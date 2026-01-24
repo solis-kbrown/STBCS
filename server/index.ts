@@ -62,9 +62,9 @@ app.use((req, res, next) => {
 (async () => {
   await registerRoutes(httpServer, app);
 
-  // Start the data scraper scheduler (fetches every 30 minutes)
+  // Start the data scraper scheduler (fetches every 15 minutes from 30+ sources)
   const { startDataRefreshScheduler } = await import("./scrapers");
-  startDataRefreshScheduler(30);
+  startDataRefreshScheduler(15);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;

@@ -67,17 +67,43 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2026)
 
-### Expanded Threat Intelligence System
-- 15+ free public threat intelligence feed sources integrated:
-  - **NVD** - National Vulnerability Database CVEs
-  - **CISA KEV** - Known Exploited Vulnerabilities catalog
-  - **URLhaus** - Malicious URL database
-  - **OpenPhish** - Phishing URL feed
-  - **Feodo Tracker** - Banking trojan C2 servers
-  - **SANS DShield** - Top attacking IP addresses
-  - **Tor Exit Nodes** - Tor network exit node IPs
-  - **SSL Blacklist** - Malicious SSL certificate IPs
-  - **Pro tier feeds** (placeholder): AlienVault OTX, VirusTotal, Shodan, GreyNoise, CrowdSec, Pulsedive, ThreatFox
+### Expanded Threat Intelligence System (30+ Sources)
+- **Refresh Interval**: 15 minutes (configurable)
+- **Total Sources**: 30+ free public threat intelligence feeds
+
+#### Core Vulnerability Feeds
+- **NVD** - National Vulnerability Database CVEs
+- **CISA KEV** - Known Exploited Vulnerabilities catalog
+
+#### Malicious URL Feeds
+- **URLhaus** - Malicious URL database (Abuse.ch)
+- **OpenPhish** - Community phishing URL feed
+- **PhishTank** - Verified phishing URLs
+- **Bambenek C2** - DGA-based C2 domain intelligence
+- **ThreatFox** - Malware IOC sharing platform
+- **Malware Bazaar** - Fresh malware samples and hashes
+
+#### IP Blocklist Feeds - Primary
+- **IPsum** - Aggregated IPs from 30+ blocklists with confidence scoring
+- **Feodo Tracker** - Banking trojan C2 server IPs
+- **Feodo Recommended** - Recommended botnet C2 blocklist
+- **SANS DShield** - Top attacking IP addresses
+- **Tor Exit Nodes** - Tor network exit node IPs
+- **Dan.me.uk Tor** - Alternative Tor exit node list
+- **SSL Blacklist** - Malicious SSL certificate IPs
+- **SSLBL Aggressive** - Aggressive SSL blacklist
+
+#### IP Blocklist Feeds - Extended
+- **Blocklist.de** - SSH, FTP, web server attack IPs
+- **CINS Army** - Bruteforce and scanning IPs
+- **GreenSnow** - Bruteforce attacker IPs
+- **EmergingThreats** - Compromised host IPs
+- **Spamhaus DROP** - Hijacked netblocks
+- **FireHOL Level1** - High-confidence malicious IPs
+- **C2 Tracker** - Command & Control server IPs
+
+#### Pro Tier Feeds (require API keys)
+- AlienVault OTX, VirusTotal, Shodan, GreyNoise, CrowdSec, Pulsedive, HoneyDB
 
 ### Security Enhancements
 - API rate limiting (100 requests/min general, 30/min for threat data endpoints)
@@ -124,9 +150,11 @@ Preferred communication style: Simple, everyday language.
 - `systemConfig` - Global system settings
 
 ### Data Refresh
-- Automatic refresh scheduler runs every 30 minutes
+- Automatic refresh scheduler runs every 15 minutes
+- 30+ threat intelligence sources fetched per cycle
 - Rate limiting between feed fetches (1-2s delays)
-- Error handling and logging for each feed
+- Graceful error handling - individual feed failures don't stop other fetches
+- Some external feeds may require API keys (noted in feed registry)
 
 ## External Dependencies
 

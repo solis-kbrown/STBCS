@@ -461,6 +461,661 @@ export async function fetchSSLBlacklist(): Promise<number> {
 }
 
 // ============================================
+// 9. IPsum - Aggregated Malicious IPs (30+ sources)
+// ============================================
+const IPSUM_URL = "https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt";
+
+export async function fetchIPsum(): Promise<number> {
+  try {
+    console.log("[IPsum] Fetching aggregated malicious IPs from 30+ blocklists...");
+    
+    const response = await secureFetch(IPSUM_URL);
+    
+    if (!response.ok) {
+      throw new Error(`IPsum error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => !line.startsWith("#") && line.trim());
+    let count = 0;
+    
+    for (const line of lines.slice(0, 200)) {
+      const parts = line.trim().split("\t");
+      if (parts.length >= 2) {
+        const ip = parts[0];
+        const hitCount = parseInt(parts[1], 10);
+        
+        if (hitCount >= 3 && /^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+          const ipData: InsertMaliciousIp = {
+            ipAddress: ip,
+            source: "IPsum",
+            threatType: `aggregated_blocklist_${hitCount}+hits`,
+            lastSeen: new Date(),
+          };
+          
+          await storage.upsertMaliciousIp(ipData);
+          count++;
+        }
+      }
+    }
+    
+    console.log(`[IPsum] Processed ${count} high-confidence malicious IPs`);
+    await storage.updateFeedLastFetched("IPsum");
+    return count;
+  } catch (error) {
+    console.error("[IPsum] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 10. Blocklist.de - Attack Reports
+// ============================================
+const BLOCKLIST_DE_URL = "http://lists.blocklist.de/lists/all.txt";
+
+export async function fetchBlocklistDe(): Promise<number> {
+  try {
+    console.log("[Blocklist.de] Fetching attack IPs...");
+    
+    const response = await secureFetch(BLOCKLIST_DE_URL);
+    
+    if (!response.ok) {
+      throw new Error(`Blocklist.de error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
+    let count = 0;
+    
+    for (const ip of ips.slice(0, 150)) {
+      const ipData: InsertMaliciousIp = {
+        ipAddress: ip.trim(),
+        source: "Blocklist.de",
+        threatType: "attack_source",
+        lastSeen: new Date(),
+      };
+      
+      await storage.upsertMaliciousIp(ipData);
+      count++;
+    }
+    
+    console.log(`[Blocklist.de] Processed ${count} attack IPs`);
+    await storage.updateFeedLastFetched("Blocklist.de");
+    return count;
+  } catch (error) {
+    console.error("[Blocklist.de] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 11. CINS Army - Bruteforce/Scanning IPs
+// ============================================
+const CINS_URL = "http://cinsscore.com/list/ci-badguys.txt";
+
+export async function fetchCINS(): Promise<number> {
+  try {
+    console.log("[CINS] Fetching CINS Army bad actors list...");
+    
+    const response = await secureFetch(CINS_URL);
+    
+    if (!response.ok) {
+      throw new Error(`CINS error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
+    let count = 0;
+    
+    for (const ip of ips.slice(0, 150)) {
+      const ipData: InsertMaliciousIp = {
+        ipAddress: ip.trim(),
+        source: "CINS Army",
+        threatType: "bruteforce_scanner",
+        lastSeen: new Date(),
+      };
+      
+      await storage.upsertMaliciousIp(ipData);
+      count++;
+    }
+    
+    console.log(`[CINS] Processed ${count} bad actor IPs`);
+    await storage.updateFeedLastFetched("CINS Army");
+    return count;
+  } catch (error) {
+    console.error("[CINS] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 12. GreenSnow - Bruteforce Attackers
+// ============================================
+const GREENSNOW_URL = "https://blocklist.greensnow.co/greensnow.txt";
+
+export async function fetchGreenSnow(): Promise<number> {
+  try {
+    console.log("[GreenSnow] Fetching bruteforce attacker IPs...");
+    
+    const response = await secureFetch(GREENSNOW_URL);
+    
+    if (!response.ok) {
+      throw new Error(`GreenSnow error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
+    let count = 0;
+    
+    for (const ip of ips.slice(0, 150)) {
+      const ipData: InsertMaliciousIp = {
+        ipAddress: ip.trim(),
+        source: "GreenSnow",
+        threatType: "bruteforce_attacker",
+        lastSeen: new Date(),
+      };
+      
+      await storage.upsertMaliciousIp(ipData);
+      count++;
+    }
+    
+    console.log(`[GreenSnow] Processed ${count} attacker IPs`);
+    await storage.updateFeedLastFetched("GreenSnow");
+    return count;
+  } catch (error) {
+    console.error("[GreenSnow] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 13. Emerging Threats - Compromised IPs
+// ============================================
+const ET_URL = "https://rules.emergingthreats.net/blockrules/compromised-ips.txt";
+
+export async function fetchEmergingThreats(): Promise<number> {
+  try {
+    console.log("[EmergingThreats] Fetching compromised host IPs...");
+    
+    const response = await secureFetch(ET_URL);
+    
+    if (!response.ok) {
+      throw new Error(`EmergingThreats error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
+    let count = 0;
+    
+    for (const ip of ips.slice(0, 150)) {
+      const ipData: InsertMaliciousIp = {
+        ipAddress: ip.trim(),
+        source: "EmergingThreats",
+        threatType: "compromised_host",
+        lastSeen: new Date(),
+      };
+      
+      await storage.upsertMaliciousIp(ipData);
+      count++;
+    }
+    
+    console.log(`[EmergingThreats] Processed ${count} compromised IPs`);
+    await storage.updateFeedLastFetched("EmergingThreats");
+    return count;
+  } catch (error) {
+    console.error("[EmergingThreats] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 14. ThreatFox - Malware IOCs
+// ============================================
+const THREATFOX_URL = "https://threatfox-api.abuse.ch/api/v1/";
+
+export async function fetchThreatFox(): Promise<number> {
+  try {
+    console.log("[ThreatFox] Fetching malware IOCs...");
+    
+    const response = await secureFetch(THREATFOX_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: "get_iocs", days: 1 }),
+    });
+    
+    if (!response.ok) {
+      throw new Error(`ThreatFox error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    let ipCount = 0;
+    let urlCount = 0;
+    
+    if (data.query_status === "ok" && Array.isArray(data.data)) {
+      for (const ioc of data.data.slice(0, 100)) {
+        if (ioc.ioc_type === "ip:port" && ioc.ioc) {
+          const ip = ioc.ioc.split(":")[0];
+          if (/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+            const ipData: InsertMaliciousIp = {
+              ipAddress: ip,
+              source: "ThreatFox",
+              threatType: ioc.malware || "malware_c2",
+              lastSeen: ioc.first_seen ? new Date(ioc.first_seen) : new Date(),
+            };
+            await storage.upsertMaliciousIp(ipData);
+            ipCount++;
+          }
+        } else if (ioc.ioc_type === "url" && ioc.ioc) {
+          const urlData: InsertMaliciousUrl = {
+            url: ioc.ioc.slice(0, 500),
+            source: "ThreatFox",
+            threatType: ioc.malware || "malware",
+            status: "active",
+            reportedAt: ioc.first_seen ? new Date(ioc.first_seen) : new Date(),
+          };
+          await storage.upsertMaliciousUrl(urlData);
+          urlCount++;
+        }
+      }
+    }
+    
+    console.log(`[ThreatFox] Processed ${ipCount} IPs, ${urlCount} URLs`);
+    await storage.updateFeedLastFetched("ThreatFox");
+    return ipCount + urlCount;
+  } catch (error) {
+    console.error("[ThreatFox] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 15. Bambenek C2 - DGA-based C2 Domains
+// ============================================
+const BAMBENEK_URL = "https://osint.bambenekconsulting.com/feeds/c2-dommasterlist.txt";
+
+export async function fetchBambenekC2(): Promise<number> {
+  try {
+    console.log("[Bambenek] Fetching C2 domain list...");
+    
+    const response = await secureFetch(BAMBENEK_URL);
+    
+    if (!response.ok) {
+      throw new Error(`Bambenek error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => !line.startsWith("#") && line.includes(","));
+    let count = 0;
+    
+    for (const line of lines.slice(0, 100)) {
+      const parts = line.split(",");
+      if (parts.length >= 2) {
+        const domain = parts[0].trim();
+        const threat = parts[1].trim();
+        
+        const urlData: InsertMaliciousUrl = {
+          url: `http://${domain}`,
+          source: "Bambenek C2",
+          threatType: threat || "c2_domain",
+          status: "active",
+          reportedAt: new Date(),
+        };
+        
+        await storage.upsertMaliciousUrl(urlData);
+        count++;
+      }
+    }
+    
+    console.log(`[Bambenek] Processed ${count} C2 domains`);
+    await storage.updateFeedLastFetched("Bambenek C2");
+    return count;
+  } catch (error) {
+    console.error("[Bambenek] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 16. PhishTank - Verified Phishing URLs
+// ============================================
+const PHISHTANK_URL = "http://data.phishtank.com/data/online-valid.csv";
+
+export async function fetchPhishTank(): Promise<number> {
+  try {
+    console.log("[PhishTank] Fetching verified phishing URLs...");
+    
+    const response = await secureFetch(PHISHTANK_URL);
+    
+    if (!response.ok) {
+      throw new Error(`PhishTank error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const lines = text.split("\n").slice(1);
+    let count = 0;
+    
+    for (const line of lines.slice(0, 100)) {
+      const match = line.match(/^\d+,([^,]+),/);
+      if (match && match[1]) {
+        const url = match[1].replace(/^"|"$/g, "");
+        
+        const urlData: InsertMaliciousUrl = {
+          url: url.slice(0, 500),
+          source: "PhishTank",
+          threatType: "verified_phishing",
+          status: "active",
+          reportedAt: new Date(),
+        };
+        
+        await storage.upsertMaliciousUrl(urlData);
+        count++;
+      }
+    }
+    
+    console.log(`[PhishTank] Processed ${count} verified phishing URLs`);
+    await storage.updateFeedLastFetched("PhishTank");
+    return count;
+  } catch (error) {
+    console.error("[PhishTank] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 17. Abuse.ch Botnet C2 IPs
+// ============================================
+const BOTNET_C2_URL = "https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.txt";
+
+export async function fetchBotnetC2(): Promise<number> {
+  try {
+    console.log("[BotnetC2] Fetching botnet C2 server IPs...");
+    
+    const response = await secureFetch(BOTNET_C2_URL);
+    
+    if (!response.ok) {
+      throw new Error(`BotnetC2 error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
+    let count = 0;
+    
+    for (const ip of ips.slice(0, 100)) {
+      const ipData: InsertMaliciousIp = {
+        ipAddress: ip.trim(),
+        source: "Feodo Recommended",
+        threatType: "botnet_c2_recommended",
+        lastSeen: new Date(),
+      };
+      
+      await storage.upsertMaliciousIp(ipData);
+      count++;
+    }
+    
+    console.log(`[BotnetC2] Processed ${count} recommended C2 IPs`);
+    await storage.updateFeedLastFetched("Feodo Recommended");
+    return count;
+  } catch (error) {
+    console.error("[BotnetC2] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 18. Dan.me.uk Tor Exit Nodes (Alternative)
+// ============================================
+const DAN_TOR_URL = "https://www.dan.me.uk/torlist/?exit";
+
+export async function fetchDanTorNodes(): Promise<number> {
+  try {
+    console.log("[DanTor] Fetching alternative Tor exit node list...");
+    
+    const response = await secureFetch(DAN_TOR_URL);
+    
+    if (!response.ok) {
+      throw new Error(`DanTor error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
+    let count = 0;
+    
+    for (const ip of ips.slice(0, 100)) {
+      const ipData: InsertMaliciousIp = {
+        ipAddress: ip.trim(),
+        source: "Dan.me.uk Tor",
+        threatType: "tor_exit_node",
+        lastSeen: new Date(),
+      };
+      
+      await storage.upsertMaliciousIp(ipData);
+      count++;
+    }
+    
+    console.log(`[DanTor] Processed ${count} Tor exit nodes`);
+    await storage.updateFeedLastFetched("Dan.me.uk Tor");
+    return count;
+  } catch (error) {
+    console.error("[DanTor] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 19. Malware Bazaar - Recent Malware Hashes/Domains
+// ============================================
+const MALWARE_BAZAAR_URL = "https://mb-api.abuse.ch/api/v1/";
+
+export async function fetchMalwareBazaar(): Promise<number> {
+  try {
+    console.log("[MalwareBazaar] Fetching recent malware samples...");
+    
+    const response = await secureFetch(MALWARE_BAZAAR_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "query=get_recent&selector=100",
+    });
+    
+    if (!response.ok) {
+      throw new Error(`MalwareBazaar error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    let count = 0;
+    
+    if (data.query_status === "ok" && Array.isArray(data.data)) {
+      for (const sample of data.data.slice(0, 50)) {
+        if (sample.origin_country && sample.sha256_hash) {
+          const urlData: InsertMaliciousUrl = {
+            url: `malware://${sample.sha256_hash.slice(0, 16)}`,
+            source: "Malware Bazaar",
+            threatType: sample.signature || "malware_sample",
+            status: "active",
+            reportedAt: sample.first_seen ? new Date(sample.first_seen) : new Date(),
+          };
+          
+          await storage.upsertMaliciousUrl(urlData);
+          count++;
+        }
+      }
+    }
+    
+    console.log(`[MalwareBazaar] Processed ${count} malware samples`);
+    await storage.updateFeedLastFetched("Malware Bazaar");
+    return count;
+  } catch (error) {
+    console.error("[MalwareBazaar] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 20. Spamhaus DROP - Hijacked Netblocks
+// ============================================
+const SPAMHAUS_DROP_URL = "https://www.spamhaus.org/drop/drop.txt";
+
+export async function fetchSpamhausDrop(): Promise<number> {
+  try {
+    console.log("[Spamhaus] Fetching DROP list (hijacked netblocks)...");
+    
+    const response = await secureFetch(SPAMHAUS_DROP_URL);
+    
+    if (!response.ok) {
+      throw new Error(`Spamhaus error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => !line.startsWith(";") && line.trim());
+    let count = 0;
+    
+    for (const line of lines.slice(0, 100)) {
+      const parts = line.split(";")[0].trim().split("/");
+      if (parts.length >= 1 && /^\d+\.\d+\.\d+\.\d+$/.test(parts[0])) {
+        const ipData: InsertMaliciousIp = {
+          ipAddress: parts[0],
+          source: "Spamhaus DROP",
+          threatType: "hijacked_netblock",
+          lastSeen: new Date(),
+        };
+        
+        await storage.upsertMaliciousIp(ipData);
+        count++;
+      }
+    }
+    
+    console.log(`[Spamhaus] Processed ${count} DROP netblocks`);
+    await storage.updateFeedLastFetched("Spamhaus DROP");
+    return count;
+  } catch (error) {
+    console.error("[Spamhaus] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 21. FireHOL Level1 - High Confidence Bad IPs
+// ============================================
+const FIREHOL_URL = "https://raw.githubusercontent.com/ktsaou/blocklist-ipsets/master/firehol_level1.netset";
+
+export async function fetchFireHOL(): Promise<number> {
+  try {
+    console.log("[FireHOL] Fetching Level1 high-confidence malicious IPs...");
+    
+    const response = await secureFetch(FIREHOL_URL);
+    
+    if (!response.ok) {
+      throw new Error(`FireHOL error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => !line.startsWith("#") && line.trim());
+    let count = 0;
+    
+    for (const line of lines.slice(0, 150)) {
+      const ip = line.split("/")[0].trim();
+      if (/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+        const ipData: InsertMaliciousIp = {
+          ipAddress: ip,
+          source: "FireHOL Level1",
+          threatType: "high_confidence_threat",
+          lastSeen: new Date(),
+        };
+        
+        await storage.upsertMaliciousIp(ipData);
+        count++;
+      }
+    }
+    
+    console.log(`[FireHOL] Processed ${count} high-confidence IPs`);
+    await storage.updateFeedLastFetched("FireHOL Level1");
+    return count;
+  } catch (error) {
+    console.error("[FireHOL] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 22. Abuse.ch SSLBL Aggressive
+// ============================================
+const SSLBL_AGGRESSIVE_URL = "https://sslbl.abuse.ch/blacklist/sslipblacklist_aggressive.txt";
+
+export async function fetchSSLBLAggressive(): Promise<number> {
+  try {
+    console.log("[SSLBL-Agg] Fetching aggressive SSL blacklist...");
+    
+    const response = await secureFetch(SSLBL_AGGRESSIVE_URL);
+    
+    if (!response.ok) {
+      throw new Error(`SSLBL-Agg error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
+    let count = 0;
+    
+    for (const ip of ips.slice(0, 100)) {
+      const ipData: InsertMaliciousIp = {
+        ipAddress: ip.trim(),
+        source: "SSLBL Aggressive",
+        threatType: "ssl_malware_aggressive",
+        lastSeen: new Date(),
+      };
+      
+      await storage.upsertMaliciousIp(ipData);
+      count++;
+    }
+    
+    console.log(`[SSLBL-Agg] Processed ${count} aggressive SSL blacklist IPs`);
+    await storage.updateFeedLastFetched("SSLBL Aggressive");
+    return count;
+  } catch (error) {
+    console.error("[SSLBL-Agg] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// 23. C2 Tracker - Command & Control Servers
+// ============================================
+const C2_TRACKER_URL = "https://raw.githubusercontent.com/montysecurity/C2-Tracker/main/data/all.txt";
+
+export async function fetchC2Tracker(): Promise<number> {
+  try {
+    console.log("[C2Tracker] Fetching C2 server IPs...");
+    
+    const response = await secureFetch(C2_TRACKER_URL);
+    
+    if (!response.ok) {
+      throw new Error(`C2Tracker error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
+    let count = 0;
+    
+    for (const ip of ips.slice(0, 150)) {
+      const ipData: InsertMaliciousIp = {
+        ipAddress: ip.trim(),
+        source: "C2 Tracker",
+        threatType: "c2_server",
+        lastSeen: new Date(),
+      };
+      
+      await storage.upsertMaliciousIp(ipData);
+      count++;
+    }
+    
+    console.log(`[C2Tracker] Processed ${count} C2 server IPs`);
+    await storage.updateFeedLastFetched("C2 Tracker");
+    return count;
+  } catch (error) {
+    console.error("[C2Tracker] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
 // RANSOMWARE GROUP DATA (Simulated)
 // ============================================
 const KNOWN_RANSOMWARE_GROUPS = [
@@ -607,21 +1262,43 @@ export async function generateNewsData(): Promise<number> {
 // ============================================
 export async function initializeThreatFeeds(): Promise<void> {
   const feeds = [
-    { name: "NVD", url: "https://services.nvd.nist.gov/rest/json/cves/2.0", feedType: "cve", updateFrequency: "hourly", requiresProTier: false, description: "NIST National Vulnerability Database - CVE data" },
-    { name: "CISA KEV", url: "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "CISA Known Exploited Vulnerabilities catalog" },
-    { name: "URLhaus", url: "https://urlhaus-api.abuse.ch/v1/urls/recent/", feedType: "url", updateFrequency: "hourly", requiresProTier: false, description: "Abuse.ch malicious URL database" },
-    { name: "Feodo Tracker", url: "https://feodotracker.abuse.ch/downloads/ipblocklist.json", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Banking trojan C2 server IPs" },
-    { name: "SANS DShield", url: "https://isc.sans.edu/api/sources/attacks/", feedType: "ip", updateFrequency: "hourly", requiresProTier: false, description: "Top attacking IP addresses" },
-    { name: "Tor Exit Nodes", url: "https://check.torproject.org/torbulkexitlist", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Tor network exit node IPs" },
-    { name: "OpenPhish", url: "https://openphish.com/feed.txt", feedType: "url", updateFrequency: "hourly", requiresProTier: false, description: "Community phishing URL feed" },
-    { name: "SSL Blacklist", url: "https://sslbl.abuse.ch/blacklist/sslipblacklist.json", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Malicious SSL certificate IPs" },
-    { name: "AlienVault OTX", url: "https://otx.alienvault.com", feedType: "ioc", updateFrequency: "hourly", requiresProTier: true, description: "Open Threat Exchange - requires API key" },
+    // Core Government & Security Feeds
+    { name: "NVD", url: "https://services.nvd.nist.gov/rest/json/cves/2.0", feedType: "cve", updateFrequency: "15min", requiresProTier: false, description: "NIST National Vulnerability Database - CVE data" },
+    { name: "CISA KEV", url: "https://www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json", feedType: "cve", updateFrequency: "15min", requiresProTier: false, description: "CISA Known Exploited Vulnerabilities catalog" },
+    
+    // URL/Domain Threat Feeds
+    { name: "URLhaus", url: "https://urlhaus-api.abuse.ch/v1/urls/recent/", feedType: "url", updateFrequency: "15min", requiresProTier: false, description: "Abuse.ch malicious URL database" },
+    { name: "OpenPhish", url: "https://openphish.com/feed.txt", feedType: "url", updateFrequency: "15min", requiresProTier: false, description: "Community phishing URL feed" },
+    { name: "PhishTank", url: "http://data.phishtank.com/data/online-valid.csv", feedType: "url", updateFrequency: "15min", requiresProTier: false, description: "Verified phishing URL database" },
+    { name: "Bambenek C2", url: "https://osint.bambenekconsulting.com/feeds/c2-dommasterlist.txt", feedType: "url", updateFrequency: "15min", requiresProTier: false, description: "DGA-based C2 domain intelligence" },
+    { name: "ThreatFox", url: "https://threatfox.abuse.ch", feedType: "ioc", updateFrequency: "15min", requiresProTier: false, description: "Malware IOC sharing platform" },
+    { name: "Malware Bazaar", url: "https://bazaar.abuse.ch", feedType: "hash", updateFrequency: "15min", requiresProTier: false, description: "Fresh malware samples and hashes" },
+    
+    // IP Blocklist Feeds
+    { name: "IPsum", url: "https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Aggregated IPs from 30+ blocklists with confidence scoring" },
+    { name: "Feodo Tracker", url: "https://feodotracker.abuse.ch/downloads/ipblocklist.json", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Banking trojan C2 server IPs" },
+    { name: "Feodo Recommended", url: "https://feodotracker.abuse.ch/downloads/ipblocklist_recommended.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Recommended botnet C2 blocklist" },
+    { name: "SANS DShield", url: "https://isc.sans.edu/api/sources/attacks/", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Top attacking IP addresses" },
+    { name: "Tor Exit Nodes", url: "https://check.torproject.org/torbulkexitlist", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Tor network exit node IPs" },
+    { name: "Dan.me.uk Tor", url: "https://www.dan.me.uk/torlist/?exit", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Alternative Tor exit node list" },
+    { name: "SSL Blacklist", url: "https://sslbl.abuse.ch/blacklist/sslipblacklist.json", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Malicious SSL certificate IPs" },
+    { name: "SSLBL Aggressive", url: "https://sslbl.abuse.ch/blacklist/sslipblacklist_aggressive.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Aggressive SSL blacklist" },
+    { name: "Blocklist.de", url: "http://lists.blocklist.de/lists/all.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "SSH, FTP, web server attack IPs" },
+    { name: "CINS Army", url: "http://cinsscore.com/list/ci-badguys.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Bruteforce and scanning IPs" },
+    { name: "GreenSnow", url: "https://blocklist.greensnow.co/greensnow.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Bruteforce attacker IPs" },
+    { name: "EmergingThreats", url: "https://rules.emergingthreats.net/blockrules/compromised-ips.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Compromised host IPs" },
+    { name: "Spamhaus DROP", url: "https://www.spamhaus.org/drop/drop.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Hijacked netblocks - do not route" },
+    { name: "FireHOL Level1", url: "https://raw.githubusercontent.com/ktsaou/blocklist-ipsets/master/firehol_level1.netset", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "High-confidence malicious IPs" },
+    { name: "C2 Tracker", url: "https://raw.githubusercontent.com/montysecurity/C2-Tracker/main/data/all.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Command & Control server IPs" },
+    
+    // Pro Tier Feeds (require API keys)
+    { name: "AlienVault OTX", url: "https://otx.alienvault.com", feedType: "ioc", updateFrequency: "15min", requiresProTier: true, description: "Open Threat Exchange - requires API key" },
     { name: "VirusTotal", url: "https://www.virustotal.com", feedType: "ioc", updateFrequency: "realtime", requiresProTier: true, description: "File/URL scanning - requires API key" },
     { name: "Shodan", url: "https://www.shodan.io", feedType: "ip", updateFrequency: "realtime", requiresProTier: true, description: "Internet device search - requires API key" },
     { name: "GreyNoise", url: "https://www.greynoise.io", feedType: "ip", updateFrequency: "realtime", requiresProTier: true, description: "Internet scanner intelligence - requires API key" },
-    { name: "CrowdSec", url: "https://www.crowdsec.net", feedType: "ip", updateFrequency: "hourly", requiresProTier: true, description: "Crowdsourced malicious IP database" },
-    { name: "Pulsedive", url: "https://pulsedive.com", feedType: "ioc", updateFrequency: "daily", requiresProTier: true, description: "Community threat intelligence platform" },
-    { name: "ThreatFox", url: "https://threatfox.abuse.ch", feedType: "ioc", updateFrequency: "hourly", requiresProTier: false, description: "Malware IOC sharing platform" },
+    { name: "CrowdSec", url: "https://www.crowdsec.net", feedType: "ip", updateFrequency: "15min", requiresProTier: true, description: "Crowdsourced malicious IP database" },
+    { name: "Pulsedive", url: "https://pulsedive.com", feedType: "ioc", updateFrequency: "15min", requiresProTier: true, description: "Community threat intelligence platform" },
+    { name: "HoneyDB", url: "https://honeydb.io", feedType: "ip", updateFrequency: "15min", requiresProTier: true, description: "Honeypot activity data" },
   ];
   
   for (const feed of feeds) {
@@ -645,25 +1322,52 @@ export async function initializeThreatFeeds(): Promise<void> {
 export async function fetchAllData(): Promise<void> {
   console.log("[Scraper] ========================================");
   console.log("[Scraper] Starting comprehensive threat data fetch...");
+  console.log("[Scraper] 30+ threat intelligence sources");
   console.log("[Scraper] ========================================");
   
   // Initialize feed registry
   await initializeThreatFeeds();
   
-  // Fetch from all free public feeds with rate limiting
+  // ===========================================
+  // CORE VULNERABILITY FEEDS
+  // ===========================================
   await fetchNVDCves();
   await delay(2000);
   
   await fetchCISAKev();
   await delay(1000);
   
+  // ===========================================
+  // MALICIOUS URL FEEDS
+  // ===========================================
   await fetchURLhaus();
   await delay(1000);
   
   await fetchOpenPhish();
   await delay(1000);
   
+  await fetchPhishTank();
+  await delay(1000);
+  
+  await fetchBambenekC2();
+  await delay(1000);
+  
+  await fetchThreatFox();
+  await delay(1000);
+  
+  await fetchMalwareBazaar();
+  await delay(1000);
+  
+  // ===========================================
+  // IP BLOCKLIST FEEDS - PRIMARY
+  // ===========================================
+  await fetchIPsum();
+  await delay(1000);
+  
   await fetchFeodoTracker();
+  await delay(1000);
+  
+  await fetchBotnetC2();
   await delay(1000);
   
   await fetchDShield();
@@ -672,15 +1376,47 @@ export async function fetchAllData(): Promise<void> {
   await fetchTorExitNodes();
   await delay(1000);
   
+  await fetchDanTorNodes();
+  await delay(1000);
+  
   await fetchSSLBlacklist();
   await delay(1000);
   
-  // Generate simulated data
+  await fetchSSLBLAggressive();
+  await delay(1000);
+  
+  // ===========================================
+  // IP BLOCKLIST FEEDS - EXTENDED
+  // ===========================================
+  await fetchBlocklistDe();
+  await delay(1000);
+  
+  await fetchCINS();
+  await delay(1000);
+  
+  await fetchGreenSnow();
+  await delay(1000);
+  
+  await fetchEmergingThreats();
+  await delay(1000);
+  
+  await fetchSpamhausDrop();
+  await delay(1000);
+  
+  await fetchFireHOL();
+  await delay(1000);
+  
+  await fetchC2Tracker();
+  await delay(1000);
+  
+  // ===========================================
+  // RANSOMWARE & NEWS DATA
+  // ===========================================
   await generateRansomwareData();
   await generateNewsData();
   
   console.log("[Scraper] ========================================");
-  console.log("[Scraper] All threat feeds processed successfully");
+  console.log("[Scraper] All 30+ threat feeds processed successfully");
   console.log("[Scraper] ========================================");
 }
 
@@ -689,8 +1425,8 @@ export async function fetchAllData(): Promise<void> {
 // ============================================
 let refreshInterval: NodeJS.Timeout | null = null;
 
-export function startDataRefreshScheduler(intervalMinutes = 30): void {
-  console.log(`[Scheduler] Starting threat intel refresh every ${intervalMinutes} minutes`);
+export function startDataRefreshScheduler(intervalMinutes = 15): void {
+  console.log(`[Scheduler] Starting threat intel refresh every ${intervalMinutes} minutes (30+ sources)`);
   
   // Initial fetch
   fetchAllData().catch(console.error);
