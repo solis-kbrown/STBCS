@@ -67,9 +67,10 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2026)
 
-### Expanded Threat Intelligence System (30+ Sources)
+### Expanded Threat Intelligence System (31+ Sources)
 - **Refresh Interval**: 15 minutes (configurable)
-- **Total Sources**: 30+ free public threat intelligence feeds
+- **Total Sources**: 31+ free public threat intelligence feeds
+- **Ransomware Sources**: Dual-source ransomware tracking (ransomware.live + ransomlook.io)
 
 #### Core Vulnerability Feeds
 - **NVD** - National Vulnerability Database CVEs

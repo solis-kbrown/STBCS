@@ -1311,17 +1311,216 @@ export async function fetchRansomwareLiveGroups(): Promise<number> {
   }
 }
 
-// Combined function to fetch all ransomware data
+// ============================================
+// RANSOMLOOK.IO API INTEGRATION
+// Additional ransomware intelligence from ransomlook.io (no API key required)
+// ============================================
+const RANSOMLOOK_API = "https://www.ransomlook.io/api";
+
+interface RansomLookPost {
+  group_name: string;
+  post_title: string;
+  discovered: string;
+  published?: string;
+  description?: string;
+  website?: string;
+  post_url?: string;
+  country?: string;
+}
+
+interface RansomLookGroup {
+  name: string;
+  captcha?: boolean;
+  parser?: boolean;
+  javascript_render?: boolean;
+  meta?: string;
+  locations?: string[];
+  profile?: string[];
+}
+
+// Fetch recent ransomware posts from RansomLook.io
+export async function fetchRansomLookVictims(): Promise<number> {
+  try {
+    console.log("[RansomLook] Fetching ransomware intelligence from ransomlook.io...");
+    
+    // Fetch last 200 recent posts for comprehensive coverage
+    const response = await secureFetch(`${RANSOMLOOK_API}/recent/200`);
+    
+    if (!response.ok) {
+      throw new Error(`RansomLook API error: ${response.status}`);
+    }
+    
+    const posts: RansomLookPost[] = await response.json();
+    console.log(`[RansomLook] Retrieved ${posts.length} recent posts`);
+    
+    let count = 0;
+    let newCount = 0;
+    
+    for (const post of posts) {
+      try {
+        // Clean and normalize the post title as victim name
+        const victimName = post.post_title?.trim() || "Unknown Victim";
+        const groupName = post.group_name?.trim() || "Unknown Group";
+        
+        // Skip if no meaningful data
+        if (victimName === "Unknown Victim" && groupName === "Unknown Group") {
+          continue;
+        }
+        
+        const incident: InsertRansomware = {
+          victim: victimName,
+          groupName: groupName,
+          country: post.country || null,
+          website: post.website || null,
+          description: post.description || `Ransomware victim posted by ${groupName}`,
+          status: "Published",
+          discoveredAt: post.discovered ? new Date(post.discovered) : new Date(),
+          postUrl: post.post_url || null,
+          screenshotUrl: null,
+          activity: null,
+          sourceApi: "ransomlook.io",
+        };
+        
+        const result = await storage.upsertRansomwareIncidentWithFlag(incident);
+        
+        // Only trigger notifications for NEW incidents
+        if (result.isNew) {
+          newCount++;
+          await triggerWatchlistNotifications('ransomware', {
+            victim: incident.victim,
+            groupName: incident.groupName,
+            country: incident.country || undefined,
+            description: incident.description || undefined,
+          });
+        }
+        
+        count++;
+      } catch (err) {
+        continue;
+      }
+    }
+    
+    console.log(`[RansomLook] Processed ${count} posts (${newCount} new)`);
+    return count;
+  } catch (error) {
+    console.error("[RansomLook] Error fetching data:", error);
+    return 0;
+  }
+}
+
+// Fetch ransomware groups from RansomLook.io
+export async function fetchRansomLookGroups(): Promise<number> {
+  try {
+    console.log("[RansomLook] Fetching ransomware group intel...");
+    
+    const response = await secureFetch(`${RANSOMLOOK_API}/groups`);
+    
+    if (!response.ok) {
+      throw new Error(`RansomLook groups API error: ${response.status}`);
+    }
+    
+    const groups: RansomLookGroup[] = await response.json();
+    console.log(`[RansomLook] Retrieved ${groups.length} ransomware groups`);
+    
+    let count = 0;
+    
+    for (const group of groups) {
+      try {
+        const profileText = group.profile?.join(" ") || "";
+        const locations = group.locations?.join(", ") || "Unknown";
+        
+        await storage.upsertThreatActor({
+          name: group.name,
+          description: profileText || group.meta || `Active ransomware group tracked by RansomLook`,
+          type: "Ransomware Operator",
+          origin: locations,
+          lastActive: new Date(),
+          active: true,
+        });
+        count++;
+      } catch (err) {
+        continue;
+      }
+    }
+    
+    console.log(`[RansomLook] Processed ${count} ransomware groups`);
+    return count;
+  } catch (error) {
+    console.error("[RansomLook] Error fetching groups:", error);
+    return 0;
+  }
+}
+
+// Fetch breach/leak data from RansomLook.io (bonus: populates breach database!)
+export async function fetchRansomLookBreaches(): Promise<number> {
+  try {
+    console.log("[RansomLook] Fetching breach/leak intelligence...");
+    
+    const response = await secureFetch(`${RANSOMLOOK_API}/leaks/leaks`);
+    
+    if (!response.ok) {
+      // This endpoint might not be available on all instances
+      console.log("[RansomLook] Leaks endpoint not available, skipping...");
+      return 0;
+    }
+    
+    const leaks = await response.json();
+    console.log(`[RansomLook] Retrieved ${Array.isArray(leaks) ? leaks.length : 0} breach records`);
+    
+    // Process breaches if available
+    let count = 0;
+    if (Array.isArray(leaks)) {
+      for (const leak of leaks.slice(0, 100)) { // Limit to 100 for efficiency
+        try {
+          await storage.upsertBreachIncident({
+            name: leak.name || leak.title || "Unknown",
+            description: leak.description || `Data breach tracked by RansomLook`,
+            breachDate: leak.date ? new Date(leak.date) : null,
+            addedDate: new Date(),
+            pwnCount: leak.records?.toString() || null,
+            dataClasses: leak.data_types || null,
+            sourceUrl: "https://ransomlook.io",
+            sourceApi: "ransomlook.io",
+          });
+          count++;
+        } catch (err) {
+          continue;
+        }
+      }
+    }
+    
+    console.log(`[RansomLook] Processed ${count} breach records`);
+    return count;
+  } catch (error) {
+    console.error("[RansomLook] Error fetching breaches:", error);
+    return 0;
+  }
+}
+
+// Combined function to fetch all ransomware data from BOTH sources
 export async function fetchRansomwareData(): Promise<number> {
   console.log("[Ransomware] Starting comprehensive ransomware intelligence fetch...");
+  console.log("[Ransomware] Sources: ransomware.live + ransomlook.io");
   
-  // Fetch groups first, then victims
-  const groupCount = await fetchRansomwareLiveGroups();
-  await delay(1000); // Rate limiting between calls
-  const victimCount = await fetchRansomwareLiveVictims();
+  // Fetch from ransomware.live first
+  const groupCount1 = await fetchRansomwareLiveGroups();
+  await delay(500); // Brief delay between APIs
+  const victimCount1 = await fetchRansomwareLiveVictims();
   
-  console.log(`[Ransomware] Total: ${groupCount} groups, ${victimCount} victims`);
-  return victimCount;
+  await delay(1000); // Rate limiting between sources
+  
+  // Then fetch from RansomLook.io for additional coverage
+  const groupCount2 = await fetchRansomLookGroups();
+  await delay(500);
+  const victimCount2 = await fetchRansomLookVictims();
+  await delay(500);
+  await fetchRansomLookBreaches(); // Bonus: populate breach database
+  
+  const totalGroups = groupCount1 + groupCount2;
+  const totalVictims = victimCount1 + victimCount2;
+  
+  console.log(`[Ransomware] Combined totals: ${totalGroups} groups, ${totalVictims} victims from 2 sources`);
+  return totalVictims;
 }
 
 // ============================================
