@@ -10,6 +10,7 @@ import Exploits from "@/pages/exploits";
 import News from "@/pages/news";
 import ThreatFeeds from "@/pages/threat-feeds";
 import SearchPage from "@/pages/search";
+import ToolsPage from "@/pages/tools";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <Route path="/news" component={News}/>
       <Route path="/threat-feeds" component={ThreatFeeds}/>
       <Route path="/search" component={SearchPage}/>
+      <Route path="/tools" component={ToolsPage}/>
       <Route component={NotFound} />
     </Switch>
   );

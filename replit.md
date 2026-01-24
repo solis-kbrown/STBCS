@@ -89,6 +89,11 @@ Preferred communication style: Simple, everyday language.
 ### Frontend Pages
 - **Dashboard** (`/`) - Overview with 7 stat cards and threat velocity chart
 - **Global Search** (`/search`) - Unified search across all threat data with debounced input and tabbed results
+- **Security Tools** (`/tools`) - Professional cybersecurity utilities:
+  - IP WHOIS Lookup - Geolocation, ISP, ASN, organization details
+  - Domain WHOIS Lookup - Registration info, DNS records, nameservers
+  - Port Scanner - Common port scanning (Free: 10 ports, Pro: 17+ ports)
+  - Threat Database Check - Check if IP is in our threat intelligence database
 - **Ransomware Tracker** (`/ransomware`) - Ransomware incidents and group activity
 - **Exploits & CVEs** (`/exploits`) - Vulnerability database with search
 - **Threat Feeds** (`/threat-feeds`) - All threat intel sources with tabs for IPs, URLs, KEV

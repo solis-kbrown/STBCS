@@ -4,6 +4,7 @@ import { storage } from "./storage";
 import { insertCveSchema, insertRansomwareSchema, insertNewsSchema } from "@shared/schema";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
+import { lookupIp, lookupDomain, scanPorts, isValidIp, isValidDomain, isPrivateIp, COMMON_PORTS } from "./tools";
 
 // Rate limiters for security
 const generalLimiter = rateLimit({
@@ -22,6 +23,24 @@ const strictLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   validate: { xForwardedForHeader: false }, // Trust proxy setup handled in Express config
+});
+
+const freeToolsLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // Free users: 10 tool requests per minute
+  message: { error: "Free tier rate limit reached. Upgrade to Pro for unlimited access." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
+});
+
+const proToolsLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // Pro users: 60 tool requests per minute
+  message: { error: "Rate limit exceeded. Please wait before trying again." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
 });
 
 // Validation schemas
@@ -364,6 +383,204 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error refreshing data:", error);
       res.status(500).json({ error: "Failed to refresh data" });
+    }
+  });
+
+  // ============ SECURITY TOOLS ENDPOINTS ============
+
+  // IP Lookup Tool
+  app.get("/api/tools/ip-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        ip: z.string().min(7).max(45),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid IP address format" });
+      }
+      
+      const { ip } = parsed.data;
+      
+      if (!isValidIp(ip)) {
+        return res.status(400).json({ error: "Invalid IP address" });
+      }
+      
+      if (isPrivateIp(ip)) {
+        return res.status(400).json({ error: "Cannot lookup private/internal IP addresses" });
+      }
+      
+      const result = await lookupIp(ip);
+      res.json(result);
+    } catch (error) {
+      console.error("IP lookup error:", error);
+      res.status(500).json({ error: "Failed to lookup IP address" });
+    }
+  });
+
+  // Domain Lookup Tool
+  app.get("/api/tools/domain-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        domain: z.string().min(3).max(253),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid domain format" });
+      }
+      
+      const { domain } = parsed.data;
+      const cleanDomain = domain.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+      
+      if (!isValidDomain(cleanDomain)) {
+        return res.status(400).json({ error: "Invalid domain name" });
+      }
+      
+      const result = await lookupDomain(cleanDomain);
+      res.json(result);
+    } catch (error) {
+      console.error("Domain lookup error:", error);
+      res.status(500).json({ error: "Failed to lookup domain" });
+    }
+  });
+
+  // Port Scanner Tool
+  app.get("/api/tools/port-scan", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        target: z.string().min(3).max(253),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid target format" });
+      }
+      
+      const { target } = parsed.data;
+      // Note: Pro tier scanning requires authentication - currently all users get free tier
+      // TODO: Implement user authentication to enable Pro tier port scanning
+      const isPro = false; // Server-enforced - no client-side bypass
+      let ipToScan = target;
+      
+      if (!isValidIp(target)) {
+        if (isValidDomain(target)) {
+          const domainResult = await lookupDomain(target);
+          if (domainResult.aRecords && domainResult.aRecords.length > 0) {
+            ipToScan = domainResult.aRecords[0];
+          } else {
+            return res.status(400).json({ error: "Could not resolve domain to IP address" });
+          }
+        } else {
+          return res.status(400).json({ error: "Invalid IP address or domain name" });
+        }
+      }
+      
+      if (isPrivateIp(ipToScan)) {
+        return res.status(400).json({ error: "Cannot scan private/internal IP addresses" });
+      }
+      
+      const results = await scanPorts(ipToScan, isPro);
+      res.json({
+        target,
+        ip: ipToScan,
+        scannedAt: new Date().toISOString(),
+        ports: results,
+        openPorts: results.filter(p => p.open),
+        tier: isPro ? 'pro' : 'free',
+      });
+    } catch (error) {
+      console.error("Port scan error:", error);
+      res.status(500).json({ error: "Failed to scan ports" });
+    }
+  });
+
+  // Get available ports info
+  app.get("/api/tools/ports-info", (req: Request, res: Response) => {
+    res.json({
+      commonPorts: COMMON_PORTS,
+      freeTierPorts: [21, 22, 25, 53, 80, 110, 143, 443, 993, 995],
+      proTierPorts: [21, 22, 23, 25, 53, 80, 110, 143, 443, 445, 993, 995, 3306, 3389, 5432, 8080, 8443],
+    });
+  });
+
+  // DNS Lookup Tool
+  app.get("/api/tools/dns-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        domain: z.string().min(3).max(253),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid domain format" });
+      }
+      
+      const { domain } = parsed.data;
+      const cleanDomain = domain.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0];
+      
+      if (!isValidDomain(cleanDomain)) {
+        return res.status(400).json({ error: "Invalid domain name" });
+      }
+      
+      const result = await lookupDomain(cleanDomain);
+      res.json({
+        domain: cleanDomain,
+        aRecords: result.aRecords || [],
+        aaaaRecords: result.aaaaRecords || [],
+        mxRecords: result.mxRecords || [],
+        nsRecords: result.nsRecords || [],
+        txtRecords: result.txtRecords || [],
+      });
+    } catch (error) {
+      console.error("DNS lookup error:", error);
+      res.status(500).json({ error: "Failed to lookup DNS records" });
+    }
+  });
+
+  // Check if IP is in our threat database
+  app.get("/api/tools/threat-check", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        ip: z.string().min(7).max(45),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid IP address format" });
+      }
+      
+      const { ip } = parsed.data;
+      
+      if (!isValidIp(ip)) {
+        return res.status(400).json({ error: "Invalid IP address" });
+      }
+      
+      // Direct database lookup for efficiency
+      const foundThreat = await storage.checkIpThreat(ip);
+      
+      if (foundThreat) {
+        res.json({
+          ip,
+          isThreat: true,
+          threatDetails: {
+            source: foundThreat.source,
+            threatType: foundThreat.threatType,
+            riskScore: foundThreat.riskScore,
+            lastSeen: foundThreat.lastSeen,
+            country: foundThreat.country,
+          },
+        });
+      } else {
+        res.json({
+          ip,
+          isThreat: false,
+          message: "IP not found in our threat database. This does not guarantee safety.",
+        });
+      }
+    } catch (error) {
+      console.error("Threat check error:", error);
+      res.status(500).json({ error: "Failed to check threat database" });
     }
   });
 

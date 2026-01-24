@@ -50,6 +50,7 @@ export interface IStorage {
   getMaliciousIps(limit?: number, offset?: number, source?: string, threatType?: string): Promise<MaliciousIp[]>;
   upsertMaliciousIp(ip: InsertMaliciousIp): Promise<MaliciousIp>;
   getMaliciousIpCount(): Promise<number>;
+  checkIpThreat(ip: string): Promise<MaliciousIp | null>;
   
   // Malicious URLs
   getMaliciousUrls(limit?: number, offset?: number, source?: string, threatType?: string): Promise<MaliciousUrl[]>;
@@ -509,6 +510,14 @@ export class DatabaseStorage implements IStorage {
       urlsDeleted: urlsResult.length,
       newsDeleted: newsResult.length,
     };
+  }
+
+  // Check if IP is in threat database (optimized lookup)
+  async checkIpThreat(ip: string): Promise<MaliciousIp | null> {
+    const [result] = await db.select().from(maliciousIps)
+      .where(eq(maliciousIps.ipAddress, ip))
+      .limit(1);
+    return result || null;
   }
 
   // Get storage statistics for admin dashboard

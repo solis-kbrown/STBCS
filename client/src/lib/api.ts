@@ -337,3 +337,127 @@ export function useRefreshData() {
     },
   });
 }
+
+export interface IpLookupResult {
+  ip: string;
+  hostname?: string;
+  city?: string;
+  region?: string;
+  country?: string;
+  countryCode?: string;
+  lat?: number;
+  lon?: number;
+  timezone?: string;
+  isp?: string;
+  org?: string;
+  as?: string;
+  asn?: string;
+  reverse?: string[];
+  isProxy?: boolean;
+  isHosting?: boolean;
+  isMobile?: boolean;
+}
+
+export interface DomainLookupResult {
+  domain: string;
+  registrar?: string;
+  creationDate?: string;
+  expirationDate?: string;
+  updatedDate?: string;
+  nameServers?: string[];
+  status?: string[];
+  dnssec?: string;
+  aRecords?: string[];
+  aaaaRecords?: string[];
+  mxRecords?: { exchange: string; priority: number }[];
+  txtRecords?: string[];
+  nsRecords?: string[];
+}
+
+export interface PortScanResult {
+  target: string;
+  ip: string;
+  scannedAt: string;
+  ports: { ip: string; port: number; open: boolean; service?: string; responseTime?: number }[];
+  openPorts: { ip: string; port: number; open: boolean; service?: string; responseTime?: number }[];
+  tier: 'free' | 'pro';
+}
+
+export interface ThreatCheckResult {
+  ip: string;
+  isThreat: boolean;
+  message?: string;
+  threatDetails?: {
+    source: string;
+    threatType: string;
+    riskScore?: number;
+    lastSeen?: string;
+    country?: string;
+  };
+}
+
+export function useIpLookup() {
+  return useMutation({
+    mutationFn: async (ip: string): Promise<IpLookupResult> => {
+      const response = await fetch(`/api/tools/ip-lookup?ip=${encodeURIComponent(ip)}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to lookup IP");
+      }
+      return response.json();
+    },
+  });
+}
+
+export function useDomainLookup() {
+  return useMutation({
+    mutationFn: async (domain: string): Promise<DomainLookupResult> => {
+      const response = await fetch(`/api/tools/domain-lookup?domain=${encodeURIComponent(domain)}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to lookup domain");
+      }
+      return response.json();
+    },
+  });
+}
+
+export function usePortScan() {
+  return useMutation({
+    mutationFn: async ({ target }: { target: string }): Promise<PortScanResult> => {
+      // Note: Pro tier port scanning requires authentication (not yet implemented)
+      const response = await fetch(`/api/tools/port-scan?target=${encodeURIComponent(target)}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to scan ports");
+      }
+      return response.json();
+    },
+  });
+}
+
+export function useThreatCheck() {
+  return useMutation({
+    mutationFn: async (ip: string): Promise<ThreatCheckResult> => {
+      const response = await fetch(`/api/tools/threat-check?ip=${encodeURIComponent(ip)}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to check threat");
+      }
+      return response.json();
+    },
+  });
+}
+
+export function useDnsLookup() {
+  return useMutation({
+    mutationFn: async (domain: string) => {
+      const response = await fetch(`/api/tools/dns-lookup?domain=${encodeURIComponent(domain)}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to lookup DNS");
+      }
+      return response.json();
+    },
+  });
+}

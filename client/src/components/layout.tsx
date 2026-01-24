@@ -9,7 +9,9 @@ import {
   User, 
   Bell,
   LogOut,
-  Globe
+  Globe,
+  Wrench,
+  Mail
 } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/search", label: "Global Search", icon: Search },
+    { href: "/tools", label: "Security Tools", icon: Wrench },
     { href: "/ransomware", label: "Ransomware Tracker", icon: Skull },
     { href: "/exploits", label: "Exploits & CVEs", icon: ShieldAlert },
     { href: "/threat-feeds", label: "Threat Feeds", icon: Globe },
@@ -74,13 +77,22 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         })}
       </div>
 
-      <div className="p-4 border-t border-sidebar-border">
-        <div className="bg-sidebar-accent/50 rounded-lg p-4 mb-2 border border-sidebar-border">
+      <div className="p-4 border-t border-sidebar-border space-y-3">
+        <div className="bg-sidebar-accent/50 rounded-lg p-4 border border-sidebar-border">
           <h4 className="font-display text-sm font-bold text-primary mb-1">PRO ACCOUNT</h4>
-          <p className="text-xs text-muted-foreground mb-3">Upgrade for real-time API access and custom alerts.</p>
+          <p className="text-xs text-muted-foreground mb-3">Upgrade for unlimited tools, real-time API access, and custom alerts.</p>
           <Button size="sm" className="w-full bg-primary hover:bg-primary/90 text-white font-bold tracking-wide">
             UPGRADE
           </Button>
+        </div>
+        <div className="px-2">
+          <a 
+            href="mailto:info@stoptbcs.com" 
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            <Mail className="h-3 w-3" />
+            <span>info@stoptbcs.com</span>
+          </a>
         </div>
       </div>
     </div>
