@@ -116,6 +116,7 @@ Preferred communication style: Simple, everyday language.
 - `GET /api/cves?limit=&offset=&search=` - Paginated CVE list with search
 - `GET /api/ransomware?limit=&offset=&group=&sector=` - Ransomware incidents with filters
 - `GET /api/ransomware/groups` - Active ransomware groups with incident counts
+- `GET /api/ransomware/search?q=` - Search ransomware incidents
 - `GET /api/threat-actors` - Threat actor profiles
 - `GET /api/news?limit=&offset=&category=` - Security news feed
 - `GET /api/malicious-ips?limit=&offset=&source=&threatType=` - Malicious IP addresses
@@ -124,9 +125,27 @@ Preferred communication style: Simple, everyday language.
 - `GET /api/threat-feeds` - All registered threat feed sources
 - `POST /api/refresh` - Manual data refresh trigger
 
+#### Pro Tier - Alerts & Notifications
+- `GET /api/notifications?userId=&limit=&unreadOnly=` - Get user notifications
+- `POST /api/notifications/:id/read` - Mark notification as read
+- `POST /api/notifications/read-all` - Mark all notifications as read
+- `POST /api/notifications/:id/dismiss` - Dismiss notification
+
+#### Pro Tier - Watchlist
+- `GET /api/watchlist?userId=&itemType=` - Get user watchlist items
+- `POST /api/watchlist` - Add item to watchlist (company, sector, cve, threat_actor, country, keyword)
+- `PATCH /api/watchlist/:id` - Update watchlist item settings
+- `DELETE /api/watchlist/:id?userId=` - Remove watchlist item
+
+#### Pro Tier - Breach Database
+- `GET /api/breaches?limit=&offset=&search=` - Get breach incidents
+- `GET /api/breaches/search?q=` - Search breach database
+- `GET /api/breaches/:id` - Get single breach details
+
 ### Frontend Pages
 - **Dashboard** (`/`) - Overview with 7 stat cards and threat velocity chart
 - **Global Search** (`/search`) - Unified search across all threat data with debounced input and tabbed results
+- **Pro Alerts** (`/alerts`) - Pro tier alerting center with notifications, watchlist management, and breach database
 - **Security Tools** (`/tools`) - Professional cybersecurity utilities:
   - IP WHOIS Lookup - Geolocation, ISP, ASN, organization details
   - Domain WHOIS Lookup - Registration info, DNS records, nameservers

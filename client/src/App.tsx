@@ -12,6 +12,7 @@ import ThreatFeeds from "@/pages/threat-feeds";
 import SearchPage from "@/pages/search";
 import ToolsPage from "@/pages/tools";
 import LogoGallery from "@/pages/logo-gallery";
+import Alerts from "@/pages/alerts";
 
 function Router() {
   return (
@@ -24,6 +25,7 @@ function Router() {
       <Route path="/search" component={SearchPage}/>
       <Route path="/tools" component={ToolsPage}/>
       <Route path="/logos" component={LogoGallery}/>
+      <Route path="/alerts" component={Alerts}/>
       <Route component={NotFound} />
     </Switch>
   );

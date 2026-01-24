@@ -602,5 +602,260 @@ export async function registerRoutes(
     }
   });
 
+  // ==========================================
+  // PRO TIER - ALERTS & NOTIFICATIONS
+  // ==========================================
+
+  // Get user notifications
+  app.get("/api/notifications", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        userId: z.string().min(1).max(100),
+        limit: z.coerce.number().int().min(1).max(100).default(50),
+        unreadOnly: z.coerce.boolean().default(false),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request parameters" });
+      }
+      
+      const { userId, limit, unreadOnly } = parsed.data;
+      const notifications = await storage.getUserNotifications(userId, limit, unreadOnly);
+      const unreadCount = await storage.getUnreadNotificationCount(userId);
+      
+      res.json({ notifications, unreadCount });
+    } catch (error) {
+      console.error("Get notifications error:", error);
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  // Mark notification as read
+  app.post("/api/notifications/:id/read", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        userId: z.string().min(1).max(100),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request body" });
+      }
+      
+      await storage.markNotificationRead(req.params.id, parsed.data.userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Mark notification read error:", error);
+      res.status(500).json({ error: "Failed to mark notification as read" });
+    }
+  });
+
+  // Mark all notifications as read
+  app.post("/api/notifications/read-all", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        userId: z.string().min(1).max(100),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request body" });
+      }
+      
+      await storage.markAllNotificationsRead(parsed.data.userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Mark all notifications read error:", error);
+      res.status(500).json({ error: "Failed to mark all notifications as read" });
+    }
+  });
+
+  // Dismiss notification
+  app.post("/api/notifications/:id/dismiss", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        userId: z.string().min(1).max(100),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request body" });
+      }
+      
+      await storage.dismissNotification(req.params.id, parsed.data.userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Dismiss notification error:", error);
+      res.status(500).json({ error: "Failed to dismiss notification" });
+    }
+  });
+
+  // ==========================================
+  // PRO TIER - WATCHLIST
+  // ==========================================
+
+  // Get user watchlist items
+  app.get("/api/watchlist", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        userId: z.string().min(1).max(100),
+        itemType: z.string().max(50).optional(),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request parameters" });
+      }
+      
+      const { userId, itemType } = parsed.data;
+      const items = itemType 
+        ? await storage.getWatchlistsByType(userId, itemType)
+        : await storage.getWatchlistItems(userId);
+      
+      res.json({ items, count: items.length });
+    } catch (error) {
+      console.error("Get watchlist error:", error);
+      res.status(500).json({ error: "Failed to fetch watchlist" });
+    }
+  });
+
+  // Add watchlist item
+  app.post("/api/watchlist", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        userId: z.string().min(1).max(100),
+        itemType: z.enum(["company", "sector", "cve", "threat_actor", "country", "keyword"]),
+        itemValue: z.string().min(1).max(500),
+        label: z.string().max(200).nullable().optional(),
+        alertOnMatch: z.boolean().default(true),
+        emailOnMatch: z.boolean().default(false),
+        notes: z.string().max(1000).nullable().optional(),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request body", details: parsed.error.flatten() });
+      }
+      
+      const item = await storage.createWatchlistItem(parsed.data);
+      res.status(201).json(item);
+    } catch (error) {
+      console.error("Create watchlist item error:", error);
+      res.status(500).json({ error: "Failed to create watchlist item" });
+    }
+  });
+
+  // Update watchlist item
+  app.patch("/api/watchlist/:id", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        userId: z.string().min(1).max(100),
+        label: z.string().max(200).optional(),
+        alertOnMatch: z.boolean().optional(),
+        emailOnMatch: z.boolean().optional(),
+        notes: z.string().max(1000).optional(),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request body" });
+      }
+      
+      const { userId, ...updates } = parsed.data;
+      const item = await storage.updateWatchlistItem(req.params.id, userId, updates);
+      res.json(item);
+    } catch (error) {
+      console.error("Update watchlist item error:", error);
+      res.status(500).json({ error: "Failed to update watchlist item" });
+    }
+  });
+
+  // Delete watchlist item
+  app.delete("/api/watchlist/:id", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        userId: z.string().min(1).max(100),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request parameters" });
+      }
+      
+      await storage.deleteWatchlistItem(req.params.id, parsed.data.userId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Delete watchlist item error:", error);
+      res.status(500).json({ error: "Failed to delete watchlist item" });
+    }
+  });
+
+  // ==========================================
+  // BREACH INCIDENTS
+  // ==========================================
+
+  // Get breach incidents
+  app.get("/api/breaches", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = paginationSchema.extend({
+        search: z.string().max(200).optional(),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid query parameters" });
+      }
+      
+      const { limit, offset, search } = parsed.data;
+      const [breaches, count] = await Promise.all([
+        storage.getBreachIncidents(limit, offset, search),
+        storage.getBreachCount(),
+      ]);
+      
+      res.json({ data: breaches, total: count, limit, offset });
+    } catch (error) {
+      console.error("Get breaches error:", error);
+      res.status(500).json({ error: "Failed to fetch breach incidents" });
+    }
+  });
+
+  // Search breaches
+  app.get("/api/breaches/search", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        q: z.string().min(2).max(200),
+        limit: z.coerce.number().int().min(1).max(100).default(50),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Search query must be at least 2 characters" });
+      }
+      
+      const { q, limit } = parsed.data;
+      const breaches = await storage.searchBreaches(q, limit);
+      
+      res.json({ data: breaches, query: q, count: breaches.length });
+    } catch (error) {
+      console.error("Search breaches error:", error);
+      res.status(500).json({ error: "Failed to search breaches" });
+    }
+  });
+
+  // Get single breach
+  app.get("/api/breaches/:id", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const breach = await storage.getBreachById(req.params.id);
+      if (!breach) {
+        return res.status(404).json({ error: "Breach incident not found" });
+      }
+      res.json(breach);
+    } catch (error) {
+      console.error("Get breach error:", error);
+      res.status(500).json({ error: "Failed to fetch breach incident" });
+    }
+  });
+
   return httpServer;
 }

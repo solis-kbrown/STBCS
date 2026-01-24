@@ -42,6 +42,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/search", label: "Global Search", icon: Search },
     { href: "/tools", label: "Security Tools", icon: Wrench },
+    { href: "/alerts", label: "Pro Alerts", icon: Bell, isPro: true },
     { href: "/ransomware", label: "Ransomware Tracker", icon: Skull },
     { href: "/exploits", label: "Exploits & CVEs", icon: ShieldAlert },
     { href: "/threat-feeds", label: "Threat Feeds", icon: Globe },
@@ -77,6 +78,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               >
                 <item.icon className={`h-5 w-5 ${isActive ? "text-white" : "text-muted-foreground group-hover:text-primary transition-colors"}`} />
                 <span className="font-medium">{item.label}</span>
+                {'isPro' in item && item.isPro && (
+                  <span className="ml-auto text-[10px] font-bold bg-primary/20 text-primary px-1.5 py-0.5 rounded">PRO</span>
+                )}
               </div>
             </Link>
           );

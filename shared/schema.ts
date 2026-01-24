@@ -278,6 +278,67 @@ export const auditLog = pgTable("audit_log", {
   index("audit_created_idx").on(table.createdAt),
 ]);
 
+// User notifications for real-time alerts
+export const userNotifications = pgTable("user_notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  type: text("type").notNull(), // ransomware, cve, breach, threat_actor, news
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  severity: text("severity").default("medium"), // low, medium, high, critical
+  relatedId: text("related_id"), // ID of related record (CVE, incident, etc.)
+  relatedType: text("related_type"), // cve, ransomware, ip, url, news
+  read: boolean("read").default(false),
+  dismissed: boolean("dismissed").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("notif_user_idx").on(table.userId),
+  index("notif_read_idx").on(table.read),
+  index("notif_type_idx").on(table.type),
+  index("notif_created_idx").on(table.createdAt),
+]);
+
+// Watchlist items for Pro users - detailed tracking
+export const watchlistItems = pgTable("watchlist_items", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  itemType: text("item_type").notNull(), // company, sector, cve, threat_actor, country, keyword
+  itemValue: text("item_value").notNull(), // the actual value to watch
+  label: text("label"), // user-friendly label
+  alertOnMatch: boolean("alert_on_match").default(true),
+  emailOnMatch: boolean("email_on_match").default(false),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("watchlist_user_idx").on(table.userId),
+  index("watchlist_type_idx").on(table.itemType),
+]);
+
+// Breach incidents from various sources
+export const breachIncidents = pgTable("breach_incidents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  domain: text("domain"),
+  breachDate: timestamp("breach_date"),
+  addedDate: timestamp("added_date"),
+  modifiedDate: timestamp("modified_date"),
+  pwnCount: text("pwn_count"), // number of accounts affected
+  description: text("description"),
+  dataClasses: text("data_classes"), // JSON array: emails, passwords, etc.
+  isVerified: boolean("is_verified").default(false),
+  isFabricated: boolean("is_fabricated").default(false),
+  isSensitive: boolean("is_sensitive").default(false),
+  isRetired: boolean("is_retired").default(false),
+  isSpamList: boolean("is_spam_list").default(false),
+  sourceUrl: text("source_url"),
+  sourceApi: text("source_api"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("breach_name_idx").on(table.name),
+  index("breach_date_idx").on(table.breachDate),
+  index("breach_domain_idx").on(table.domain),
+]);
+
 // System configuration for admins
 export const systemConfig = pgTable("system_config", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -342,3 +403,27 @@ export type Subscription = typeof subscriptions.$inferSelect;
 
 export type InsertThreatFeed = z.infer<typeof insertThreatFeedSchema>;
 export type ThreatFeed = typeof threatFeeds.$inferSelect;
+
+export const insertNotificationSchema = createInsertSchema(userNotifications).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertWatchlistItemSchema = createInsertSchema(watchlistItems).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertBreachSchema = createInsertSchema(breachIncidents).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type UserNotification = typeof userNotifications.$inferSelect;
+
+export type InsertWatchlistItem = z.infer<typeof insertWatchlistItemSchema>;
+export type WatchlistItem = typeof watchlistItems.$inferSelect;
+
+export type InsertBreach = z.infer<typeof insertBreachSchema>;
+export type BreachIncident = typeof breachIncidents.$inferSelect;

@@ -476,3 +476,167 @@ export function useDnsLookup() {
     },
   });
 }
+
+// ==========================================
+// PRO TIER - NOTIFICATIONS & ALERTS
+// ==========================================
+
+export interface UserNotification {
+  id: string;
+  userId: string;
+  type: string;
+  title: string;
+  message: string;
+  severity: string | null;
+  relatedId: string | null;
+  relatedType: string | null;
+  read: boolean;
+  dismissed: boolean;
+  createdAt: string | null;
+}
+
+export interface WatchlistItem {
+  id: string;
+  userId: string;
+  itemType: string;
+  itemValue: string;
+  label: string | null;
+  alertOnMatch: boolean;
+  emailOnMatch: boolean;
+  notes: string | null;
+  createdAt: string | null;
+}
+
+export interface BreachIncident {
+  id: string;
+  name: string;
+  domain: string | null;
+  breachDate: string | null;
+  addedDate: string | null;
+  modifiedDate: string | null;
+  pwnCount: string | null;
+  description: string | null;
+  dataClasses: string | null;
+  isVerified: boolean;
+  isFabricated: boolean;
+  isSensitive: boolean;
+  isRetired: boolean;
+  isSpamList: boolean;
+  sourceUrl: string | null;
+  sourceApi: string | null;
+  createdAt: string | null;
+}
+
+export function useNotifications(userId: string, limit = 50, unreadOnly = false) {
+  return useQuery<{ notifications: UserNotification[]; unreadCount: number }>({
+    queryKey: ["/api/notifications", userId, limit, unreadOnly],
+    queryFn: () => fetchApi(`/api/notifications?userId=${userId}&limit=${limit}&unreadOnly=${unreadOnly}`),
+    enabled: !!userId,
+    refetchInterval: 30000,
+  });
+}
+
+export function useMarkNotificationRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ notificationId, userId }: { notificationId: string; userId: string }) => {
+      const response = await fetch(`/api/notifications/${notificationId}/read`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      if (!response.ok) throw new Error("Failed to mark notification as read");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+    },
+  });
+}
+
+export function useMarkAllNotificationsRead() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (userId: string) => {
+      const response = await fetch("/api/notifications/read-all", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ userId }),
+      });
+      if (!response.ok) throw new Error("Failed to mark all notifications as read");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/notifications"] });
+    },
+  });
+}
+
+export function useWatchlist(userId: string, itemType?: string) {
+  const queryString = new URLSearchParams({
+    userId,
+    ...(itemType && { itemType }),
+  }).toString();
+  
+  return useQuery<{ items: WatchlistItem[]; count: number }>({
+    queryKey: ["/api/watchlist", userId, itemType],
+    queryFn: () => fetchApi(`/api/watchlist?${queryString}`),
+    enabled: !!userId,
+  });
+}
+
+export function useAddWatchlistItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (item: Omit<WatchlistItem, 'id' | 'createdAt'>) => {
+      const response = await fetch("/api/watchlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(item),
+      });
+      if (!response.ok) throw new Error("Failed to add watchlist item");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/watchlist"] });
+    },
+  });
+}
+
+export function useDeleteWatchlistItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ itemId, userId }: { itemId: string; userId: string }) => {
+      const response = await fetch(`/api/watchlist/${itemId}?userId=${userId}`, {
+        method: "DELETE",
+      });
+      if (!response.ok) throw new Error("Failed to delete watchlist item");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/watchlist"] });
+    },
+  });
+}
+
+export function useBreaches(limit = 50, offset = 0, search?: string) {
+  const queryString = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+    ...(search && { search }),
+  }).toString();
+  
+  return useQuery<PaginatedResponse<BreachIncident>>({
+    queryKey: ["/api/breaches", limit, offset, search],
+    queryFn: () => fetchApi(`/api/breaches?${queryString}`),
+    refetchInterval: 120000,
+  });
+}
+
+export function useSearchBreaches(query: string) {
+  return useQuery<{ data: BreachIncident[]; query: string; count: number }>({
+    queryKey: ["/api/breaches/search", query],
+    queryFn: () => fetchApi(`/api/breaches/search?q=${encodeURIComponent(query)}`),
+    enabled: query.length >= 2,
+  });
+}

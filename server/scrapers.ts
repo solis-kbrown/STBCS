@@ -1,5 +1,74 @@
 import { storage } from "./storage";
-import type { InsertCve, InsertRansomware, InsertNews, InsertMaliciousIp, InsertMaliciousUrl, InsertCisaKev } from "@shared/schema";
+import type { InsertCve, InsertRansomware, InsertNews, InsertMaliciousIp, InsertMaliciousUrl, InsertCisaKev, InsertNotification } from "@shared/schema";
+import { db } from "./db";
+import { watchlistItems } from "@shared/schema";
+
+// Notification trigger for Pro users when new threats match watchlists
+async function triggerWatchlistNotifications(
+  threatType: 'ransomware' | 'cve' | 'breach',
+  data: { victim?: string; groupName?: string; cveId?: string; description?: string; sector?: string; country?: string }
+): Promise<void> {
+  try {
+    const allWatchlistItems = await db.select().from(watchlistItems);
+    if (allWatchlistItems.length === 0) return;
+    
+    const searchableText = [
+      data.victim,
+      data.groupName,
+      data.cveId,
+      data.description,
+      data.sector,
+      data.country,
+    ].filter(Boolean).join(' ').toLowerCase();
+    
+    for (const item of allWatchlistItems) {
+      if (!item.alertOnMatch) continue;
+      
+      const watchValue = item.itemValue.toLowerCase();
+      let matched = false;
+      
+      switch (item.itemType) {
+        case 'company':
+          matched = (data.victim?.toLowerCase() || '').includes(watchValue);
+          break;
+        case 'threat_actor':
+          matched = (data.groupName?.toLowerCase() || '').includes(watchValue);
+          break;
+        case 'sector':
+          matched = (data.sector?.toLowerCase() || '').includes(watchValue);
+          break;
+        case 'country':
+          matched = (data.country?.toLowerCase() || '').includes(watchValue);
+          break;
+        case 'cve':
+          matched = (data.cveId?.toLowerCase() || '').includes(watchValue);
+          break;
+        case 'keyword':
+          matched = searchableText.includes(watchValue);
+          break;
+      }
+      
+      if (matched) {
+        const notification: InsertNotification = {
+          userId: item.userId,
+          type: threatType,
+          title: `Watchlist Alert: ${item.itemValue}`,
+          message: threatType === 'ransomware'
+            ? `New ransomware incident matching "${item.itemValue}": ${data.victim || 'Unknown victim'} targeted by ${data.groupName || 'Unknown group'}`
+            : threatType === 'cve'
+            ? `New vulnerability matching "${item.itemValue}": ${data.cveId || 'Unknown CVE'}`
+            : `New breach matching "${item.itemValue}"`,
+          severity: 'high',
+          relatedType: threatType,
+        };
+        await storage.createNotification(notification);
+        console.log(`[ALERT] Created notification for user ${item.userId}: ${notification.title}`);
+      }
+    }
+  } catch (error) {
+    console.error('[ALERT] Error triggering watchlist notifications:', error);
+  }
+}
 
 // ============================================
 // THREAT INTELLIGENCE FEED SOURCES
@@ -1174,7 +1243,19 @@ export async function fetchRansomwareLiveVictims(): Promise<number> {
           sourceApi: "ransomware.live",
         };
         
-        await storage.upsertRansomwareIncident(incident);
+        const result = await storage.upsertRansomwareIncidentWithFlag(incident);
+        
+        // Only trigger watchlist notifications for NEW ransomware incidents (not updates)
+        if (result.isNew) {
+          await triggerWatchlistNotifications('ransomware', {
+            victim: incident.victim,
+            groupName: incident.groupName,
+            sector: incident.sector || undefined,
+            country: incident.country || undefined,
+            description: incident.description || undefined,
+          });
+        }
+        
         count++;
       } catch (err) {
         // Skip individual victim errors

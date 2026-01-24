@@ -9,8 +9,12 @@ import {
   type CisaKev, type InsertCisaKev,
   type Subscription, type InsertSubscription,
   type ThreatFeed, type InsertThreatFeed,
+  type UserNotification, type InsertNotification,
+  type WatchlistItem, type InsertWatchlistItem,
+  type BreachIncident, type InsertBreach,
   users, cves, ransomwareIncidents, threatActors, newsArticles,
-  maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds
+  maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
+  userNotifications, watchlistItems, breachIncidents
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and } from "drizzle-orm";
@@ -33,6 +37,7 @@ export interface IStorage {
   getRansomwareById(id: string): Promise<RansomwareIncident | undefined>;
   createRansomwareIncident(incident: InsertRansomware): Promise<RansomwareIncident>;
   upsertRansomwareIncident(incident: InsertRansomware): Promise<RansomwareIncident>;
+  upsertRansomwareIncidentWithFlag(incident: InsertRansomware): Promise<{ incident: RansomwareIncident; isNew: boolean }>;
   searchRansomware(query: string, limit?: number): Promise<RansomwareIncident[]>;
   getRansomwareCount(): Promise<number>;
   getActiveGroups(): Promise<{ name: string; count: number }[]>;
@@ -79,6 +84,28 @@ export interface IStorage {
     maliciousUrls: number;
     cisaKevCount: number;
   }>;
+  
+  // User Notifications
+  getUserNotifications(userId: string, limit?: number, unreadOnly?: boolean): Promise<UserNotification[]>;
+  createNotification(notification: InsertNotification): Promise<UserNotification>;
+  markNotificationRead(id: string, userId: string): Promise<void>;
+  markAllNotificationsRead(userId: string): Promise<void>;
+  dismissNotification(id: string, userId: string): Promise<void>;
+  getUnreadNotificationCount(userId: string): Promise<number>;
+  
+  // Watchlist Items
+  getWatchlistItems(userId: string): Promise<WatchlistItem[]>;
+  createWatchlistItem(item: InsertWatchlistItem): Promise<WatchlistItem>;
+  updateWatchlistItem(id: string, userId: string, updates: Partial<InsertWatchlistItem>): Promise<WatchlistItem>;
+  deleteWatchlistItem(id: string, userId: string): Promise<void>;
+  getWatchlistsByType(userId: string, itemType: string): Promise<WatchlistItem[]>;
+  
+  // Breach Incidents
+  getBreachIncidents(limit?: number, offset?: number, search?: string): Promise<BreachIncident[]>;
+  getBreachById(id: string): Promise<BreachIncident | undefined>;
+  upsertBreachIncident(breach: InsertBreach): Promise<BreachIncident>;
+  searchBreaches(query: string, limit?: number): Promise<BreachIncident[]>;
+  getBreachCount(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -168,6 +195,11 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertRansomwareIncident(incident: InsertRansomware): Promise<RansomwareIncident> {
+    const result = await this.upsertRansomwareIncidentWithFlag(incident);
+    return result.incident;
+  }
+  
+  async upsertRansomwareIncidentWithFlag(incident: InsertRansomware): Promise<{ incident: RansomwareIncident; isNew: boolean }> {
     // Check if victim with same name and group exists
     const existing = await db.select()
       .from(ransomwareIncidents)
@@ -190,11 +222,11 @@ export class DatabaseStorage implements IStorage {
         })
         .where(eq(ransomwareIncidents.id, existing[0].id))
         .returning();
-      return updated;
+      return { incident: updated, isNew: false };
     }
     
     const [created] = await db.insert(ransomwareIncidents).values(incident).returning();
-    return created;
+    return { incident: created, isNew: true };
   }
 
   async searchRansomware(query: string, limit = 50): Promise<RansomwareIncident[]> {
@@ -617,6 +649,158 @@ export class DatabaseStorage implements IStorage {
       totalUsers: Number(userCount[0]?.count || 0),
       oldestRecord,
     };
+  }
+
+  // User Notifications
+  async getUserNotifications(userId: string, limit = 50, unreadOnly = false): Promise<UserNotification[]> {
+    if (unreadOnly) {
+      return db.select().from(userNotifications)
+        .where(and(
+          eq(userNotifications.userId, userId),
+          eq(userNotifications.read, false),
+          eq(userNotifications.dismissed, false)
+        ))
+        .orderBy(desc(userNotifications.createdAt))
+        .limit(limit);
+    }
+    return db.select().from(userNotifications)
+      .where(and(
+        eq(userNotifications.userId, userId),
+        eq(userNotifications.dismissed, false)
+      ))
+      .orderBy(desc(userNotifications.createdAt))
+      .limit(limit);
+  }
+
+  async createNotification(notification: InsertNotification): Promise<UserNotification> {
+    const [created] = await db.insert(userNotifications).values(notification).returning();
+    return created;
+  }
+
+  async markNotificationRead(id: string, userId: string): Promise<void> {
+    await db.update(userNotifications)
+      .set({ read: true })
+      .where(and(eq(userNotifications.id, id), eq(userNotifications.userId, userId)));
+  }
+
+  async markAllNotificationsRead(userId: string): Promise<void> {
+    await db.update(userNotifications)
+      .set({ read: true })
+      .where(eq(userNotifications.userId, userId));
+  }
+
+  async dismissNotification(id: string, userId: string): Promise<void> {
+    await db.update(userNotifications)
+      .set({ dismissed: true })
+      .where(and(eq(userNotifications.id, id), eq(userNotifications.userId, userId)));
+  }
+
+  async getUnreadNotificationCount(userId: string): Promise<number> {
+    const [result] = await db.select({ count: sql<number>`count(*)` })
+      .from(userNotifications)
+      .where(and(
+        eq(userNotifications.userId, userId),
+        eq(userNotifications.read, false),
+        eq(userNotifications.dismissed, false)
+      ));
+    return Number(result?.count || 0);
+  }
+
+  // Watchlist Items
+  async getWatchlistItems(userId: string): Promise<WatchlistItem[]> {
+    return db.select().from(watchlistItems)
+      .where(eq(watchlistItems.userId, userId))
+      .orderBy(desc(watchlistItems.createdAt));
+  }
+
+  async createWatchlistItem(item: InsertWatchlistItem): Promise<WatchlistItem> {
+    const [created] = await db.insert(watchlistItems).values(item).returning();
+    return created;
+  }
+
+  async updateWatchlistItem(id: string, userId: string, updates: Partial<InsertWatchlistItem>): Promise<WatchlistItem> {
+    const [updated] = await db.update(watchlistItems)
+      .set(updates)
+      .where(and(eq(watchlistItems.id, id), eq(watchlistItems.userId, userId)))
+      .returning();
+    return updated;
+  }
+
+  async deleteWatchlistItem(id: string, userId: string): Promise<void> {
+    await db.delete(watchlistItems)
+      .where(and(eq(watchlistItems.id, id), eq(watchlistItems.userId, userId)));
+  }
+
+  async getWatchlistsByType(userId: string, itemType: string): Promise<WatchlistItem[]> {
+    return db.select().from(watchlistItems)
+      .where(and(eq(watchlistItems.userId, userId), eq(watchlistItems.itemType, itemType)))
+      .orderBy(desc(watchlistItems.createdAt));
+  }
+
+  // Breach Incidents
+  async getBreachIncidents(limit = 50, offset = 0, search?: string): Promise<BreachIncident[]> {
+    if (search) {
+      const searchPattern = `%${search.toLowerCase()}%`;
+      return db.select().from(breachIncidents)
+        .where(or(
+          ilike(breachIncidents.name, searchPattern),
+          ilike(breachIncidents.domain, searchPattern),
+          ilike(breachIncidents.description, searchPattern)
+        ))
+        .orderBy(desc(breachIncidents.breachDate))
+        .limit(limit)
+        .offset(offset);
+    }
+    return db.select().from(breachIncidents)
+      .orderBy(desc(breachIncidents.breachDate))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getBreachById(id: string): Promise<BreachIncident | undefined> {
+    const [breach] = await db.select().from(breachIncidents).where(eq(breachIncidents.id, id));
+    return breach;
+  }
+
+  async upsertBreachIncident(breach: InsertBreach): Promise<BreachIncident> {
+    const existing = await db.select().from(breachIncidents)
+      .where(eq(breachIncidents.name, breach.name))
+      .limit(1);
+    
+    if (existing.length > 0) {
+      const [updated] = await db.update(breachIncidents)
+        .set({
+          domain: breach.domain ?? existing[0].domain,
+          description: breach.description ?? existing[0].description,
+          pwnCount: breach.pwnCount ?? existing[0].pwnCount,
+          dataClasses: breach.dataClasses ?? existing[0].dataClasses,
+          modifiedDate: new Date(),
+        })
+        .where(eq(breachIncidents.id, existing[0].id))
+        .returning();
+      return updated;
+    }
+    
+    const [created] = await db.insert(breachIncidents).values(breach).returning();
+    return created;
+  }
+
+  async searchBreaches(query: string, limit = 50): Promise<BreachIncident[]> {
+    const searchPattern = `%${query.toLowerCase()}%`;
+    return db.select().from(breachIncidents)
+      .where(or(
+        ilike(breachIncidents.name, searchPattern),
+        ilike(breachIncidents.domain, searchPattern),
+        ilike(breachIncidents.description, searchPattern),
+        ilike(breachIncidents.dataClasses, searchPattern)
+      ))
+      .orderBy(desc(breachIncidents.breachDate))
+      .limit(limit);
+  }
+
+  async getBreachCount(): Promise<number> {
+    const [result] = await db.select({ count: sql<number>`count(*)` }).from(breachIncidents);
+    return Number(result?.count || 0);
   }
 }
 
