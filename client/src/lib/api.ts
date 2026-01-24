@@ -29,6 +29,11 @@ export interface RansomwareIncident {
   discoveredAt: string | null;
   deadline: string | null;
   createdAt: string | null;
+  postUrl: string | null;
+  screenshotUrl: string | null;
+  proofUrl: string | null;
+  activity: string | null;
+  sourceApi: string | null;
 }
 
 export interface ThreatActor {
@@ -182,6 +187,16 @@ export function useRansomwareGroups() {
     queryKey: ["/api/ransomware/groups"],
     queryFn: () => fetchApi<{ name: string; count: number }[]>("/api/ransomware/groups"),
     refetchInterval: 300000,
+  });
+}
+
+export function useRansomwareSearch(query: string) {
+  return useQuery<{ data: RansomwareIncident[]; query: string; count: number }>({
+    queryKey: ["/api/ransomware/search", query],
+    queryFn: () => fetchApi<{ data: RansomwareIncident[]; query: string; count: number }>(
+      `/api/ransomware/search?q=${encodeURIComponent(query)}`
+    ),
+    enabled: query.length >= 2,
   });
 }
 

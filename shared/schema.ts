@@ -45,10 +45,17 @@ export const ransomwareIncidents = pgTable("ransomware_incidents", {
   discoveredAt: timestamp("discovered_at").defaultNow(),
   deadline: timestamp("deadline"),
   createdAt: timestamp("created_at").defaultNow(),
+  // Enhanced fields from ransomware.live
+  postUrl: text("post_url"),
+  screenshotUrl: text("screenshot_url"),
+  proofUrl: text("proof_url"),
+  activity: text("activity"),
+  sourceApi: text("source_api").default("ransomware.live"),
 }, (table) => [
   index("ransom_group_idx").on(table.groupName),
   index("ransom_sector_idx").on(table.sector),
   index("ransom_status_idx").on(table.status),
+  index("ransom_victim_idx").on(table.victim),
 ]);
 
 export const threatActors = pgTable("threat_actors", {

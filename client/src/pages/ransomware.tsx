@@ -1,20 +1,37 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
-import { useRansomware, useRansomwareGroups } from "@/lib/api";
+import { useRansomware, useRansomwareGroups, useRansomwareSearch } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Download } from "lucide-react";
+import { Search, Filter, Download, ExternalLink, Globe } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState } from "react";
+import { useState, KeyboardEvent } from "react";
 
 export default function Ransomware() {
   const [selectedGroup, setSelectedGroup] = useState<string | undefined>();
-  const { data, isLoading } = useRansomware(50, 0, selectedGroup);
-  const { data: groups } = useRansomwareGroups();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
   
-  const incidents = data?.data || [];
+  const { data, isLoading } = useRansomware(100, 0, selectedGroup);
+  const { data: groups } = useRansomwareGroups();
+  const { data: searchResults, isLoading: isSearching } = useRansomwareSearch(activeSearch);
+  
+  const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
+      setActiveSearch(searchQuery.trim());
+      setSelectedGroup(undefined);
+    }
+  };
+  
+  const clearSearch = () => {
+    setSearchQuery("");
+    setActiveSearch("");
+  };
+  
+  const incidents = activeSearch ? (searchResults?.data || []) : (data?.data || []);
+  const loading = activeSearch ? isSearching : isLoading;
 
   return (
     <Layout>
@@ -50,10 +67,24 @@ export default function Ransomware() {
             <div className="relative flex-1 w-full">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Search victims, groups, or sectors..." 
+                placeholder="Search victims, groups, countries... (press Enter)" 
                 className="pl-10 bg-background/50 border-white/10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearch}
                 data-testid="input-search"
               />
+              {activeSearch && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-white"
+                  onClick={clearSearch}
+                  data-testid="button-clear-search"
+                >
+                  Clear
+                </Button>
+              )}
             </div>
             <div className="flex gap-2 w-full md:w-auto overflow-x-auto">
               <Button 
@@ -82,9 +113,17 @@ export default function Ransomware() {
           </CardContent>
         </Card>
 
+        {/* Search Results Info */}
+        {activeSearch && (
+          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+            <Search className="h-4 w-4" />
+            <span>Search results for "{activeSearch}" - {incidents.length} results found</span>
+          </div>
+        )}
+
         {/* Incidents Grid */}
         <div className="grid grid-cols-1 gap-4">
-          {isLoading ? (
+          {loading ? (
             Array(5).fill(0).map((_, i) => (
               <Card key={i} className="border-white/5 bg-card/40">
                 <CardContent className="p-6">
@@ -125,10 +164,12 @@ export default function Ransomware() {
                       </div>
                       <p className="text-muted-foreground text-sm">{incident.description}</p>
                       <div className="flex flex-wrap gap-4 text-xs text-muted-foreground mt-4 font-mono">
-                        <span className="flex items-center gap-1">
-                          <span className="w-2 h-2 rounded-full bg-white/20"></span>
-                          {incident.sector}
-                        </span>
+                        {incident.sector && (
+                          <span className="flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-white/20"></span>
+                            {incident.sector}
+                          </span>
+                        )}
                         {incident.dataSize && (
                           <span className="flex items-center gap-1">
                             <span className="w-2 h-2 rounded-full bg-white/20"></span>
@@ -145,17 +186,50 @@ export default function Ransomware() {
                             {incident.country}
                           </span>
                         )}
+                        {incident.website && (
+                          <a 
+                            href={incident.website.startsWith('http') ? incident.website : `https://${incident.website}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center gap-1 text-primary hover:underline"
+                            data-testid={`link-website-${incident.id}`}
+                          >
+                            <Globe className="h-3 w-3" />
+                            Website
+                            <ExternalLink className="h-3 w-3" />
+                          </a>
+                        )}
                       </div>
                     </div>
                     
-                    <div className="flex flex-col items-end justify-between gap-4 min-w-[140px]">
-                      <Badge className={
-                        incident.status === "Published" ? "bg-destructive hover:bg-destructive/90" : 
-                        incident.status === "Negotiating" ? "bg-yellow-600 hover:bg-yellow-700" : 
-                        "bg-secondary hover:bg-secondary/90 text-black"
-                      }>
-                        {incident.status}
-                      </Badge>
+                    <div className="flex flex-col items-end justify-between gap-4 min-w-[160px]">
+                      <div className="flex flex-col items-end gap-2">
+                        <Badge className={
+                          incident.status === "Published" ? "bg-destructive hover:bg-destructive/90" : 
+                          incident.status === "Negotiating" ? "bg-yellow-600 hover:bg-yellow-700" : 
+                          "bg-secondary hover:bg-secondary/90 text-black"
+                        }>
+                          {incident.status}
+                        </Badge>
+                        {incident.activity && (
+                          <span className="text-xs text-muted-foreground">{incident.activity}</span>
+                        )}
+                        {incident.sourceApi && (
+                          <span className="text-[10px] text-muted-foreground/60">via {incident.sourceApi}</span>
+                        )}
+                      </div>
+                      {incident.screenshotUrl && (
+                        <a 
+                          href={incident.screenshotUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-primary hover:underline flex items-center gap-1"
+                          data-testid={`link-screenshot-${incident.id}`}
+                        >
+                          View Screenshot
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      )}
                       <Button 
                         variant="link" 
                         className="text-primary p-0 h-auto font-mono text-xs" 

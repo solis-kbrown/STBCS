@@ -32,6 +32,8 @@ export interface IStorage {
   getRansomwareIncidents(limit?: number, offset?: number, group?: string, sector?: string): Promise<RansomwareIncident[]>;
   getRansomwareById(id: string): Promise<RansomwareIncident | undefined>;
   createRansomwareIncident(incident: InsertRansomware): Promise<RansomwareIncident>;
+  upsertRansomwareIncident(incident: InsertRansomware): Promise<RansomwareIncident>;
+  searchRansomware(query: string, limit?: number): Promise<RansomwareIncident[]>;
   getRansomwareCount(): Promise<number>;
   getActiveGroups(): Promise<{ name: string; count: number }[]>;
   
@@ -163,6 +165,51 @@ export class DatabaseStorage implements IStorage {
   async createRansomwareIncident(incident: InsertRansomware): Promise<RansomwareIncident> {
     const [created] = await db.insert(ransomwareIncidents).values(incident).returning();
     return created;
+  }
+
+  async upsertRansomwareIncident(incident: InsertRansomware): Promise<RansomwareIncident> {
+    // Check if victim with same name and group exists
+    const existing = await db.select()
+      .from(ransomwareIncidents)
+      .where(and(
+        eq(ransomwareIncidents.victim, incident.victim),
+        eq(ransomwareIncidents.groupName, incident.groupName)
+      ))
+      .limit(1);
+    
+    if (existing.length > 0) {
+      const [updated] = await db.update(ransomwareIncidents)
+        .set({
+          country: incident.country ?? existing[0].country,
+          website: incident.website ?? existing[0].website,
+          description: incident.description ?? existing[0].description,
+          status: incident.status ?? existing[0].status,
+          postUrl: incident.postUrl ?? existing[0].postUrl,
+          screenshotUrl: incident.screenshotUrl ?? existing[0].screenshotUrl,
+          activity: incident.activity ?? existing[0].activity,
+        })
+        .where(eq(ransomwareIncidents.id, existing[0].id))
+        .returning();
+      return updated;
+    }
+    
+    const [created] = await db.insert(ransomwareIncidents).values(incident).returning();
+    return created;
+  }
+
+  async searchRansomware(query: string, limit = 50): Promise<RansomwareIncident[]> {
+    const searchPattern = `%${query.toLowerCase()}%`;
+    return db.select()
+      .from(ransomwareIncidents)
+      .where(or(
+        sql`LOWER(${ransomwareIncidents.victim}) LIKE ${searchPattern}`,
+        sql`LOWER(${ransomwareIncidents.groupName}) LIKE ${searchPattern}`,
+        sql`LOWER(${ransomwareIncidents.country}) LIKE ${searchPattern}`,
+        sql`LOWER(${ransomwareIncidents.sector}) LIKE ${searchPattern}`,
+        sql`LOWER(${ransomwareIncidents.website}) LIKE ${searchPattern}`
+      ))
+      .orderBy(desc(ransomwareIncidents.discoveredAt))
+      .limit(limit);
   }
 
   async getRansomwareCount(): Promise<number> {

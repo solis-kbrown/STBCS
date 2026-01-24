@@ -156,6 +156,24 @@ export async function registerRoutes(
     }
   });
 
+  // Ransomware search endpoint
+  app.get("/api/ransomware/search", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const query = String(req.query.q || "").trim();
+      const limit = Math.min(parseInt(String(req.query.limit || "50")), 100);
+      
+      if (query.length < 2) {
+        return res.status(400).json({ error: "Search query must be at least 2 characters" });
+      }
+      
+      const results = await storage.searchRansomware(query, limit);
+      res.json({ data: results, query, count: results.length });
+    } catch (error) {
+      console.error("Error searching ransomware:", error);
+      res.status(500).json({ error: "Failed to search ransomware data" });
+    }
+  });
+
   app.get("/api/ransomware/:id", async (req: Request, res: Response) => {
     try {
       const incident = await storage.getRansomwareById(req.params.id);

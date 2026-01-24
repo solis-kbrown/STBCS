@@ -1116,97 +1116,131 @@ export async function fetchC2Tracker(): Promise<number> {
 }
 
 // ============================================
-// RANSOMWARE GROUP DATA (Simulated)
+// RANSOMWARE.LIVE API INTEGRATION
+// Real-time ransomware victim tracking from ransomware.live
 // ============================================
-const KNOWN_RANSOMWARE_GROUPS = [
-  { name: "LockBit 3.0", aliases: "LockBit, LockBit Black", origin: "Russia", sectors: "Healthcare, Finance, Government" },
-  { name: "BlackCat/ALPHV", aliases: "ALPHV, BlackMatter", origin: "Russia", sectors: "Energy, Healthcare, Technology" },
-  { name: "Play", aliases: "PlayCrypt", origin: "Unknown", sectors: "Manufacturing, Technology" },
-  { name: "Akira", aliases: "", origin: "Russia", sectors: "Finance, Education" },
-  { name: "8Base", aliases: "", origin: "Unknown", sectors: "Business Services, Manufacturing" },
-  { name: "Cl0p", aliases: "Clop, TA505", origin: "Russia", sectors: "Finance, Retail, Healthcare" },
-  { name: "Royal", aliases: "Zeon", origin: "Russia", sectors: "Healthcare, Manufacturing" },
-  { name: "Black Basta", aliases: "", origin: "Russia", sectors: "Technology, Manufacturing" },
-  { name: "Medusa", aliases: "MedusaLocker", origin: "Unknown", sectors: "Education, Healthcare" },
-  { name: "NoEscape", aliases: "", origin: "Russia", sectors: "Various" },
-  { name: "Rhysida", aliases: "", origin: "Unknown", sectors: "Government, Education" },
-  { name: "BianLian", aliases: "", origin: "Unknown", sectors: "Healthcare, Professional Services" },
-  { name: "Hunters International", aliases: "", origin: "Unknown", sectors: "Healthcare, Technology" },
-  { name: "RansomHub", aliases: "", origin: "Unknown", sectors: "Various" },
-  { name: "Qilin", aliases: "Agenda", origin: "Russia", sectors: "Healthcare, Manufacturing" },
-];
+const RANSOMWARE_LIVE_API = "https://api.ransomware.live/v2";
 
-const SAMPLE_VICTIMS = [
-  { name: "Global Logistics Corp", sector: "Logistics", country: "USA" },
-  { name: "City Health Network", sector: "Healthcare", country: "USA" },
-  { name: "TechInnovate Solutions", sector: "Technology", country: "Germany" },
-  { name: "Regional Bank of West", sector: "Finance", country: "USA" },
-  { name: "EduSystems Inc", sector: "Education", country: "UK" },
-  { name: "MedTech Labs", sector: "Healthcare", country: "Canada" },
-  { name: "Industrial Parts Co", sector: "Manufacturing", country: "USA" },
-  { name: "Energia Power", sector: "Energy", country: "Brazil" },
-  { name: "SecureData Services", sector: "Technology", country: "Netherlands" },
-  { name: "Retail Giant Ltd", sector: "Retail", country: "Australia" },
-  { name: "Metro Transit Authority", sector: "Government", country: "USA" },
-  { name: "PharmaCorp International", sector: "Healthcare", country: "Switzerland" },
-  { name: "CloudFirst Hosting", sector: "Technology", country: "Ireland" },
-  { name: "Pacific Shipping Lines", sector: "Logistics", country: "Japan" },
-  { name: "National Insurance Group", sector: "Finance", country: "UK" },
-];
+interface RansomwareLiveVictim {
+  name: string;
+  group_name: string;
+  discovered: string;
+  published: string;
+  country?: string;
+  website?: string;
+  description?: string;
+  activity?: string;
+  post_url?: string;
+  screenshot?: string;
+}
 
-export async function generateRansomwareData(): Promise<number> {
+interface RansomwareLiveGroup {
+  name: string;
+  description?: string;
+  url?: string;
+  locations?: string[];
+  profile?: string[];
+}
+
+// Fetch recent ransomware victims from ransomware.live
+export async function fetchRansomwareLiveVictims(): Promise<number> {
   try {
-    console.log("[Ransomware] Generating threat actor and incident data...");
+    console.log("[Ransomware.live] Fetching real-time ransomware victim data...");
     
-    // Upsert threat actors
-    for (const group of KNOWN_RANSOMWARE_GROUPS) {
-      await storage.upsertThreatActor({
-        name: group.name,
-        aliases: group.aliases,
-        description: `Active ransomware group known for targeting ${group.sectors}`,
-        type: "Ransomware Operator",
-        origin: group.origin,
-        firstSeen: new Date(Date.now() - Math.random() * 730 * 24 * 60 * 60 * 1000),
-        lastActive: new Date(),
-        targetSectors: group.sectors,
-        active: true,
-      });
+    const response = await secureFetch(`${RANSOMWARE_LIVE_API}/recentvictims`);
+    
+    if (!response.ok) {
+      throw new Error(`Ransomware.live API error: ${response.status}`);
     }
     
-    // Check existing incidents
-    const existingIncidents = await storage.getRansomwareIncidents(100);
-    let count = existingIncidents.length;
+    const victims: RansomwareLiveVictim[] = await response.json();
+    console.log(`[Ransomware.live] Retrieved ${victims.length} recent victims`);
     
-    // Generate more incidents if needed
-    if (existingIncidents.length < 30) {
-      for (let i = existingIncidents.length; i < 30; i++) {
-        const victim = SAMPLE_VICTIMS[Math.floor(Math.random() * SAMPLE_VICTIMS.length)];
-        const group = KNOWN_RANSOMWARE_GROUPS[Math.floor(Math.random() * KNOWN_RANSOMWARE_GROUPS.length)];
-        const statuses = ["Published", "claimed", "Negotiating", "Data Leaked"];
-        const dataSizes = ["50 GB", "120 GB", "450 GB", "1.2 TB", "800 GB", "2.5 TB", "5 TB"];
-        
+    let count = 0;
+    
+    for (const victim of victims) {
+      try {
         const incident: InsertRansomware = {
-          victim: `${victim.name} ${i + 1}`,
-          groupName: group.name,
-          sector: victim.sector,
-          country: victim.country,
-          description: `Data exfiltration and encryption attack. Threat actor claims access to internal systems and sensitive data.`,
-          dataSize: dataSizes[Math.floor(Math.random() * dataSizes.length)],
-          status: statuses[Math.floor(Math.random() * statuses.length)],
-          discoveredAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
+          victim: victim.name || "Unknown Victim",
+          groupName: victim.group_name || "Unknown Group",
+          country: victim.country || null,
+          website: victim.website || null,
+          description: victim.description || `Victim posted by ${victim.group_name} ransomware group`,
+          status: "Published",
+          discoveredAt: victim.discovered ? new Date(victim.discovered) : new Date(),
+          postUrl: victim.post_url || null,
+          screenshotUrl: victim.screenshot || null,
+          activity: victim.activity || null,
+          sourceApi: "ransomware.live",
         };
         
-        await storage.createRansomwareIncident(incident);
+        await storage.upsertRansomwareIncident(incident);
         count++;
+      } catch (err) {
+        // Skip individual victim errors
+        continue;
       }
     }
     
-    console.log(`[Ransomware] Processed ${KNOWN_RANSOMWARE_GROUPS.length} groups, ${count} incidents`);
+    console.log(`[Ransomware.live] Processed ${count} ransomware victims`);
     return count;
   } catch (error) {
-    console.error("[Ransomware] Error:", error);
+    console.error("[Ransomware.live] Error fetching victims:", error);
     return 0;
   }
+}
+
+// Fetch ransomware groups from ransomware.live
+export async function fetchRansomwareLiveGroups(): Promise<number> {
+  try {
+    console.log("[Ransomware.live] Fetching ransomware group intelligence...");
+    
+    const response = await secureFetch(`${RANSOMWARE_LIVE_API}/groups`);
+    
+    if (!response.ok) {
+      throw new Error(`Ransomware.live groups API error: ${response.status}`);
+    }
+    
+    const groups: RansomwareLiveGroup[] = await response.json();
+    console.log(`[Ransomware.live] Retrieved ${groups.length} ransomware groups`);
+    
+    let count = 0;
+    
+    for (const group of groups) {
+      try {
+        await storage.upsertThreatActor({
+          name: group.name,
+          description: group.description || group.profile?.join(" ") || `Active ransomware group`,
+          type: "Ransomware Operator",
+          origin: group.locations?.join(", ") || "Unknown",
+          lastActive: new Date(),
+          active: true,
+        });
+        count++;
+      } catch (err) {
+        continue;
+      }
+    }
+    
+    console.log(`[Ransomware.live] Processed ${count} ransomware groups`);
+    return count;
+  } catch (error) {
+    console.error("[Ransomware.live] Error fetching groups:", error);
+    return 0;
+  }
+}
+
+// Combined function to fetch all ransomware data
+export async function fetchRansomwareData(): Promise<number> {
+  console.log("[Ransomware] Starting comprehensive ransomware intelligence fetch...");
+  
+  // Fetch groups first, then victims
+  const groupCount = await fetchRansomwareLiveGroups();
+  await delay(1000); // Rate limiting between calls
+  const victimCount = await fetchRansomwareLiveVictims();
+  
+  console.log(`[Ransomware] Total: ${groupCount} groups, ${victimCount} victims`);
+  return victimCount;
 }
 
 // ============================================
@@ -1410,9 +1444,9 @@ export async function fetchAllData(): Promise<void> {
   await delay(1000);
   
   // ===========================================
-  // RANSOMWARE & NEWS DATA
+  // RANSOMWARE & NEWS DATA (from ransomware.live)
   // ===========================================
-  await generateRansomwareData();
+  await fetchRansomwareData();
   await generateNewsData();
   
   console.log("[Scraper] ========================================");
