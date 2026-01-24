@@ -1,8 +1,20 @@
-# Stop The Bleed CS - Cybersecurity Threat Intelligence Platform
+# STB Cybersecurity (STBCS) - Real-Time Threat Intelligence Platform
 
 ## Overview
 
-Stop The Bleed CS (stoptbcs.com) is a real-time cybersecurity threat intelligence platform that tracks ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news. The application aggregates data from 15+ free public threat intelligence feeds and provides a comprehensive dashboard for monitoring active threats, ransomware groups, and critical security events.
+STB Cybersecurity (stoptbcs.com / stbcybersecurity.com) is a real-time cybersecurity threat intelligence platform that tracks ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news. The application aggregates data from 15+ free public threat intelligence feeds and provides a comprehensive dashboard for monitoring active threats, ransomware groups, and critical security events.
+
+## Branding
+
+- **Primary Name**: STB Cybersecurity / STBCS
+- **Domains**: stoptbcs.com (primary), stbcybersecurity.com (secondary/redirect)
+- **Twitter/Social**: @stoptbcs
+- **Founder**: Kevin Brown
+- **Contact Emails**:
+  - info@stoptbcs.com - General inquiries
+  - sales@stoptbcs.com - Sales and B2B services
+  - support@stoptbcs.com - Customer support
+  - billing@stoptbcs.com - Billing and payments
 
 ## User Preferences
 

@@ -1,4 +1,5 @@
 import Layout from "@/components/layout";
+import Footer from "@/components/footer";
 import { useRansomware, useRansomwareGroups } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -176,6 +177,7 @@ export default function Ransomware() {
             </Card>
           )}
         </div>
+        <Footer />
       </div>
     </Layout>
   );

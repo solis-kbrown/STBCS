@@ -51,8 +51,11 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
       <div className="p-6 flex items-center gap-3">
-        <img src="/logo.png" alt="Stop The Bleed CS" className="h-8 w-8" />
-        <span className="font-display font-bold text-lg tracking-wider text-primary">STOP THE BLEED</span>
+        <img src="/logo.png" alt="STB Cybersecurity" className="h-8 w-8" />
+        <div className="flex flex-col">
+          <span className="font-display font-bold text-lg tracking-wider text-primary">STBCS</span>
+          <span className="text-[10px] text-muted-foreground tracking-wide">STB Cybersecurity</span>
+        </div>
       </div>
       
       <div className="flex-1 px-4 py-6 space-y-2">
@@ -85,7 +88,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             UPGRADE
           </Button>
         </div>
-        <div className="px-2">
+        <div className="px-2 space-y-1">
           <a 
             href="mailto:info@stoptbcs.com" 
             className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
@@ -93,6 +96,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Mail className="h-3 w-3" />
             <span>info@stoptbcs.com</span>
           </a>
+          <a 
+            href="mailto:support@stoptbcs.com" 
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-primary transition-colors"
+          >
+            <Mail className="h-3 w-3" />
+            <span>support@stoptbcs.com</span>
+          </a>
+        </div>
+        <div className="px-2 pt-2 border-t border-sidebar-border/50">
+          <p className="text-[10px] text-muted-foreground/60 leading-relaxed">
+            STB Cybersecurity (STBCS)<br />
+            stoptbcs.com | stbcybersecurity.com
+          </p>
         </div>
       </div>
     </div>

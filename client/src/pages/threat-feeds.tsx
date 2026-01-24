@@ -1,4 +1,5 @@
 import Layout from "@/components/layout";
+import Footer from "@/components/footer";
 import { useThreatFeeds, useMaliciousIps, useMaliciousUrls, useCisaKev } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -289,6 +290,7 @@ export default function ThreatFeeds() {
             </Button>
           </CardContent>
         </Card>
+        <Footer />
       </div>
     </Layout>
   );

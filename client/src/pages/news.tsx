@@ -1,4 +1,5 @@
 import Layout from "@/components/layout";
+import Footer from "@/components/footer";
 import { useNews } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -143,6 +144,7 @@ export default function News() {
             </Card>
           </div>
         </div>
+        <Footer />
       </div>
     </Layout>
   );

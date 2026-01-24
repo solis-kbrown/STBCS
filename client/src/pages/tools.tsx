@@ -1,5 +1,6 @@
 import { useState } from "react";
 import Layout from "@/components/layout";
+import Footer from "@/components/footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -511,13 +512,18 @@ export default function ToolsPage() {
               <div>
                 <h3 className="font-bold text-white text-lg">Need Custom Solutions?</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Contact us for enterprise API access, custom integrations, and B2B threat intelligence services.
+                  Contact STBCS for enterprise API access, custom integrations, and B2B threat intelligence services.
                 </p>
               </div>
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <Button variant="outline" className="border-white/20" asChild>
-                  <a href="mailto:info@stoptbcs.com">
-                    <Mail className="h-4 w-4 mr-2" /> info@stoptbcs.com
+                  <a href="mailto:sales@stoptbcs.com">
+                    <Mail className="h-4 w-4 mr-2" /> sales@stoptbcs.com
+                  </a>
+                </Button>
+                <Button variant="outline" className="border-white/20" asChild>
+                  <a href="mailto:support@stoptbcs.com">
+                    <Mail className="h-4 w-4 mr-2" /> support@stoptbcs.com
                   </a>
                 </Button>
               </div>
@@ -531,6 +537,7 @@ export default function ToolsPage() {
             Unauthorized scanning of systems you do not own may be illegal.
           </p>
         </div>
+        <Footer />
       </div>
     </Layout>
   );

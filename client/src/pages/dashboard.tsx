@@ -1,4 +1,5 @@
 import Layout from "@/components/layout";
+import Footer from "@/components/footer";
 import { useStats, useCves, useRansomware, useRefreshData } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -274,6 +275,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        <Footer />
       </div>
     </Layout>
   );

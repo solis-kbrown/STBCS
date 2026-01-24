@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import Layout from "@/components/layout";
+import Footer from "@/components/footer";
 import { useGlobalSearch } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -453,6 +454,7 @@ export default function SearchPage() {
             </CardContent>
           </Card>
         )}
+        <Footer />
       </div>
     </Layout>
   );
