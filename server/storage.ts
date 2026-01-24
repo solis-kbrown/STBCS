@@ -1,38 +1,235 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
-
-// modify the interface with any CRUD methods
-// you might need
+import { 
+  type User, type InsertUser,
+  type Cve, type InsertCve,
+  type RansomwareIncident, type InsertRansomware,
+  type ThreatActor, type InsertThreatActor,
+  type NewsArticle, type InsertNews,
+  users, cves, ransomwareIncidents, threatActors, newsArticles
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, ilike, or, sql } from "drizzle-orm";
 
 export interface IStorage {
+  // Users
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // CVEs
+  getCves(limit?: number, offset?: number, search?: string): Promise<Cve[]>;
+  getCveById(id: string): Promise<Cve | undefined>;
+  getCveByCveId(cveId: string): Promise<Cve | undefined>;
+  upsertCve(cve: InsertCve): Promise<Cve>;
+  getCveCount(): Promise<number>;
+  
+  // Ransomware Incidents
+  getRansomwareIncidents(limit?: number, offset?: number, group?: string, sector?: string): Promise<RansomwareIncident[]>;
+  getRansomwareById(id: string): Promise<RansomwareIncident | undefined>;
+  createRansomwareIncident(incident: InsertRansomware): Promise<RansomwareIncident>;
+  getRansomwareCount(): Promise<number>;
+  getActiveGroups(): Promise<{ name: string; count: number }[]>;
+  
+  // Threat Actors
+  getThreatActors(limit?: number): Promise<ThreatActor[]>;
+  getThreatActorByName(name: string): Promise<ThreatActor | undefined>;
+  upsertThreatActor(actor: InsertThreatActor): Promise<ThreatActor>;
+  
+  // News
+  getNews(limit?: number, offset?: number, category?: string): Promise<NewsArticle[]>;
+  getNewsById(id: string): Promise<NewsArticle | undefined>;
+  createNews(article: InsertNews): Promise<NewsArticle>;
+  getNewsCount(): Promise<number>;
+  
+  // Stats
+  getDashboardStats(): Promise<{
+    activeGroups: number;
+    criticalCves: number;
+    activeExploits: number;
+    totalIncidents: number;
+  }>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
-
-  constructor() {
-    this.users = new Map();
-  }
-
+export class DatabaseStorage implements IStorage {
+  // Users
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
 
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+
+  // CVEs
+  async getCves(limit = 50, offset = 0, search?: string): Promise<Cve[]> {
+    let query = db.select().from(cves).orderBy(desc(cves.publishedDate)).limit(limit).offset(offset);
+    
+    if (search) {
+      return db.select().from(cves)
+        .where(or(
+          ilike(cves.cveId, `%${search}%`),
+          ilike(cves.description, `%${search}%`),
+          ilike(cves.platform, `%${search}%`)
+        ))
+        .orderBy(desc(cves.score))
+        .limit(limit)
+        .offset(offset);
+    }
+    
+    return query;
+  }
+
+  async getCveById(id: string): Promise<Cve | undefined> {
+    const [cve] = await db.select().from(cves).where(eq(cves.id, id));
+    return cve;
+  }
+
+  async getCveByCveId(cveId: string): Promise<Cve | undefined> {
+    const [cve] = await db.select().from(cves).where(eq(cves.cveId, cveId));
+    return cve;
+  }
+
+  async upsertCve(cve: InsertCve): Promise<Cve> {
+    const existing = await this.getCveByCveId(cve.cveId);
+    if (existing) {
+      const [updated] = await db.update(cves)
+        .set({ ...cve, lastModified: new Date() })
+        .where(eq(cves.cveId, cve.cveId))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(cves).values(cve).returning();
+    return created;
+  }
+
+  async getCveCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(cves);
+    return Number(result[0]?.count || 0);
+  }
+
+  // Ransomware Incidents
+  async getRansomwareIncidents(limit = 50, offset = 0, group?: string, sector?: string): Promise<RansomwareIncident[]> {
+    let baseQuery = db.select().from(ransomwareIncidents);
+    
+    if (group) {
+      baseQuery = baseQuery.where(eq(ransomwareIncidents.groupName, group)) as typeof baseQuery;
+    }
+    if (sector) {
+      baseQuery = baseQuery.where(eq(ransomwareIncidents.sector, sector)) as typeof baseQuery;
+    }
+    
+    return baseQuery.orderBy(desc(ransomwareIncidents.discoveredAt)).limit(limit).offset(offset);
+  }
+
+  async getRansomwareById(id: string): Promise<RansomwareIncident | undefined> {
+    const [incident] = await db.select().from(ransomwareIncidents).where(eq(ransomwareIncidents.id, id));
+    return incident;
+  }
+
+  async createRansomwareIncident(incident: InsertRansomware): Promise<RansomwareIncident> {
+    const [created] = await db.insert(ransomwareIncidents).values(incident).returning();
+    return created;
+  }
+
+  async getRansomwareCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(ransomwareIncidents);
+    return Number(result[0]?.count || 0);
+  }
+
+  async getActiveGroups(): Promise<{ name: string; count: number }[]> {
+    const result = await db.select({
+      name: ransomwareIncidents.groupName,
+      count: sql<number>`count(*)`
+    })
+    .from(ransomwareIncidents)
+    .groupBy(ransomwareIncidents.groupName)
+    .orderBy(desc(sql`count(*)`))
+    .limit(20);
+    
+    return result.map(r => ({ name: r.name, count: Number(r.count) }));
+  }
+
+  // Threat Actors
+  async getThreatActors(limit = 50): Promise<ThreatActor[]> {
+    return db.select().from(threatActors).orderBy(desc(threatActors.lastActive)).limit(limit);
+  }
+
+  async getThreatActorByName(name: string): Promise<ThreatActor | undefined> {
+    const [actor] = await db.select().from(threatActors).where(eq(threatActors.name, name));
+    return actor;
+  }
+
+  async upsertThreatActor(actor: InsertThreatActor): Promise<ThreatActor> {
+    const existing = await this.getThreatActorByName(actor.name);
+    if (existing) {
+      const [updated] = await db.update(threatActors)
+        .set(actor)
+        .where(eq(threatActors.name, actor.name))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(threatActors).values(actor).returning();
+    return created;
+  }
+
+  // News
+  async getNews(limit = 50, offset = 0, category?: string): Promise<NewsArticle[]> {
+    let baseQuery = db.select().from(newsArticles);
+    
+    if (category) {
+      baseQuery = baseQuery.where(eq(newsArticles.category, category)) as typeof baseQuery;
+    }
+    
+    return baseQuery.orderBy(desc(newsArticles.publishedAt)).limit(limit).offset(offset);
+  }
+
+  async getNewsById(id: string): Promise<NewsArticle | undefined> {
+    const [article] = await db.select().from(newsArticles).where(eq(newsArticles.id, id));
+    return article;
+  }
+
+  async createNews(article: InsertNews): Promise<NewsArticle> {
+    const [created] = await db.insert(newsArticles).values(article).returning();
+    return created;
+  }
+
+  async getNewsCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(newsArticles);
+    return Number(result[0]?.count || 0);
+  }
+
+  // Dashboard Stats
+  async getDashboardStats(): Promise<{
+    activeGroups: number;
+    criticalCves: number;
+    activeExploits: number;
+    totalIncidents: number;
+  }> {
+    const groups = await this.getActiveGroups();
+    
+    const criticalCvesResult = await db.select({ count: sql<number>`count(*)` })
+      .from(cves)
+      .where(eq(cves.severity, "CRITICAL"));
+    
+    const activeExploitsResult = await db.select({ count: sql<number>`count(*)` })
+      .from(cves)
+      .where(eq(cves.exploitAvailable, true));
+    
+    const totalIncidents = await this.getRansomwareCount();
+    
+    return {
+      activeGroups: groups.length,
+      criticalCves: Number(criticalCvesResult[0]?.count || 0),
+      activeExploits: Number(activeExploitsResult[0]?.count || 0),
+      totalIncidents,
+    };
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
