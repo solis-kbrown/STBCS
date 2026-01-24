@@ -3,31 +3,49 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import NotFound from "@/pages/not-found";
-import Dashboard from "@/pages/dashboard";
-import Ransomware from "@/pages/ransomware";
-import Exploits from "@/pages/exploits";
-import News from "@/pages/news";
-import ThreatFeeds from "@/pages/threat-feeds";
-import SearchPage from "@/pages/search";
-import ToolsPage from "@/pages/tools";
-import LogoGallery from "@/pages/logo-gallery";
-import Alerts from "@/pages/alerts";
+import { lazy, Suspense } from "react";
+import { Loader2 } from "lucide-react";
+
+// Lazy load pages for better performance
+const Dashboard = lazy(() => import("@/pages/dashboard"));
+const Ransomware = lazy(() => import("@/pages/ransomware"));
+const Exploits = lazy(() => import("@/pages/exploits"));
+const News = lazy(() => import("@/pages/news"));
+const ThreatFeeds = lazy(() => import("@/pages/threat-feeds"));
+const SearchPage = lazy(() => import("@/pages/search"));
+const ToolsPage = lazy(() => import("@/pages/tools"));
+const LogoGallery = lazy(() => import("@/pages/logo-gallery"));
+const Alerts = lazy(() => import("@/pages/alerts"));
+const NotFound = lazy(() => import("@/pages/not-found"));
+
+// Page loading component
+function PageLoader() {
+  return (
+    <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="text-center space-y-4">
+        <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
+        <p className="text-muted-foreground text-sm">Loading...</p>
+      </div>
+    </div>
+  );
+}
 
 function Router() {
   return (
-    <Switch>
-      <Route path="/" component={Dashboard}/>
-      <Route path="/ransomware" component={Ransomware}/>
-      <Route path="/exploits" component={Exploits}/>
-      <Route path="/news" component={News}/>
-      <Route path="/threat-feeds" component={ThreatFeeds}/>
-      <Route path="/search" component={SearchPage}/>
-      <Route path="/tools" component={ToolsPage}/>
-      <Route path="/logos" component={LogoGallery}/>
-      <Route path="/alerts" component={Alerts}/>
-      <Route component={NotFound} />
-    </Switch>
+    <Suspense fallback={<PageLoader />}>
+      <Switch>
+        <Route path="/" component={Dashboard}/>
+        <Route path="/ransomware" component={Ransomware}/>
+        <Route path="/exploits" component={Exploits}/>
+        <Route path="/news" component={News}/>
+        <Route path="/threat-feeds" component={ThreatFeeds}/>
+        <Route path="/search" component={SearchPage}/>
+        <Route path="/tools" component={ToolsPage}/>
+        <Route path="/logos" component={LogoGallery}/>
+        <Route path="/alerts" component={Alerts}/>
+        <Route component={NotFound} />
+      </Switch>
+    </Suspense>
   );
 }
 
