@@ -52,7 +52,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
       <div className="p-6 flex items-center gap-3 group">
         <div className="relative">
-          <img src="/logo.png" alt="STB Cybersecurity" className="h-12 w-12 rounded-lg shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-shadow duration-300" />
+          <img src="/logo.png" alt="STB Cybersecurity" className="h-16 w-16 rounded-lg shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-shadow duration-300" />
           <div className="absolute inset-0 rounded-lg bg-gradient-to-tr from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
         </div>
         <div className="flex flex-col">
