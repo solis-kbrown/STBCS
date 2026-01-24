@@ -50,11 +50,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-      <div className="p-6 flex items-center gap-3">
-        <img src="/logo.png" alt="STB Cybersecurity" className="h-8 w-8" />
+      <div className="p-6 flex items-center gap-3 group">
+        <div className="relative">
+          <img src="/logo.png" alt="STB Cybersecurity" className="h-12 w-12 rounded-lg shadow-lg shadow-primary/20 group-hover:shadow-primary/40 transition-shadow duration-300" />
+          <div className="absolute inset-0 rounded-lg bg-gradient-to-tr from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        </div>
         <div className="flex flex-col">
-          <span className="font-display font-bold text-lg tracking-wider text-primary">STBCS</span>
-          <span className="text-[10px] text-muted-foreground tracking-wide">STB Cybersecurity</span>
+          <span className="font-display font-bold text-xl tracking-wider text-primary drop-shadow-[0_0_10px_rgba(220,38,38,0.3)]">STBCS</span>
+          <span className="text-[10px] text-muted-foreground tracking-widest uppercase">Stop The Bleed</span>
         </div>
       </div>
       
