@@ -397,6 +397,171 @@ export class DatabaseStorage implements IStorage {
       cisaKevCount: kevCount,
     };
   }
+
+  // Global Search across all data types
+  async globalSearch(query: string, limit = 20): Promise<{
+    cves: Cve[];
+    ransomware: RansomwareIncident[];
+    ips: MaliciousIp[];
+    urls: MaliciousUrl[];
+    kev: CisaKev[];
+    news: NewsArticle[];
+  }> {
+    const searchTerm = `%${query}%`;
+    
+    const [cveResults, ransomwareResults, ipResults, urlResults, kevResults, newsResults] = await Promise.all([
+      db.select().from(cves)
+        .where(or(
+          ilike(cves.cveId, searchTerm),
+          ilike(cves.description, searchTerm),
+          ilike(cves.platform, searchTerm)
+        ))
+        .orderBy(desc(cves.score))
+        .limit(limit),
+      
+      db.select().from(ransomwareIncidents)
+        .where(or(
+          ilike(ransomwareIncidents.victim, searchTerm),
+          ilike(ransomwareIncidents.groupName, searchTerm),
+          ilike(ransomwareIncidents.sector, searchTerm),
+          ilike(ransomwareIncidents.country, searchTerm)
+        ))
+        .orderBy(desc(ransomwareIncidents.discoveredAt))
+        .limit(limit),
+      
+      db.select().from(maliciousIps)
+        .where(or(
+          ilike(maliciousIps.ipAddress, searchTerm),
+          ilike(maliciousIps.source, searchTerm),
+          ilike(maliciousIps.threatType, searchTerm),
+          ilike(maliciousIps.country, searchTerm)
+        ))
+        .orderBy(desc(maliciousIps.lastSeen))
+        .limit(limit),
+      
+      db.select().from(maliciousUrls)
+        .where(or(
+          ilike(maliciousUrls.url, searchTerm),
+          ilike(maliciousUrls.source, searchTerm),
+          ilike(maliciousUrls.threatType, searchTerm),
+          ilike(maliciousUrls.malwareFamily, searchTerm)
+        ))
+        .orderBy(desc(maliciousUrls.reportedAt))
+        .limit(limit),
+      
+      db.select().from(cisaKev)
+        .where(or(
+          ilike(cisaKev.cveId, searchTerm),
+          ilike(cisaKev.vendorProject, searchTerm),
+          ilike(cisaKev.product, searchTerm),
+          ilike(cisaKev.vulnerabilityName, searchTerm),
+          ilike(cisaKev.shortDescription, searchTerm)
+        ))
+        .orderBy(desc(cisaKev.dateAdded))
+        .limit(limit),
+      
+      db.select().from(newsArticles)
+        .where(or(
+          ilike(newsArticles.title, searchTerm),
+          ilike(newsArticles.summary, searchTerm),
+          ilike(newsArticles.source, searchTerm),
+          ilike(newsArticles.category, searchTerm)
+        ))
+        .orderBy(desc(newsArticles.publishedAt))
+        .limit(limit),
+    ]);
+    
+    return {
+      cves: cveResults,
+      ransomware: ransomwareResults,
+      ips: ipResults,
+      urls: urlResults,
+      kev: kevResults,
+      news: newsResults,
+    };
+  }
+
+  // Data retention cleanup - remove data older than retention period
+  async cleanupOldData(retentionDays = 365): Promise<{
+    ipsDeleted: number;
+    urlsDeleted: number;
+    newsDeleted: number;
+  }> {
+    const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
+    
+    // Delete old malicious IPs (keep last seen within retention)
+    const ipsResult = await db.delete(maliciousIps)
+      .where(sql`${maliciousIps.lastSeen} < ${cutoffDate} OR (${maliciousIps.lastSeen} IS NULL AND ${maliciousIps.createdAt} < ${cutoffDate})`)
+      .returning();
+    
+    // Delete old malicious URLs
+    const urlsResult = await db.delete(maliciousUrls)
+      .where(sql`${maliciousUrls.reportedAt} < ${cutoffDate} OR (${maliciousUrls.reportedAt} IS NULL AND ${maliciousUrls.createdAt} < ${cutoffDate})`)
+      .returning();
+    
+    // Delete old news (but keep important ones)
+    const newsResult = await db.delete(newsArticles)
+      .where(sql`${newsArticles.publishedAt} < ${cutoffDate}`)
+      .returning();
+    
+    return {
+      ipsDeleted: ipsResult.length,
+      urlsDeleted: urlsResult.length,
+      newsDeleted: newsResult.length,
+    };
+  }
+
+  // Get storage statistics for admin dashboard
+  async getStorageStats(): Promise<{
+    totalCves: number;
+    totalRansomware: number;
+    totalIps: number;
+    totalUrls: number;
+    totalKev: number;
+    totalNews: number;
+    totalUsers: number;
+    oldestRecord: Date | null;
+  }> {
+    const [cveCount, ransomCount, ipCount, urlCount, kevCount, newsCount, userCount] = await Promise.all([
+      this.getCveCount(),
+      this.getRansomwareCount(),
+      this.getMaliciousIpCount(),
+      this.getMaliciousUrlCount(),
+      this.getCisaKevCount(),
+      this.getNewsCount(),
+      db.select({ count: sql<number>`count(*)` }).from(users),
+    ]);
+    
+    // Get oldest record date across all tables
+    const [oldestCve, oldestRansomware, oldestIp, oldestUrl, oldestNews] = await Promise.all([
+      db.select({ created: cves.createdAt }).from(cves).orderBy(cves.createdAt).limit(1),
+      db.select({ created: ransomwareIncidents.createdAt }).from(ransomwareIncidents).orderBy(ransomwareIncidents.createdAt).limit(1),
+      db.select({ created: maliciousIps.createdAt }).from(maliciousIps).orderBy(maliciousIps.createdAt).limit(1),
+      db.select({ created: maliciousUrls.createdAt }).from(maliciousUrls).orderBy(maliciousUrls.createdAt).limit(1),
+      db.select({ created: newsArticles.createdAt }).from(newsArticles).orderBy(newsArticles.createdAt).limit(1),
+    ]);
+    
+    const dates = [
+      oldestCve[0]?.created,
+      oldestRansomware[0]?.created,
+      oldestIp[0]?.created,
+      oldestUrl[0]?.created,
+      oldestNews[0]?.created,
+    ].filter((d): d is Date => d != null);
+    
+    const oldestRecord = dates.length > 0 ? new Date(Math.min(...dates.map(d => d.getTime()))) : null;
+    
+    return {
+      totalCves: cveCount,
+      totalRansomware: ransomCount,
+      totalIps: ipCount,
+      totalUrls: urlCount,
+      totalKev: kevCount,
+      totalNews: newsCount,
+      totalUsers: Number(userCount[0]?.count || 0),
+      oldestRecord,
+    };
+  }
 }
 
 export const storage = new DatabaseStorage();

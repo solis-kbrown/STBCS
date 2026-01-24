@@ -258,6 +258,64 @@ export function useThreatFeeds() {
   });
 }
 
+export interface SearchResults {
+  query: string;
+  totalResults: number;
+  cves: Cve[];
+  ransomware: RansomwareIncident[];
+  ips: MaliciousIp[];
+  urls: MaliciousUrl[];
+  kev: CisaKev[];
+  news: NewsArticle[];
+}
+
+export interface AdminStats {
+  totalCves: number;
+  totalRansomware: number;
+  totalIps: number;
+  totalUrls: number;
+  totalKev: number;
+  totalNews: number;
+  totalUsers: number;
+  oldestRecord: string | null;
+}
+
+export function useGlobalSearch(query: string, limit = 20) {
+  return useQuery<SearchResults>({
+    queryKey: ["/api/search", query, limit],
+    queryFn: () => fetchApi<SearchResults>(`/api/search?q=${encodeURIComponent(query)}&limit=${limit}`),
+    enabled: query.length >= 2,
+    staleTime: 30000,
+  });
+}
+
+export function useAdminStats() {
+  return useQuery<AdminStats>({
+    queryKey: ["/api/admin/stats"],
+    queryFn: () => fetchApi<AdminStats>("/api/admin/stats"),
+    refetchInterval: 300000, // 5 minutes
+  });
+}
+
+export function useExportData() {
+  return useMutation({
+    mutationFn: async (type: 'cves' | 'ips' | 'urls' | 'kev' | 'ransomware') => {
+      const response = await fetch(`/api/export/${type}`);
+      if (!response.ok) throw new Error("Failed to export data");
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${type}_export_${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      return { success: true };
+    },
+  });
+}
+
 export function useRefreshData() {
   const queryClient = useQueryClient();
   

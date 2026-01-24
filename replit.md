@@ -88,10 +88,23 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Pages
 - **Dashboard** (`/`) - Overview with 7 stat cards and threat velocity chart
+- **Global Search** (`/search`) - Unified search across all threat data with debounced input and tabbed results
 - **Ransomware Tracker** (`/ransomware`) - Ransomware incidents and group activity
 - **Exploits & CVEs** (`/exploits`) - Vulnerability database with search
 - **Threat Feeds** (`/threat-feeds`) - All threat intel sources with tabs for IPs, URLs, KEV
 - **Intel & News** (`/news`) - Curated security news feed
+
+### Pro/Admin Features
+- **Global Search API** (`GET /api/search?q=&limit=`) - Search across CVEs, IPs, URLs, ransomware, KEV, news
+- **Admin Stats** (`GET /api/admin/stats`) - Storage statistics for all data tables
+- **Data Cleanup** (`POST /api/admin/cleanup`) - Trigger data retention cleanup (365-day default)
+- **Export Data** (`GET /api/export/:type`) - Export CVEs, IPs, URLs, KEV, or ransomware as JSON
+
+### Database Schema Extensions
+- `userSettings` - Pro user preferences (theme, alerts, watchlists, dashboard layout)
+- `savedSearches` - Saved search queries per user
+- `auditLog` - Action tracking for admin monitoring
+- `systemConfig` - Global system settings
 
 ### Data Refresh
 - Automatic refresh scheduler runs every 30 minutes

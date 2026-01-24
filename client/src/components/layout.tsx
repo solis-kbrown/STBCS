@@ -1,4 +1,4 @@
-import { Link, useLocation } from "wouter";
+import { Link, useLocation, useRoute } from "wouter";
 import { 
   LayoutDashboard, 
   ShieldAlert, 
@@ -11,7 +11,7 @@ import {
   LogOut,
   Globe
 } from "lucide-react";
-import { useState } from "react";
+import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -26,11 +26,19 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
+      setLocation(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   const navItems = [
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
+    { href: "/search", label: "Global Search", icon: Search },
     { href: "/ransomware", label: "Ransomware Tracker", icon: Skull },
     { href: "/exploits", label: "Exploits & CVEs", icon: ShieldAlert },
     { href: "/threat-feeds", label: "Threat Feeds", icon: Globe },
@@ -104,8 +112,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <div className="relative hidden sm:block w-96">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
-                  placeholder="Search CVEs, Groups, Incidents..." 
+                  placeholder="Search CVEs, Groups, Incidents... (Press Enter)" 
                   className="pl-10 bg-sidebar-accent border-input focus:border-primary/50 transition-colors"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  data-testid="input-header-search"
                 />
               </div>
             </div>

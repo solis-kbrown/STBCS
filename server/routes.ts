@@ -266,6 +266,95 @@ export async function registerRoutes(
     }
   });
 
+  // Global Search across all threat data
+  app.get("/api/search", async (req: Request, res: Response) => {
+    try {
+      const searchSchema = z.object({
+        q: z.string().min(2).max(200),
+        limit: z.coerce.number().int().min(1).max(50).default(20),
+      });
+      
+      const parsed = searchSchema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid search query", details: parsed.error.issues });
+      }
+      
+      const { q, limit } = parsed.data;
+      const results = await storage.globalSearch(q, limit);
+      
+      const totalResults = 
+        results.cves.length + 
+        results.ransomware.length + 
+        results.ips.length + 
+        results.urls.length + 
+        results.kev.length + 
+        results.news.length;
+      
+      res.json({ query: q, totalResults, ...results });
+    } catch (error) {
+      console.error("Error searching:", error);
+      res.status(500).json({ error: "Failed to search" });
+    }
+  });
+
+  // Admin: Storage statistics
+  app.get("/api/admin/stats", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const stats = await storage.getStorageStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ error: "Failed to fetch admin stats" });
+    }
+  });
+
+  // Admin: Data cleanup (trigger old data removal)
+  app.post("/api/admin/cleanup", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const result = await storage.cleanupOldData(365); // 1 year retention
+      res.json({ success: true, ...result });
+    } catch (error) {
+      console.error("Error cleaning up data:", error);
+      res.status(500).json({ error: "Failed to cleanup data" });
+    }
+  });
+
+  // Export data (Pro feature)
+  app.get("/api/export/:type", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const { type } = req.params;
+      const limit = 1000; // Max export limit
+      
+      let data: any[] = [];
+      switch (type) {
+        case 'cves':
+          data = await storage.getCves(limit, 0);
+          break;
+        case 'ips':
+          data = await storage.getMaliciousIps(limit, 0);
+          break;
+        case 'urls':
+          data = await storage.getMaliciousUrls(limit, 0);
+          break;
+        case 'kev':
+          data = await storage.getCisaKev(limit, 0);
+          break;
+        case 'ransomware':
+          data = await storage.getRansomwareIncidents(limit, 0);
+          break;
+        default:
+          return res.status(400).json({ error: "Invalid export type" });
+      }
+      
+      res.setHeader('Content-Type', 'application/json');
+      res.setHeader('Content-Disposition', `attachment; filename="${type}_export_${Date.now()}.json"`);
+      res.json({ type, exportedAt: new Date().toISOString(), count: data.length, data });
+    } catch (error) {
+      console.error("Error exporting data:", error);
+      res.status(500).json({ error: "Failed to export data" });
+    }
+  });
+
   // Manual data refresh trigger (for admin use)
   app.post("/api/refresh", async (req: Request, res: Response) => {
     try {

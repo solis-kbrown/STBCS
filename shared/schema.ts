@@ -223,6 +223,89 @@ export const insertThreatFeedSchema = createInsertSchema(threatFeeds).omit({
   createdAt: true,
 });
 
+// User preferences and settings for Pro users
+export const userSettings = pgTable("user_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique(),
+  theme: text("theme").default("dark"),
+  emailAlerts: boolean("email_alerts").default(true),
+  slackWebhook: text("slack_webhook"),
+  alertSeverity: text("alert_severity").default("critical"), // low, medium, high, critical
+  watchedCves: text("watched_cves"), // JSON array of CVE IDs
+  watchedGroups: text("watched_groups"), // JSON array of ransomware groups
+  watchedSectors: text("watched_sectors"), // JSON array of sectors
+  dashboardLayout: text("dashboard_layout"), // JSON for custom dashboard
+  defaultView: text("default_view").default("dashboard"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("settings_user_idx").on(table.userId),
+]);
+
+// Saved searches for Pro users
+export const savedSearches = pgTable("saved_searches", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  name: text("name").notNull(),
+  searchType: text("search_type").notNull(), // global, cves, ips, urls, ransomware
+  query: text("query").notNull(),
+  filters: text("filters"), // JSON for additional filters
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("saved_search_user_idx").on(table.userId),
+]);
+
+// Audit log for admin tracking
+export const auditLog = pgTable("audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id"),
+  action: text("action").notNull(), // login, search, export, settings_change, etc.
+  resource: text("resource"), // cves, ips, urls, etc.
+  details: text("details"), // JSON with action details
+  ipAddress: text("ip_address"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("audit_user_idx").on(table.userId),
+  index("audit_action_idx").on(table.action),
+  index("audit_created_idx").on(table.createdAt),
+]);
+
+// System configuration for admins
+export const systemConfig = pgTable("system_config", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  key: text("key").notNull().unique(),
+  value: text("value").notNull(),
+  description: text("description"),
+  updatedAt: timestamp("updated_at").defaultNow(),
+  updatedBy: varchar("updated_by"),
+});
+
+export const insertUserSettingsSchema = createInsertSchema(userSettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertSavedSearchSchema = createInsertSchema(savedSearches).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertAuditLogSchema = createInsertSchema(auditLog).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertUserSettings = z.infer<typeof insertUserSettingsSchema>;
+export type UserSettings = typeof userSettings.$inferSelect;
+
+export type InsertSavedSearch = z.infer<typeof insertSavedSearchSchema>;
+export type SavedSearch = typeof savedSearches.$inferSelect;
+
+export type InsertAuditLog = z.infer<typeof insertAuditLogSchema>;
+export type AuditLog = typeof auditLog.$inferSelect;
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 

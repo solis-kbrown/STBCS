@@ -9,6 +9,7 @@ import Ransomware from "@/pages/ransomware";
 import Exploits from "@/pages/exploits";
 import News from "@/pages/news";
 import ThreatFeeds from "@/pages/threat-feeds";
+import SearchPage from "@/pages/search";
 
 function Router() {
   return (
@@ -18,6 +19,7 @@ function Router() {
       <Route path="/exploits" component={Exploits}/>
       <Route path="/news" component={News}/>
       <Route path="/threat-feeds" component={ThreatFeeds}/>
+      <Route path="/search" component={SearchPage}/>
       <Route component={NotFound} />
     </Switch>
   );
