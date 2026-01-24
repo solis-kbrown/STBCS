@@ -182,7 +182,12 @@ export default function Dashboard() {
                       </div>
                       <p className="text-xs text-muted-foreground truncate max-w-[180px]">{cve.platform}</p>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-white">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-muted-foreground hover:text-white"
+                      onClick={() => window.open(`https://nvd.nist.gov/vuln/detail/${cve.cveId}`, '_blank')}
+                    >
                       <ArrowUpRight className="h-4 w-4" />
                     </Button>
                   </div>
@@ -204,7 +209,12 @@ export default function Dashboard() {
               <CardTitle className="font-display">Recent Ransomware Incidents</CardTitle>
               <CardDescription>Live feed from dark web monitoring and victim sites.</CardDescription>
             </div>
-            <Button variant="outline" className="border-white/10 hover:bg-white/5 text-xs" data-testid="button-export-csv">
+            <Button 
+              variant="outline" 
+              className="border-white/10 hover:bg-white/5 text-xs" 
+              data-testid="button-export-csv"
+              onClick={() => alert('CSV export coming soon! This feature will be available in the Pro tier.')}
+            >
               <ExternalLink className="h-3 w-3 mr-2" />
               EXPORT CSV
             </Button>

@@ -24,11 +24,20 @@ export default function Ransomware() {
             <p className="text-muted-foreground">Monitor active ransomware groups, victim postings, and negotiation statuses.</p>
           </div>
           <div className="flex gap-2 w-full md:w-auto">
-             <Button variant="outline" className="border-white/10 hover:bg-white/5" data-testid="button-export">
+             <Button 
+              variant="outline" 
+              className="border-white/10 hover:bg-white/5" 
+              data-testid="button-export"
+              onClick={() => alert('Export coming soon! This feature will be available in the Pro tier.')}
+            >
               <Download className="h-4 w-4 mr-2" />
               Export
             </Button>
-            <Button className="bg-primary hover:bg-primary/90" data-testid="button-report-incident">
+            <Button 
+              className="bg-primary hover:bg-primary/90" 
+              data-testid="button-report-incident"
+              onClick={() => alert('Report Incident feature coming soon! Contact us to report incidents manually.')}
+            >
               Report Incident
             </Button>
           </div>
@@ -146,7 +155,12 @@ export default function Ransomware() {
                       }>
                         {incident.status}
                       </Badge>
-                      <Button variant="link" className="text-primary p-0 h-auto font-mono text-xs" data-testid={`link-view-evidence-${incident.id}`}>
+                      <Button 
+                        variant="link" 
+                        className="text-primary p-0 h-auto font-mono text-xs" 
+                        data-testid={`link-view-evidence-${incident.id}`}
+                        onClick={() => alert('Evidence viewing requires Pro tier access for security reasons.')}
+                      >
                         VIEW EVIDENCE &gt;
                       </Button>
                     </div>

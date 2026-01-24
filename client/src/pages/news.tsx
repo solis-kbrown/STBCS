@@ -71,10 +71,25 @@ export default function News() {
                       <div className="flex justify-between items-center pt-2">
                         <span className="text-xs font-bold text-white/50">{article.source}</span>
                         <div className="flex gap-2">
-                           <Button variant="ghost" size="icon" className="h-8 w-8 hover:text-white" data-testid={`button-share-${article.id}`}>
+                           <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 hover:text-white" 
+                            data-testid={`button-share-${article.id}`}
+                            onClick={() => {
+                              navigator.clipboard.writeText(window.location.href);
+                              alert('Link copied to clipboard!');
+                            }}
+                          >
                             <Share2 className="h-4 w-4" />
                           </Button>
-                          <Button variant="outline" size="sm" className="border-white/10 hover:border-primary/50 hover:text-primary text-xs" data-testid={`button-read-${article.id}`}>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="border-white/10 hover:border-primary/50 hover:text-primary text-xs" 
+                            data-testid={`button-read-${article.id}`}
+                            onClick={() => article.sourceUrl ? window.open(article.sourceUrl, '_blank') : alert('Source link not available for this article.')}
+                          >
                             READ FULL <ArrowRight className="ml-2 h-3 w-3" />
                           </Button>
                         </div>
@@ -119,7 +134,11 @@ export default function News() {
                     data-testid="input-email-subscribe"
                   />
                 </div>
-                <Button className="w-full bg-primary hover:bg-primary/90" data-testid="button-subscribe">SUBSCRIBE</Button>
+                <Button 
+                  className="w-full bg-primary hover:bg-primary/90" 
+                  data-testid="button-subscribe"
+                  onClick={() => alert('Newsletter subscription coming soon! Check back later.')}
+                >SUBSCRIBE</Button>
               </CardContent>
             </Card>
           </div>
