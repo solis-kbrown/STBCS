@@ -29,7 +29,7 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="space-y-8 page-transition">
         
         {/* Hero Section */}
         <div className="relative overflow-hidden rounded-xl border border-white/10 bg-card h-64 flex items-center">
@@ -93,7 +93,7 @@ export default function Dashboard() {
               { title: "Malicious URLs", value: stats?.maliciousUrls || 0, change: "Active", icon: Link2, color: "text-yellow-500" },
               { title: "CISA KEV", value: stats?.cisaKevCount || 0, change: "Exploited", icon: AlertTriangle, color: "text-red-400" },
             ].map((stat, i) => (
-              <Card key={i} className="border-white/5 bg-card/50 backdrop-blur-sm hover:border-primary/30 transition-colors" data-testid={`card-stat-${i}`}>
+              <Card key={i} className={`border-white/5 bg-card/50 backdrop-blur-sm hover:border-primary/30 card-hover animate-fade-in stagger-${Math.min(i + 1, 5)}`} data-testid={`card-stat-${i}`}>
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div className={`p-1.5 rounded-lg bg-background border border-white/5 ${stat.color}`}>
