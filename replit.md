@@ -2,7 +2,7 @@
 
 ## Overview
 
-Stop The Bleed CS (stoptbcs.com) is a real-time cybersecurity threat intelligence platform that tracks ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, and security news. The application aggregates data from sources like the NVD (National Vulnerability Database) and provides a dashboard for monitoring active threats, ransomware groups, and critical security events.
+Stop The Bleed CS (stoptbcs.com) is a real-time cybersecurity threat intelligence platform that tracks ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news. The application aggregates data from 15+ free public threat intelligence feeds and provides a comprehensive dashboard for monitoring active threats, ransomware groups, and critical security events.
 
 ## User Preferences
 
@@ -21,8 +21,9 @@ Preferred communication style: Simple, everyday language.
 ### Backend Architecture
 - **Runtime**: Node.js with Express 5
 - **Language**: TypeScript with ESM modules
-- **API Design**: RESTful JSON API under `/api/*` routes
-- **Data Fetching**: Server-side scrapers pull from external sources (NVD API for CVEs)
+- **API Design**: RESTful JSON API under `/api/*` routes with Zod validation
+- **Security**: Rate limiting via express-rate-limit, input validation on all endpoints
+- **Data Fetching**: Server-side scrapers pull from 15+ external threat intelligence sources
 
 ### Data Storage
 - **Database**: PostgreSQL via Drizzle ORM
@@ -31,8 +32,13 @@ Preferred communication style: Simple, everyday language.
   - `users` - User accounts with tier-based access
   - `cves` - Vulnerability database with CVSS scores and severity
   - `ransomwareIncidents` - Tracked ransomware attacks and victims
-  - `threatActors` - Known threat groups and their TTPs
+  - `threatActors` - Known threat groups and their TTPs (15 groups)
   - `newsArticles` - Curated security news and intel
+  - `maliciousIps` - Tracked malicious IP addresses from multiple sources
+  - `maliciousUrls` - Tracked malicious URLs (phishing, malware, C2)
+  - `cisaKev` - CISA Known Exploited Vulnerabilities catalog
+  - `threatFeeds` - Registry of all threat intelligence feed sources
+  - `subscriptions` - Pro tier subscription management
 - **Migrations**: Managed via `drizzle-kit push` command
 
 ### Key Design Patterns
@@ -40,6 +46,7 @@ Preferred communication style: Simple, everyday language.
 - **Storage Interface**: `server/storage.ts` provides abstracted database operations
 - **API Hooks**: `client/src/lib/api.ts` contains React Query hooks for all API endpoints
 - **Component Aliases**: Path aliases configured (`@/` for client, `@shared/` for shared code)
+- **Rate Limiting**: General limit (100/min) and strict limit (30/min) for sensitive endpoints
 
 ### Build and Deployment
 - **Development**: `npm run dev` starts Express server with Vite middleware for HMR
@@ -48,43 +55,69 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2026)
 
-### Data Harvesting Implementation
-- NVD API integration fetches real CVE data from last 7 days
-- Automatic data refresh scheduler runs every 30 minutes
-- Simulated ransomware incidents from 10 known threat groups
-- Sample cybersecurity news articles seeded
+### Expanded Threat Intelligence System
+- 15+ free public threat intelligence feed sources integrated:
+  - **NVD** - National Vulnerability Database CVEs
+  - **CISA KEV** - Known Exploited Vulnerabilities catalog
+  - **URLhaus** - Malicious URL database
+  - **OpenPhish** - Phishing URL feed
+  - **Feodo Tracker** - Banking trojan C2 servers
+  - **SANS DShield** - Top attacking IP addresses
+  - **Tor Exit Nodes** - Tor network exit node IPs
+  - **SSL Blacklist** - Malicious SSL certificate IPs
+  - **Pro tier feeds** (placeholder): AlienVault OTX, VirusTotal, Shodan, GreyNoise, CrowdSec, Pulsedive, ThreatFox
+
+### Security Enhancements
+- API rate limiting (100 requests/min general, 30/min for threat data endpoints)
+- Zod validation on all query parameters
+- Secure fetch wrapper with 30s timeout for external APIs
+- Input sanitization and max length constraints
 
 ### API Endpoints
-- `GET /api/stats` - Dashboard statistics (active groups, critical CVEs, exploits, total incidents)
+- `GET /api/stats` - Dashboard statistics (7 threat categories)
 - `GET /api/cves?limit=&offset=&search=` - Paginated CVE list with search
 - `GET /api/ransomware?limit=&offset=&group=&sector=` - Ransomware incidents with filters
 - `GET /api/ransomware/groups` - Active ransomware groups with incident counts
 - `GET /api/threat-actors` - Threat actor profiles
 - `GET /api/news?limit=&offset=&category=` - Security news feed
+- `GET /api/malicious-ips?limit=&offset=&source=&threatType=` - Malicious IP addresses
+- `GET /api/malicious-urls?limit=&offset=&source=&threatType=` - Malicious URLs
+- `GET /api/cisa-kev?limit=&offset=` - CISA Known Exploited Vulnerabilities
+- `GET /api/threat-feeds` - All registered threat feed sources
 - `POST /api/refresh` - Manual data refresh trigger
 
-### Frontend Integration
-- React Query hooks in `client/src/lib/api.ts` for all endpoints
-- Auto-refresh intervals: stats (60s), CVEs/ransomware/news (120s), groups (300s)
-- Loading skeletons and empty states for better UX
+### Frontend Pages
+- **Dashboard** (`/`) - Overview with 7 stat cards and threat velocity chart
+- **Ransomware Tracker** (`/ransomware`) - Ransomware incidents and group activity
+- **Exploits & CVEs** (`/exploits`) - Vulnerability database with search
+- **Threat Feeds** (`/threat-feeds`) - All threat intel sources with tabs for IPs, URLs, KEV
+- **Intel & News** (`/news`) - Curated security news feed
+
+### Data Refresh
+- Automatic refresh scheduler runs every 30 minutes
+- Rate limiting between feed fetches (1-2s delays)
+- Error handling and logging for each feed
 
 ## External Dependencies
 
-### Data Sources
-- **NVD API**: `services.nvd.nist.gov/rest/json/cves/2.0` for CVE data
-- Planned integration with ransomware leak site monitoring and threat intelligence feeds
+### Data Sources (Free Public Feeds)
+- **NVD API**: `services.nvd.nist.gov/rest/json/cves/2.0`
+- **CISA KEV**: `www.cisa.gov/sites/default/files/feeds/known_exploited_vulnerabilities.json`
+- **URLhaus**: `urlhaus-api.abuse.ch/v1/urls/recent/`
+- **OpenPhish**: `openphish.com/feed.txt`
+- **Feodo Tracker**: `feodotracker.abuse.ch/downloads/ipblocklist.json`
+- **SANS DShield**: `isc.sans.edu/api/sources/attacks/`
+- **Tor Exit Nodes**: `check.torproject.org/torbulkexitlist`
+- **SSL Blacklist**: `sslbl.abuse.ch/blacklist/sslipblacklist.json`
 
 ### Database
 - PostgreSQL (connection via `DATABASE_URL` environment variable)
 - Uses `connect-pg-simple` for session storage
 
-### Third-Party Services (Configured but may need setup)
-- Session management with `express-session`
-- Optional integrations available: OpenAI, Google Generative AI, Stripe, Nodemailer
-
 ### Key NPM Packages
 - `drizzle-orm` / `drizzle-zod` - Database ORM with Zod validation
 - `@tanstack/react-query` - Data fetching and caching
 - `recharts` - Dashboard charts and visualizations
-- `date-fns` - Date formatting utilities
+- `express-rate-limit` - API rate limiting
 - `zod` - Runtime type validation
+- `date-fns` - Date formatting utilities

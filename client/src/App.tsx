@@ -8,6 +8,7 @@ import Dashboard from "@/pages/dashboard";
 import Ransomware from "@/pages/ransomware";
 import Exploits from "@/pages/exploits";
 import News from "@/pages/news";
+import ThreatFeeds from "@/pages/threat-feeds";
 
 function Router() {
   return (
@@ -16,6 +17,7 @@ function Router() {
       <Route path="/ransomware" component={Ransomware}/>
       <Route path="/exploits" component={Exploits}/>
       <Route path="/news" component={News}/>
+      <Route path="/threat-feeds" component={ThreatFeeds}/>
       <Route component={NotFound} />
     </Switch>
   );

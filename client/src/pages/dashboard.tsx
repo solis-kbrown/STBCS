@@ -3,7 +3,7 @@ import { useStats, useCves, useRansomware, useRefreshData } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw } from "lucide-react";
+import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -71,37 +71,40 @@ export default function Dashboard() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
           {statsLoading ? (
-            Array(4).fill(0).map((_, i) => (
+            Array(7).fill(0).map((_, i) => (
               <Card key={i} className="border-white/5 bg-card/50 backdrop-blur-sm">
-                <CardContent className="p-6">
-                  <Skeleton className="h-8 w-8 rounded-lg mb-4" />
-                  <Skeleton className="h-8 w-16 mb-2" />
-                  <Skeleton className="h-4 w-32" />
+                <CardContent className="p-4">
+                  <Skeleton className="h-6 w-6 rounded-lg mb-3" />
+                  <Skeleton className="h-6 w-12 mb-1" />
+                  <Skeleton className="h-3 w-20" />
                 </CardContent>
               </Card>
             ))
           ) : (
             [
-              { title: "Active Ransomware Groups", value: stats?.activeGroups || 0, change: "Live", icon: Skull, color: "text-primary" },
-              { title: "Critical CVEs (24h)", value: stats?.criticalCves || 0, change: "High", icon: Shield, color: "text-destructive" },
-              { title: "Exploits in Wild", value: stats?.activeExploits || 0, change: "Active", icon: Activity, color: "text-secondary" },
-              { title: "Total Incidents Tracked", value: stats?.totalIncidents || 0, change: "All-time", icon: Lock, color: "text-green-500" },
+              { title: "Ransomware Groups", value: stats?.activeGroups || 0, change: "Live", icon: Skull, color: "text-primary" },
+              { title: "Critical CVEs", value: stats?.criticalCves || 0, change: "High", icon: Shield, color: "text-destructive" },
+              { title: "Active Exploits", value: stats?.activeExploits || 0, change: "Active", icon: Activity, color: "text-secondary" },
+              { title: "Incidents", value: stats?.totalIncidents || 0, change: "Total", icon: Lock, color: "text-green-500" },
+              { title: "Malicious IPs", value: stats?.maliciousIps || 0, change: "Tracked", icon: Globe, color: "text-orange-500" },
+              { title: "Malicious URLs", value: stats?.maliciousUrls || 0, change: "Active", icon: Link2, color: "text-yellow-500" },
+              { title: "CISA KEV", value: stats?.cisaKevCount || 0, change: "Exploited", icon: AlertTriangle, color: "text-red-400" },
             ].map((stat, i) => (
               <Card key={i} className="border-white/5 bg-card/50 backdrop-blur-sm hover:border-primary/30 transition-colors" data-testid={`card-stat-${i}`}>
-                <CardContent className="p-6">
-                  <div className="flex justify-between items-start mb-4">
-                    <div className={`p-2 rounded-lg bg-background border border-white/5 ${stat.color}`}>
-                      <stat.icon className="h-5 w-5" />
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-start mb-3">
+                    <div className={`p-1.5 rounded-lg bg-background border border-white/5 ${stat.color}`}>
+                      <stat.icon className="h-4 w-4" />
                     </div>
-                    <Badge variant="outline" className="bg-background/50 border-white/10 text-xs">
+                    <Badge variant="outline" className="bg-background/50 border-white/10 text-[10px] px-1.5">
                       {stat.change}
                     </Badge>
                   </div>
-                  <div className="space-y-1">
-                    <h3 className="text-3xl font-display font-bold text-white" data-testid={`text-stat-value-${i}`}>{stat.value}</h3>
-                    <p className="text-sm text-muted-foreground font-medium">{stat.title}</p>
+                  <div className="space-y-0.5">
+                    <h3 className="text-2xl font-display font-bold text-white" data-testid={`text-stat-value-${i}`}>{stat.value}</h3>
+                    <p className="text-xs text-muted-foreground font-medium">{stat.title}</p>
                   </div>
                 </CardContent>
               </Card>

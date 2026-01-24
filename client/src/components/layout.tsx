@@ -8,7 +8,8 @@ import {
   Search, 
   User, 
   Bell,
-  LogOut
+  LogOut,
+  Globe
 } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/", label: "Dashboard", icon: LayoutDashboard },
     { href: "/ransomware", label: "Ransomware Tracker", icon: Skull },
     { href: "/exploits", label: "Exploits & CVEs", icon: ShieldAlert },
+    { href: "/threat-feeds", label: "Threat Feeds", icon: Globe },
     { href: "/news", label: "Intel & News", icon: Newspaper },
   ];
 

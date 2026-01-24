@@ -4,10 +4,16 @@ import {
   type RansomwareIncident, type InsertRansomware,
   type ThreatActor, type InsertThreatActor,
   type NewsArticle, type InsertNews,
-  users, cves, ransomwareIncidents, threatActors, newsArticles
+  type MaliciousIp, type InsertMaliciousIp,
+  type MaliciousUrl, type InsertMaliciousUrl,
+  type CisaKev, type InsertCisaKev,
+  type Subscription, type InsertSubscription,
+  type ThreatFeed, type InsertThreatFeed,
+  users, cves, ransomwareIncidents, threatActors, newsArticles,
+  maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, ilike, or, sql } from "drizzle-orm";
+import { eq, desc, ilike, or, sql, and } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -40,12 +46,35 @@ export interface IStorage {
   createNews(article: InsertNews): Promise<NewsArticle>;
   getNewsCount(): Promise<number>;
   
+  // Malicious IPs
+  getMaliciousIps(limit?: number, offset?: number, source?: string, threatType?: string): Promise<MaliciousIp[]>;
+  upsertMaliciousIp(ip: InsertMaliciousIp): Promise<MaliciousIp>;
+  getMaliciousIpCount(): Promise<number>;
+  
+  // Malicious URLs
+  getMaliciousUrls(limit?: number, offset?: number, source?: string, threatType?: string): Promise<MaliciousUrl[]>;
+  upsertMaliciousUrl(url: InsertMaliciousUrl): Promise<MaliciousUrl>;
+  getMaliciousUrlCount(): Promise<number>;
+  
+  // CISA KEV
+  getCisaKev(limit?: number, offset?: number): Promise<CisaKev[]>;
+  upsertCisaKev(kev: InsertCisaKev): Promise<CisaKev>;
+  getCisaKevCount(): Promise<number>;
+  
+  // Threat Feeds
+  getThreatFeeds(): Promise<ThreatFeed[]>;
+  updateFeedLastFetched(name: string): Promise<void>;
+  upsertThreatFeed(feed: InsertThreatFeed): Promise<ThreatFeed>;
+  
   // Stats
   getDashboardStats(): Promise<{
     activeGroups: number;
     criticalCves: number;
     activeExploits: number;
     totalIncidents: number;
+    maliciousIps: number;
+    maliciousUrls: number;
+    cisaKevCount: number;
   }>;
 }
 
@@ -68,8 +97,6 @@ export class DatabaseStorage implements IStorage {
 
   // CVEs
   async getCves(limit = 50, offset = 0, search?: string): Promise<Cve[]> {
-    let query = db.select().from(cves).orderBy(desc(cves.publishedDate)).limit(limit).offset(offset);
-    
     if (search) {
       return db.select().from(cves)
         .where(or(
@@ -82,7 +109,7 @@ export class DatabaseStorage implements IStorage {
         .offset(offset);
     }
     
-    return query;
+    return db.select().from(cves).orderBy(desc(cves.publishedDate)).limit(limit).offset(offset);
   }
 
   async getCveById(id: string): Promise<Cve | undefined> {
@@ -204,12 +231,146 @@ export class DatabaseStorage implements IStorage {
     return Number(result[0]?.count || 0);
   }
 
+  // Malicious IPs
+  async getMaliciousIps(limit = 50, offset = 0, source?: string, threatType?: string): Promise<MaliciousIp[]> {
+    let baseQuery = db.select().from(maliciousIps);
+    
+    if (source && threatType) {
+      baseQuery = baseQuery.where(and(
+        eq(maliciousIps.source, source),
+        eq(maliciousIps.threatType, threatType)
+      )) as typeof baseQuery;
+    } else if (source) {
+      baseQuery = baseQuery.where(eq(maliciousIps.source, source)) as typeof baseQuery;
+    } else if (threatType) {
+      baseQuery = baseQuery.where(eq(maliciousIps.threatType, threatType)) as typeof baseQuery;
+    }
+    
+    return baseQuery.orderBy(desc(maliciousIps.lastSeen)).limit(limit).offset(offset);
+  }
+
+  async upsertMaliciousIp(ip: InsertMaliciousIp): Promise<MaliciousIp> {
+    const [existing] = await db.select().from(maliciousIps)
+      .where(and(
+        eq(maliciousIps.ipAddress, ip.ipAddress),
+        eq(maliciousIps.source, ip.source)
+      ));
+    
+    if (existing) {
+      const [updated] = await db.update(maliciousIps)
+        .set({ ...ip, lastSeen: new Date() })
+        .where(eq(maliciousIps.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(maliciousIps).values(ip).returning();
+    return created;
+  }
+
+  async getMaliciousIpCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(maliciousIps);
+    return Number(result[0]?.count || 0);
+  }
+
+  // Malicious URLs
+  async getMaliciousUrls(limit = 50, offset = 0, source?: string, threatType?: string): Promise<MaliciousUrl[]> {
+    let baseQuery = db.select().from(maliciousUrls);
+    
+    if (source && threatType) {
+      baseQuery = baseQuery.where(and(
+        eq(maliciousUrls.source, source),
+        eq(maliciousUrls.threatType, threatType)
+      )) as typeof baseQuery;
+    } else if (source) {
+      baseQuery = baseQuery.where(eq(maliciousUrls.source, source)) as typeof baseQuery;
+    } else if (threatType) {
+      baseQuery = baseQuery.where(eq(maliciousUrls.threatType, threatType)) as typeof baseQuery;
+    }
+    
+    return baseQuery.orderBy(desc(maliciousUrls.reportedAt)).limit(limit).offset(offset);
+  }
+
+  async upsertMaliciousUrl(url: InsertMaliciousUrl): Promise<MaliciousUrl> {
+    const [existing] = await db.select().from(maliciousUrls)
+      .where(and(
+        eq(maliciousUrls.url, url.url),
+        eq(maliciousUrls.source, url.source)
+      ));
+    
+    if (existing) {
+      const [updated] = await db.update(maliciousUrls)
+        .set(url)
+        .where(eq(maliciousUrls.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(maliciousUrls).values(url).returning();
+    return created;
+  }
+
+  async getMaliciousUrlCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(maliciousUrls);
+    return Number(result[0]?.count || 0);
+  }
+
+  // CISA KEV
+  async getCisaKev(limit = 50, offset = 0): Promise<CisaKev[]> {
+    return db.select().from(cisaKev).orderBy(desc(cisaKev.dateAdded)).limit(limit).offset(offset);
+  }
+
+  async upsertCisaKev(kev: InsertCisaKev): Promise<CisaKev> {
+    const [existing] = await db.select().from(cisaKev).where(eq(cisaKev.cveId, kev.cveId));
+    
+    if (existing) {
+      const [updated] = await db.update(cisaKev)
+        .set(kev)
+        .where(eq(cisaKev.cveId, kev.cveId))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(cisaKev).values(kev).returning();
+    return created;
+  }
+
+  async getCisaKevCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(cisaKev);
+    return Number(result[0]?.count || 0);
+  }
+
+  // Threat Feeds
+  async getThreatFeeds(): Promise<ThreatFeed[]> {
+    return db.select().from(threatFeeds).orderBy(threatFeeds.name);
+  }
+
+  async updateFeedLastFetched(name: string): Promise<void> {
+    await db.update(threatFeeds)
+      .set({ lastFetched: new Date() })
+      .where(eq(threatFeeds.name, name));
+  }
+
+  async upsertThreatFeed(feed: InsertThreatFeed): Promise<ThreatFeed> {
+    const [existing] = await db.select().from(threatFeeds).where(eq(threatFeeds.name, feed.name));
+    
+    if (existing) {
+      const [updated] = await db.update(threatFeeds)
+        .set(feed)
+        .where(eq(threatFeeds.name, feed.name))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(threatFeeds).values(feed).returning();
+    return created;
+  }
+
   // Dashboard Stats
   async getDashboardStats(): Promise<{
     activeGroups: number;
     criticalCves: number;
     activeExploits: number;
     totalIncidents: number;
+    maliciousIps: number;
+    maliciousUrls: number;
+    cisaKevCount: number;
   }> {
     const groups = await this.getActiveGroups();
     
@@ -222,12 +383,18 @@ export class DatabaseStorage implements IStorage {
       .where(eq(cves.exploitAvailable, true));
     
     const totalIncidents = await this.getRansomwareCount();
+    const maliciousIpCount = await this.getMaliciousIpCount();
+    const maliciousUrlCount = await this.getMaliciousUrlCount();
+    const kevCount = await this.getCisaKevCount();
     
     return {
       activeGroups: groups.length,
       criticalCves: Number(criticalCvesResult[0]?.count || 0),
       activeExploits: Number(activeExploitsResult[0]?.count || 0),
       totalIncidents,
+      maliciousIps: maliciousIpCount,
+      maliciousUrls: maliciousUrlCount,
+      cisaKevCount: kevCount,
     };
   }
 }

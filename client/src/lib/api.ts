@@ -64,6 +64,65 @@ export interface DashboardStats {
   criticalCves: number;
   activeExploits: number;
   totalIncidents: number;
+  maliciousIps: number;
+  maliciousUrls: number;
+  cisaKevCount: number;
+}
+
+export interface MaliciousIp {
+  id: string;
+  ipAddress: string;
+  source: string;
+  threatType: string | null;
+  riskScore: number | null;
+  country: string | null;
+  asn: string | null;
+  lastSeen: string | null;
+  firstSeen: string | null;
+  reportCount: number | null;
+  createdAt: string | null;
+}
+
+export interface MaliciousUrl {
+  id: string;
+  url: string;
+  source: string;
+  threatType: string | null;
+  status: string | null;
+  malwareFamily: string | null;
+  country: string | null;
+  hostIp: string | null;
+  lastOnline: string | null;
+  reportedAt: string | null;
+  createdAt: string | null;
+}
+
+export interface CisaKev {
+  id: string;
+  cveId: string;
+  vendorProject: string | null;
+  product: string | null;
+  vulnerabilityName: string | null;
+  dateAdded: string | null;
+  shortDescription: string | null;
+  requiredAction: string | null;
+  dueDate: string | null;
+  knownRansomware: boolean | null;
+  notes: string | null;
+  createdAt: string | null;
+}
+
+export interface ThreatFeed {
+  id: string;
+  name: string;
+  url: string;
+  feedType: string | null;
+  updateFrequency: string | null;
+  lastFetched: string | null;
+  isActive: boolean | null;
+  requiresProTier: boolean | null;
+  description: string | null;
+  createdAt: string | null;
 }
 
 export interface PaginatedResponse<T> {
@@ -148,6 +207,57 @@ export function useNews(limit = 50, offset = 0, category?: string) {
   });
 }
 
+export function useMaliciousIps(limit = 50, offset = 0, source?: string, threatType?: string) {
+  const queryString = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+    ...(source && { source }),
+    ...(threatType && { threatType }),
+  }).toString();
+  
+  return useQuery<PaginatedResponse<MaliciousIp>>({
+    queryKey: ["/api/malicious-ips", limit, offset, source, threatType],
+    queryFn: () => fetchApi<PaginatedResponse<MaliciousIp>>(`/api/malicious-ips?${queryString}`),
+    refetchInterval: 120000,
+  });
+}
+
+export function useMaliciousUrls(limit = 50, offset = 0, source?: string, threatType?: string) {
+  const queryString = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+    ...(source && { source }),
+    ...(threatType && { threatType }),
+  }).toString();
+  
+  return useQuery<PaginatedResponse<MaliciousUrl>>({
+    queryKey: ["/api/malicious-urls", limit, offset, source, threatType],
+    queryFn: () => fetchApi<PaginatedResponse<MaliciousUrl>>(`/api/malicious-urls?${queryString}`),
+    refetchInterval: 120000,
+  });
+}
+
+export function useCisaKev(limit = 50, offset = 0) {
+  const queryString = new URLSearchParams({
+    limit: String(limit),
+    offset: String(offset),
+  }).toString();
+  
+  return useQuery<PaginatedResponse<CisaKev>>({
+    queryKey: ["/api/cisa-kev", limit, offset],
+    queryFn: () => fetchApi<PaginatedResponse<CisaKev>>(`/api/cisa-kev?${queryString}`),
+    refetchInterval: 300000,
+  });
+}
+
+export function useThreatFeeds() {
+  return useQuery<ThreatFeed[]>({
+    queryKey: ["/api/threat-feeds"],
+    queryFn: () => fetchApi<ThreatFeed[]>("/api/threat-feeds"),
+    refetchInterval: 600000,
+  });
+}
+
 export function useRefreshData() {
   const queryClient = useQueryClient();
   
@@ -162,6 +272,10 @@ export function useRefreshData() {
       queryClient.invalidateQueries({ queryKey: ["/api/cves"] });
       queryClient.invalidateQueries({ queryKey: ["/api/ransomware"] });
       queryClient.invalidateQueries({ queryKey: ["/api/news"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/malicious-ips"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/malicious-urls"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/cisa-kev"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/threat-feeds"] });
     },
   });
 }
