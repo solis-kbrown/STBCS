@@ -79,7 +79,7 @@ export async function sendWeeklyDigests(): Promise<number> {
         ...digestData,
         weekStart: format(weekStart, "MMM d"),
         weekEnd: format(weekEnd, "MMM d, yyyy"),
-        unsubscribeToken: subscriber.unsubscribeToken
+        unsubscribeToken: subscriber.unsubscribeToken || ""
       });
       
       const success = await sendEmail({
@@ -120,7 +120,7 @@ export async function sendDailyDigests(): Promise<number> {
         ...digestData,
         weekStart: format(yesterday, "MMM d"),
         weekEnd: format(today, "MMM d, yyyy"),
-        unsubscribeToken: subscriber.unsubscribeToken
+        unsubscribeToken: subscriber.unsubscribeToken || ""
       });
       
       const subject = `[STBCS] Daily Security Digest: ${format(today, "MMM d, yyyy")}`;

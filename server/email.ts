@@ -329,7 +329,7 @@ export async function processWatchlistAlerts(userId: string): Promise<void> {
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
   
   for (const item of watchlistItems) {
-    if (!item.alertsEnabled) continue;
+    if (!item.alertOnMatch) continue;
     
     try {
       switch (item.itemType) {
