@@ -6,6 +6,8 @@ import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { lookupIp, lookupDomain, scanPorts, isValidIp, isValidDomain, isPrivateIp, COMMON_PORTS, lookupShodanInternetDB } from "./tools";
 import crypto from "crypto";
+import { stripeService } from "./stripeService";
+import { getStripePublishableKey } from "./stripeClient";
 
 // Rate limiters for security
 const generalLimiter = rateLimit({
@@ -1085,6 +1087,119 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Newsletter status error:", error);
       res.status(500).json({ error: "Failed to check newsletter status" });
+    }
+  });
+
+  // ===== STRIPE PAYMENT ROUTES =====
+  
+  // Get Stripe publishable key for frontend
+  app.get("/api/stripe/config", async (req: Request, res: Response) => {
+    try {
+      const publishableKey = await getStripePublishableKey();
+      res.json({ publishableKey });
+    } catch (error) {
+      console.error("Stripe config error:", error);
+      res.status(500).json({ error: "Payment system unavailable" });
+    }
+  });
+
+  // List available products and prices (for donation/membership tiers)
+  app.get("/api/stripe/products", async (req: Request, res: Response) => {
+    try {
+      const products = await stripeService.listProductsWithPrices();
+      
+      // Group by product
+      const productsMap = new Map();
+      for (const row of products) {
+        const r = row as any;
+        if (!productsMap.has(r.product_id)) {
+          productsMap.set(r.product_id, {
+            id: r.product_id,
+            name: r.product_name,
+            description: r.product_description,
+            metadata: r.product_metadata,
+            prices: []
+          });
+        }
+        if (r.price_id) {
+          productsMap.get(r.product_id).prices.push({
+            id: r.price_id,
+            unit_amount: r.unit_amount,
+            currency: r.currency,
+            recurring: r.recurring,
+          });
+        }
+      }
+      
+      res.json({ products: Array.from(productsMap.values()) });
+    } catch (error) {
+      console.error("Products error:", error);
+      res.status(500).json({ error: "Failed to fetch products" });
+    }
+  });
+
+  // Create checkout session for subscription/membership
+  app.post("/api/stripe/checkout", async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        priceId: z.string().min(1),
+        customerEmail: z.string().email().optional(),
+        mode: z.enum(['payment', 'subscription']).default('subscription'),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request", details: parsed.error.errors });
+      }
+      
+      const { priceId, customerEmail, mode } = parsed.data;
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      
+      const session = await stripeService.createCheckoutSession({
+        priceId,
+        successUrl: `${baseUrl}/support?success=true`,
+        cancelUrl: `${baseUrl}/support?canceled=true`,
+        customerEmail,
+        mode,
+        metadata: { source: 'stbcs_support' },
+      });
+      
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Checkout error:", error);
+      res.status(500).json({ error: "Failed to create checkout session" });
+    }
+  });
+
+  // Create checkout session for one-time donation
+  app.post("/api/stripe/donate", async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        amount: z.number().min(100).max(100000), // $1 to $1000 in cents
+        customerEmail: z.string().email().optional(),
+        donorName: z.string().max(100).optional(),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request", details: parsed.error.errors });
+      }
+      
+      const { amount, customerEmail, donorName } = parsed.data;
+      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      
+      const session = await stripeService.createDonationCheckout({
+        amount,
+        successUrl: `${baseUrl}/support?donated=true`,
+        cancelUrl: `${baseUrl}/support?canceled=true`,
+        customerEmail,
+        donorName,
+      });
+      
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Donation error:", error);
+      res.status(500).json({ error: "Failed to create donation session" });
     }
   });
 

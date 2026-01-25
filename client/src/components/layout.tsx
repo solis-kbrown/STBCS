@@ -11,7 +11,8 @@ import {
   LogOut,
   Globe,
   Wrench,
-  Mail
+  Mail,
+  Heart
 } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -47,6 +48,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/exploits", label: "Exploits & CVEs", icon: ShieldAlert },
     { href: "/threat-feeds", label: "Threat Feeds", icon: Globe },
     { href: "/news", label: "Intel & News", icon: Newspaper },
+    { href: "/support", label: "Support Us", icon: Heart },
   ];
 
   const SidebarContent = () => (
