@@ -1,5 +1,6 @@
 import { 
   type User, type InsertUser,
+  type Session, type InsertSession,
   type Cve, type InsertCve,
   type RansomwareIncident, type InsertRansomware,
   type ThreatActor, type InsertThreatActor,
@@ -13,7 +14,7 @@ import {
   type WatchlistItem, type InsertWatchlistItem,
   type BreachIncident, type InsertBreach,
   type NewsletterSubscription, type InsertNewsletter,
-  users, cves, ransomwareIncidents, threatActors, newsArticles,
+  users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
   userNotifications, watchlistItems, breachIncidents, newsletterSubscriptions
 } from "@shared/schema";
@@ -23,8 +24,19 @@ import { eq, desc, ilike, or, sql, and } from "drizzle-orm";
 export interface IStorage {
   // Users
   getUser(id: string): Promise<User | undefined>;
+  getUserById(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUserTier(userId: string, tier: string): Promise<void>;
+  updateUserStripe(userId: string, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<void>;
+  
+  // Sessions
+  createSession(session: InsertSession): Promise<Session>;
+  getSessionByToken(token: string): Promise<Session | undefined>;
+  deleteSession(id: string): Promise<void>;
+  deleteUserSessions(userId: string): Promise<void>;
+  cleanupExpiredSessions(): Promise<void>;
   
   // CVEs
   getCves(limit?: number, offset?: number, search?: string): Promise<Cve[]>;
@@ -116,14 +128,58 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getUserById(id: string): Promise<User | undefined> {
+    return this.getUser(id);
+  }
+
   async getUserByUsername(username: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
     return user;
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+
+  async updateUserTier(userId: string, tier: string): Promise<void> {
+    await db.update(users).set({ tier }).where(eq(users.id, userId));
+  }
+
+  async updateUserStripe(userId: string, stripeCustomerId: string, stripeSubscriptionId?: string): Promise<void> {
+    const updates: Partial<User> = { stripeCustomerId };
+    if (stripeSubscriptionId) {
+      updates.stripeSubscriptionId = stripeSubscriptionId;
+    }
+    await db.update(users).set(updates).where(eq(users.id, userId));
+  }
+
+  // Sessions
+  async createSession(session: InsertSession): Promise<Session> {
+    const [created] = await db.insert(sessions).values(session).returning();
+    return created;
+  }
+
+  async getSessionByToken(token: string): Promise<Session | undefined> {
+    const [session] = await db.select().from(sessions).where(eq(sessions.token, token));
+    return session;
+  }
+
+  async deleteSession(id: string): Promise<void> {
+    await db.delete(sessions).where(eq(sessions.id, id));
+  }
+
+  async deleteUserSessions(userId: string): Promise<void> {
+    await db.delete(sessions).where(eq(sessions.userId, userId));
+  }
+
+  async cleanupExpiredSessions(): Promise<void> {
+    await db.delete(sessions).where(sql`${sessions.expiresAt} < NOW()`);
   }
 
   // CVEs

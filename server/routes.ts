@@ -1,7 +1,8 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
+import cookieParser from "cookie-parser";
 import { storage } from "./storage";
-import { insertCveSchema, insertRansomwareSchema, insertNewsSchema } from "@shared/schema";
+import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema } from "@shared/schema";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { lookupIp, lookupDomain, scanPorts, isValidIp, isValidDomain, isPrivateIp, COMMON_PORTS, lookupShodanInternetDB } from "./tools";
@@ -9,6 +10,16 @@ import crypto from "crypto";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 import { getQuoService, isQuoConfigured } from "./quoService";
+import { 
+  hashPassword, 
+  verifyPassword, 
+  generateSessionToken, 
+  getSessionExpiry, 
+  authMiddleware, 
+  requireAuth, 
+  requirePro,
+  type AuthenticatedRequest 
+} from "./auth";
 
 // Rate limiters for security
 const generalLimiter = rateLimit({
@@ -80,13 +91,176 @@ const limitOnlySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
 
+// Auth validation schemas
+const signupSchema = z.object({
+  username: z.string().min(3).max(50).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
+  email: z.string().email(),
+  password: z.string().min(8).max(100),
+});
+
+const loginSchema = z.object({
+  username: z.string().min(1),
+  password: z.string().min(1),
+});
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
 
+  // Cookie parser for session tokens
+  app.use(cookieParser());
+  
+  // Auth middleware - runs on all requests to populate req.user if logged in
+  app.use(authMiddleware as any);
+
   // Apply rate limiting to all API routes
   app.use("/api", generalLimiter);
+
+  // ===== AUTH ROUTES =====
+  
+  // Sign up
+  app.post("/api/auth/signup", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const data = signupSchema.parse(req.body);
+      
+      // Check if username exists
+      const existingUser = await storage.getUserByUsername(data.username);
+      if (existingUser) {
+        res.status(400).json({ error: "Username already taken" });
+        return;
+      }
+      
+      // Check if email exists
+      const existingEmail = await storage.getUserByEmail(data.email);
+      if (existingEmail) {
+        res.status(400).json({ error: "Email already registered" });
+        return;
+      }
+      
+      // Hash password and create user
+      const hashedPassword = await hashPassword(data.password);
+      const user = await storage.createUser({
+        username: data.username,
+        email: data.email,
+        password: hashedPassword,
+      });
+      
+      // Create session
+      const token = generateSessionToken();
+      await storage.createSession({
+        userId: user.id,
+        token,
+        expiresAt: getSessionExpiry(),
+      });
+      
+      // Set cookie
+      res.cookie("session_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+      });
+      
+      res.json({
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          tier: user.tier || "free",
+        },
+        token,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors[0].message });
+        return;
+      }
+      console.error("Signup error:", error);
+      res.status(500).json({ error: "Failed to create account" });
+    }
+  });
+
+  // Login
+  app.post("/api/auth/login", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const data = loginSchema.parse(req.body);
+      
+      // Find user by username or email
+      let user = await storage.getUserByUsername(data.username);
+      if (!user) {
+        user = await storage.getUserByEmail(data.username);
+      }
+      
+      if (!user) {
+        res.status(401).json({ error: "Invalid credentials" });
+        return;
+      }
+      
+      // Verify password
+      const valid = await verifyPassword(data.password, user.password);
+      if (!valid) {
+        res.status(401).json({ error: "Invalid credentials" });
+        return;
+      }
+      
+      // Create session
+      const token = generateSessionToken();
+      await storage.createSession({
+        userId: user.id,
+        token,
+        expiresAt: getSessionExpiry(),
+      });
+      
+      // Set cookie
+      res.cookie("session_token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 30 * 24 * 60 * 60 * 1000,
+      });
+      
+      res.json({
+        user: {
+          id: user.id,
+          username: user.username,
+          email: user.email,
+          tier: user.tier || "free",
+        },
+        token,
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors[0].message });
+        return;
+      }
+      console.error("Login error:", error);
+      res.status(500).json({ error: "Failed to log in" });
+    }
+  });
+
+  // Logout
+  app.post("/api/auth/logout", async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (req.session) {
+        await storage.deleteSession(req.session.id);
+      }
+      res.clearCookie("session_token");
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Logout error:", error);
+      res.status(500).json({ error: "Failed to log out" });
+    }
+  });
+
+  // Get current user
+  app.get("/api/auth/me", async (req: AuthenticatedRequest, res: Response) => {
+    if (!req.user) {
+      res.status(401).json({ error: "Not authenticated" });
+      return;
+    }
+    res.json({ user: req.user });
+  });
 
   // Dashboard Stats
   app.get("/api/stats", async (req: Request, res: Response) => {
@@ -1511,6 +1685,315 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Quo webhook error:", error);
       res.status(500).json({ error: "Webhook processing failed" });
+    }
+  });
+
+  // ===== PRO FEATURES =====
+
+  // Get user's watchlist items
+  app.get("/api/watchlist", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const items = await storage.getWatchlistItems(req.user!.id);
+      res.json({ items });
+    } catch (error) {
+      console.error("Watchlist fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch watchlist" });
+    }
+  });
+
+  // Add item to watchlist
+  app.post("/api/watchlist", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schema = z.object({
+        itemType: z.enum(["cve", "ip", "domain", "ransomware_group", "keyword", "sector", "country"]),
+        itemValue: z.string().min(1).max(500),
+        label: z.string().max(100).optional(),
+        alertOnMatch: z.boolean().default(true),
+        emailOnMatch: z.boolean().default(false),
+        notes: z.string().max(1000).optional(),
+      });
+      
+      const data = schema.parse(req.body);
+      
+      const item = await storage.createWatchlistItem({
+        userId: req.user!.id,
+        itemType: data.itemType,
+        itemValue: data.itemValue,
+        label: data.label,
+        alertOnMatch: data.alertOnMatch,
+        emailOnMatch: data.emailOnMatch,
+        notes: data.notes,
+      });
+      
+      res.json({ item });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors[0].message });
+        return;
+      }
+      console.error("Watchlist add error:", error);
+      res.status(500).json({ error: "Failed to add to watchlist" });
+    }
+  });
+
+  // Update watchlist item
+  app.patch("/api/watchlist/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      const schema = z.object({
+        label: z.string().max(100).optional(),
+        alertOnMatch: z.boolean().optional(),
+        emailOnMatch: z.boolean().optional(),
+        notes: z.string().max(1000).optional(),
+      });
+      
+      const data = schema.parse(req.body);
+      const item = await storage.updateWatchlistItem(id, req.user!.id, data);
+      
+      if (!item) {
+        res.status(404).json({ error: "Watchlist item not found" });
+        return;
+      }
+      
+      res.json({ item });
+    } catch (error) {
+      console.error("Watchlist update error:", error);
+      res.status(500).json({ error: "Failed to update watchlist item" });
+    }
+  });
+
+  // Delete watchlist item
+  app.delete("/api/watchlist/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      await storage.deleteWatchlistItem(id, req.user!.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Watchlist delete error:", error);
+      res.status(500).json({ error: "Failed to delete watchlist item" });
+    }
+  });
+
+  // Get user notifications
+  app.get("/api/notifications", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schema = z.object({
+        limit: z.coerce.number().int().min(1).max(100).default(50),
+        unreadOnly: z.coerce.boolean().default(false),
+      });
+      
+      const { limit, unreadOnly } = schema.parse(req.query);
+      const notifications = await storage.getUserNotifications(req.user!.id, limit, unreadOnly);
+      const unreadCount = await storage.getUnreadNotificationCount(req.user!.id);
+      
+      res.json({ notifications, unreadCount });
+    } catch (error) {
+      console.error("Notifications fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch notifications" });
+    }
+  });
+
+  // Mark notification as read
+  app.post("/api/notifications/:id/read", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      await storage.markNotificationRead(id, req.user!.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Notification read error:", error);
+      res.status(500).json({ error: "Failed to mark notification as read" });
+    }
+  });
+
+  // Mark all notifications as read
+  app.post("/api/notifications/read-all", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      await storage.markAllNotificationsRead(req.user!.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Notifications read-all error:", error);
+      res.status(500).json({ error: "Failed to mark notifications as read" });
+    }
+  });
+
+  // Dismiss notification
+  app.post("/api/notifications/:id/dismiss", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { id } = req.params;
+      await storage.dismissNotification(id, req.user!.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Notification dismiss error:", error);
+      res.status(500).json({ error: "Failed to dismiss notification" });
+    }
+  });
+
+  // Search breaches (Pro feature)
+  app.get("/api/breaches", async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schema = z.object({
+        limit: z.coerce.number().int().min(1).max(100).default(50),
+        offset: z.coerce.number().int().min(0).default(0),
+        search: z.string().max(200).optional(),
+      });
+      
+      const { limit, offset, search } = schema.parse(req.query);
+      const breaches = await storage.getBreachIncidents(limit, offset, search);
+      const total = await storage.getBreachCount();
+      
+      res.json({ data: breaches, total, limit, offset });
+    } catch (error) {
+      console.error("Breaches fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch breaches" });
+    }
+  });
+
+  // Check email in breach database (Pro feature)
+  app.post("/api/breaches/check", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schema = z.object({
+        email: z.string().email(),
+      });
+      
+      const { email } = schema.parse(req.body);
+      const domain = email.split("@")[1];
+      
+      // Search for breaches matching the domain
+      const breaches = await storage.searchBreaches(domain, 50);
+      
+      res.json({ 
+        email,
+        domain,
+        breachesFound: breaches.length,
+        breaches: breaches.map(b => ({
+          name: b.name,
+          breachDate: b.breachDate,
+          pwnCount: b.pwnCount,
+          dataClasses: b.dataClasses,
+          description: b.description,
+        })),
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors[0].message });
+        return;
+      }
+      console.error("Breach check error:", error);
+      res.status(500).json({ error: "Failed to check breaches" });
+    }
+  });
+
+  // Export data (Pro feature)
+  app.get("/api/export/:type", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { type } = req.params;
+      const format = (req.query.format as string) || "json";
+      const limit = Math.min(parseInt(req.query.limit as string) || 1000, 5000);
+      
+      let data: any[];
+      let filename: string;
+      
+      switch (type) {
+        case "cves":
+          data = await storage.getCves(limit, 0);
+          filename = "stbcs_cves";
+          break;
+        case "ransomware":
+          data = await storage.getRansomwareIncidents(limit, 0);
+          filename = "stbcs_ransomware";
+          break;
+        case "ips":
+          data = await storage.getMaliciousIps(limit, 0);
+          filename = "stbcs_malicious_ips";
+          break;
+        case "urls":
+          data = await storage.getMaliciousUrls(limit, 0);
+          filename = "stbcs_malicious_urls";
+          break;
+        case "kev":
+          data = await storage.getCisaKev(limit, 0);
+          filename = "stbcs_cisa_kev";
+          break;
+        default:
+          res.status(400).json({ error: "Invalid export type" });
+          return;
+      }
+      
+      if (format === "csv") {
+        // Convert to CSV
+        if (data.length === 0) {
+          res.status(404).json({ error: "No data to export" });
+          return;
+        }
+        
+        const headers = Object.keys(data[0]);
+        const csvRows = [
+          headers.join(","),
+          ...data.map(row => 
+            headers.map(h => {
+              const val = (row as any)[h];
+              if (val === null || val === undefined) return "";
+              if (typeof val === "string" && (val.includes(",") || val.includes('"') || val.includes("\n"))) {
+                return `"${val.replace(/"/g, '""')}"`;
+              }
+              return String(val);
+            }).join(",")
+          )
+        ];
+        
+        res.setHeader("Content-Type", "text/csv");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}.csv"`);
+        res.send(csvRows.join("\n"));
+      } else {
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Content-Disposition", `attachment; filename="${filename}.json"`);
+        res.json({ data, exportedAt: new Date().toISOString(), count: data.length });
+      }
+    } catch (error) {
+      console.error("Export error:", error);
+      res.status(500).json({ error: "Failed to export data" });
+    }
+  });
+
+  // Advanced search with filters (Pro feature)
+  app.post("/api/search/advanced", async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schema = z.object({
+        query: z.string().min(1).max(200),
+        types: z.array(z.enum(["cves", "ransomware", "ips", "urls", "kev", "news"])).default(["cves", "ransomware", "ips", "urls", "kev", "news"]),
+        filters: z.object({
+          severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]).optional(),
+          dateFrom: z.string().optional(),
+          dateTo: z.string().optional(),
+          source: z.string().max(100).optional(),
+          country: z.string().max(100).optional(),
+          sector: z.string().max(100).optional(),
+        }).optional(),
+        limit: z.number().int().min(1).max(100).default(20),
+      });
+      
+      const data = schema.parse(req.body);
+      
+      // For now, use global search - advanced filters can be added later
+      const results = await (storage as any).globalSearch(data.query, data.limit);
+      
+      // Filter by types requested
+      const filteredResults: any = {};
+      if (data.types.includes("cves")) filteredResults.cves = results.cves;
+      if (data.types.includes("ransomware")) filteredResults.ransomware = results.ransomware;
+      if (data.types.includes("ips")) filteredResults.ips = results.ips;
+      if (data.types.includes("urls")) filteredResults.urls = results.urls;
+      if (data.types.includes("kev")) filteredResults.kev = results.kev;
+      if (data.types.includes("news")) filteredResults.news = results.news;
+      
+      res.json({ results: filteredResults, query: data.query });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors[0].message });
+        return;
+      }
+      console.error("Advanced search error:", error);
+      res.status(500).json({ error: "Search failed" });
     }
   });
 

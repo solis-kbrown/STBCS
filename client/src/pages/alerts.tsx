@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import { useAuth } from "@/lib/auth";
 import { 
   useNotifications, 
   useWatchlist, 
@@ -34,7 +35,9 @@ import {
   Clock,
   Database,
   ExternalLink,
-  CheckCheck
+  CheckCheck,
+  Lock,
+  Crown
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -44,8 +47,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-
-const DEMO_USER_ID = "demo-pro-user";
+import { Link } from "wouter";
 
 const WATCHLIST_TYPES = [
   { value: "company", label: "Company", icon: Building2 },
@@ -58,11 +60,11 @@ const WATCHLIST_TYPES = [
 
 function getSeverityColor(severity: string | null) {
   switch (severity?.toLowerCase()) {
-    case "critical": return "bg-destructive text-destructive-foreground";
+    case "critical": return "bg-red-600 text-white";
     case "high": return "bg-orange-600 text-white";
     case "medium": return "bg-yellow-600 text-white";
     case "low": return "bg-blue-600 text-white";
-    default: return "bg-secondary text-secondary-foreground";
+    default: return "bg-zinc-700 text-zinc-300";
   }
 }
 
@@ -77,12 +79,15 @@ function getTypeIcon(type: string) {
 }
 
 export default function Alerts() {
+  const { user, isAuthenticated, isPro } = useAuth();
   const [activeTab, setActiveTab] = useState("notifications");
   const [newWatchItem, setNewWatchItem] = useState({ type: "company", value: "" });
   const [breachSearch, setBreachSearch] = useState("");
   
-  const { data: notifData, isLoading: loadingNotifs } = useNotifications(DEMO_USER_ID);
-  const { data: watchlistData, isLoading: loadingWatchlist } = useWatchlist(DEMO_USER_ID);
+  const userId = user?.id?.toString() || "";
+  
+  const { data: notifData, isLoading: loadingNotifs } = useNotifications(userId);
+  const { data: watchlistData, isLoading: loadingWatchlist } = useWatchlist(userId);
   const { data: breachData, isLoading: loadingBreaches } = useBreaches(20, 0, breachSearch || undefined);
   
   const addWatchlistItem = useAddWatchlistItem();
@@ -96,9 +101,9 @@ export default function Alerts() {
   const breaches = breachData?.data || [];
 
   const handleAddWatchItem = () => {
-    if (!newWatchItem.value.trim()) return;
+    if (!newWatchItem.value.trim() || !userId) return;
     addWatchlistItem.mutate({
-      userId: DEMO_USER_ID,
+      userId,
       itemType: newWatchItem.type,
       itemValue: newWatchItem.value.trim(),
       label: null,
@@ -110,16 +115,51 @@ export default function Alerts() {
   };
 
   const handleDeleteWatchItem = (itemId: string) => {
-    deleteWatchlistItem.mutate({ itemId, userId: DEMO_USER_ID });
+    if (!userId) return;
+    deleteWatchlistItem.mutate({ itemId, userId });
   };
 
   const handleMarkRead = (notificationId: string) => {
-    markRead.mutate({ notificationId, userId: DEMO_USER_ID });
+    if (!userId) return;
+    markRead.mutate({ notificationId, userId });
   };
 
   const handleMarkAllRead = () => {
-    markAllRead.mutate(DEMO_USER_ID);
+    if (!userId) return;
+    markAllRead.mutate(userId);
   };
+
+  if (!isAuthenticated) {
+    return (
+      <Layout>
+        <div className="min-h-[60vh] flex items-center justify-center">
+          <Card className="max-w-md w-full border-zinc-800 bg-zinc-900/50">
+            <CardContent className="p-12 text-center">
+              <div className="mx-auto w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center mb-6">
+                <Lock className="h-8 w-8 text-orange-400" />
+              </div>
+              <h2 className="text-2xl font-bold text-white mb-3">Pro Feature</h2>
+              <p className="text-zinc-400 mb-6">
+                The Alerts Center provides real-time threat notifications, watchlist management, and breach intelligence. Sign in to access these features.
+              </p>
+              <div className="space-y-3">
+                <p className="text-sm text-zinc-500">
+                  Already have an account? Click "Sign In" in the header to continue.
+                </p>
+                <Link href="/support">
+                  <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
+                    <Crown className="h-4 w-4 mr-2" />
+                    View Pro Plans
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -127,19 +167,19 @@ export default function Alerts() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-primary/10 rounded-lg">
-                <Bell className="h-6 w-6 text-primary" />
+              <div className="p-2 bg-orange-500/10 rounded-lg">
+                <Bell className="h-6 w-6 text-orange-400" />
               </div>
               <h1 className="text-3xl font-display font-bold text-white">Pro Alerts Center</h1>
-              <Badge className="bg-primary text-black font-bold">PRO</Badge>
+              <Badge className="bg-orange-500 text-white font-bold">PRO</Badge>
             </div>
-            <p className="text-muted-foreground">Real-time threat alerts, watchlists, and breach intelligence for Pro users.</p>
+            <p className="text-zinc-400">Real-time threat alerts, watchlists, and breach intelligence for Pro users.</p>
           </div>
           {unreadCount > 0 && (
             <Button 
               variant="outline" 
               onClick={handleMarkAllRead}
-              className="border-primary/30 hover:border-primary text-primary"
+              className="border-orange-500/30 hover:border-orange-500 text-orange-400"
               data-testid="button-mark-all-read"
             >
               <CheckCheck className="h-4 w-4 mr-2" />
@@ -149,19 +189,19 @@ export default function Alerts() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="bg-card/40 border border-white/5">
-            <TabsTrigger value="notifications" className="data-[state=active]:bg-primary data-[state=active]:text-black" data-testid="tab-notifications">
+          <TabsList className="bg-zinc-900/60 border border-zinc-800">
+            <TabsTrigger value="notifications" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white" data-testid="tab-notifications">
               <Bell className="h-4 w-4 mr-2" />
               Notifications
               {unreadCount > 0 && (
-                <Badge className="ml-2 bg-destructive text-white text-xs px-1.5">{unreadCount}</Badge>
+                <Badge className="ml-2 bg-red-600 text-white text-xs px-1.5">{unreadCount}</Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="watchlist" className="data-[state=active]:bg-primary data-[state=active]:text-black" data-testid="tab-watchlist">
+            <TabsTrigger value="watchlist" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white" data-testid="tab-watchlist">
               <Eye className="h-4 w-4 mr-2" />
               Watchlist ({watchlist.length})
             </TabsTrigger>
-            <TabsTrigger value="breaches" className="data-[state=active]:bg-primary data-[state=active]:text-black" data-testid="tab-breaches">
+            <TabsTrigger value="breaches" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white" data-testid="tab-breaches">
               <Database className="h-4 w-4 mr-2" />
               Breach Database
             </TabsTrigger>
@@ -171,7 +211,7 @@ export default function Alerts() {
             <div className="space-y-4">
               {loadingNotifs ? (
                 Array(3).fill(0).map((_, i) => (
-                  <Card key={i} className="border-white/5 bg-card/40">
+                  <Card key={i} className="border-zinc-800 bg-zinc-900/50">
                     <CardContent className="p-4">
                       <div className="flex gap-4">
                         <Skeleton className="h-10 w-10 rounded-lg" />
@@ -184,11 +224,11 @@ export default function Alerts() {
                   </Card>
                 ))
               ) : notifications.length === 0 ? (
-                <Card className="border-white/5 bg-card/40">
+                <Card className="border-zinc-800 bg-zinc-900/50">
                   <CardContent className="p-12 text-center">
-                    <Bell className="h-16 w-16 mx-auto text-muted-foreground/30 mb-4" />
+                    <Bell className="h-16 w-16 mx-auto text-zinc-600 mb-4" />
                     <h3 className="text-xl font-bold text-white mb-2">No Alerts Yet</h3>
-                    <p className="text-muted-foreground max-w-md mx-auto">
+                    <p className="text-zinc-400 max-w-md mx-auto">
                       Add items to your watchlist to receive real-time alerts when new threats match your criteria.
                     </p>
                   </CardContent>
@@ -199,7 +239,7 @@ export default function Alerts() {
                   return (
                     <Card 
                       key={notif.id} 
-                      className={`border-white/5 bg-card/40 hover:bg-card/60 transition-colors ${!notif.read ? 'border-l-4 border-l-primary' : ''}`}
+                      className={`border-zinc-800 bg-zinc-900/50 hover:bg-zinc-800/50 transition-colors ${!notif.read ? 'border-l-4 border-l-orange-500' : ''}`}
                       data-testid={`card-notification-${notif.id}`}
                     >
                       <CardContent className="p-4">

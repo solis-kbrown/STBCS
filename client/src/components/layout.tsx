@@ -16,7 +16,8 @@ import {
   Mail,
   Phone,
   MessageSquare,
-  Bell
+  Bell,
+  Crown
 } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -33,12 +34,16 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { LanguageSelector } from "@/components/language-selector";
 import { useTranslation } from "@/lib/i18n/context";
+import { useAuth } from "@/lib/auth";
+import { AuthModal } from "@/components/auth-modal";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [authModalOpen, setAuthModalOpen] = useState(false);
   const { t } = useTranslation();
+  const { user, isAuthenticated, isPro, logout } = useAuth();
 
   const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
@@ -198,43 +203,77 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="flex items-center gap-2 sm:gap-4">
               <LanguageSelector />
               
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-3 right-3 h-2 w-2 bg-primary rounded-full animate-pulse"></span>
-              </Button>
-              
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="gap-2 pl-2 pr-4 h-10 rounded-full hover:bg-sidebar-accent">
-                    <Avatar className="h-8 w-8 border border-border">
-                      <AvatarImage src="https://github.com/shadcn.png" />
-                      <AvatarFallback>CN</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col items-start text-xs hidden sm:flex">
-                      <span className="font-bold">Security Analyst</span>
-                      <span className="text-muted-foreground">Free Tier</span>
-                    </div>
+              {isAuthenticated && (
+                <Link href="/alerts">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-orange-400 relative">
+                    <Bell className="h-5 w-5" />
+                    <span className="absolute top-3 right-3 h-2 w-2 bg-orange-500 rounded-full animate-pulse"></span>
                   </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-card border-border">
-                  <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                  <DropdownMenuSeparator className="bg-border" />
-                  <DropdownMenuItem className="cursor-pointer">
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profile</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="cursor-pointer">
-                    <Bell className="mr-2 h-4 w-4" />
-                    <span>Alert Preferences</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator className="bg-border" />
-                  <DropdownMenuItem className="cursor-pointer text-destructive focus:text-destructive">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Log out</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+                </Link>
+              )}
+              
+              {isAuthenticated ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="gap-2 pl-2 pr-4 h-10 rounded-full hover:bg-zinc-800">
+                      <Avatar className="h-8 w-8 border border-orange-500/30">
+                        <AvatarFallback className="bg-orange-500/20 text-orange-400">
+                          {user?.username?.charAt(0).toUpperCase() || "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col items-start text-xs hidden sm:flex">
+                        <span className="font-bold text-white">{user?.username}</span>
+                        <span className="text-zinc-500 flex items-center gap-1">
+                          {isPro && <Crown className="h-3 w-3 text-orange-400" />}
+                          {user?.tier === "free" ? "Free Tier" : user?.tier?.toUpperCase()}
+                        </span>
+                      </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-zinc-900 border-zinc-800">
+                    <DropdownMenuLabel className="text-zinc-300">My Account</DropdownMenuLabel>
+                    <DropdownMenuSeparator className="bg-zinc-800" />
+                    <DropdownMenuItem className="cursor-pointer text-zinc-400 hover:text-white">
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profile</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="cursor-pointer text-zinc-400 hover:text-white">
+                      <Bell className="mr-2 h-4 w-4" />
+                      <span>Alert Preferences</span>
+                    </DropdownMenuItem>
+                    {!isPro && (
+                      <>
+                        <DropdownMenuSeparator className="bg-zinc-800" />
+                        <Link href="/support">
+                          <DropdownMenuItem className="cursor-pointer text-orange-400 hover:text-orange-300">
+                            <Crown className="mr-2 h-4 w-4" />
+                            <span>Upgrade to Pro</span>
+                          </DropdownMenuItem>
+                        </Link>
+                      </>
+                    )}
+                    <DropdownMenuSeparator className="bg-zinc-800" />
+                    <DropdownMenuItem 
+                      className="cursor-pointer text-red-400 hover:text-red-300"
+                      onClick={() => logout()}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Log out</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <Button 
+                  onClick={() => setAuthModalOpen(true)}
+                  className="bg-orange-500 hover:bg-orange-600 text-white font-medium"
+                  data-testid="button-login"
+                >
+                  Sign In
+                </Button>
+              )}
             </div>
+            
+            <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
           </header>
 
           {/* Main Content Scroll Area */}

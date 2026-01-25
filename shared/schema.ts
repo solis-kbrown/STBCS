@@ -7,12 +7,27 @@ export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
-  email: text("email"),
+  email: text("email").unique(),
   tier: text("tier").default("free"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
+  emailVerified: boolean("email_verified").default(false),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  index("users_email_idx").on(table.email),
+  index("users_stripe_idx").on(table.stripeCustomerId),
+]);
+
+export const sessions = pgTable("sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  token: text("token").notNull().unique(),
+  expiresAt: timestamp("expires_at").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("sessions_token_idx").on(table.token),
+  index("sessions_user_idx").on(table.userId),
+]);
 
 export const cves = pgTable("cves", {
   id: varchar("id").primaryKey(),
@@ -186,6 +201,14 @@ export const insertUserSchema = createInsertSchema(users).pick({
   password: true,
   email: true,
 });
+
+export const insertSessionSchema = createInsertSchema(sessions).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertSession = z.infer<typeof insertSessionSchema>;
+export type Session = typeof sessions.$inferSelect;
 
 export const insertCveSchema = createInsertSchema(cves).omit({
   createdAt: true,
