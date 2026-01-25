@@ -13,6 +13,13 @@ STB Cybersecurity provides professional cybersecurity services and real-time thr
 
 Preferred communication style: Simple, everyday language.
 
+### Visual Theme: Stealth Mode
+- **Accent Color**: Orange (#f97316 / orange-500)
+- **Navigation Style**: Border-left-2 active state with orange accents
+- **Icons**: Cyber-themed Lucide icons (GalleryVerticalEnd, Scan, Wrench, Activity, ShieldOff, Bug, Satellite, TrendingUp, Heart)
+- **Background**: Dark minimal (zinc-900/950)
+- **Text**: Zinc-500 inactive, orange-400 active/accent
+
 ## System Architecture
 
 ### Frontend
