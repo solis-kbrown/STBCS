@@ -29,11 +29,14 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LanguageSelector } from "@/components/language-selector";
+import { useTranslation } from "@/lib/i18n/context";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const { t } = useTranslation();
 
   const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
@@ -42,15 +45,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   };
 
   const navItems = [
-    { href: "/", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/search", label: "Global Search", icon: Search },
-    { href: "/tools", label: "Security Tools", icon: Wrench },
-    { href: "/alerts", label: "Pro Alerts", icon: Bell, isPro: true },
-    { href: "/ransomware", label: "Ransomware Tracker", icon: Skull },
-    { href: "/exploits", label: "Exploits & CVEs", icon: ShieldAlert },
-    { href: "/threat-feeds", label: "Threat Feeds", icon: Globe },
-    { href: "/news", label: "Intel & News", icon: Newspaper },
-    { href: "/support", label: "Support Us", icon: Heart },
+    { href: "/", labelKey: "nav.dashboard", icon: LayoutDashboard },
+    { href: "/search", labelKey: "nav.search", icon: Search },
+    { href: "/tools", labelKey: "nav.tools", icon: Wrench },
+    { href: "/alerts", labelKey: "nav.alerts", icon: Bell, isPro: true },
+    { href: "/ransomware", labelKey: "nav.ransomware", icon: Skull },
+    { href: "/exploits", labelKey: "nav.exploits", icon: ShieldAlert },
+    { href: "/threat-feeds", labelKey: "nav.threatFeeds", icon: Globe },
+    { href: "/news", labelKey: "nav.news", icon: Newspaper },
+    { href: "/support", labelKey: "nav.support", icon: Heart },
   ];
 
   const SidebarContent = () => (
@@ -81,7 +84,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 `}
               >
                 <item.icon className={`h-5 w-5 ${isActive ? "text-white" : "text-muted-foreground group-hover:text-primary transition-colors"}`} />
-                <span className="font-medium">{item.label}</span>
+                <span className="font-medium">{t(item.labelKey)}</span>
                 {'isPro' in item && item.isPro && (
                   <span className="ml-auto text-[10px] font-bold bg-primary/20 text-primary px-1.5 py-0.5 rounded">PRO</span>
                 )}
@@ -94,7 +97,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="p-4 border-t border-sidebar-border space-y-3">
         <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
           <p className="text-[10px] text-primary font-bold mb-1 flex items-center gap-1">
-            <Phone className="h-3 w-3" /> EMERGENCY HOTLINE
+            <Phone className="h-3 w-3" /> {t('hotline.emergency')}
           </p>
           <a 
             href="tel:+18557821987" 
@@ -103,20 +106,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           >
             (855) STB-1987
           </a>
+          <p className="text-xs text-muted-foreground mt-1">{t('hotline.available')}</p>
           <div className="flex gap-2 mt-2">
             <a 
               href="tel:+18557821987" 
               className="flex-1 bg-primary/20 hover:bg-primary/30 text-primary text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-colors"
               data-testid="button-call-sidebar"
             >
-              <Phone className="h-3 w-3" /> Call
+              <Phone className="h-3 w-3" /> {t('hotline.callNow')}
             </a>
             <a 
               href="sms:+18557821987" 
               className="flex-1 bg-primary/20 hover:bg-primary/30 text-primary text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-colors"
               data-testid="button-sms-sidebar"
             >
-              <MessageSquare className="h-3 w-3" /> Text
+              <MessageSquare className="h-3 w-3" /> {t('hotline.textUs')}
             </a>
           </div>
         </div>
@@ -189,7 +193,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </div>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <LanguageSelector />
+              
               <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary relative">
                 <Bell className="h-5 w-5" />
                 <span className="absolute top-3 right-3 h-2 w-2 bg-primary rounded-full animate-pulse"></span>
