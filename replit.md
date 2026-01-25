@@ -67,6 +67,27 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes (January 2026)
 
+### New: Shodan InternetDB Integration (Free IP Intelligence)
+- **Endpoint**: `GET /api/tools/shodan-lookup?ip=`
+- **Data Provided**: Open ports, known vulnerabilities (CVEs), hostnames, tags, CPE identifiers
+- **Cost**: Completely free - no API key required
+- **Source**: `https://internetdb.shodan.io/{ip}`
+- **UI**: Added "Shodan IP Intelligence" tool on Security Tools page
+
+### New: Newsletter Subscription System
+- **Database Table**: `newsletterSubscriptions` with email, name, frequency, preferences
+- **API Endpoints**:
+  - `POST /api/newsletter/subscribe` - Subscribe to newsletter
+  - `POST /api/newsletter/unsubscribe` - Unsubscribe by token
+  - `GET /api/newsletter/preferences?email=` - Get subscription preferences
+  - `PATCH /api/newsletter/preferences/:id` - Update preferences
+- **Features**:
+  - Frequency options: daily, weekly, monthly
+  - Content preferences: ransomware, CVEs, news, breaches
+  - Verification tokens for double opt-in (email sending pending)
+  - Unsubscribe tokens for one-click unsubscribe
+- **UI**: Added "Weekly Security Digest" subscription form on Security Tools page
+
 ### Expanded Threat Intelligence System (31+ Sources)
 - **Refresh Interval**: 15 minutes (configurable)
 - **Total Sources**: 31+ free public threat intelligence feeds
