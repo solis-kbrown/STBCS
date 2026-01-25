@@ -25,6 +25,37 @@ const PhoneNumbersResponseSchema = z.object({
   }).passthrough()),
 });
 
+const CallsResponseSchema = z.object({
+  data: z.array(z.object({
+    id: z.string(),
+    object: z.string(),
+    direction: z.enum(['incoming', 'outgoing']).optional(),
+    status: z.string().optional(),
+    duration: z.number().optional(),
+    from: z.string().optional(),
+    to: z.string().optional(),
+    createdAt: z.string().optional(),
+    answeredAt: z.string().optional(),
+    completedAt: z.string().optional(),
+    recordingUrl: z.string().optional(),
+  }).passthrough()).optional(),
+});
+
+const ContactSchema = z.object({
+  id: z.string(),
+  object: z.string(),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+  company: z.string().optional(),
+  emails: z.array(z.object({ value: z.string() })).optional(),
+  phoneNumbers: z.array(z.object({ value: z.string() })).optional(),
+  customFields: z.record(z.string()).optional(),
+}).passthrough();
+
+const ContactsResponseSchema = z.object({
+  data: z.array(ContactSchema).optional(),
+});
+
 export class QuoService {
   private apiKey: string;
   private fromNumber: string;
@@ -97,6 +128,57 @@ export class QuoService {
 
   async sendThreatAlert(to: string, threatType: string, severity: string, description: string) {
     const message = `[STBCS THREAT ALERT]\nType: ${threatType}\nSeverity: ${severity}\n\n${description}\n\nFor assistance: (855) STB-1987`;
+    return this.sendSMS(to, message);
+  }
+
+  async getRecentCalls(phoneNumberId?: string, limit: number = 50) {
+    const params = new URLSearchParams();
+    if (phoneNumberId) params.set('phoneNumberId', phoneNumberId);
+    params.set('maxResults', String(limit));
+    
+    const response = await this.request<unknown>(`/calls?${params.toString()}`);
+    return CallsResponseSchema.parse(response);
+  }
+
+  async getContacts(limit: number = 100) {
+    const params = new URLSearchParams();
+    params.set('maxResults', String(limit));
+    
+    const response = await this.request<unknown>(`/contacts?${params.toString()}`);
+    return ContactsResponseSchema.parse(response);
+  }
+
+  async createContact(contact: {
+    firstName?: string;
+    lastName?: string;
+    company?: string;
+    emails?: string[];
+    phoneNumbers: string[];
+  }) {
+    const payload = {
+      firstName: contact.firstName,
+      lastName: contact.lastName,
+      company: contact.company,
+      emails: contact.emails?.map(e => ({ value: e })),
+      phoneNumbers: contact.phoneNumbers.map(p => ({ value: p })),
+    };
+
+    const response = await this.request<unknown>('/contacts', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+
+    return ContactSchema.parse(response);
+  }
+
+  async sendRansomwareAlert(to: string, groupName: string, victim: string, sector?: string) {
+    const sectorInfo = sector ? `\nSector: ${sector}` : '';
+    const message = `[STBCS RANSOMWARE ALERT]\nGroup: ${groupName}\nVictim: ${victim}${sectorInfo}\n\nNew attack detected. Monitor for potential supply chain impact.\n\nstoptbcs.com`;
+    return this.sendSMS(to, message);
+  }
+
+  async sendCVEAlert(to: string, cveId: string, severity: string, description: string) {
+    const message = `[STBCS CVE ALERT]\n${cveId}\nSeverity: ${severity}\n\n${description.slice(0, 200)}...\n\nPatch immediately if affected.\nstoptbcs.com`;
     return this.sendSMS(to, message);
   }
 }
