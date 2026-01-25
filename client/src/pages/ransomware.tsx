@@ -1,11 +1,11 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
-import { useRansomware, useRansomwareGroups, useRansomwareSearch } from "@/lib/api";
+import { useRansomware, useRansomwareGroups, useRansomwareSearch, useExportData } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Download, ExternalLink, Globe } from "lucide-react";
+import { Search, Filter, Download, ExternalLink, Globe, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useState, KeyboardEvent } from "react";
 
@@ -17,6 +17,7 @@ export default function Ransomware() {
   const { data, isLoading } = useRansomware(100, 0, selectedGroup);
   const { data: groups } = useRansomwareGroups();
   const { data: searchResults, isLoading: isSearching } = useRansomwareSearch(activeSearch);
+  const exportMutation = useExportData();
   
   const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
@@ -44,12 +45,13 @@ export default function Ransomware() {
           <div className="flex gap-2 w-full md:w-auto">
              <Button 
               variant="outline" 
-              className="border-white/10 hover:bg-white/5" 
+              className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" 
               data-testid="button-export"
-              onClick={() => alert('Export coming soon! This feature will be available in the Pro tier.')}
+              onClick={() => exportMutation.mutate('ransomware')}
+              disabled={exportMutation.isPending}
             >
-              <Download className="h-4 w-4 mr-2" />
-              Export
+              {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+              Export JSON
             </Button>
             <Button 
               className="bg-primary hover:bg-primary/90" 

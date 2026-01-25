@@ -1,11 +1,11 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
-import { useThreatFeeds, useMaliciousIps, useMaliciousUrls, useCisaKev } from "@/lib/api";
+import { useThreatFeeds, useMaliciousIps, useMaliciousUrls, useCisaKev, useExportData } from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Shield, Link2, Lock, AlertTriangle, CheckCircle, Clock, Zap } from "lucide-react";
+import { Globe, Shield, Link2, Lock, AlertTriangle, CheckCircle, Clock, Zap, Download, Loader2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ThreatFeeds() {
@@ -13,6 +13,7 @@ export default function ThreatFeeds() {
   const { data: ipsData, isLoading: ipsLoading } = useMaliciousIps(20);
   const { data: urlsData, isLoading: urlsLoading } = useMaliciousUrls(20);
   const { data: kevData, isLoading: kevLoading } = useCisaKev(20);
+  const exportMutation = useExportData();
   
   const maliciousIps = ipsData?.data || [];
   const maliciousUrls = urlsData?.data || [];
@@ -115,14 +116,27 @@ export default function ThreatFeeds() {
 
           <TabsContent value="ips" className="space-y-4">
             <Card className="border-white/5 bg-card/50">
-              <CardHeader>
-                <CardTitle className="font-display flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-destructive" />
-                  Malicious IP Addresses
-                </CardTitle>
-                <CardDescription>
-                  Known malicious IPs from DShield, Feodo Tracker, Tor exit nodes, and SSL blacklists.
-                </CardDescription>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle className="font-display flex items-center gap-2">
+                    <Shield className="h-5 w-5 text-destructive" />
+                    Malicious IP Addresses
+                  </CardTitle>
+                  <CardDescription>
+                    Known malicious IPs from DShield, Feodo Tracker, Tor exit nodes, and SSL blacklists.
+                  </CardDescription>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" 
+                  data-testid="button-export-ips"
+                  onClick={() => exportMutation.mutate('ips')}
+                  disabled={exportMutation.isPending}
+                >
+                  {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
+                  Export
+                </Button>
               </CardHeader>
               <CardContent>
                 {ipsLoading ? (
@@ -165,14 +179,27 @@ export default function ThreatFeeds() {
 
           <TabsContent value="urls" className="space-y-4">
             <Card className="border-white/5 bg-card/50">
-              <CardHeader>
-                <CardTitle className="font-display flex items-center gap-2">
-                  <Link2 className="h-5 w-5 text-orange-500" />
-                  Malicious URLs
-                </CardTitle>
-                <CardDescription>
-                  Phishing, malware distribution, and C2 URLs from URLhaus and OpenPhish.
-                </CardDescription>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle className="font-display flex items-center gap-2">
+                    <Link2 className="h-5 w-5 text-orange-500" />
+                    Malicious URLs
+                  </CardTitle>
+                  <CardDescription>
+                    Phishing, malware distribution, and C2 URLs from URLhaus and OpenPhish.
+                  </CardDescription>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" 
+                  data-testid="button-export-urls"
+                  onClick={() => exportMutation.mutate('urls')}
+                  disabled={exportMutation.isPending}
+                >
+                  {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
+                  Export
+                </Button>
               </CardHeader>
               <CardContent>
                 {urlsLoading ? (
@@ -211,14 +238,27 @@ export default function ThreatFeeds() {
 
           <TabsContent value="kev" className="space-y-4">
             <Card className="border-white/5 bg-card/50">
-              <CardHeader>
-                <CardTitle className="font-display flex items-center gap-2">
-                  <AlertTriangle className="h-5 w-5 text-yellow-500" />
-                  CISA Known Exploited Vulnerabilities
-                </CardTitle>
-                <CardDescription>
-                  Official catalog of CVEs actively exploited in the wild. Prioritize patching these immediately.
-                </CardDescription>
+              <CardHeader className="flex flex-row items-start justify-between">
+                <div>
+                  <CardTitle className="font-display flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5 text-yellow-500" />
+                    CISA Known Exploited Vulnerabilities
+                  </CardTitle>
+                  <CardDescription>
+                    Official catalog of CVEs actively exploited in the wild. Prioritize patching these immediately.
+                  </CardDescription>
+                </div>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" 
+                  data-testid="button-export-kev"
+                  onClick={() => exportMutation.mutate('kev')}
+                  disabled={exportMutation.isPending}
+                >
+                  {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-1 animate-spin" /> : <Download className="h-4 w-4 mr-1" />}
+                  Export
+                </Button>
               </CardHeader>
               <CardContent>
                 {kevLoading ? (
