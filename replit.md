@@ -55,8 +55,24 @@ Preferred communication style: Simple, everyday language.
 - **Newsletter System**: Subscription management with customizable frequency and content preferences.
 - **Quo Phone System Integration**: Emergency hotline (855) STB-1987, SMS notifications, and incident alerts.
 - **Email Notifications**: Automated daily/weekly security digests and alert notifications (ransomware, CVE, breach).
-- **Pro Tier Features**: Alerts, notifications, watchlist management, breach database.
 - **Global Search**: Unified search across all threat data.
+
+### Pro Tier Features (8 Features)
+1. **User Authentication**: Secure signup/login with bcrypt password hashing (12 salt rounds), session management via httpOnly cookies (30-day expiration).
+2. **Subscription Management**: Stripe-integrated tier system (Supporter, Pro, Business) with automatic tier assignment.
+3. **Watchlist System**: Track CVEs, IPs, domains, ransomware groups, keywords, sectors, and countries. CRUD operations with real-time updates.
+4. **Real-time Alerts**: Notification system for watchlist matches with severity levels and read/unread tracking.
+5. **Breach Database**: Searchable breach intelligence with verified status, data classes, and affected account counts.
+6. **API Rate Limiting**: Tiered rate limits (free: 10/min, pro: 60/min) with middleware enforcement.
+7. **Export Capabilities**: CSV/JSON export for CVEs, ransomware, IPs, URLs, KEV data (up to 5000 records).
+8. **Advanced Search**: Multi-filter search across all threat data with date ranges, severity, and type filters.
+
+### Authentication System
+- **Backend**: `server/auth.ts` - Password hashing, session tokens, verification
+- **Routes**: POST `/api/auth/signup`, POST `/api/auth/login`, POST `/api/auth/logout`, GET `/api/auth/me`
+- **Frontend**: `AuthProvider` context in `client/src/lib/auth.tsx`, `AuthModal` component
+- **Middleware**: `requireAuth` and `requirePro` for protected routes
+- **Sessions**: Stored in database with 30-day expiration, automatic cleanup
 
 ### Deployment
 - **Development**: `npm run dev` (Express + Vite HMR).
