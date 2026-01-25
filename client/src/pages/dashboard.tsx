@@ -44,10 +44,10 @@ export default function Dashboard() {
               LIVE THREAT LEVEL: ELEVATED
             </Badge>
             <h1 className="text-4xl font-display font-bold text-white mb-2 tracking-wide">
-              GLOBAL THREAT <span className="text-primary">INTELLIGENCE</span>
+              FRONTLINE THREAT <span className="text-primary">INTELLIGENCE</span>
             </h1>
             <p className="text-muted-foreground text-lg mb-6">
-              Real-time monitoring of ransomware incidents, zero-day exploits, and emerging cyber threats.
+              Real-time monitoring powered by frontline Incident Response, Ransomware Recovery, and Threat Hunting experts.
             </p>
             <div className="flex gap-4">
               <Button 

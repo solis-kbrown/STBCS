@@ -1,12 +1,22 @@
-# STB Cybersecurity (STBCS) - Real-Time Threat Intelligence Platform
+# STB Cybersecurity (STBCS) - Frontline Threat Intelligence & Security Services
 
 ## Overview
 
-STB Cybersecurity (stoptbcs.com / stbcybersecurity.com) is a real-time cybersecurity threat intelligence platform that tracks ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news. The application aggregates data from 15+ free public threat intelligence feeds and provides a comprehensive dashboard for monitoring active threats, ransomware groups, and critical security events.
+STB Cybersecurity (stoptbcs.com / stbcybersecurity.com) is a professional cybersecurity company providing frontline security services and real-time threat intelligence. STBCS has professional Cybersecurity Consultants, Recovery Engineers, and Threat Hunters who handle Incident Response cases and Ransomware Recovery & Restoration for small to medium-sized businesses and organizations. The platform tracks ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news, aggregating data from 31+ free public threat intelligence feeds.
+
+**"We don't just track and monitor everything cybersecurity - we live it and see it on the front lines, where we live, every day!"**
+
+## Professional Services
+
+- **Cybersecurity Consulting** - Expert guidance for SMBs on security posture and risk management
+- **Incident Response** - Rapid response to active security breaches and cyberattacks
+- **Ransomware Recovery & Restoration** - Data recovery and system restoration after ransomware attacks
+- **Threat Hunting** - Proactive detection of threats and adversaries in your environment
 
 ## Branding
 
-- **Primary Name**: STB Cybersecurity / STBCS
+- **Primary Name**: STB Cybersecurity / STBCS ("Stop The Bleed Cybersecurity")
+- **Tagline**: "Stop The Bleed" - Stopping the bleed when it comes to hackers, ransomware attacks, exploitation, and extortion
 - **Domains**: stoptbcs.com (primary), stbcybersecurity.com (secondary/redirect)
 - **Twitter/Social**: @stoptbcs
 - **Founder**: Kevin Brown

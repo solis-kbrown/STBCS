@@ -395,10 +395,12 @@ export default function SupportPage() {
         <CardContent className="py-8 text-center space-y-4">
           <h3 className="text-2xl font-bold">A Message From the Founder</h3>
           <blockquote className="text-muted-foreground max-w-3xl mx-auto italic leading-relaxed">
-            "STBCS was born from a simple belief: everyone deserves access to quality threat intelligence.
-            Whether you're a seasoned security professional or just starting your journey, our tools are here for you.
-            Your support - whether through donations, subscriptions, or simply spreading the word - 
-            helps us continue this mission. Together, we're building a safer digital world."
+            "At STBCS, we don't just track and monitor cybersecurity threats - we live it on the front lines every single day.
+            Our team of professional Cybersecurity Consultants, Recovery Engineers, and Threat Hunters handle real 
+            Incident Response cases and Ransomware Recovery for small to medium-sized businesses.
+            We've seen firsthand the devastation that cyberattacks cause, which is why we built this platform - 
+            to help organizations stay ahead of threats before they become disasters.
+            Your support helps us continue serving the community that needs it most."
           </blockquote>
           <p className="font-bold text-primary">- Kevin Brown, Founder</p>
         </CardContent>

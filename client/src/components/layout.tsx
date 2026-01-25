@@ -60,7 +60,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
         <div className="flex flex-col">
           <span className="font-display font-bold text-xl tracking-wider text-primary drop-shadow-[0_0_10px_rgba(220,38,38,0.3)]">STBCS</span>
-          <span className="text-[10px] text-muted-foreground tracking-widest uppercase">Stop The Bleed</span>
+          <span className="text-[10px] text-muted-foreground tracking-widest uppercase">Stop The Bleed Cybersecurity</span>
         </div>
       </div>
       
