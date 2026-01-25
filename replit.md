@@ -105,14 +105,21 @@ Preferred communication style: Simple, everyday language.
 - **Features**:
   - Click-to-call and click-to-text from website
   - SMS notifications for incident alerts
-  - Threat alert SMS delivery
+  - Threat alert SMS delivery (ransomware, CVE, incident, threat)
   - Webhook support for incoming calls/messages
-- **API Endpoints**:
+  - Admin call logs and contact management
+- **Public API Endpoints**:
   - `GET /api/quo/status` - Check integration status
+- **Protected Admin Endpoints** (require `x-internal-api-key` header):
   - `POST /api/quo/send-sms` - Send SMS message
   - `POST /api/quo/incident-alert` - Send incident alert SMS
-  - `POST /api/quo/threat-alert` - Send threat alert SMS
-  - `POST /api/quo/webhook` - Receive Quo events
+  - `POST /api/quo/threat-alert` - Send general threat alert
+  - `POST /api/quo/ransomware-alert` - Send ransomware attack alert
+  - `POST /api/quo/cve-alert` - Send CVE vulnerability alert
+  - `GET /api/quo/calls` - Get recent call logs (admin)
+  - `GET /api/quo/contacts` - Get contacts list (admin)
+  - `POST /api/quo/contacts` - Create new contact (admin)
+  - `POST /api/quo/webhook` - Receive Quo events (webhook signature verification)
 - **Environment Variable**: `QUO_API_KEY` - API key from Quo dashboard
 
 ### New: Email Notification & Digest System

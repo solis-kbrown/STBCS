@@ -1342,6 +1342,139 @@ export async function registerRoutes(
     }
   });
 
+  // Admin endpoint: Get recent call logs (protected)
+  app.get("/api/quo/calls", strictLimiter, verifyInternalApiKey, async (req: Request, res: Response) => {
+    try {
+      if (!isQuoConfigured()) {
+        return res.status(503).json({ error: "Quo integration not configured" });
+      }
+
+      const limitParam = z.coerce.number().int().min(1).max(100).default(50).safeParse(req.query.limit);
+      const limit = limitParam.success ? limitParam.data : 50;
+
+      const quoService = getQuoService();
+      const calls = await quoService.getRecentCalls(undefined, limit);
+      res.json(calls);
+    } catch (error) {
+      console.error("Quo get calls error:", error);
+      res.status(500).json({ error: "Failed to fetch call logs" });
+    }
+  });
+
+  // Admin endpoint: Get contacts (protected)
+  app.get("/api/quo/contacts", strictLimiter, verifyInternalApiKey, async (req: Request, res: Response) => {
+    try {
+      if (!isQuoConfigured()) {
+        return res.status(503).json({ error: "Quo integration not configured" });
+      }
+
+      const limitParam = z.coerce.number().int().min(1).max(100).default(50).safeParse(req.query.limit);
+      const limit = limitParam.success ? limitParam.data : 50;
+
+      const quoService = getQuoService();
+      const contacts = await quoService.getContacts(limit);
+      res.json(contacts);
+    } catch (error) {
+      console.error("Quo get contacts error:", error);
+      res.status(500).json({ error: "Failed to fetch contacts" });
+    }
+  });
+
+  // Admin endpoint: Create new contact (protected)
+  app.post("/api/quo/contacts", strictLimiter, verifyInternalApiKey, async (req: Request, res: Response) => {
+    try {
+      if (!isQuoConfigured()) {
+        return res.status(503).json({ error: "Quo integration not configured" });
+      }
+
+      const contactSchema = z.object({
+        firstName: z.string().max(100).optional(),
+        lastName: z.string().max(100).optional(),
+        company: z.string().max(200).optional(),
+        emails: z.array(z.string().email()).optional(),
+        phoneNumbers: z.array(z.string().max(20)).min(1),
+      });
+
+      const result = contactSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid contact data", details: result.error.issues });
+      }
+
+      const quoService = getQuoService();
+      const contact = await quoService.createContact(result.data);
+      res.status(201).json(contact);
+    } catch (error) {
+      console.error("Quo create contact error:", error);
+      res.status(500).json({ error: "Failed to create contact" });
+    }
+  });
+
+  // Specialized alert: Send ransomware attack notification (protected)
+  app.post("/api/quo/ransomware-alert", strictLimiter, verifyInternalApiKey, async (req: Request, res: Response) => {
+    try {
+      if (!isQuoConfigured()) {
+        return res.status(503).json({ error: "Quo integration not configured" });
+      }
+
+      const alertSchema = z.object({
+        to: z.string().min(1).max(20),
+        groupName: z.string().min(1).max(100),
+        victim: z.string().min(1).max(200),
+        sector: z.string().max(100).optional(),
+      });
+
+      const result = alertSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid ransomware alert data", details: result.error.issues });
+      }
+
+      const quoService = getQuoService();
+      const message = await quoService.sendRansomwareAlert(
+        result.data.to,
+        result.data.groupName,
+        result.data.victim,
+        result.data.sector
+      );
+      res.json({ success: true, message });
+    } catch (error) {
+      console.error("Quo ransomware alert error:", error);
+      res.status(500).json({ error: "Failed to send ransomware alert" });
+    }
+  });
+
+  // Specialized alert: Send CVE vulnerability notification (protected)
+  app.post("/api/quo/cve-alert", strictLimiter, verifyInternalApiKey, async (req: Request, res: Response) => {
+    try {
+      if (!isQuoConfigured()) {
+        return res.status(503).json({ error: "Quo integration not configured" });
+      }
+
+      const alertSchema = z.object({
+        to: z.string().min(1).max(20),
+        cveId: z.string().regex(/^CVE-\d{4}-\d+$/),
+        severity: z.string().max(20),
+        description: z.string().max(1000),
+      });
+
+      const result = alertSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Invalid CVE alert data", details: result.error.issues });
+      }
+
+      const quoService = getQuoService();
+      const message = await quoService.sendCVEAlert(
+        result.data.to,
+        result.data.cveId,
+        result.data.severity,
+        result.data.description
+      );
+      res.json({ success: true, message });
+    } catch (error) {
+      console.error("Quo CVE alert error:", error);
+      res.status(500).json({ error: "Failed to send CVE alert" });
+    }
+  });
+
   // Webhook endpoint for incoming Quo messages/calls (with signature verification)
   app.post("/api/quo/webhook", async (req: Request, res: Response) => {
     try {
