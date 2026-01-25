@@ -1,4 +1,5 @@
 import { useState } from "react";
+import Layout from "@/components/layout";
 import { 
   LayoutDashboard, Search, Wrench, Bell, Skull, ShieldAlert, Globe, Newspaper, Heart,
   Shield, Target, Radar, Zap, Bug, Terminal, Lock, Eye, Radio, Wifi, Server, Database,
@@ -8,7 +9,6 @@ import {
   Sparkles, TrendingUp, Unplug, Webhook, Boxes, BrainCircuit, GalleryVerticalEnd
 } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -180,12 +180,13 @@ export default function StylePreviewPage() {
   const [selectedStyle, setSelectedStyle] = useState<string | null>(null);
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="max-w-7xl mx-auto space-y-8">
-        <div className="text-center space-y-2">
-          <h1 className="text-3xl font-display font-bold text-primary">Navigation Style Preview</h1>
-          <p className="text-muted-foreground">Review different icon and styling options for your sidebar navigation</p>
-        </div>
+    <Layout>
+      <div className="min-h-screen bg-background p-6">
+        <div className="max-w-7xl mx-auto space-y-8">
+          <div className="text-center space-y-2">
+            <h1 className="text-3xl font-display font-bold text-primary">Navigation Style Preview</h1>
+            <p className="text-muted-foreground">Review different icon and styling options for your sidebar navigation</p>
+          </div>
 
         <Tabs defaultValue="grid" className="w-full">
           <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
@@ -317,6 +318,7 @@ export default function StylePreviewPage() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </Layout>
   );
 }
