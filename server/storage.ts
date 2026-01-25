@@ -12,9 +12,10 @@ import {
   type UserNotification, type InsertNotification,
   type WatchlistItem, type InsertWatchlistItem,
   type BreachIncident, type InsertBreach,
+  type NewsletterSubscription, type InsertNewsletter,
   users, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
-  userNotifications, watchlistItems, breachIncidents
+  userNotifications, watchlistItems, breachIncidents, newsletterSubscriptions
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and } from "drizzle-orm";
@@ -801,6 +802,66 @@ export class DatabaseStorage implements IStorage {
   async getBreachCount(): Promise<number> {
     const [result] = await db.select({ count: sql<number>`count(*)` }).from(breachIncidents);
     return Number(result?.count || 0);
+  }
+
+  // Newsletter Subscriptions
+  async getNewsletterByEmail(email: string): Promise<NewsletterSubscription | undefined> {
+    const [subscription] = await db.select().from(newsletterSubscriptions)
+      .where(eq(newsletterSubscriptions.email, email));
+    return subscription;
+  }
+
+  async getNewsletterByUnsubscribeToken(token: string): Promise<NewsletterSubscription | undefined> {
+    const [subscription] = await db.select().from(newsletterSubscriptions)
+      .where(eq(newsletterSubscriptions.unsubscribeToken, token));
+    return subscription;
+  }
+
+  async createNewsletterSubscription(data: InsertNewsletter): Promise<NewsletterSubscription> {
+    // Check for existing unsubscribed user and reactivate
+    const existing = await this.getNewsletterByEmail(data.email!);
+    if (existing) {
+      const [updated] = await db.update(newsletterSubscriptions)
+        .set({
+          name: data.name,
+          preferences: data.preferences,
+          frequency: data.frequency,
+          verificationToken: data.verificationToken,
+          unsubscribeToken: data.unsubscribeToken,
+          verified: false,
+          unsubscribedAt: null,
+          subscribedAt: new Date(),
+        })
+        .where(eq(newsletterSubscriptions.id, existing.id))
+        .returning();
+      return updated;
+    }
+    
+    const [created] = await db.insert(newsletterSubscriptions).values(data).returning();
+    return created;
+  }
+
+  async unsubscribeNewsletter(id: string): Promise<void> {
+    await db.update(newsletterSubscriptions)
+      .set({ unsubscribedAt: new Date() })
+      .where(eq(newsletterSubscriptions.id, id));
+  }
+
+  async updateNewsletterPreferences(id: string, updates: Partial<InsertNewsletter>): Promise<NewsletterSubscription> {
+    const [updated] = await db.update(newsletterSubscriptions)
+      .set(updates)
+      .where(eq(newsletterSubscriptions.id, id))
+      .returning();
+    return updated;
+  }
+
+  async getActiveNewsletterSubscriptions(): Promise<NewsletterSubscription[]> {
+    return db.select().from(newsletterSubscriptions)
+      .where(and(
+        eq(newsletterSubscriptions.verified, true),
+        sql`${newsletterSubscriptions.unsubscribedAt} IS NULL`
+      ))
+      .orderBy(desc(newsletterSubscriptions.subscribedAt));
   }
 }
 

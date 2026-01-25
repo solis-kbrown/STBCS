@@ -22,7 +22,12 @@ import {
   Mail,
   Lock,
   Wifi,
-  ExternalLink
+  ExternalLink,
+  Eye,
+  Bug,
+  Tag,
+  Newspaper,
+  Bell
 } from "lucide-react";
 import { 
   useIpLookup, 
@@ -30,10 +35,13 @@ import {
   usePortScan, 
   useThreatCheck,
   useDnsLookup,
+  useShodanLookup,
+  useNewsletterSubscribe,
   IpLookupResult, 
   DomainLookupResult, 
   PortScanResult, 
-  ThreatCheckResult 
+  ThreatCheckResult,
+  ShodanLookupResult
 } from "@/lib/api";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -428,6 +436,219 @@ function ThreatCheckTool() {
   );
 }
 
+function ShodanLookupTool() {
+  const [ip, setIp] = useState("");
+  const { mutate: lookup, data, isPending, error, reset } = useShodanLookup();
+
+  const handleLookup = () => {
+    if (ip.trim()) {
+      lookup(ip.trim());
+    }
+  };
+
+  return (
+    <ToolCard
+      title="Shodan IP Intelligence"
+      description="Get open ports, vulnerabilities, hostnames, and service details for any IP using Shodan's InternetDB - completely free."
+      icon={Eye}
+      tier="free"
+    >
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Enter IP address (e.g., 8.8.8.8)"
+            value={ip}
+            onChange={(e) => { setIp(e.target.value); reset(); }}
+            onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
+            className="bg-background border-white/10"
+            data-testid="input-shodan-lookup"
+          />
+          <Button onClick={handleLookup} disabled={isPending || !ip.trim()} data-testid="button-shodan-lookup">
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Lookup"}
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Eye className="h-3 w-3" />
+          <span>Powered by Shodan InternetDB - Free, no API key required</span>
+        </div>
+
+        {error && (
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            {error.message}
+          </div>
+        )}
+
+        {data && (
+          <div className="space-y-4 pt-2">
+            {!data.found ? (
+              <div className="p-4 rounded-lg bg-muted/20 border border-white/10 text-center">
+                <p className="text-muted-foreground">{data.message || "No data found for this IP"}</p>
+              </div>
+            ) : (
+              <>
+                {data.ports.length > 0 && (
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                      <Server className="h-3 w-3" /> Open Ports ({data.ports.length})
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {data.ports.map((port) => (
+                        <Badge key={port} variant="outline" className="font-mono bg-green-500/10 border-green-500/30 text-green-400">
+                          {port}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {data.vulns.length > 0 && (
+                  <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30">
+                    <div className="flex items-center gap-2 text-xs text-destructive mb-2">
+                      <Bug className="h-3 w-3" /> Known Vulnerabilities ({data.vulns.length})
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {data.vulns.slice(0, 10).map((vuln) => (
+                        <Badge key={vuln} className="bg-destructive font-mono text-xs">
+                          {vuln}
+                        </Badge>
+                      ))}
+                      {data.vulns.length > 10 && (
+                        <Badge variant="outline" className="text-xs">+{data.vulns.length - 10} more</Badge>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {data.hostnames.length > 0 && (
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                      <Globe className="h-3 w-3" /> Hostnames
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {data.hostnames.map((hostname) => (
+                        <Badge key={hostname} variant="outline" className="font-mono text-xs">
+                          {hostname}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {data.tags.length > 0 && (
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                      <Tag className="h-3 w-3" /> Tags
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {data.tags.map((tag) => (
+                        <Badge key={tag} variant="outline" className="text-xs capitalize">
+                          {tag.replace(/-/g, ' ')}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {data.cpes.length > 0 && (
+                  <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                    <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
+                      <Shield className="h-3 w-3" /> CPE (Software/Hardware)
+                    </div>
+                    <div className="space-y-1 text-xs font-mono text-muted-foreground max-h-32 overflow-y-auto">
+                      {data.cpes.slice(0, 5).map((cpe) => (
+                        <div key={cpe} className="truncate">{cpe}</div>
+                      ))}
+                      {data.cpes.length > 5 && (
+                        <div className="text-primary">+{data.cpes.length - 5} more...</div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </ToolCard>
+  );
+}
+
+function NewsletterSubscribeTool() {
+  const [email, setEmail] = useState("");
+  const [name, setName] = useState("");
+  const { mutate: subscribe, data, isPending, error, reset } = useNewsletterSubscribe();
+
+  const handleSubscribe = () => {
+    if (email.trim() && email.includes("@")) {
+      subscribe({ 
+        email: email.trim(), 
+        name: name.trim() || undefined,
+        frequency: "weekly",
+        preferences: { ransomware: true, cves: true, news: true, breaches: true }
+      });
+    }
+  };
+
+  return (
+    <ToolCard
+      title="Weekly Security Digest"
+      description="Subscribe to receive weekly updates on ransomware attacks, critical CVEs, security news, and breach alerts."
+      icon={Newspaper}
+      tier="free"
+    >
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+          <Input
+            placeholder="Your name (optional)"
+            value={name}
+            onChange={(e) => { setName(e.target.value); reset(); }}
+            className="bg-background border-white/10"
+            data-testid="input-newsletter-name"
+          />
+          <Input
+            placeholder="Your email address"
+            type="email"
+            value={email}
+            onChange={(e) => { setEmail(e.target.value); reset(); }}
+            onKeyDown={(e) => e.key === 'Enter' && handleSubscribe()}
+            className="bg-background border-white/10"
+            data-testid="input-newsletter-email"
+          />
+        </div>
+        <Button 
+          onClick={handleSubscribe} 
+          disabled={isPending || !email.includes("@")} 
+          className="w-full bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-700"
+          data-testid="button-newsletter-subscribe"
+        >
+          {isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Bell className="h-4 w-4 mr-2" />}
+          Subscribe to Newsletter
+        </Button>
+
+        <div className="text-xs text-muted-foreground text-center">
+          Get weekly updates on: Ransomware incidents, Critical CVEs, Security news, Data breaches
+        </div>
+
+        {error && (
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            {error.message}
+          </div>
+        )}
+
+        {data?.success && (
+          <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 text-sm">
+            <div className="flex items-center gap-2">
+              <Check className="h-4 w-4" />
+              <span>{data.message}</span>
+            </div>
+          </div>
+        )}
+      </div>
+    </ToolCard>
+  );
+}
+
 export default function ToolsPage() {
   return (
     <Layout>
@@ -480,14 +701,17 @@ export default function ToolsPage() {
             <TabsTrigger value="all" className="data-[state=active]:bg-primary/20">All Tools</TabsTrigger>
             <TabsTrigger value="network" className="data-[state=active]:bg-primary/20">Network</TabsTrigger>
             <TabsTrigger value="threat" className="data-[state=active]:bg-primary/20">Threat Intel</TabsTrigger>
+            <TabsTrigger value="subscribe" className="data-[state=active]:bg-primary/20">Newsletter</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <IpLookupTool />
+              <ShodanLookupTool />
               <DomainLookupTool />
               <PortScanTool />
               <ThreatCheckTool />
+              <NewsletterSubscribeTool />
             </div>
           </TabsContent>
 
@@ -496,12 +720,20 @@ export default function ToolsPage() {
               <IpLookupTool />
               <DomainLookupTool />
               <PortScanTool />
+              <ShodanLookupTool />
             </div>
           </TabsContent>
 
           <TabsContent value="threat" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <ThreatCheckTool />
+              <ShodanLookupTool />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="subscribe" className="space-y-6">
+            <div className="max-w-xl mx-auto">
+              <NewsletterSubscribeTool />
             </div>
           </TabsContent>
         </Tabs>

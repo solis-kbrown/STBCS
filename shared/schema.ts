@@ -349,6 +349,26 @@ export const systemConfig = pgTable("system_config", {
   updatedBy: varchar("updated_by"),
 });
 
+// Newsletter subscriptions for email marketing
+export const newsletterSubscriptions = pgTable("newsletter_subscriptions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  email: text("email").notNull().unique(),
+  name: text("name"),
+  tier: text("tier").default("free"), // free or pro
+  preferences: text("preferences"), // JSON: { ransomware: true, cves: true, news: true, breaches: true }
+  frequency: text("frequency").default("weekly"), // daily, weekly, monthly
+  verified: boolean("verified").default(false),
+  verificationToken: text("verification_token"),
+  unsubscribeToken: text("unsubscribe_token"),
+  subscribedAt: timestamp("subscribed_at").defaultNow(),
+  unsubscribedAt: timestamp("unsubscribed_at"),
+  lastEmailSent: timestamp("last_email_sent"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("newsletter_email_idx").on(table.email),
+  index("newsletter_verified_idx").on(table.verified),
+]);
+
 export const insertUserSettingsSchema = createInsertSchema(userSettings).omit({
   id: true,
   createdAt: true,
@@ -427,3 +447,12 @@ export type WatchlistItem = typeof watchlistItems.$inferSelect;
 
 export type InsertBreach = z.infer<typeof insertBreachSchema>;
 export type BreachIncident = typeof breachIncidents.$inferSelect;
+
+export const insertNewsletterSchema = createInsertSchema(newsletterSubscriptions).omit({
+  id: true,
+  createdAt: true,
+  subscribedAt: true,
+});
+
+export type InsertNewsletter = z.infer<typeof insertNewsletterSchema>;
+export type NewsletterSubscription = typeof newsletterSubscriptions.$inferSelect;

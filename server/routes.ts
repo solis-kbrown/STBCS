@@ -4,7 +4,8 @@ import { storage } from "./storage";
 import { insertCveSchema, insertRansomwareSchema, insertNewsSchema } from "@shared/schema";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
-import { lookupIp, lookupDomain, scanPorts, isValidIp, isValidDomain, isPrivateIp, COMMON_PORTS } from "./tools";
+import { lookupIp, lookupDomain, scanPorts, isValidIp, isValidDomain, isPrivateIp, COMMON_PORTS, lookupShodanInternetDB } from "./tools";
+import crypto from "crypto";
 
 // Rate limiters for security
 const generalLimiter = rateLimit({
@@ -854,6 +855,236 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Get breach error:", error);
       res.status(500).json({ error: "Failed to fetch breach incident" });
+    }
+  });
+
+  // ==========================================
+  // SHODAN INTERNETDB - FREE TOOL
+  // ==========================================
+
+  // Shodan InternetDB lookup (free, no API key needed)
+  app.get("/api/tools/shodan-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        ip: z.string().min(7).max(45),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid IP address format" });
+      }
+      
+      const { ip } = parsed.data;
+      
+      if (!isValidIp(ip)) {
+        return res.status(400).json({ error: "Invalid IP address format" });
+      }
+      
+      if (isPrivateIp(ip)) {
+        return res.status(400).json({ error: "Cannot lookup private/internal IP addresses" });
+      }
+      
+      const result = await lookupShodanInternetDB(ip);
+      
+      if (!result) {
+        return res.json({ 
+          ip,
+          found: false,
+          message: "No data found for this IP in Shodan InternetDB",
+          ports: [],
+          hostnames: [],
+          vulns: [],
+          cpes: [],
+          tags: []
+        });
+      }
+      
+      res.json({
+        ...result,
+        found: true,
+        source: "Shodan InternetDB"
+      });
+    } catch (error) {
+      console.error("Shodan lookup error:", error);
+      res.status(500).json({ error: "Failed to lookup IP in Shodan InternetDB" });
+    }
+  });
+
+  // ==========================================
+  // NEWSLETTER SUBSCRIPTIONS
+  // ==========================================
+
+  // Subscribe to newsletter
+  app.post("/api/newsletter/subscribe", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        email: z.string().email().max(255),
+        name: z.string().max(100).optional(),
+        preferences: z.object({
+          ransomware: z.boolean().default(true),
+          cves: z.boolean().default(true),
+          news: z.boolean().default(true),
+          breaches: z.boolean().default(true),
+        }).optional(),
+        frequency: z.enum(["daily", "weekly", "monthly"]).default("weekly"),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid email address or request body" });
+      }
+      
+      const { email, name, preferences, frequency } = parsed.data;
+      
+      // Check if already subscribed
+      const existing = await storage.getNewsletterByEmail(email);
+      if (existing && !existing.unsubscribedAt) {
+        return res.status(409).json({ error: "This email is already subscribed" });
+      }
+      
+      // Generate tokens
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      const unsubscribeToken = crypto.randomBytes(32).toString('hex');
+      
+      const subscription = await storage.createNewsletterSubscription({
+        email,
+        name: name || null,
+        preferences: preferences ? JSON.stringify(preferences) : JSON.stringify({ ransomware: true, cves: true, news: true, breaches: true }),
+        frequency,
+        verificationToken,
+        unsubscribeToken,
+        verified: false,
+      });
+      
+      res.status(201).json({ 
+        success: true,
+        message: "Successfully subscribed! Check your email for verification (coming soon).",
+        email,
+      });
+    } catch (error) {
+      console.error("Newsletter subscribe error:", error);
+      res.status(500).json({ error: "Failed to subscribe to newsletter" });
+    }
+  });
+
+  // Unsubscribe from newsletter
+  app.post("/api/newsletter/unsubscribe", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        email: z.string().email().max(255).optional(),
+        token: z.string().min(10).max(100).optional(),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request body" });
+      }
+      
+      const { email, token } = parsed.data;
+      
+      if (!email && !token) {
+        return res.status(400).json({ error: "Email or unsubscribe token required" });
+      }
+      
+      let subscription;
+      if (token) {
+        subscription = await storage.getNewsletterByUnsubscribeToken(token);
+      } else if (email) {
+        subscription = await storage.getNewsletterByEmail(email);
+      }
+      
+      if (!subscription) {
+        return res.status(404).json({ error: "Subscription not found" });
+      }
+      
+      await storage.unsubscribeNewsletter(subscription.id);
+      
+      res.json({ 
+        success: true,
+        message: "Successfully unsubscribed from the newsletter."
+      });
+    } catch (error) {
+      console.error("Newsletter unsubscribe error:", error);
+      res.status(500).json({ error: "Failed to unsubscribe from newsletter" });
+    }
+  });
+
+  // Update newsletter preferences
+  app.patch("/api/newsletter/preferences", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        email: z.string().email().max(255),
+        preferences: z.object({
+          ransomware: z.boolean().optional(),
+          cves: z.boolean().optional(),
+          news: z.boolean().optional(),
+          breaches: z.boolean().optional(),
+        }).optional(),
+        frequency: z.enum(["daily", "weekly", "monthly"]).optional(),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request body" });
+      }
+      
+      const { email, preferences, frequency } = parsed.data;
+      
+      const subscription = await storage.getNewsletterByEmail(email);
+      if (!subscription) {
+        return res.status(404).json({ error: "Subscription not found" });
+      }
+      
+      const updates: any = {};
+      if (preferences) {
+        const currentPrefs = subscription.preferences ? JSON.parse(subscription.preferences) : {};
+        updates.preferences = JSON.stringify({ ...currentPrefs, ...preferences });
+      }
+      if (frequency) {
+        updates.frequency = frequency;
+      }
+      
+      await storage.updateNewsletterPreferences(subscription.id, updates);
+      
+      res.json({ 
+        success: true,
+        message: "Preferences updated successfully."
+      });
+    } catch (error) {
+      console.error("Newsletter preferences error:", error);
+      res.status(500).json({ error: "Failed to update newsletter preferences" });
+    }
+  });
+
+  // Get newsletter subscription status
+  app.get("/api/newsletter/status", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        email: z.string().email().max(255),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid email address" });
+      }
+      
+      const { email } = parsed.data;
+      const subscription = await storage.getNewsletterByEmail(email);
+      
+      if (!subscription) {
+        return res.json({ subscribed: false });
+      }
+      
+      res.json({
+        subscribed: !subscription.unsubscribedAt,
+        verified: subscription.verified,
+        frequency: subscription.frequency,
+        preferences: subscription.preferences ? JSON.parse(subscription.preferences) : null,
+        subscribedAt: subscription.subscribedAt,
+      });
+    } catch (error) {
+      console.error("Newsletter status error:", error);
+      res.status(500).json({ error: "Failed to check newsletter status" });
     }
   });
 

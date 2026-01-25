@@ -272,4 +272,43 @@ export function isPrivateIp(ip: string): boolean {
   return false;
 }
 
+// Shodan InternetDB - Free API (no key needed)
+// https://internetdb.shodan.io/
+export interface ShodanInternetDBResult {
+  ip: string;
+  ports: number[];
+  hostnames: string[];
+  cpes: string[];
+  vulns: string[];
+  tags: string[];
+}
+
+export async function lookupShodanInternetDB(ip: string): Promise<ShodanInternetDBResult | null> {
+  try {
+    const response = await fetchWithTimeout(`https://internetdb.shodan.io/${ip}`, 15000);
+    
+    if (response.status === 404) {
+      return null;
+    }
+    
+    if (!response.ok) {
+      throw new Error(`Shodan InternetDB error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    return {
+      ip: data.ip || ip,
+      ports: data.ports || [],
+      hostnames: data.hostnames || [],
+      cpes: data.cpes || [],
+      vulns: data.vulns || [],
+      tags: data.tags || [],
+    };
+  } catch (error) {
+    console.error("[Shodan InternetDB] Error:", error);
+    return null;
+  }
+}
+
 export { COMMON_PORTS, FREE_USER_PORTS, PRO_USER_PORTS };

@@ -640,3 +640,92 @@ export function useSearchBreaches(query: string) {
     enabled: query.length >= 2,
   });
 }
+
+// Shodan InternetDB Lookup
+export interface ShodanLookupResult {
+  ip: string;
+  found: boolean;
+  ports: number[];
+  hostnames: string[];
+  vulns: string[];
+  cpes: string[];
+  tags: string[];
+  message?: string;
+  source?: string;
+}
+
+export function useShodanLookup() {
+  return useMutation<ShodanLookupResult, Error, string>({
+    mutationFn: async (ip: string) => {
+      const response = await fetch(`/api/tools/shodan-lookup?ip=${encodeURIComponent(ip)}`);
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Lookup failed");
+      }
+      return response.json();
+    },
+  });
+}
+
+// Newsletter Subscription
+export interface NewsletterPreferences {
+  ransomware: boolean;
+  cves: boolean;
+  news: boolean;
+  breaches: boolean;
+}
+
+export interface NewsletterSubscribeData {
+  email: string;
+  name?: string;
+  preferences?: NewsletterPreferences;
+  frequency?: "daily" | "weekly" | "monthly";
+}
+
+export function useNewsletterSubscribe() {
+  return useMutation<{ success: boolean; message: string; email: string }, Error, NewsletterSubscribeData>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Subscription failed");
+      }
+      return response.json();
+    },
+  });
+}
+
+export function useNewsletterUnsubscribe() {
+  return useMutation<{ success: boolean; message: string }, Error, { email?: string; token?: string }>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/newsletter/unsubscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Unsubscribe failed");
+      }
+      return response.json();
+    },
+  });
+}
+
+export function useNewsletterStatus(email: string) {
+  return useQuery<{
+    subscribed: boolean;
+    verified?: boolean;
+    frequency?: string;
+    preferences?: NewsletterPreferences;
+    subscribedAt?: string;
+  }>({
+    queryKey: ["/api/newsletter/status", email],
+    queryFn: () => fetchApi(`/api/newsletter/status?email=${encodeURIComponent(email)}`),
+    enabled: !!email && email.includes("@"),
+  });
+}
