@@ -136,7 +136,12 @@ export default function SupportPage() {
   const handleSubscribe = (tierName: string) => {
     const products = productsData?.products || [];
     const product = products.find((p: any) => p.name?.includes(tierName));
-    const price = product?.prices?.[0];
+    
+    // Find monthly price (prefer monthly over yearly)
+    const monthlyPrice = product?.prices?.find((p: any) => 
+      p.recurring?.interval === 'month'
+    );
+    const price = monthlyPrice || product?.prices?.[0];
     
     if (price?.id) {
       checkoutMutation.mutate({

@@ -1153,6 +1153,19 @@ export async function registerRoutes(
       }
       
       const { priceId, customerEmail, mode } = parsed.data;
+      
+      // Validate price exists and belongs to an allowed STBCS product
+      const price = await stripeService.getPrice(priceId);
+      if (!price) {
+        return res.status(400).json({ error: "Invalid price" });
+      }
+      
+      // Verify the price belongs to an STBCS membership product
+      const product = await stripeService.getProduct(price.product as string);
+      if (!product || !(product.name as string)?.includes('STBCS')) {
+        return res.status(400).json({ error: "Invalid product" });
+      }
+      
       const baseUrl = `${req.protocol}://${req.get('host')}`;
       
       const session = await stripeService.createCheckoutSession({
