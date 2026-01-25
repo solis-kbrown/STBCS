@@ -84,9 +84,20 @@ Preferred communication style: Simple, everyday language.
 - **Features**:
   - Frequency options: daily, weekly, monthly
   - Content preferences: ransomware, CVEs, news, breaches
-  - Verification tokens for double opt-in (email sending pending)
+  - Verification tokens for double opt-in
   - Unsubscribe tokens for one-click unsubscribe
 - **UI**: Added "Weekly Security Digest" subscription form on Security Tools page
+
+### New: Email Notification & Digest System
+- **Email Service**: `server/email.ts` - Modular email provider with templates
+- **Digest Scheduler**: `server/digest.ts` - Automated daily/weekly digest generation
+- **Email Templates**:
+  - Alert notifications (ransomware, CVE, breach, watchlist match)
+  - Weekly security digest with stats, critical CVEs, top ransomware groups
+- **Scheduler**: 
+  - Daily digests sent at 8:00 AM UTC
+  - Weekly digests sent Mondays at 9:00 AM UTC
+- **Email Provider**: Requires Resend or SendGrid integration for actual delivery
 
 ### Expanded Threat Intelligence System (31+ Sources)
 - **Refresh Interval**: 15 minutes (configurable)
