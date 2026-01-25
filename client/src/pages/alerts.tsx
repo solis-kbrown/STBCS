@@ -189,19 +189,19 @@ export default function Alerts() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="bg-zinc-900/60 border border-zinc-800">
-            <TabsTrigger value="notifications" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white" data-testid="tab-notifications">
+          <TabsList className="bg-zinc-900 border border-zinc-800 p-1">
+            <TabsTrigger value="notifications" className="data-[state=active]:!bg-orange-500 data-[state=active]:!text-white data-[state=active]:!shadow-none text-zinc-400" data-testid="tab-notifications">
               <Bell className="h-4 w-4 mr-2" />
               Notifications
               {unreadCount > 0 && (
-                <Badge className="ml-2 bg-red-600 text-white text-xs px-1.5">{unreadCount}</Badge>
+                <Badge className="ml-2 !bg-red-600 !text-white text-xs px-1.5">{unreadCount}</Badge>
               )}
             </TabsTrigger>
-            <TabsTrigger value="watchlist" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white" data-testid="tab-watchlist">
+            <TabsTrigger value="watchlist" className="data-[state=active]:!bg-orange-500 data-[state=active]:!text-white data-[state=active]:!shadow-none text-zinc-400" data-testid="tab-watchlist">
               <Eye className="h-4 w-4 mr-2" />
               Watchlist ({watchlist.length})
             </TabsTrigger>
-            <TabsTrigger value="breaches" className="data-[state=active]:bg-orange-500 data-[state=active]:text-white" data-testid="tab-breaches">
+            <TabsTrigger value="breaches" className="data-[state=active]:!bg-orange-500 data-[state=active]:!text-white data-[state=active]:!shadow-none text-zinc-400" data-testid="tab-breaches">
               <Database className="h-4 w-4 mr-2" />
               Breach Database
             </TabsTrigger>
