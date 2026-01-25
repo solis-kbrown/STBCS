@@ -1,4 +1,5 @@
 import { storage } from "./storage";
+import { Resend } from "resend";
 
 export interface EmailOptions {
   to: string;
@@ -7,26 +8,67 @@ export interface EmailOptions {
   text?: string;
 }
 
-export interface EmailProvider {
-  send(options: EmailOptions): Promise<boolean>;
-}
+let connectionSettings: any = null;
 
-class ConsoleEmailProvider implements EmailProvider {
-  async send(options: EmailOptions): Promise<boolean> {
-    console.log(`[Email] Would send to ${options.to}: ${options.subject}`);
-    return true;
+async function getResendCredentials(): Promise<{ apiKey: string; fromEmail: string }> {
+  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
+  const xReplitToken = process.env.REPL_IDENTITY 
+    ? 'repl ' + process.env.REPL_IDENTITY 
+    : process.env.WEB_REPL_RENEWAL 
+    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
+    : null;
+
+  if (!xReplitToken || !hostname) {
+    throw new Error('Resend credentials not available');
   }
+
+  connectionSettings = await fetch(
+    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=resend',
+    {
+      headers: {
+        'Accept': 'application/json',
+        'X_REPLIT_TOKEN': xReplitToken
+      }
+    }
+  ).then(res => res.json()).then(data => data.items?.[0]);
+
+  if (!connectionSettings || !connectionSettings.settings?.api_key) {
+    throw new Error('Resend not connected');
+  }
+  
+  return {
+    apiKey: connectionSettings.settings.api_key,
+    fromEmail: connectionSettings.settings.from_email || 'noreply@stoptbcs.com'
+  };
 }
 
-let emailProvider: EmailProvider = new ConsoleEmailProvider();
-
-export function setEmailProvider(provider: EmailProvider) {
-  emailProvider = provider;
+async function getResendClient(): Promise<{ client: Resend; fromEmail: string }> {
+  const { apiKey, fromEmail } = await getResendCredentials();
+  return {
+    client: new Resend(apiKey),
+    fromEmail
+  };
 }
 
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
   try {
-    return await emailProvider.send(options);
+    const { client, fromEmail } = await getResendClient();
+    
+    const result = await client.emails.send({
+      from: `STB Cybersecurity <${fromEmail}>`,
+      to: options.to,
+      subject: options.subject,
+      html: options.html,
+      text: options.text
+    });
+    
+    if (result.error) {
+      console.error("[Email] Resend error:", result.error);
+      return false;
+    }
+    
+    console.log(`[Email] Sent to ${options.to}: ${options.subject}`);
+    return true;
   } catch (error) {
     console.error("[Email] Failed to send:", error);
     return false;
