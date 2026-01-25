@@ -18,6 +18,7 @@ const ToolsPage = lazy(() => import("@/pages/tools"));
 const LogoGallery = lazy(() => import("@/pages/logo-gallery"));
 const Alerts = lazy(() => import("@/pages/alerts"));
 const Support = lazy(() => import("@/pages/support"));
+const StylePreview = lazy(() => import("@/pages/style-preview"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -46,6 +47,7 @@ function Router() {
         <Route path="/logos" component={LogoGallery}/>
         <Route path="/alerts" component={Alerts}/>
         <Route path="/support" component={Support}/>
+        <Route path="/style-preview" component={StylePreview}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>
