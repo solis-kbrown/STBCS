@@ -86,6 +86,10 @@ app.use((req, res, next) => {
   const { startDataRefreshScheduler } = await import("./scrapers");
   startDataRefreshScheduler(15);
 
+  // Start the digest scheduler (daily at 8am UTC, weekly on Mondays at 9am UTC)
+  const { startDigestScheduler } = await import("./digest");
+  startDigestScheduler();
+
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";

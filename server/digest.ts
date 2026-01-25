@@ -123,13 +123,15 @@ export async function sendDailyDigests(): Promise<number> {
         unsubscribeToken: subscriber.unsubscribeToken
       });
       
-      email.subject = email.subject.replace("Weekly", "Daily");
+      const subject = `[STBCS] Daily Security Digest: ${format(today, "MMM d, yyyy")}`;
+      const html = email.html.replace("Weekly Security Digest", "Daily Security Digest");
+      const text = email.text.replace("Weekly", "Daily");
       
       const success = await sendEmail({
         to: subscriber.email,
-        subject: email.subject,
-        html: email.html,
-        text: email.text
+        subject,
+        html,
+        text
       });
       
       if (success) sent++;

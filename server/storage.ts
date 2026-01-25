@@ -868,6 +868,7 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(newsletterSubscriptions)
       .where(and(
         eq(newsletterSubscriptions.frequency, frequency),
+        eq(newsletterSubscriptions.verified, true),
         sql`${newsletterSubscriptions.unsubscribedAt} IS NULL`
       ))
       .orderBy(desc(newsletterSubscriptions.subscribedAt));
