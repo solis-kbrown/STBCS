@@ -12,7 +12,9 @@ import {
   Globe,
   Wrench,
   Mail,
-  Heart
+  Heart,
+  Phone,
+  MessageSquare
 } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -90,6 +92,32 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       </div>
 
       <div className="p-4 border-t border-sidebar-border space-y-3">
+        <div className="bg-primary/10 border border-primary/30 rounded-lg p-3">
+          <p className="text-[10px] text-primary font-bold mb-1 flex items-center gap-1">
+            <Phone className="h-3 w-3" /> EMERGENCY HOTLINE
+          </p>
+          <a 
+            href="tel:+18557821987" 
+            className="text-base font-display font-bold text-white hover:text-primary transition-colors block"
+            data-testid="link-phone-sidebar"
+          >
+            (855) STB-1987
+          </a>
+          <div className="flex gap-2 mt-2">
+            <a 
+              href="tel:+18557821987" 
+              className="flex-1 bg-primary/20 hover:bg-primary/30 text-primary text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-colors"
+            >
+              <Phone className="h-3 w-3" /> Call
+            </a>
+            <a 
+              href="sms:+18557821987" 
+              className="flex-1 bg-primary/20 hover:bg-primary/30 text-primary text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-colors"
+            >
+              <MessageSquare className="h-3 w-3" /> Text
+            </a>
+          </div>
+        </div>
         <div className="bg-sidebar-accent/50 rounded-lg p-4 border border-sidebar-border">
           <h4 className="font-display text-sm font-bold text-primary mb-1">PRO ACCOUNT</h4>
           <p className="text-xs text-muted-foreground mb-3">Upgrade for unlimited tools, real-time API access, and custom alerts.</p>

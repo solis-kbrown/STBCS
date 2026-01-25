@@ -1,4 +1,4 @@
-import { Mail, Globe, Shield } from "lucide-react";
+import { Mail, Globe, Shield, Phone, MessageSquare } from "lucide-react";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -13,9 +13,23 @@ export default function Footer() {
               <span className="font-display font-bold text-lg text-primary">STBCS</span>
             </div>
             <p className="text-sm text-muted-foreground mb-4 max-w-md">
-              STB Cybersecurity provides real-time threat intelligence, ransomware tracking, 
-              CVE monitoring, and professional security tools for security teams worldwide.
+              STB Cybersecurity provides frontline incident response, ransomware recovery, threat hunting, 
+              and real-time threat intelligence for small to medium-sized businesses.
             </p>
+            
+            <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mb-4 max-w-md">
+              <p className="text-xs text-primary font-bold mb-1 flex items-center gap-1">
+                <Phone className="h-3 w-3" /> EMERGENCY HOTLINE
+              </p>
+              <a 
+                href="tel:+18557821987" 
+                className="text-lg font-display font-bold text-white hover:text-primary transition-colors"
+                data-testid="link-phone-footer"
+              >
+                (855) STB-1987
+              </a>
+              <p className="text-xs text-muted-foreground mt-1">24/7 Incident Response</p>
+            </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Globe className="h-3 w-3" />
               <span>stoptbcs.com</span>
@@ -27,6 +41,16 @@ export default function Footer() {
           <div>
             <h4 className="font-bold text-white text-sm mb-3">Contact</h4>
             <ul className="space-y-2 text-sm">
+              <li>
+                <a href="tel:+18557821987" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+                  <Phone className="h-3 w-3" /> (855) STB-1987
+                </a>
+              </li>
+              <li>
+                <a href="sms:+18557821987" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+                  <MessageSquare className="h-3 w-3" /> Text Us
+                </a>
+              </li>
               <li>
                 <a href="mailto:info@stoptbcs.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
                   <Mail className="h-3 w-3" /> info@stoptbcs.com
@@ -40,11 +64,6 @@ export default function Footer() {
               <li>
                 <a href="mailto:support@stoptbcs.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
                   <Mail className="h-3 w-3" /> support@stoptbcs.com
-                </a>
-              </li>
-              <li>
-                <a href="mailto:billing@stoptbcs.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
-                  <Mail className="h-3 w-3" /> billing@stoptbcs.com
                 </a>
               </li>
             </ul>

@@ -20,6 +20,7 @@ STB Cybersecurity (stoptbcs.com / stbcybersecurity.com) is a professional cybers
 - **Domains**: stoptbcs.com (primary), stbcybersecurity.com (secondary/redirect)
 - **Twitter/Social**: @stoptbcs
 - **Founder**: Kevin Brown
+- **Emergency Hotline**: (855) STB-1987 (24/7 Incident Response via Quo phone system)
 - **Contact Emails**:
   - info@stoptbcs.com - General inquiries
   - sales@stoptbcs.com - Sales and B2B services
