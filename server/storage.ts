@@ -863,6 +863,15 @@ export class DatabaseStorage implements IStorage {
       ))
       .orderBy(desc(newsletterSubscriptions.subscribedAt));
   }
+
+  async getActiveNewsletterSubscribers(frequency: string): Promise<NewsletterSubscription[]> {
+    return db.select().from(newsletterSubscriptions)
+      .where(and(
+        eq(newsletterSubscriptions.frequency, frequency),
+        sql`${newsletterSubscriptions.unsubscribedAt} IS NULL`
+      ))
+      .orderBy(desc(newsletterSubscriptions.subscribedAt));
+  }
 }
 
 export const storage = new DatabaseStorage();
