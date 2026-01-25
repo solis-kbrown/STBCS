@@ -79,3 +79,35 @@ Preferred communication style: Simple, everyday language.
 - `express-rate-limit`
 - `zod`
 - `date-fns`
+- `stripe`, `stripe-replit-sync`
+
+## Stripe Payment Integration
+
+### Overview
+All payments are processed through Stripe-hosted checkout pages (checkout.stripe.com). No payment data or sensitive PII is stored on our servers.
+
+### Membership Tiers
+- **STBCS Supporter**: $9.99/month (or $99.90/year) - Basic support tier
+- **STBCS Pro**: $29.99/month (or $299.90/year) - Full access to Pro features
+- **STBCS Business**: $99.99/month (or $999.90/year) - Enterprise-grade features
+
+### Donations
+One-time contributions: $5, $10, $25, $50, $100, or custom amounts
+
+### API Endpoints
+- `GET /api/stripe/products` - Lists products with prices synced from Stripe
+- `POST /api/stripe/checkout` - Creates subscription checkout session
+- `POST /api/stripe/donate` - Creates one-time donation checkout
+- `POST /api/stripe/webhook` - Handles Stripe webhook events (auto-managed)
+
+### Key Files
+- `server/stripeClient.ts` - Stripe client and credential management
+- `server/stripeService.ts` - Stripe API operations
+- `server/webhookHandlers.ts` - Webhook processing
+- `server/seed-stripe-products.ts` - Product creation script
+
+### Security
+- Payments processed on Stripe's secure checkout pages
+- No card data touches our servers
+- Webhook signatures validated for authenticity
+- Customer portal for self-service subscription management
