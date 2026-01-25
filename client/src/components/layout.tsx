@@ -107,12 +107,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <a 
               href="tel:+18557821987" 
               className="flex-1 bg-primary/20 hover:bg-primary/30 text-primary text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-colors"
+              data-testid="button-call-sidebar"
             >
               <Phone className="h-3 w-3" /> Call
             </a>
             <a 
               href="sms:+18557821987" 
               className="flex-1 bg-primary/20 hover:bg-primary/30 text-primary text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-colors"
+              data-testid="button-sms-sidebar"
             >
               <MessageSquare className="h-3 w-3" /> Text
             </a>

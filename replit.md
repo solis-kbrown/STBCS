@@ -99,6 +99,22 @@ Preferred communication style: Simple, everyday language.
   - Unsubscribe tokens for one-click unsubscribe
 - **UI**: Added "Weekly Security Digest" subscription form on Security Tools page
 
+### New: Quo Phone System Integration
+- **Provider**: Quo (formerly OpenPhone) - AI-powered business phone system
+- **Emergency Hotline**: (855) STB-1987 (+18557821987)
+- **Features**:
+  - Click-to-call and click-to-text from website
+  - SMS notifications for incident alerts
+  - Threat alert SMS delivery
+  - Webhook support for incoming calls/messages
+- **API Endpoints**:
+  - `GET /api/quo/status` - Check integration status
+  - `POST /api/quo/send-sms` - Send SMS message
+  - `POST /api/quo/incident-alert` - Send incident alert SMS
+  - `POST /api/quo/threat-alert` - Send threat alert SMS
+  - `POST /api/quo/webhook` - Receive Quo events
+- **Environment Variable**: `QUO_API_KEY` - API key from Quo dashboard
+
 ### New: Email Notification & Digest System
 - **Email Service**: `server/email.ts` - Modular email provider with templates
 - **Digest Scheduler**: `server/digest.ts` - Automated daily/weekly digest generation

@@ -42,27 +42,27 @@ export default function Footer() {
             <h4 className="font-bold text-white text-sm mb-3">Contact</h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <a href="tel:+18557821987" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+                <a href="tel:+18557821987" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-call-footer">
                   <Phone className="h-3 w-3" /> (855) STB-1987
                 </a>
               </li>
               <li>
-                <a href="sms:+18557821987" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+                <a href="sms:+18557821987" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-sms-footer">
                   <MessageSquare className="h-3 w-3" /> Text Us
                 </a>
               </li>
               <li>
-                <a href="mailto:info@stoptbcs.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+                <a href="mailto:info@stoptbcs.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-info">
                   <Mail className="h-3 w-3" /> info@stoptbcs.com
                 </a>
               </li>
               <li>
-                <a href="mailto:sales@stoptbcs.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+                <a href="mailto:sales@stoptbcs.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-sales">
                   <Mail className="h-3 w-3" /> sales@stoptbcs.com
                 </a>
               </li>
               <li>
-                <a href="mailto:support@stoptbcs.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2">
+                <a href="mailto:support@stoptbcs.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-support">
                   <Mail className="h-3 w-3" /> support@stoptbcs.com
                 </a>
               </li>

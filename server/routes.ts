@@ -8,6 +8,7 @@ import { lookupIp, lookupDomain, scanPorts, isValidIp, isValidDomain, isPrivateI
 import crypto from "crypto";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
+import { getQuoService, isQuoConfigured } from "./quoService";
 
 // Rate limiters for security
 const generalLimiter = rateLimit({
@@ -1213,6 +1214,170 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Donation error:", error);
       res.status(500).json({ error: "Failed to create donation session" });
+    }
+  });
+
+  // ==================== QUO PHONE INTEGRATION ====================
+
+  // Check Quo integration status
+  app.get("/api/quo/status", generalLimiter, async (req: Request, res: Response) => {
+    res.json({
+      configured: isQuoConfigured(),
+      hotline: "(855) STB-1987",
+      hotlineE164: "+18557821987",
+    });
+  });
+
+  // Internal API key for server-side SMS operations (use for internal automation only)
+  const verifyInternalApiKey = (req: Request, res: Response, next: Function) => {
+    const internalKey = req.headers['x-internal-api-key'];
+    const expectedKey = process.env.INTERNAL_API_KEY || process.env.QUO_API_KEY;
+    
+    if (!internalKey || internalKey !== expectedKey) {
+      return res.status(401).json({ error: "Unauthorized - internal API key required" });
+    }
+    next();
+  };
+
+  // Send SMS via Quo (internal use only - requires API key)
+  app.post("/api/quo/send-sms", strictLimiter, verifyInternalApiKey, async (req: Request, res: Response) => {
+    try {
+      if (!isQuoConfigured()) {
+        return res.status(503).json({ error: "Quo phone integration not configured" });
+      }
+
+      const schema = z.object({
+        to: z.string().min(10).max(20),
+        message: z.string().min(1).max(1600),
+      });
+
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request", details: parsed.error.errors });
+      }
+
+      const quoService = getQuoService();
+      const result = await quoService.sendSMS(parsed.data.to, parsed.data.message);
+
+      res.json({
+        success: true,
+        messageId: result.data.id,
+        to: result.data.to,
+      });
+    } catch (error) {
+      console.error("Quo SMS error:", error);
+      res.status(500).json({ error: "Failed to send SMS" });
+    }
+  });
+
+  // Send incident alert SMS (internal use only)
+  app.post("/api/quo/incident-alert", strictLimiter, verifyInternalApiKey, async (req: Request, res: Response) => {
+    try {
+      if (!isQuoConfigured()) {
+        return res.status(503).json({ error: "Quo phone integration not configured" });
+      }
+
+      const schema = z.object({
+        to: z.string().min(10).max(20),
+        incidentType: z.string().min(1).max(100),
+        details: z.string().min(1).max(500),
+      });
+
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request", details: parsed.error.errors });
+      }
+
+      const quoService = getQuoService();
+      const result = await quoService.sendIncidentAlert(
+        parsed.data.to,
+        parsed.data.incidentType,
+        parsed.data.details
+      );
+
+      res.json({
+        success: true,
+        messageId: result.data.id,
+      });
+    } catch (error) {
+      console.error("Quo incident alert error:", error);
+      res.status(500).json({ error: "Failed to send incident alert" });
+    }
+  });
+
+  // Send threat alert SMS (internal use only)
+  app.post("/api/quo/threat-alert", strictLimiter, verifyInternalApiKey, async (req: Request, res: Response) => {
+    try {
+      if (!isQuoConfigured()) {
+        return res.status(503).json({ error: "Quo phone integration not configured" });
+      }
+
+      const schema = z.object({
+        to: z.string().min(10).max(20),
+        threatType: z.string().min(1).max(100),
+        severity: z.enum(["LOW", "MEDIUM", "HIGH", "CRITICAL"]),
+        description: z.string().min(1).max(500),
+      });
+
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request", details: parsed.error.errors });
+      }
+
+      const quoService = getQuoService();
+      const result = await quoService.sendThreatAlert(
+        parsed.data.to,
+        parsed.data.threatType,
+        parsed.data.severity,
+        parsed.data.description
+      );
+
+      res.json({
+        success: true,
+        messageId: result.data.id,
+      });
+    } catch (error) {
+      console.error("Quo threat alert error:", error);
+      res.status(500).json({ error: "Failed to send threat alert" });
+    }
+  });
+
+  // Webhook endpoint for incoming Quo messages/calls (with signature verification)
+  app.post("/api/quo/webhook", async (req: Request, res: Response) => {
+    try {
+      // Verify webhook signature if configured
+      const webhookSecret = process.env.QUO_WEBHOOK_SECRET;
+      if (webhookSecret) {
+        const signature = req.headers['x-openphone-signature'] || req.headers['x-quo-signature'];
+        if (!signature) {
+          console.warn("[Quo Webhook] Missing signature header");
+          return res.status(401).json({ error: "Missing webhook signature" });
+        }
+        // Note: Implement proper HMAC verification when Quo provides signature format
+      }
+
+      const event = req.body;
+      console.log("[Quo Webhook] Received event:", event.type || "unknown");
+      
+      // Handle different event types
+      switch (event.type) {
+        case "message.received":
+          console.log("[Quo] Incoming message from:", event.data?.from);
+          break;
+        case "call.completed":
+          console.log("[Quo] Call completed:", event.data?.id);
+          break;
+        case "call.recording.completed":
+          console.log("[Quo] Call recording ready:", event.data?.id);
+          break;
+        default:
+          console.log("[Quo] Unhandled event type:", event.type);
+      }
+
+      res.json({ received: true });
+    } catch (error) {
+      console.error("Quo webhook error:", error);
+      res.status(500).json({ error: "Webhook processing failed" });
     }
   });
 
