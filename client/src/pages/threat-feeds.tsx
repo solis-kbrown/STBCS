@@ -1,6 +1,7 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 import { useThreatFeeds, useMaliciousIps, useMaliciousUrls, useCisaKev, useExportData } from "@/lib/api";
+import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Globe, Shield, Link2, Lock, AlertTriangle, CheckCircle, Clock, Zap, Dow
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function ThreatFeeds() {
+  useDocumentTitle("Threat Intelligence Feeds | STB Cybersecurity");
   const { data: feeds, isLoading: feedsLoading } = useThreatFeeds();
   const { data: ipsData, isLoading: ipsLoading } = useMaliciousIps(20);
   const { data: urlsData, isLoading: urlsLoading } = useMaliciousUrls(20);

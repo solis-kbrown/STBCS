@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Heart, Shield, Users, Zap, Check, Coffee, Rocket, Building2, ExternalLink, Loader2, CreditCard, Lock } from "lucide-react";
+import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -74,6 +75,7 @@ const membershipTiers = [
 ];
 
 export default function SupportPage() {
+  useDocumentTitle("Support & Membership | STB Cybersecurity");
   const [location] = useLocation();
   const searchParams = new URLSearchParams(location.split('?')[1] || '');
   const success = searchParams.get('success') === 'true';

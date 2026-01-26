@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -650,6 +651,7 @@ function NewsletterSubscribeTool() {
 }
 
 export default function ToolsPage() {
+  useDocumentTitle("Free Security Tools | STB Cybersecurity");
   return (
     <Layout>
       <div className="space-y-6 animate-in fade-in duration-500">

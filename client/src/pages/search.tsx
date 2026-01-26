@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 import { useGlobalSearch } from "@/lib/api";
+import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,7 @@ import { useAuth } from "@/lib/auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SearchPage() {
+  useDocumentTitle("Global Threat Search | STB Cybersecurity");
   const [location] = useLocation();
   const params = new URLSearchParams(location.split('?')[1] || '');
   const initialQuery = params.get('q') || '';

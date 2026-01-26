@@ -1,6 +1,7 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 import { useStats, useCves, useRansomware, useRefreshData } from "@/lib/api";
+import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -19,6 +20,7 @@ const chartData = [
 ];
 
 export default function Dashboard() {
+  useDocumentTitle("Threat Intelligence Dashboard | STB Cybersecurity");
   const { data: stats, isLoading: statsLoading } = useStats();
   const { data: cvesData, isLoading: cvesLoading } = useCves(5);
   const { data: ransomwareData, isLoading: ransomwareLoading } = useRansomware(5);

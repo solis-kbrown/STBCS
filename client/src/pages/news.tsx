@@ -1,6 +1,7 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 import { useNews } from "@/lib/api";
+import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { ArrowRight, Globe, Share2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export default function News() {
+  useDocumentTitle("Cybersecurity Intel & News | STB Cybersecurity");
   const { data, isLoading } = useNews(20);
   
   const news = data?.data || [];

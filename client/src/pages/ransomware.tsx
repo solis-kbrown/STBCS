@@ -1,6 +1,7 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 import { useRansomware, useRansomwareGroups, useRansomwareSearch, useExportData } from "@/lib/api";
+import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useState, KeyboardEvent } from "react";
 
 export default function Ransomware() {
+  useDocumentTitle("Ransomware Tracker | STB Cybersecurity");
   const [selectedGroup, setSelectedGroup] = useState<string | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState("");

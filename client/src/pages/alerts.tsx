@@ -2,6 +2,7 @@ import { useState } from "react";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 import { useAuth } from "@/lib/auth";
+import { useDocumentTitle } from "@/lib/use-document-title";
 import { 
   useNotifications, 
   useWatchlist, 
@@ -79,6 +80,7 @@ function getTypeIcon(type: string) {
 }
 
 export default function Alerts() {
+  useDocumentTitle("Pro Alerts & Watchlist | STB Cybersecurity");
   const { user, isAuthenticated, isPro } = useAuth();
   const [activeTab, setActiveTab] = useState("notifications");
   const [newWatchItem, setNewWatchItem] = useState({ type: "company", value: "" });
