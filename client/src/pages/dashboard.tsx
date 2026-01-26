@@ -36,7 +36,7 @@ export default function Dashboard() {
         {/* Hero Section */}
         <div className="relative overflow-hidden rounded-xl border border-white/10 bg-card h-64 flex items-center">
           <div className="absolute inset-0 z-0">
-            <img src="/hero-bg.png" alt="Cyber Background" className="w-full h-full object-cover opacity-40 mix-blend-overlay" />
+            <img src="/hero-bg.png" alt="Cybersecurity threat intelligence network visualization" className="w-full h-full object-cover opacity-40 mix-blend-overlay" />
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"></div>
           </div>
           
