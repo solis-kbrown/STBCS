@@ -412,7 +412,7 @@ export default function SupportPage() {
               to help organizations stay ahead of threats before they become disasters.
               Your support helps us continue serving the community that needs it most."
             </blockquote>
-            <p className="font-bold text-orange-400">- Kevin Brown, Founder</p>
+            <p className="font-bold text-orange-400">- The STBCS Team</p>
           </CardContent>
         </Card>
 
