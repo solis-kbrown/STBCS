@@ -1,0 +1,11 @@
+# STB Cybersecurity - robots.txt
+# https://www.stoptbcs.com
+
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://www.stoptbcs.com/sitemap.xml
+
+# Crawl-delay for respectful crawling
+Crawl-delay: 1
