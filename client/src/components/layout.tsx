@@ -140,24 +140,24 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
         <div className="px-2 space-y-1">
           <a 
-            href="mailto:info@stoptbcs.com" 
+            href="mailto:info@stbcybersecurity.com" 
             className="flex items-center gap-2 text-xs text-zinc-500 hover:text-orange-400 transition-colors"
           >
             <Mail className="h-3 w-3" />
-            <span>info@stoptbcs.com</span>
+            <span>info@stbcybersecurity.com</span>
           </a>
           <a 
-            href="mailto:support@stoptbcs.com" 
+            href="mailto:support@stbcybersecurity.com" 
             className="flex items-center gap-2 text-xs text-zinc-500 hover:text-orange-400 transition-colors"
           >
             <Mail className="h-3 w-3" />
-            <span>support@stoptbcs.com</span>
+            <span>support@stbcybersecurity.com</span>
           </a>
         </div>
         <div className="px-2 pt-2 border-t border-zinc-800/50">
           <p className="text-[10px] text-zinc-600 leading-relaxed">
             STB Cybersecurity (STBCS)<br />
-            stoptbcs.com | stbcybersecurity.com
+            stbcybersecurity.com
           </p>
         </div>
       </div>

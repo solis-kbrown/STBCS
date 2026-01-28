@@ -38,7 +38,7 @@ async function getResendCredentials(): Promise<{ apiKey: string; fromEmail: stri
   
   return {
     apiKey: connectionSettings.settings.api_key,
-    fromEmail: connectionSettings.settings.from_email || 'noreply@stoptbcs.com'
+    fromEmail: connectionSettings.settings.from_email || 'noreply@stbcybersecurity.com'
   };
 }
 
@@ -139,7 +139,7 @@ export function generateAlertEmail(params: {
             <td style="padding: 20px 40px; border-top: 1px solid #333; background-color: #111;">
               <p style="margin: 0; color: #666; font-size: 12px;">
                 You're receiving this because you have alerts enabled on STBCS.
-                <a href="https://stoptbcs.com/settings" style="color: #3b82f6;">Manage preferences</a>
+                <a href="https://stbcybersecurity.com/settings" style="color: #3b82f6;">Manage preferences</a>
               </p>
             </td>
           </tr>
@@ -150,7 +150,7 @@ export function generateAlertEmail(params: {
 </body>
 </html>`;
 
-  const text = `${typeLabel}: ${params.title}\n\n${params.description}\n\n${params.link || 'Visit stoptbcs.com for details'}`;
+  const text = `${typeLabel}: ${params.title}\n\n${params.description}\n\n${params.link || 'Visit stbcybersecurity.com for details'}`;
 
   return { subject, html, text };
 }
@@ -244,7 +244,7 @@ export function generateWeeklyDigestEmail(params: {
               </table>
               ` : ''}
 
-              <a href="https://stoptbcs.com" style="display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View Full Dashboard</a>
+              <a href="https://stbcybersecurity.com" style="display: inline-block; background-color: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">View Full Dashboard</a>
             </td>
           </tr>
           
@@ -252,11 +252,11 @@ export function generateWeeklyDigestEmail(params: {
             <td style="padding: 20px 40px; border-top: 1px solid #333; background-color: #111;">
               <p style="margin: 0; color: #666; font-size: 12px;">
                 You subscribed to the STBCS Weekly Security Digest.
-                <a href="https://stoptbcs.com/unsubscribe?token=${params.unsubscribeToken}" style="color: #3b82f6;">Unsubscribe</a> |
-                <a href="https://stoptbcs.com/preferences" style="color: #3b82f6;">Manage preferences</a>
+                <a href="https://stbcybersecurity.com/unsubscribe?token=${params.unsubscribeToken}" style="color: #3b82f6;">Unsubscribe</a> |
+                <a href="https://stbcybersecurity.com/preferences" style="color: #3b82f6;">Manage preferences</a>
               </p>
               <p style="margin: 10px 0 0; color: #444; font-size: 11px;">
-                STB Cybersecurity | stoptbcs.com | @stoptbcs
+                STB Cybersecurity | stbcybersecurity.com | @stbcybersecurity
               </p>
             </td>
           </tr>
@@ -280,11 +280,11 @@ ${params.criticalCves.length > 0 ? `CRITICAL VULNERABILITIES:\n${params.critical
 
 ${params.topRansomwareGroups.length > 0 ? `MOST ACTIVE RANSOMWARE GROUPS:\n${params.topRansomwareGroups.slice(0, 5).map(g => `- ${g.name}: ${g.count} victims`).join('\n')}\n` : ''}
 
-View the full dashboard: https://stoptbcs.com
+View the full dashboard: https://stbcybersecurity.com
 
 ---
-Unsubscribe: https://stoptbcs.com/unsubscribe?token=${params.unsubscribeToken}
-STB Cybersecurity | stoptbcs.com`;
+Unsubscribe: https://stbcybersecurity.com/unsubscribe?token=${params.unsubscribeToken}
+STB Cybersecurity | stbcybersecurity.com`;
 
   return { subject, html, text };
 }

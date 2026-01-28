@@ -4,6 +4,11 @@
 
 STB Cybersecurity provides professional cybersecurity services and real-time threat intelligence. The platform aggregates data from over 31 free public threat intelligence feeds to track ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news. The company offers Cybersecurity Consulting, Incident Response, Ransomware Recovery & Restoration, and Threat Hunting services for small to medium-sized businesses.
 
+**Domain**: www.stbcybersecurity.com
+**Brand**: STB Cybersecurity (STBCS)
+**Emergency Hotline**: (855) STB-1987
+**Contact Email**: info@stbcybersecurity.com, support@stbcybersecurity.com
+
 **Key capabilities:**
 - Aggregates and displays real-time threat intelligence data.
 - Professional services for incident response and recovery.

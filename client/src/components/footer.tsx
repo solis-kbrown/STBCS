@@ -32,8 +32,6 @@ export default function Footer() {
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
               <Globe className="h-3 w-3" />
-              <span>stoptbcs.com</span>
-              <span className="text-white/20">|</span>
               <span>stbcybersecurity.com</span>
             </div>
           </div>
@@ -52,18 +50,18 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="mailto:info@stoptbcs.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-info">
-                  <Mail className="h-3 w-3" /> info@stoptbcs.com
+                <a href="mailto:info@stbcybersecurity.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-info">
+                  <Mail className="h-3 w-3" /> info@stbcybersecurity.com
                 </a>
               </li>
               <li>
-                <a href="mailto:sales@stoptbcs.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-sales">
-                  <Mail className="h-3 w-3" /> sales@stoptbcs.com
+                <a href="mailto:sales@stbcybersecurity.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-sales">
+                  <Mail className="h-3 w-3" /> sales@stbcybersecurity.com
                 </a>
               </li>
               <li>
-                <a href="mailto:support@stoptbcs.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-support">
-                  <Mail className="h-3 w-3" /> support@stoptbcs.com
+                <a href="mailto:support@stbcybersecurity.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-support">
+                  <Mail className="h-3 w-3" /> support@stbcybersecurity.com
                 </a>
               </li>
             </ul>

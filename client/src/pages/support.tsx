@@ -418,7 +418,7 @@ export default function SupportPage() {
 
         <div className="text-center space-y-2 text-sm text-zinc-500 pb-8">
           <p>Questions about payments or memberships?</p>
-          <p>Contact us at <a href="mailto:billing@stoptbcs.com" className="text-orange-400 hover:underline">billing@stoptbcs.com</a></p>
+          <p>Contact us at <a href="mailto:billing@stbcybersecurity.com" className="text-orange-400 hover:underline">billing@stbcybersecurity.com</a></p>
         </div>
       </div>
       <Footer />
