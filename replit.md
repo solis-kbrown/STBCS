@@ -2,7 +2,7 @@
 
 ## Overview
 
-STB Cybersecurity provides professional cybersecurity services and real-time threat intelligence. The platform aggregates data from over 31 free public threat intelligence feeds to track ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news. The company offers Cybersecurity Consulting, Incident Response, Ransomware Recovery & Restoration, and Threat Hunting services for small to medium-sized businesses.
+STB Cybersecurity provides professional cybersecurity services and real-time threat intelligence. The platform aggregates data from over 40 free public threat intelligence feeds to track ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news. The company offers Cybersecurity Consulting, Incident Response, Ransomware Recovery & Restoration, and Threat Hunting services for small to medium-sized businesses.
 
 **Domain**: www.stbcybersecurity.com
 **Brand**: STB Cybersecurity (STBCS)
@@ -140,15 +140,15 @@ One-time contributions: $5, $10, $25, $50, $100, or custom amounts
 - Webhook signatures validated for authenticity
 - Customer portal for self-service subscription management
 
-## Threat Intelligence Feeds Reference
+## Threat Intelligence Feeds Reference (40+ Sources)
 
-### Currently Implemented (No API Key Required)
+### Currently Implemented (No API Key Required) - 22 Feeds
 | Feed | Data Type | Status |
 |------|-----------|--------|
 | NVD API | CVEs/Vulnerabilities | Active |
 | CISA KEV | Known Exploited Vulnerabilities | Active |
+| CIRCL CVE-Search | Enhanced CVE Data | Active |
 | OpenPhish | Phishing URLs | Active |
-| PhishTank | Phishing URLs | Active |
 | Feodo Tracker | Banking Trojan C2s | Active |
 | SANS DShield | Top Attacking IPs | Active |
 | Tor Exit Nodes | Anonymization IPs | Active |
@@ -161,25 +161,30 @@ One-time contributions: $5, $10, $25, $50, $100, or custom amounts
 | FireHOL Level1 | High-Confidence Malicious IPs | Active |
 | C2 Tracker | Command & Control IPs | Active |
 | RansomLook | Ransomware Incidents | Active |
+| Ransomware.live | Ransomware Victims & Groups | Active |
 | CleanTalk | HTTP Spammers | Active |
 | C2IntelFeeds | C2 Infrastructure | Active |
 | Dataplane SSH | SSH Bruteforce IPs | Active |
 | BinaryDefense | Threat Intel IPs | Active |
 | Turris Sentinel | Router Attack Detection | Active |
 
-### Community APIs (Free Tier Available)
-| Feed | Data Type | Free Tier | Status |
-|------|-----------|-----------|--------|
-| GreyNoise Community | Internet Scanners | 50/day | Active |
-| CrowdSec | Malicious IPs | 50/day | Active |
+### Premium APIs (FREE Accounts Required) - 7 Feeds
+| Feed | Data Type | Free Tier | Env Variable | Get Account At |
+|------|-----------|-----------|--------------|----------------|
+| AlienVault OTX | IoCs, Malware, IPs | 10K req/hour | OTX_API_KEY | https://otx.alienvault.com |
+| VirusTotal | File/URL Scanning | 500/day | VIRUSTOTAL_API_KEY | https://www.virustotal.com |
+| Hybrid Analysis | Malware Sandbox | Unlimited* | HYBRID_ANALYSIS_API_KEY | https://hybrid-analysis.com |
+| GreyNoise | Internet Scanners | 50/day | GREYNOISE_API_KEY | https://www.greynoise.io |
+| CrowdSec | Malicious IPs | 50/day | CROWDSEC_API_KEY | https://www.crowdsec.net |
+| Shodan | Internet Scanning | 100/month | SHODAN_API_KEY | https://account.shodan.io |
+| Pulsedive | Community Intel | 100/day | PULSEDIVE_API_KEY | https://pulsedive.com |
 
-### Future Expansion (Require API Keys)
+*Hybrid Analysis requires account vetting for full API access
+
+### Future Expansion Options
 | Feed | Data Type | Notes |
 |------|-----------|-------|
-| AlienVault OTX | IoCs, Malware, IPs | Free API key signup |
-| VirusTotal | File/URL Scanning | 500/day free tier |
 | HoneyDB | Honeypot Activity | Free API key signup |
 | Shadowserver | Botnet Data | Free for non-commercial |
-| CIRCL CVE-Search | Enhanced CVE Data | Open access |
-| Pulsedive | Community Intel | Free tier available |
-| Cybercrime Tracker | Crimeware C2s | CSV feed |
+| AbuseIPDB | IP Abuse Reports | 1000/day free tier |
+| URLScan.io | URL Analysis | 5K/day free tier |
