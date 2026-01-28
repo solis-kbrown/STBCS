@@ -116,13 +116,13 @@ export class QuoService {
   }
 
   async sendIncidentAlert(to: string, incidentType: string, details: string) {
-    const message = `[STBCS ALERT] ${incidentType.toUpperCase()}\n\n${details}\n\nCall us: (855) STB-1987\nstoptbcs.com`;
+    const message = `[STBCS ALERT] ${incidentType.toUpperCase()}\n\n${details}\n\nCall us: (855) STB-1987\nstbcybersecurity.com`;
     return this.sendSMS(to, message);
   }
 
   async sendWelcomeSMS(to: string, name?: string) {
     const greeting = name ? `Hi ${name}!` : 'Hello!';
-    const message = `${greeting} Welcome to STB Cybersecurity. Our team is ready to help with incident response, ransomware recovery, and threat hunting.\n\n24/7 Hotline: (855) STB-1987\nstoptbcs.com`;
+    const message = `${greeting} Welcome to STB Cybersecurity. Our team is ready to help with incident response, ransomware recovery, and threat hunting.\n\n24/7 Hotline: (855) STB-1987\nstbcybersecurity.com`;
     return this.sendSMS(to, message);
   }
 
@@ -173,12 +173,12 @@ export class QuoService {
 
   async sendRansomwareAlert(to: string, groupName: string, victim: string, sector?: string) {
     const sectorInfo = sector ? `\nSector: ${sector}` : '';
-    const message = `[STBCS RANSOMWARE ALERT]\nGroup: ${groupName}\nVictim: ${victim}${sectorInfo}\n\nNew attack detected. Monitor for potential supply chain impact.\n\nstoptbcs.com`;
+    const message = `[STBCS RANSOMWARE ALERT]\nGroup: ${groupName}\nVictim: ${victim}${sectorInfo}\n\nNew attack detected. Monitor for potential supply chain impact.\n\nstbcybersecurity.com`;
     return this.sendSMS(to, message);
   }
 
   async sendCVEAlert(to: string, cveId: string, severity: string, description: string) {
-    const message = `[STBCS CVE ALERT]\n${cveId}\nSeverity: ${severity}\n\n${description.slice(0, 200)}...\n\nPatch immediately if affected.\nstoptbcs.com`;
+    const message = `[STBCS CVE ALERT]\n${cveId}\nSeverity: ${severity}\n\n${description.slice(0, 200)}...\n\nPatch immediately if affected.\nstbcybersecurity.com`;
     return this.sendSMS(to, message);
   }
 }

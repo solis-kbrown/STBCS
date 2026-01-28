@@ -686,7 +686,7 @@ export default function ToolsPage() {
               </div>
               <div className="flex items-center gap-3">
                 <Button variant="outline" className="border-white/20" asChild>
-                  <a href="mailto:info@stoptbcs.com">
+                  <a href="mailto:info@stbcybersecurity.com">
                     <Mail className="h-4 w-4 mr-2" /> Contact Sales
                   </a>
                 </Button>
@@ -751,13 +751,13 @@ export default function ToolsPage() {
               </div>
               <div className="flex flex-wrap items-center gap-3">
                 <Button variant="outline" className="border-white/20" asChild>
-                  <a href="mailto:sales@stoptbcs.com">
-                    <Mail className="h-4 w-4 mr-2" /> sales@stoptbcs.com
+                  <a href="mailto:sales@stbcybersecurity.com">
+                    <Mail className="h-4 w-4 mr-2" /> sales@stbcybersecurity.com
                   </a>
                 </Button>
                 <Button variant="outline" className="border-white/20" asChild>
-                  <a href="mailto:support@stoptbcs.com">
-                    <Mail className="h-4 w-4 mr-2" /> support@stoptbcs.com
+                  <a href="mailto:support@stbcybersecurity.com">
+                    <Mail className="h-4 w-4 mr-2" /> support@stbcybersecurity.com
                   </a>
                 </Button>
               </div>

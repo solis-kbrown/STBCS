@@ -76,7 +76,7 @@ async function triggerWatchlistNotifications(
 // This system integrates 15+ free public threat intel feeds
 // to provide comprehensive, real-time threat data
 
-const USER_AGENT = "StopTBCS/1.0 (Cybersecurity Threat Intelligence Platform)";
+const USER_AGENT = "STBCS/1.0 (STB Cybersecurity Threat Intelligence Platform)";
 
 // Rate limiting helper to avoid hammering free APIs
 async function delay(ms: number): Promise<void> {
