@@ -163,9 +163,9 @@ One-time contributions: $5, $10, $25, $50, $100, or custom amounts
 | RansomLook | Ransomware Incidents | Active |
 | CleanTalk | HTTP Spammers | Active |
 | C2IntelFeeds | C2 Infrastructure | Active |
-| Malc0de | Malicious Domains | Active |
-| Rutgers Blocklist | SSH/Spam IPs | Active |
-| Darklist.de | Attack IPs | Active |
+| Dataplane SSH | SSH Bruteforce IPs | Active |
+| BinaryDefense | Threat Intel IPs | Active |
+| Turris Sentinel | Router Attack Detection | Active |
 
 ### Community APIs (Free Tier Available)
 | Feed | Data Type | Free Tier | Status |

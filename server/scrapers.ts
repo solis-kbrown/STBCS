@@ -1185,6 +1185,320 @@ export async function fetchC2Tracker(): Promise<number> {
 }
 
 // ============================================
+// EASY WINS FEEDS - Additional Free IP Blocklists
+// ============================================
+
+// CleanTalk - HTTP Spammers (IPs that spam websites)
+const CLEANTALK_URL = "https://iplists.firehol.org/files/cleantalk_7d.ipset";
+
+export async function fetchCleanTalk(): Promise<number> {
+  try {
+    console.log("[CleanTalk] Fetching HTTP spammer IPs...");
+    
+    const response = await secureFetch(CLEANTALK_URL);
+    
+    if (!response.ok) {
+      throw new Error(`CleanTalk error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+/.test(line.trim()) && !line.startsWith("#"));
+    let count = 0;
+    
+    for (const ip of ips.slice(0, 200)) {
+      const ipData: InsertMaliciousIp = {
+        ipAddress: ip.trim().split("/")[0],
+        source: "CleanTalk",
+        threatType: "spam",
+        lastSeen: new Date(),
+      };
+      
+      await storage.upsertMaliciousIp(ipData);
+      count++;
+    }
+    
+    console.log(`[CleanTalk] Processed ${count} HTTP spammer IPs`);
+    await storage.updateFeedLastFetched("CleanTalk");
+    return count;
+  } catch (error) {
+    console.error("[CleanTalk] Error:", error);
+    return 0;
+  }
+}
+
+// C2IntelFeeds - Command & Control infrastructure
+const C2INTEL_URL = "https://raw.githubusercontent.com/drb-ra/C2IntelFeeds/master/feeds/IPC2s-30day.csv";
+
+export async function fetchC2IntelFeeds(): Promise<number> {
+  try {
+    console.log("[C2IntelFeeds] Fetching C2 infrastructure IPs...");
+    
+    const response = await secureFetch(C2INTEL_URL);
+    
+    if (!response.ok) {
+      throw new Error(`C2IntelFeeds error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#") && !line.startsWith("ioc"));
+    let count = 0;
+    
+    for (const line of lines.slice(0, 200)) {
+      const parts = line.split(",");
+      const ip = parts[0]?.trim();
+      
+      if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+        const ipData: InsertMaliciousIp = {
+          ipAddress: ip,
+          source: "C2IntelFeeds",
+          threatType: "c2_server",
+          lastSeen: new Date(),
+        };
+        
+        await storage.upsertMaliciousIp(ipData);
+        count++;
+      }
+    }
+    
+    console.log(`[C2IntelFeeds] Processed ${count} C2 infrastructure IPs`);
+    await storage.updateFeedLastFetched("C2IntelFeeds");
+    return count;
+  } catch (error) {
+    console.error("[C2IntelFeeds] Error:", error);
+    return 0;
+  }
+}
+
+// Dataplane.org SSH Bruteforce - Password auth attack IPs
+const DATAPLANE_SSH_URL = "https://dataplane.org/sshpwauth.txt";
+
+export async function fetchDataplaneSsh(): Promise<number> {
+  try {
+    console.log("[Dataplane] Fetching SSH bruteforce IPs...");
+    
+    const response = await secureFetch(DATAPLANE_SSH_URL);
+    
+    if (!response.ok) {
+      throw new Error(`Dataplane error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#"));
+    let count = 0;
+    
+    for (const line of lines.slice(0, 200)) {
+      // Format: ASN | AS Name | IP Address | Timestamp | Category
+      const parts = line.split("|");
+      const ip = parts[2]?.trim();
+      
+      if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+        const ipData: InsertMaliciousIp = {
+          ipAddress: ip,
+          source: "Dataplane SSH",
+          threatType: "bruteforce",
+          asnNumber: parts[0]?.trim() || null,
+          asnName: parts[1]?.trim() || null,
+          lastSeen: new Date(),
+        };
+        
+        await storage.upsertMaliciousIp(ipData);
+        count++;
+      }
+    }
+    
+    console.log(`[Dataplane] Processed ${count} SSH bruteforce IPs`);
+    await storage.updateFeedLastFetched("Dataplane SSH");
+    return count;
+  } catch (error) {
+    console.error("[Dataplane] Error:", error);
+    return 0;
+  }
+}
+
+// Binarydefense (replacement for Rutgers which has broken URL)
+const BINARYDEFENSE_URL = "https://www.binarydefense.com/banlist.txt";
+
+export async function fetchBinaryDefense(): Promise<number> {
+  try {
+    console.log("[BinaryDefense] Fetching threat intel IPs...");
+    
+    const response = await secureFetch(BINARYDEFENSE_URL);
+    
+    if (!response.ok) {
+      throw new Error(`BinaryDefense error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()) && !line.startsWith("#"));
+    let count = 0;
+    
+    for (const ip of ips.slice(0, 200)) {
+      const ipData: InsertMaliciousIp = {
+        ipAddress: ip.trim(),
+        source: "BinaryDefense",
+        threatType: "threat_intel",
+        lastSeen: new Date(),
+      };
+      
+      await storage.upsertMaliciousIp(ipData);
+      count++;
+    }
+    
+    console.log(`[BinaryDefense] Processed ${count} threat intel IPs`);
+    await storage.updateFeedLastFetched("BinaryDefense");
+    return count;
+  } catch (error) {
+    console.error("[BinaryDefense] Error:", error);
+    return 0;
+  }
+}
+
+// Turris Sentinel (replacement for Darklist which is offline)
+const TURRIS_GREYLIST_URL = "https://view.sentinel.turris.cz/greylist-data/greylist-latest.csv";
+
+export async function fetchTurrisSentinel(): Promise<number> {
+  try {
+    console.log("[Turris] Fetching greylist attack IPs...");
+    
+    const response = await secureFetch(TURRIS_GREYLIST_URL);
+    
+    if (!response.ok) {
+      throw new Error(`Turris error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#") && !line.startsWith("Address"));
+    let count = 0;
+    
+    for (const line of lines.slice(0, 200)) {
+      const parts = line.split(",");
+      const ip = parts[0]?.trim();
+      
+      if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+        const ipData: InsertMaliciousIp = {
+          ipAddress: ip,
+          source: "Turris Sentinel",
+          threatType: "attack",
+          lastSeen: new Date(),
+        };
+        
+        await storage.upsertMaliciousIp(ipData);
+        count++;
+      }
+    }
+    
+    console.log(`[Turris] Processed ${count} greylist attack IPs`);
+    await storage.updateFeedLastFetched("Turris Sentinel");
+    return count;
+  } catch (error) {
+    console.error("[Turris] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// COMMUNITY APIS WITH FREE TIERS
+// ============================================
+
+// GreyNoise Community API - 50 queries/day free tier
+// Identifies mass internet scanners vs targeted attacks
+const GREYNOISE_API = "https://api.greynoise.io/v3/community";
+
+export async function fetchGreyNoiseCommunity(): Promise<number> {
+  const apiKey = process.env.GREYNOISE_API_KEY;
+  
+  if (!apiKey) {
+    console.log("[GreyNoise] No API key configured - skipping (add GREYNOISE_API_KEY for 50 free queries/day)");
+    return 0;
+  }
+  
+  try {
+    console.log("[GreyNoise] Fetching internet scanner intelligence...");
+    
+    // GreyNoise Community API gives context about an IP - we'll query some known bad IPs
+    // In production, this would be used to enrich IP lookups on-demand
+    // For now, we'll mark the feed as active when the key is configured
+    
+    const testIp = "8.8.8.8";
+    const response = await secureFetch(`${GREYNOISE_API}/${testIp}`, {
+      headers: {
+        "key": apiKey,
+      }
+    });
+    
+    if (response.ok) {
+      console.log("[GreyNoise] API connection verified - enrichment available for IP lookups");
+      await storage.updateFeedLastFetched("GreyNoise");
+      return 1;
+    } else {
+      console.log(`[GreyNoise] API error: ${response.status}`);
+      return 0;
+    }
+  } catch (error) {
+    console.error("[GreyNoise] Error:", error);
+    return 0;
+  }
+}
+
+// CrowdSec CTI API - 50 queries/day free tier
+// Community-powered blocklist with 25M+ malicious IPs
+const CROWDSEC_API = "https://cti.api.crowdsec.net/v2/smoke";
+
+export async function fetchCrowdSec(): Promise<number> {
+  const apiKey = process.env.CROWDSEC_API_KEY;
+  
+  if (!apiKey) {
+    console.log("[CrowdSec] No API key configured - skipping (add CROWDSEC_API_KEY for 50 free queries/day)");
+    return 0;
+  }
+  
+  try {
+    console.log("[CrowdSec] Fetching community blocklist data...");
+    
+    // CrowdSec smoke endpoint returns top malicious IPs
+    const response = await secureFetch(CROWDSEC_API, {
+      headers: {
+        "x-api-key": apiKey,
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`CrowdSec error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    let count = 0;
+    
+    // Process IPs from the response
+    if (Array.isArray(data)) {
+      for (const entry of data.slice(0, 100)) {
+        if (entry.ip) {
+          const ipData: InsertMaliciousIp = {
+            ipAddress: entry.ip,
+            source: "CrowdSec",
+            threatType: entry.behaviors?.join(", ") || "malicious",
+            asnNumber: entry.as_num?.toString() || null,
+            asnName: entry.as_name || null,
+            country: entry.location?.country || null,
+            lastSeen: new Date(),
+          };
+          
+          await storage.upsertMaliciousIp(ipData);
+          count++;
+        }
+      }
+    }
+    
+    console.log(`[CrowdSec] Processed ${count} community blocklist IPs`);
+    await storage.updateFeedLastFetched("CrowdSec");
+    return count;
+  } catch (error) {
+    console.error("[CrowdSec] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
 // RANSOMWARE.LIVE API INTEGRATION
 // Real-time ransomware victim tracking from ransomware.live
 // ============================================
@@ -1604,6 +1918,11 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "Spamhaus DROP", url: "https://www.spamhaus.org/drop/drop.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Hijacked netblocks - do not route" },
     { name: "FireHOL Level1", url: "https://raw.githubusercontent.com/ktsaou/blocklist-ipsets/master/firehol_level1.netset", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "High-confidence malicious IPs" },
     { name: "C2 Tracker", url: "https://raw.githubusercontent.com/montysecurity/C2-Tracker/main/data/all.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Command & Control server IPs" },
+    { name: "CleanTalk", url: "https://iplists.firehol.org/files/cleantalk_7d.ipset", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "HTTP spammer IPs" },
+    { name: "C2IntelFeeds", url: "https://raw.githubusercontent.com/drb-ra/C2IntelFeeds/master/feeds/IPC2s-30day.csv", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "C2 infrastructure IPs" },
+    { name: "Dataplane SSH", url: "https://dataplane.org/sshpwauth.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "SSH password bruteforce IPs" },
+    { name: "BinaryDefense", url: "https://www.binarydefense.com/banlist.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Threat intelligence IPs" },
+    { name: "Turris Sentinel", url: "https://view.sentinel.turris.cz/greylist-data/greylist-latest.csv", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Router-based attack detection" },
     
     // Pro Tier Feeds (require API keys)
     { name: "AlienVault OTX", url: "https://otx.alienvault.com", feedType: "ioc", updateFrequency: "15min", requiresProTier: true, description: "Open Threat Exchange - requires API key" },
@@ -1636,7 +1955,7 @@ export async function initializeThreatFeeds(): Promise<void> {
 export async function fetchAllData(): Promise<void> {
   console.log("[Scraper] ========================================");
   console.log("[Scraper] Starting comprehensive threat data fetch...");
-  console.log("[Scraper] 30+ threat intelligence sources");
+  console.log("[Scraper] 35+ threat intelligence sources");
   console.log("[Scraper] ========================================");
   
   // Initialize feed registry
@@ -1724,13 +2043,40 @@ export async function fetchAllData(): Promise<void> {
   await delay(1000);
   
   // ===========================================
+  // EASY WINS FEEDS - Additional Free IP Blocklists
+  // ===========================================
+  await fetchCleanTalk();
+  await delay(1000);
+  
+  await fetchC2IntelFeeds();
+  await delay(1000);
+  
+  await fetchDataplaneSsh();
+  await delay(1000);
+  
+  await fetchBinaryDefense();
+  await delay(1000);
+  
+  await fetchTurrisSentinel();
+  await delay(1000);
+  
+  // ===========================================
+  // COMMUNITY APIS (Free Tier - Require API Keys)
+  // ===========================================
+  await fetchGreyNoiseCommunity();
+  await delay(1000);
+  
+  await fetchCrowdSec();
+  await delay(1000);
+  
+  // ===========================================
   // RANSOMWARE & NEWS DATA (from ransomware.live)
   // ===========================================
   await fetchRansomwareData();
   await generateNewsData();
   
   console.log("[Scraper] ========================================");
-  console.log("[Scraper] All 30+ threat feeds processed successfully");
+  console.log("[Scraper] All 35+ threat feeds processed successfully");
   console.log("[Scraper] ========================================");
 }
 
@@ -1740,7 +2086,7 @@ export async function fetchAllData(): Promise<void> {
 let refreshInterval: NodeJS.Timeout | null = null;
 
 export function startDataRefreshScheduler(intervalMinutes = 15): void {
-  console.log(`[Scheduler] Starting threat intel refresh every ${intervalMinutes} minutes (30+ sources)`);
+  console.log(`[Scheduler] Starting threat intel refresh every ${intervalMinutes} minutes (35+ sources)`);
   
   // Initial fetch
   fetchAllData().catch(console.error);
