@@ -139,3 +139,47 @@ One-time contributions: $5, $10, $25, $50, $100, or custom amounts
 - No card data touches our servers
 - Webhook signatures validated for authenticity
 - Customer portal for self-service subscription management
+
+## Threat Intelligence Feeds Reference
+
+### Currently Implemented (No API Key Required)
+| Feed | Data Type | Status |
+|------|-----------|--------|
+| NVD API | CVEs/Vulnerabilities | Active |
+| CISA KEV | Known Exploited Vulnerabilities | Active |
+| OpenPhish | Phishing URLs | Active |
+| PhishTank | Phishing URLs | Active |
+| Feodo Tracker | Banking Trojan C2s | Active |
+| SANS DShield | Top Attacking IPs | Active |
+| Tor Exit Nodes | Anonymization IPs | Active |
+| IPsum | Aggregated Malicious IPs | Active |
+| Blocklist.de | Attack IPs | Active |
+| CINS Army | Bruteforce IPs | Active |
+| GreenSnow | Attacker IPs | Active |
+| EmergingThreats | Compromised IPs | Active |
+| Spamhaus DROP | Hijacked Netblocks | Active |
+| FireHOL Level1 | High-Confidence Malicious IPs | Active |
+| C2 Tracker | Command & Control IPs | Active |
+| RansomLook | Ransomware Incidents | Active |
+| CleanTalk | HTTP Spammers | Active |
+| C2IntelFeeds | C2 Infrastructure | Active |
+| Malc0de | Malicious Domains | Active |
+| Rutgers Blocklist | SSH/Spam IPs | Active |
+| Darklist.de | Attack IPs | Active |
+
+### Community APIs (Free Tier Available)
+| Feed | Data Type | Free Tier | Status |
+|------|-----------|-----------|--------|
+| GreyNoise Community | Internet Scanners | 50/day | Active |
+| CrowdSec | Malicious IPs | 50/day | Active |
+
+### Future Expansion (Require API Keys)
+| Feed | Data Type | Notes |
+|------|-----------|-------|
+| AlienVault OTX | IoCs, Malware, IPs | Free API key signup |
+| VirusTotal | File/URL Scanning | 500/day free tier |
+| HoneyDB | Honeypot Activity | Free API key signup |
+| Shadowserver | Botnet Data | Free for non-commercial |
+| CIRCL CVE-Search | Enhanced CVE Data | Open access |
+| Pulsedive | Community Intel | Free tier available |
+| Cybercrime Tracker | Crimeware C2s | CSV feed |
