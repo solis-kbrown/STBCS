@@ -142,7 +142,7 @@ One-time contributions: $5, $10, $25, $50, $100, or custom amounts
 
 ## Threat Intelligence Feeds Reference (40+ Sources)
 
-### Currently Implemented (No API Key Required) - 22 Feeds
+### Currently Implemented (No API Key Required) - 25 Feeds
 | Feed | Data Type | Status |
 |------|-----------|--------|
 | NVD API | CVEs/Vulnerabilities | Active |
@@ -167,6 +167,9 @@ One-time contributions: $5, $10, $25, $50, $100, or custom amounts
 | Dataplane SSH | SSH Bruteforce IPs | Active |
 | BinaryDefense | Threat Intel IPs | Active |
 | Turris Sentinel | Router Attack Detection | Active |
+| Ransomwhere | Bitcoin Ransomware Payments | Active |
+| Cisco Talos | Enterprise IP Blocklist | Active |
+| ThreatFeeds.io | Aggregated Intelligence | Active |
 
 ### Premium APIs (FREE Accounts Required) - 7 Feeds
 | Feed | Data Type | Free Tier | Env Variable | Get Account At |
