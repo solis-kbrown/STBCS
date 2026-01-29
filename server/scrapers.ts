@@ -1524,6 +1524,80 @@ export async function fetchCrowdSec(): Promise<number> {
 // PREMIUM FREE-TIER APIS
 // ============================================
 
+// Pulsedive API - 100 queries/day FREE tier
+// Community threat intelligence platform
+const PULSEDIVE_API = "https://pulsedive.com/api";
+
+export async function fetchPulsedive(): Promise<number> {
+  const apiKey = process.env.PULSEDIVE_API_KEY;
+  
+  if (!apiKey) {
+    console.log("[Pulsedive] No API key configured - skipping (add PULSEDIVE_API_KEY for 100 queries/day FREE)");
+    return 0;
+  }
+  
+  try {
+    console.log("[Pulsedive] Fetching community threat intelligence...");
+    
+    // Get recent threat indicators from Pulsedive
+    const response = await secureFetch(`${PULSEDIVE_API}/info.php?indicator=pulsedive.com&pretty=1&key=${apiKey}`);
+    
+    if (!response.ok) {
+      throw new Error(`Pulsedive API error: ${response.status}`);
+    }
+    
+    // Verify API connectivity
+    const testData = await response.json();
+    console.log(`[Pulsedive] API connected - community intel available`);
+    
+    // Fetch recent threats feed
+    const feedResponse = await secureFetch(`${PULSEDIVE_API}/explore.php?q=type%3Aip+risk%3Ahigh&limit=25&pretty=1&key=${apiKey}`);
+    
+    let count = 0;
+    
+    if (feedResponse.ok) {
+      const feedData = await feedResponse.json();
+      
+      if (feedData.results && Array.isArray(feedData.results)) {
+        for (const item of feedData.results) {
+          if (item.indicator && item.type === "ip") {
+            const ipData: InsertMaliciousIp = {
+              ipAddress: item.indicator,
+              source: "Pulsedive",
+              threatType: item.risk || "high-risk",
+              asn: null,
+              country: null,
+              lastSeen: new Date(),
+            };
+            
+            await storage.upsertMaliciousIp(ipData);
+            count++;
+          } else if (item.indicator && (item.type === "url" || item.type === "domain")) {
+            const urlData: InsertMaliciousUrl = {
+              url: item.indicator,
+              source: "Pulsedive",
+              threatType: item.risk || "high-risk",
+              status: "active",
+              reportedAt: new Date(),
+            };
+            
+            await storage.upsertMaliciousUrl(urlData);
+            count++;
+          }
+        }
+      }
+    }
+    
+    console.log(`[Pulsedive] Processed ${count} high-risk indicators`);
+    console.log(`[Pulsedive] Use security tools for real-time threat lookups`);
+    await storage.updateFeedLastFetched("Pulsedive");
+    return count;
+  } catch (error) {
+    console.error("[Pulsedive] Error:", error);
+    return 0;
+  }
+}
+
 // Shodan API - 100 credits/month FREE tier
 // Internet-wide device scanning and host intelligence
 const SHODAN_API = "https://api.shodan.io";
@@ -2470,6 +2544,9 @@ export async function fetchAllData(): Promise<void> {
   await delay(1000);
   
   await fetchShodanIntel();
+  await delay(1000);
+  
+  await fetchPulsedive();
   await delay(1000);
   
   // ===========================================
