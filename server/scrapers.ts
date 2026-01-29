@@ -2281,10 +2281,185 @@ export async function fetchRansomLookBreaches(): Promise<number> {
   }
 }
 
-// Combined function to fetch all ransomware data from BOTH sources
+// ============================================
+// RANSOMWHERE - Bitcoin Payment Tracking (FREE, no auth)
+// Crowdsourced ransomware payment database
+// ============================================
+const RANSOMWHERE_API = "https://api.ransomwhe.re";
+
+interface RansomwherePayment {
+  address: string;
+  amount: number;
+  family: string;
+  date: string;
+  source?: string;
+}
+
+export async function fetchRansomwhere(): Promise<number> {
+  try {
+    console.log("[Ransomwhere] Fetching Bitcoin ransomware payment data...");
+    
+    const response = await secureFetch(`${RANSOMWHERE_API}/export`);
+    
+    if (!response.ok) {
+      throw new Error(`Ransomwhere API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const payments: RansomwherePayment[] = data.result || data || [];
+    
+    console.log(`[Ransomwhere] Retrieved ${payments.length} ransomware payment records`);
+    
+    // Update threat actor data with payment info
+    const familyPayments = new Map<string, number>();
+    
+    for (const payment of payments) {
+      if (payment.family) {
+        const current = familyPayments.get(payment.family) || 0;
+        familyPayments.set(payment.family, current + (payment.amount || 0));
+      }
+    }
+    
+    let count = 0;
+    const families = Array.from(familyPayments.keys());
+    for (const family of families) {
+      try {
+        const totalBtc = familyPayments.get(family) || 0;
+        await storage.upsertThreatActor({
+          name: family,
+          description: `Ransomware family with ${totalBtc.toFixed(4)} BTC in tracked payments`,
+          type: "Ransomware Operator",
+          origin: "Unknown",
+          lastActive: new Date(),
+          active: true,
+        });
+        count++;
+      } catch (err) {
+        continue;
+      }
+    }
+    
+    console.log(`[Ransomwhere] Tracked ${count} ransomware families with payment data`);
+    await storage.updateFeedLastFetched("Ransomwhere");
+    return count;
+  } catch (error) {
+    console.error("[Ransomwhere] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// CISCO TALOS IP BLOCKLIST (FREE)
+// Enterprise-grade threat intel from Cisco's global network
+// ============================================
+const TALOS_IP_BLOCKLIST = "https://talosintelligence.com/documents/ip-blacklist";
+
+export async function fetchTalosBlocklist(): Promise<number> {
+  try {
+    console.log("[Talos] Fetching Cisco Talos IP blocklist...");
+    
+    const response = await secureFetch(TALOS_IP_BLOCKLIST);
+    
+    if (!response.ok) {
+      throw new Error(`Talos API error: ${response.status}`);
+    }
+    
+    const text = await response.text();
+    const lines = text.split('\n').filter(line => line.trim() && !line.startsWith('#'));
+    
+    console.log(`[Talos] Retrieved ${lines.length} IPs from Cisco threat network`);
+    
+    let count = 0;
+    for (const ip of lines.slice(0, 200)) {
+      const cleanIp = ip.trim();
+      if (cleanIp && /^[\d.]+$/.test(cleanIp)) {
+        try {
+          const ipData: InsertMaliciousIp = {
+            ipAddress: cleanIp,
+            source: "Cisco Talos",
+            threatType: "malicious",
+            asn: null,
+            country: null,
+            lastSeen: new Date(),
+          };
+          await storage.upsertMaliciousIp(ipData);
+          count++;
+        } catch (err) {
+          continue;
+        }
+      }
+    }
+    
+    console.log(`[Talos] Processed ${count} Cisco Talos blocklist IPs`);
+    await storage.updateFeedLastFetched("Cisco Talos");
+    return count;
+  } catch (error) {
+    console.error("[Talos] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// THREATFEEDS.IO AGGREGATOR (FREE)
+// Aggregated threat intelligence feeds
+// ============================================
+const THREATFEEDS_BOTS = "https://threatfeeds.io/feed/bad-bots";
+
+export async function fetchThreatFeedsIO(): Promise<number> {
+  try {
+    console.log("[ThreatFeeds.io] Fetching aggregated threat data...");
+    
+    // Try multiple free feeds from threatfeeds.io
+    const feeds = [
+      { url: "https://threatfeeds.io/feed/bad-bots", name: "bad-bots" },
+    ];
+    
+    let totalCount = 0;
+    
+    for (const feed of feeds) {
+      try {
+        const response = await secureFetch(feed.url);
+        if (response.ok) {
+          const text = await response.text();
+          const lines = text.split('\n').filter(line => line.trim() && !line.startsWith('#'));
+          
+          for (const ip of lines.slice(0, 50)) {
+            const cleanIp = ip.trim();
+            if (cleanIp && /^[\d.]+$/.test(cleanIp)) {
+              await storage.upsertMaliciousIp({
+                ipAddress: cleanIp,
+                source: "ThreatFeeds.io",
+                threatType: feed.name,
+                asn: null,
+                country: null,
+                lastSeen: new Date(),
+              });
+              totalCount++;
+            }
+          }
+        }
+      } catch (e) {
+        continue;
+      }
+    }
+    
+    console.log(`[ThreatFeeds.io] Processed ${totalCount} aggregated threat IPs`);
+    await storage.updateFeedLastFetched("ThreatFeeds.io");
+    return totalCount;
+  } catch (error) {
+    console.error("[ThreatFeeds.io] Error:", error);
+    return 0;
+  }
+}
+
+// Combined function to fetch all ransomware data from ALL sources
 export async function fetchRansomwareData(): Promise<number> {
   console.log("[Ransomware] Starting comprehensive ransomware intelligence fetch...");
-  console.log("[Ransomware] Sources: ransomware.live + ransomlook.io");
+  console.log("[Ransomware] Sources: ransomware.live + ransomlook.io + ransomwhere");
+  
+  // Fetch Bitcoin payment data first
+  await fetchRansomwhere();
+  await delay(500);
   
   // Fetch from ransomware.live first
   const groupCount1 = await fetchRansomwareLiveGroups();
@@ -2406,6 +2581,9 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "Shodan", url: "https://www.shodan.io", feedType: "ip", updateFrequency: "realtime", requiresProTier: true, description: "100 credits/month FREE - internet scanning" },
     { name: "Pulsedive", url: "https://pulsedive.com", feedType: "ioc", updateFrequency: "15min", requiresProTier: true, description: "FREE tier available - community intel" },
     { name: "HoneyDB", url: "https://honeydb.io", feedType: "ip", updateFrequency: "15min", requiresProTier: true, description: "FREE API key - honeypot activity" },
+    { name: "Ransomwhere", url: "https://ransomwhe.re", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "Bitcoin ransomware payments tracker" },
+    { name: "Cisco Talos", url: "https://talosintelligence.com", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Enterprise IP blocklist from Cisco" },
+    { name: "ThreatFeeds.io", url: "https://threatfeeds.io", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Aggregated threat intelligence" },
   ];
   
   for (const feed of feeds) {
@@ -2532,6 +2710,15 @@ export async function fetchAllData(): Promise<void> {
   await delay(1000);
   
   await fetchTurrisSentinel();
+  await delay(1000);
+  
+  // ===========================================
+  // NEW THREAT FEEDS (2025 Additions)
+  // ===========================================
+  await fetchTalosBlocklist();
+  await delay(1000);
+  
+  await fetchThreatFeedsIO();
   await delay(1000);
   
   // ===========================================
