@@ -1620,20 +1620,27 @@ export async function fetchVirusTotalFeed(): Promise<number> {
   try {
     console.log("[VirusTotal] Fetching threat intelligence...");
     
-    // Get recent malicious files (uses 1 API call)
-    // Note: Free tier has strict limits, so we just verify connectivity
-    const response = await secureFetch(`${VT_API}/files/behaviours`, {
+    // Verify API key by checking current user quota (works with free tier)
+    const response = await secureFetch(`${VT_API}/users/${apiKey}`, {
       headers: {
         "x-apikey": apiKey,
       }
     });
     
     if (response.ok) {
-      console.log("[VirusTotal] API connection verified - enrichment available for file/URL scans");
+      const userData = await response.json();
+      const quota = userData.data?.attributes?.quotas?.api_requests_daily;
+      const used = quota?.used || 0;
+      const allowed = quota?.allowed || 500;
+      console.log(`[VirusTotal] API connected - ${used}/${allowed} daily requests used`);
+      console.log("[VirusTotal] Enrichment available for IP/URL/hash lookups via security tools");
       await storage.updateFeedLastFetched("VirusTotal");
       return 1;
     } else if (response.status === 429) {
       console.log("[VirusTotal] Rate limit reached - will retry next cycle");
+      return 0;
+    } else if (response.status === 401) {
+      console.log("[VirusTotal] Invalid API key - please check your key");
       return 0;
     } else {
       console.log(`[VirusTotal] API status: ${response.status}`);
