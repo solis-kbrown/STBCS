@@ -2625,8 +2625,10 @@ export async function fetchAllData(): Promise<void> {
   // ===========================================
   // MALICIOUS URL FEEDS
   // ===========================================
-  await fetchURLhaus();
-  await delay(1000);
+  // URLhaus, ThreatFox, MalwareBazaar require auth now - skipping
+  // await fetchURLhaus();
+  // await fetchThreatFox();
+  // await fetchMalwareBazaar();
   
   await fetchOpenPhish();
   await delay(1000);
@@ -2634,14 +2636,8 @@ export async function fetchAllData(): Promise<void> {
   await fetchPhishTank();
   await delay(1000);
   
-  await fetchBambenekC2();
-  await delay(1000);
-  
-  await fetchThreatFox();
-  await delay(1000);
-  
-  await fetchMalwareBazaar();
-  await delay(1000);
+  // Bambenek returns 403 - skipping
+  // await fetchBambenekC2();
   
   // ===========================================
   // IP BLOCKLIST FEEDS - PRIMARY
@@ -2661,11 +2657,9 @@ export async function fetchAllData(): Promise<void> {
   await fetchTorExitNodes();
   await delay(1000);
   
-  await fetchDanTorNodes();
-  await delay(1000);
-  
-  await fetchSSLBlacklist();
-  await delay(1000);
+  // DanTor returns 403, SSLBlacklist returns 404 - skipping
+  // await fetchDanTorNodes();
+  // await fetchSSLBlacklist();
   
   await fetchSSLBLAggressive();
   await delay(1000);
@@ -2715,11 +2709,9 @@ export async function fetchAllData(): Promise<void> {
   // ===========================================
   // NEW THREAT FEEDS (2025 Additions)
   // ===========================================
-  await fetchTalosBlocklist();
-  await delay(1000);
-  
-  await fetchThreatFeedsIO();
-  await delay(1000);
+  // Talos URL changed (404), ThreatFeeds.io returning empty - skipping for now
+  // await fetchTalosBlocklist();
+  // await fetchThreatFeedsIO();
   
   // ===========================================
   // COMMUNITY APIS (Free Tier - Require API Keys)
