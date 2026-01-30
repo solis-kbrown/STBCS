@@ -1088,6 +1088,175 @@ export async function registerRoutes(
   });
 
   // ==========================================
+  // NEW FREE SECURITY TOOLS
+  // ==========================================
+
+  // Password Strength Checker
+  app.post("/api/tools/password-strength", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        password: z.string().min(1).max(128),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid password" });
+      }
+      
+      const { checkPasswordStrength } = await import("./tools.js");
+      const result = checkPasswordStrength(parsed.data.password);
+      res.json(result);
+    } catch (error) {
+      console.error("Password strength check error:", error);
+      res.status(500).json({ error: "Failed to analyze password" });
+    }
+  });
+
+  // Subnet/CIDR Calculator
+  app.get("/api/tools/subnet-calc", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        cidr: z.string().min(7).max(18),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid CIDR notation" });
+      }
+      
+      const { calculateSubnet } = await import("./tools.js");
+      const result = calculateSubnet(parsed.data.cidr);
+      
+      if (!result) {
+        return res.status(400).json({ error: "Invalid CIDR notation" });
+      }
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Subnet calc error:", error);
+      res.status(500).json({ error: "Failed to calculate subnet" });
+    }
+  });
+
+  // Base64 Encode/Decode
+  app.post("/api/tools/base64", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        input: z.string().max(100000),
+        operation: z.enum(["encode", "decode"]),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid input" });
+      }
+      
+      const { base64Encode, base64Decode } = await import("./tools.js");
+      const result = parsed.data.operation === "encode" 
+        ? base64Encode(parsed.data.input)
+        : base64Decode(parsed.data.input);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("Base64 error:", error);
+      res.status(500).json({ error: "Failed to process Base64" });
+    }
+  });
+
+  // URL Encode/Decode
+  app.post("/api/tools/url-encode", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        input: z.string().max(100000),
+        operation: z.enum(["encode", "decode"]),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid input" });
+      }
+      
+      const { urlEncode, urlDecode } = await import("./tools.js");
+      const result = parsed.data.operation === "encode" 
+        ? urlEncode(parsed.data.input)
+        : urlDecode(parsed.data.input);
+      
+      res.json(result);
+    } catch (error) {
+      console.error("URL encode error:", error);
+      res.status(500).json({ error: "Failed to process URL encoding" });
+    }
+  });
+
+  // Email Header Analyzer
+  app.post("/api/tools/email-headers", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        headers: z.string().min(10).max(500000),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid email headers" });
+      }
+      
+      const { analyzeEmailHeaders } = await import("./tools.js");
+      const result = analyzeEmailHeaders(parsed.data.headers);
+      res.json(result);
+    } catch (error) {
+      console.error("Email header analysis error:", error);
+      res.status(500).json({ error: "Failed to analyze email headers" });
+    }
+  });
+
+  // SSL Certificate Checker
+  app.get("/api/tools/ssl-check", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        domain: z.string().min(3).max(253),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid domain" });
+      }
+      
+      const { checkSSLCertificate, isValidDomain } = await import("./tools.js");
+      
+      if (!isValidDomain(parsed.data.domain)) {
+        return res.status(400).json({ error: "Invalid domain format" });
+      }
+      
+      const result = await checkSSLCertificate(parsed.data.domain);
+      res.json(result);
+    } catch (error) {
+      console.error("SSL check error:", error);
+      res.status(500).json({ error: "Failed to check SSL certificate" });
+    }
+  });
+
+  // Hash Analyzer
+  app.get("/api/tools/hash-analyze", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        hash: z.string().min(16).max(256),
+      });
+      
+      const parsed = schema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid hash" });
+      }
+      
+      const { analyzeHash } = await import("./tools.js");
+      const result = analyzeHash(parsed.data.hash);
+      res.json(result);
+    } catch (error) {
+      console.error("Hash analysis error:", error);
+      res.status(500).json({ error: "Failed to analyze hash" });
+    }
+  });
+
+  // ==========================================
   // NEWSLETTER SUBSCRIPTIONS
   // ==========================================
 
