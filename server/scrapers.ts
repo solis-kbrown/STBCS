@@ -2747,6 +2747,15 @@ export async function fetchAllData(): Promise<void> {
   await delay(1000);
   
   // ===========================================
+  // NEW 2025 THREAT FEEDS (Free Tier APIs)
+  // ===========================================
+  await fetchHoneyDB();
+  await delay(1000);
+  
+  await fetchAbuseIPDB();
+  await delay(1000);
+  
+  // ===========================================
   // RANSOMWARE & NEWS DATA (from ransomware.live)
   // ===========================================
   await fetchRansomwareData();
@@ -2755,6 +2764,197 @@ export async function fetchAllData(): Promise<void> {
   console.log("[Scraper] ========================================");
   console.log("[Scraper] All 40+ threat feeds processed successfully");
   console.log("[Scraper] ========================================");
+}
+
+// ============================================
+// HONEYDB API INTEGRATION
+// Honeypot threat intelligence - 1,500 queries/month FREE
+// Register at: https://honeydb.io/
+// ============================================
+const HONEYDB_API = "https://honeydb.io/api";
+
+// Fetch malicious IPs from HoneyDB honeypot network
+export async function fetchHoneyDB(): Promise<number> {
+  const apiId = process.env.HONEYDB_API_ID;
+  const apiKey = process.env.HONEYDB_API_KEY;
+  
+  if (!apiId || !apiKey) {
+    console.log("[HoneyDB] No API credentials configured - skipping (add HONEYDB_API_ID and HONEYDB_API_KEY for 1,500 queries/month FREE)");
+    return 0;
+  }
+  
+  try {
+    console.log("[HoneyDB] Fetching honeypot threat intelligence...");
+    
+    // Get bad hosts from the last 24 hours
+    const response = await secureFetch(`${HONEYDB_API}/bad-hosts`, {
+      headers: {
+        "X-HoneyDb-ApiId": apiId,
+        "X-HoneyDb-ApiKey": apiKey,
+      }
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.log("[HoneyDB] Invalid API credentials - please check your keys");
+      } else if (response.status === 429) {
+        console.log("[HoneyDB] Monthly quota exceeded - will resume next month");
+      } else {
+        throw new Error(`HoneyDB error: ${response.status}`);
+      }
+      return 0;
+    }
+    
+    const badHosts = await response.json();
+    let count = 0;
+    
+    // Process bad hosts (IPs that connected to honeypots)
+    if (Array.isArray(badHosts)) {
+      for (const host of badHosts.slice(0, 200)) {
+        try {
+          if (host.remote_host && /^\d+\.\d+\.\d+\.\d+$/.test(host.remote_host)) {
+            const ipData: InsertMaliciousIp = {
+              ipAddress: host.remote_host,
+              source: "HoneyDB",
+              threatType: "honeypot_attacker",
+              lastSeen: new Date(),
+              riskScore: Math.min(100, (host.count || 1) * 10),
+            };
+            await storage.upsertMaliciousIp(ipData);
+            count++;
+          }
+        } catch (err) {
+          continue;
+        }
+      }
+    }
+    
+    console.log(`[HoneyDB] Processed ${count} honeypot attacker IPs`);
+    await storage.updateFeedLastFetched("HoneyDB");
+    return count;
+  } catch (error) {
+    console.error("[HoneyDB] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// ABUSEIPDB API INTEGRATION
+// IP reputation intelligence - 1,000 queries/day FREE
+// Register at: https://www.abuseipdb.com/register
+// ============================================
+const ABUSEIPDB_API = "https://api.abuseipdb.com/api/v2";
+
+// Fetch blacklisted IPs from AbuseIPDB
+export async function fetchAbuseIPDB(): Promise<number> {
+  const apiKey = process.env.ABUSEIPDB_API_KEY;
+  
+  if (!apiKey) {
+    console.log("[AbuseIPDB] No API key configured - skipping (add ABUSEIPDB_API_KEY for 1,000 queries/day FREE)");
+    return 0;
+  }
+  
+  try {
+    console.log("[AbuseIPDB] Fetching IP reputation blacklist...");
+    
+    // Get the most abusive IPs (confidence score 100)
+    const response = await secureFetch(`${ABUSEIPDB_API}/blacklist?limit=500&confidenceMinimum=90`, {
+      headers: {
+        "Key": apiKey,
+        "Accept": "application/json",
+      }
+    });
+    
+    if (!response.ok) {
+      if (response.status === 401) {
+        console.log("[AbuseIPDB] Invalid API key - please check your key");
+      } else if (response.status === 429) {
+        console.log("[AbuseIPDB] Daily quota exceeded - will resume tomorrow");
+      } else {
+        throw new Error(`AbuseIPDB error: ${response.status}`);
+      }
+      return 0;
+    }
+    
+    const data = await response.json();
+    let count = 0;
+    
+    // Process blacklisted IPs
+    if (data.data && Array.isArray(data.data)) {
+      for (const entry of data.data.slice(0, 500)) {
+        try {
+          const ipData: InsertMaliciousIp = {
+            ipAddress: entry.ipAddress,
+            source: "AbuseIPDB",
+            threatType: "abuse_reported",
+            lastSeen: entry.lastReportedAt ? new Date(entry.lastReportedAt) : new Date(),
+            riskScore: entry.abuseConfidenceScore || 100,
+            country: entry.countryCode || null,
+          };
+          await storage.upsertMaliciousIp(ipData);
+          count++;
+        } catch (err) {
+          continue;
+        }
+      }
+    }
+    
+    console.log(`[AbuseIPDB] Processed ${count} reported abusive IPs`);
+    await storage.updateFeedLastFetched("AbuseIPDB");
+    return count;
+  } catch (error) {
+    console.error("[AbuseIPDB] Error:", error);
+    return 0;
+  }
+}
+
+// AbuseIPDB IP check function for enrichment (used by security tools)
+export async function checkIPWithAbuseIPDB(ip: string): Promise<{
+  abuseScore: number;
+  totalReports: number;
+  countryCode: string;
+  isp: string;
+  domain: string;
+  isWhitelisted: boolean;
+  lastReported: string | null;
+} | null> {
+  const apiKey = process.env.ABUSEIPDB_API_KEY;
+  
+  if (!apiKey) {
+    return null;
+  }
+  
+  try {
+    const response = await secureFetch(`${ABUSEIPDB_API}/check?ipAddress=${encodeURIComponent(ip)}&maxAgeInDays=90`, {
+      headers: {
+        "Key": apiKey,
+        "Accept": "application/json",
+      }
+    });
+    
+    if (!response.ok) {
+      return null;
+    }
+    
+    const data = await response.json();
+    
+    if (data.data) {
+      return {
+        abuseScore: data.data.abuseConfidenceScore || 0,
+        totalReports: data.data.totalReports || 0,
+        countryCode: data.data.countryCode || "",
+        isp: data.data.isp || "",
+        domain: data.data.domain || "",
+        isWhitelisted: data.data.isWhitelisted || false,
+        lastReported: data.data.lastReportedAt || null,
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error("[AbuseIPDB] IP check error:", error);
+    return null;
+  }
 }
 
 // ============================================

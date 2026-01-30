@@ -171,7 +171,7 @@ One-time contributions: $5, $10, $25, $50, $100, or custom amounts
 | Cisco Talos | Enterprise IP Blocklist | Active |
 | ThreatFeeds.io | Aggregated Intelligence | Active |
 
-### Premium APIs (FREE Accounts Required) - 7 Feeds
+### Premium APIs (FREE Accounts Required) - 9 Feeds
 | Feed | Data Type | Free Tier | Env Variable | Get Account At |
 |------|-----------|-----------|--------------|----------------|
 | AlienVault OTX | IoCs, Malware, IPs | 10K req/hour | OTX_API_KEY | https://otx.alienvault.com |
@@ -181,13 +181,14 @@ One-time contributions: $5, $10, $25, $50, $100, or custom amounts
 | CrowdSec | Malicious IPs | 50/day | CROWDSEC_API_KEY | https://www.crowdsec.net |
 | Shodan | Internet Scanning | 100/month | SHODAN_API_KEY | https://account.shodan.io |
 | Pulsedive | Community Intel | 100/day | PULSEDIVE_API_KEY | https://pulsedive.com |
+| HoneyDB | Honeypot Attacker IPs | 1,500/month | HONEYDB_API_ID, HONEYDB_API_KEY | https://honeydb.io |
+| AbuseIPDB | IP Abuse Reports | 1,000/day | ABUSEIPDB_API_KEY | https://abuseipdb.com |
 
 *Hybrid Analysis requires account vetting for full API access
 
 ### Future Expansion Options
 | Feed | Data Type | Notes |
 |------|-----------|-------|
-| HoneyDB | Honeypot Activity | Free API key signup |
-| Shadowserver | Botnet Data | Free for non-commercial |
-| AbuseIPDB | IP Abuse Reports | 1000/day free tier |
 | URLScan.io | URL Analysis | 5K/day free tier |
+| Vulners | CVE-to-Exploit Mapping | Free tier available |
+| Shadowserver | Botnet Data | Free for non-commercial |
