@@ -451,6 +451,92 @@ export function usePortScan() {
   });
 }
 
+// ==========================================
+// ADVANCED NMAP SCANNER (Pro/Business)
+// ==========================================
+
+export interface NmapScanRequest {
+  target: string;
+  scanType: 'quick' | 'standard' | 'comprehensive';
+  customPorts?: string;
+  grabBanners?: boolean;
+}
+
+export interface AdvancedScanResult {
+  ip: string;
+  port: number;
+  state: 'open' | 'closed' | 'filtered';
+  service: string;
+  version?: string;
+  banner?: string;
+  responseTime: number;
+}
+
+export interface NmapScanResponse {
+  success: boolean;
+  scan: {
+    target: string;
+    scanType: 'quick' | 'standard' | 'comprehensive';
+    startTime: string;
+    endTime: string;
+    duration: number;
+    portsScanned: number;
+    openPorts: number;
+    closedPorts: number;
+    filteredPorts: number;
+    results: AdvancedScanResult[];
+    hostUp: boolean;
+  };
+  usage: {
+    scansToday: number;
+    dailyLimit: number;
+    tier: string;
+  };
+}
+
+export interface NmapUsageStats {
+  scansToday: number;
+  dailyLimit: number;
+  scansRemaining: number;
+  cooldownRemaining: number;
+  tier: string;
+}
+
+export function useNmapScan() {
+  return useMutation({
+    mutationFn: async (request: NmapScanRequest): Promise<NmapScanResponse> => {
+      const response = await fetch('/api/tools/nmap-scan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(request),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to run scan");
+      }
+      return response.json();
+    },
+  });
+}
+
+export function useNmapUsage() {
+  return useQuery({
+    queryKey: ['/api/tools/nmap-scan/usage'],
+    queryFn: async (): Promise<NmapUsageStats> => {
+      const response = await fetch('/api/tools/nmap-scan/usage', {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        throw new Error("Failed to get usage stats");
+      }
+      return response.json();
+    },
+    enabled: true,
+    staleTime: 30000,
+  });
+}
+
 export function useThreatCheck() {
   return useMutation({
     mutationFn: async (ip: string): Promise<ThreatCheckResult> => {

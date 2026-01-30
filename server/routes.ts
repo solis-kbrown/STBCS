@@ -1257,6 +1257,171 @@ export async function registerRoutes(
   });
 
   // ==========================================
+  // ADVANCED NMAP-STYLE PORT SCANNER (Pro/Business)
+  // ==========================================
+
+  // Per-user scan tracking for abuse prevention
+  const scanHistory: Map<string, { count: number; lastScan: number; cooldownUntil: number }> = new Map();
+
+  // Nmap scanner rate limiter (stricter for this powerful tool)
+  const nmapScannerLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hour
+    max: 20, // 20 scans per hour
+    message: { error: "Scan rate limit exceeded. Please wait before running more scans." },
+    standardHeaders: true,
+    legacyHeaders: false,
+    validate: { xForwardedForHeader: false },
+    keyGenerator: (req: AuthenticatedRequest) => req.user?.id || req.ip || 'unknown',
+  });
+
+  app.post("/api/tools/nmap-scan", requirePro as any, nmapScannerLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schema = z.object({
+        target: z.string().min(7).max(255),
+        scanType: z.enum(["quick", "standard", "comprehensive"]).default("quick"),
+        customPorts: z.string().max(500).optional(),
+        grabBanners: z.boolean().default(true),
+      });
+
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid scan parameters", details: parsed.error.issues });
+      }
+
+      const { target, scanType, customPorts, grabBanners } = parsed.data;
+      const userId = req.user!.id;
+
+      // Import scanner functions
+      const { isBlockedIP, nmapScan, parsePortSpec, isValidIp } = await import("./tools.js");
+
+      // Validate target is a valid IP
+      if (!isValidIp(target)) {
+        return res.status(400).json({ error: "Invalid target IP address. Please provide a valid IPv4 address." });
+      }
+
+      // Block internal/private IP scanning
+      if (isBlockedIP(target)) {
+        return res.status(403).json({ 
+          error: "Scanning private, internal, or reserved IP ranges is not permitted.",
+          reason: "This includes localhost (127.x.x.x), private networks (10.x, 172.16-31.x, 192.168.x), and other reserved ranges."
+        });
+      }
+
+      // Per-user abuse prevention
+      const userTracking = scanHistory.get(userId) || { count: 0, lastScan: 0, cooldownUntil: 0 };
+      const now = Date.now();
+
+      // Check cooldown (30 seconds between scans)
+      if (now < userTracking.cooldownUntil) {
+        const waitTime = Math.ceil((userTracking.cooldownUntil - now) / 1000);
+        return res.status(429).json({ 
+          error: `Please wait ${waitTime} seconds before starting another scan.`,
+          cooldownRemaining: waitTime
+        });
+      }
+
+      // Check daily limit based on tier
+      const isBusinessTier = ["business", "enterprise"].includes(req.user!.tier);
+      const dailyLimit = isBusinessTier ? 100 : 30; // Business: 100/day, Pro: 30/day
+
+      // Reset count if it's a new day
+      const lastScanDate = new Date(userTracking.lastScan).toDateString();
+      const today = new Date().toDateString();
+      if (lastScanDate !== today) {
+        userTracking.count = 0;
+      }
+
+      if (userTracking.count >= dailyLimit) {
+        return res.status(429).json({ 
+          error: `Daily scan limit reached (${dailyLimit} scans). Your limit resets at midnight.`,
+          limit: dailyLimit,
+          tier: req.user!.tier
+        });
+      }
+
+      // Validate custom ports if provided
+      let portCount = 0;
+      if (customPorts) {
+        const parsedPorts = parsePortSpec(customPorts);
+        portCount = parsedPorts.length;
+        if (portCount === 0) {
+          return res.status(400).json({ error: "Invalid port specification" });
+        }
+        if (portCount > 500) {
+          return res.status(400).json({ error: "Maximum 500 ports allowed per scan" });
+        }
+      } else {
+        portCount = scanType === 'quick' ? 16 : scanType === 'standard' ? 100 : 500;
+      }
+
+      // Update tracking
+      scanHistory.set(userId, {
+        count: userTracking.count + 1,
+        lastScan: now,
+        cooldownUntil: now + 30000, // 30 second cooldown
+      });
+
+      // Run the scan
+      console.log(`[NMAP] User ${userId} (${req.user!.tier}) scanning ${target} - Type: ${scanType}, Ports: ${portCount}`);
+
+      const scanResult = await nmapScan(target, {
+        scanType,
+        customPorts,
+        grabBanners,
+        timeout: 2000,
+        maxConcurrent: 50,
+      });
+
+      res.json({
+        success: true,
+        scan: scanResult,
+        usage: {
+          scansToday: userTracking.count + 1,
+          dailyLimit,
+          tier: req.user!.tier,
+        }
+      });
+
+    } catch (error) {
+      console.error("Nmap scan error:", error);
+      res.status(500).json({ error: "Scan failed. Please try again later." });
+    }
+  });
+
+  // Get scan usage stats for current user
+  app.get("/api/tools/nmap-scan/usage", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const userTracking = scanHistory.get(userId);
+      const isBusinessTier = ["business", "enterprise"].includes(req.user!.tier);
+      const dailyLimit = isBusinessTier ? 100 : 30;
+
+      const now = Date.now();
+      let scansToday = 0;
+      let cooldownRemaining = 0;
+
+      if (userTracking) {
+        const lastScanDate = new Date(userTracking.lastScan).toDateString();
+        const today = new Date().toDateString();
+        scansToday = lastScanDate === today ? userTracking.count : 0;
+        cooldownRemaining = Math.max(0, Math.ceil((userTracking.cooldownUntil - now) / 1000));
+      }
+
+      res.json({
+        scansToday,
+        dailyLimit,
+        scansRemaining: Math.max(0, dailyLimit - scansToday),
+        cooldownRemaining,
+        tier: req.user!.tier,
+      });
+
+    } catch (error) {
+      console.error("Scan usage error:", error);
+      res.status(500).json({ error: "Failed to get usage stats" });
+    }
+  });
+
+  // ==========================================
   // NEWSLETTER SUBSCRIPTIONS
   // ==========================================
 

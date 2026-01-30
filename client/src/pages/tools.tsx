@@ -38,12 +38,17 @@ import {
   useDnsLookup,
   useShodanLookup,
   useNewsletterSubscribe,
+  useNmapScan,
+  useNmapUsage,
   IpLookupResult, 
   DomainLookupResult, 
   PortScanResult, 
   ThreatCheckResult,
   ShodanLookupResult
 } from "@/lib/api";
+import { useAuth } from "@/lib/auth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Progress } from "@/components/ui/progress";
 import { Skeleton } from "@/components/ui/skeleton";
 
 function ToolCard({ 
@@ -348,6 +353,198 @@ function PortScanTool() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+      </div>
+    </ToolCard>
+  );
+}
+
+function NmapScanTool() {
+  const { user } = useAuth();
+  const [target, setTarget] = useState("");
+  const [scanType, setScanType] = useState<'quick' | 'standard' | 'comprehensive'>('quick');
+  const [customPorts, setCustomPorts] = useState("");
+  const [showCustomPorts, setShowCustomPorts] = useState(false);
+  const { mutate: scan, data, isPending, error, reset } = useNmapScan();
+  const { data: usage, refetch: refetchUsage } = useNmapUsage();
+
+  const isPro = user && ['supporter', 'pro', 'business', 'enterprise'].includes(user.tier);
+  const isBusiness = user && ['business', 'enterprise'].includes(user.tier);
+
+  const handleScan = () => {
+    if (target.trim() && isPro) {
+      scan({
+        target: target.trim(),
+        scanType,
+        customPorts: showCustomPorts && customPorts.trim() ? customPorts.trim() : undefined,
+        grabBanners: true,
+      }, {
+        onSuccess: () => refetchUsage(),
+      });
+    }
+  };
+
+  const getPortCount = () => {
+    if (showCustomPorts && customPorts.trim()) {
+      return "Custom";
+    }
+    switch (scanType) {
+      case 'quick': return '16 ports';
+      case 'standard': return '100 ports';
+      case 'comprehensive': return '500 ports';
+      default: return '';
+    }
+  };
+
+  return (
+    <ToolCard
+      title="Advanced Port Scanner"
+      description="Nmap-style port scanner with service detection, banner grabbing, and custom port ranges. Pro/Business feature with abuse prevention."
+      icon={Server}
+      tier="pro"
+    >
+      <div className="space-y-4">
+        {!isPro ? (
+          <div className="p-4 rounded-lg bg-orange-500/10 border border-orange-500/30">
+            <div className="flex items-center gap-2 mb-2">
+              <Crown className="h-4 w-4 text-orange-400" />
+              <span className="text-orange-400 font-medium">Pro/Business Feature</span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Upgrade to Pro or Business to access the advanced port scanner with service detection, 
+              banner grabbing, custom port ranges, and up to 500 ports per scan.
+            </p>
+          </div>
+        ) : (
+          <>
+            {usage && (
+              <div className="flex items-center justify-between text-xs text-muted-foreground bg-white/5 p-2 rounded">
+                <span>Scans today: {usage.scansToday}/{usage.dailyLimit}</span>
+                <span>{usage.scansRemaining} remaining</span>
+                {usage.cooldownRemaining > 0 && (
+                  <span className="text-orange-400">Cooldown: {usage.cooldownRemaining}s</span>
+                )}
+              </div>
+            )}
+            
+            <div className="flex gap-2">
+              <Input
+                placeholder="Enter IP address (e.g., 8.8.8.8)"
+                value={target}
+                onChange={(e) => { setTarget(e.target.value); reset(); }}
+                onKeyDown={(e) => e.key === 'Enter' && handleScan()}
+                className="bg-background/50 border-white/10"
+                data-testid="input-nmap-target"
+              />
+              <Button 
+                onClick={handleScan} 
+                disabled={isPending || !target.trim() || (usage?.cooldownRemaining ?? 0) > 0}
+                className="shrink-0"
+                data-testid="button-nmap-scan"
+              >
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Scan"}
+              </Button>
+            </div>
+
+            <div className="flex flex-wrap gap-2 items-center">
+              <Select value={scanType} onValueChange={(v) => setScanType(v as any)}>
+                <SelectTrigger className="w-40 bg-background/50 border-white/10">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="quick">Quick (16 ports)</SelectItem>
+                  <SelectItem value="standard">Standard (100)</SelectItem>
+                  <SelectItem value="comprehensive">Full (500)</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCustomPorts(!showCustomPorts)}
+                className="text-xs"
+              >
+                {showCustomPorts ? 'Use Preset' : 'Custom Ports'}
+              </Button>
+
+              <Badge variant="outline" className="text-xs">
+                {getPortCount()}
+              </Badge>
+            </div>
+
+            {showCustomPorts && (
+              <Input
+                placeholder="Custom ports: 22,80,443 or 1-1000 or 22,80,100-200"
+                value={customPorts}
+                onChange={(e) => setCustomPorts(e.target.value)}
+                className="bg-background/50 border-white/10 text-sm"
+                data-testid="input-custom-ports"
+              />
+            )}
+          </>
+        )}
+
+        {error && (
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/30 text-destructive text-sm">
+            <AlertTriangle className="h-4 w-4 inline mr-2" />
+            {error.message}
+          </div>
+        )}
+
+        {data?.scan && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+              <div className="p-2 rounded bg-white/5">
+                <div className="text-muted-foreground text-xs">Target</div>
+                <div className="font-mono text-white">{data.scan.target}</div>
+              </div>
+              <div className="p-2 rounded bg-white/5">
+                <div className="text-muted-foreground text-xs">Duration</div>
+                <div className="text-white">{(data.scan.duration / 1000).toFixed(1)}s</div>
+              </div>
+              <div className="p-2 rounded bg-white/5">
+                <div className="text-muted-foreground text-xs">Scanned</div>
+                <div className="text-white">{data.scan.portsScanned} ports</div>
+              </div>
+              <div className="p-2 rounded bg-green-500/10">
+                <div className="text-muted-foreground text-xs">Open Ports</div>
+                <div className="text-green-400 font-bold">{data.scan.openPorts}</div>
+              </div>
+            </div>
+
+            {data.scan.results.length > 0 ? (
+              <div className="rounded-lg border border-white/10 overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-white/5">
+                    <tr>
+                      <th className="px-3 py-2 text-left text-muted-foreground font-medium">Port</th>
+                      <th className="px-3 py-2 text-left text-muted-foreground font-medium">Service</th>
+                      <th className="px-3 py-2 text-left text-muted-foreground font-medium">Response</th>
+                      <th className="px-3 py-2 text-left text-muted-foreground font-medium hidden md:table-cell">Banner</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data.scan.results.map((result, idx) => (
+                      <tr key={idx} className="border-t border-white/5">
+                        <td className="px-3 py-2 font-mono text-green-400">{result.port}</td>
+                        <td className="px-3 py-2 text-white">{result.service}</td>
+                        <td className="px-3 py-2 text-muted-foreground">{result.responseTime}ms</td>
+                        <td className="px-3 py-2 text-xs text-muted-foreground font-mono truncate max-w-[200px] hidden md:table-cell">
+                          {result.banner || '-'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="p-4 text-center text-muted-foreground bg-white/5 rounded-lg">
+                {data.scan.hostUp 
+                  ? 'No open ports found in scanned range'
+                  : 'Host appears to be down or filtered'}
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -712,6 +909,7 @@ export default function ToolsPage() {
               <ShodanLookupTool />
               <DomainLookupTool />
               <PortScanTool />
+              <NmapScanTool />
               <ThreatCheckTool />
               <NewsletterSubscribeTool />
             </div>
@@ -722,6 +920,7 @@ export default function ToolsPage() {
               <IpLookupTool />
               <DomainLookupTool />
               <PortScanTool />
+              <NmapScanTool />
               <ShodanLookupTool />
             </div>
           </TabsContent>

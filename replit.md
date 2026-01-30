@@ -56,13 +56,13 @@ Preferred communication style: Simple, everyday language.
 
 ### Features
 - **Threat Intelligence**: Aggregates NVD, CISA KEV, URLhaus, OpenPhish, Feodo Tracker, SANS DShield, Tor Exit Nodes, SSL Blacklist, and many more. Refreshes every 15 minutes.
-- **Security Tools**: IP WHOIS Lookup, Domain WHOIS Lookup, Port Scanner, Threat Database Check, Shodan InternetDB Integration, Password Strength Checker, Subnet/CIDR Calculator, Base64/URL Encoder-Decoder, Email Header Analyzer, SSL Certificate Checker, Hash Analyzer.
+- **Security Tools**: IP WHOIS Lookup, Domain WHOIS Lookup, Port Scanner, Threat Database Check, Shodan InternetDB Integration, Password Strength Checker, Subnet/CIDR Calculator, Base64/URL Encoder-Decoder, Email Header Analyzer, SSL Certificate Checker, Hash Analyzer, Advanced Nmap Port Scanner (Pro/Business).
 - **Newsletter System**: Subscription management with customizable frequency and content preferences.
 - **Quo Phone System Integration**: Emergency hotline (855) STB-1987, SMS notifications, and incident alerts.
 - **Email Notifications**: Automated daily/weekly security digests and alert notifications (ransomware, CVE, breach).
 - **Global Search**: Unified search across all threat data.
 
-### Pro Tier Features (8 Features)
+### Pro Tier Features (9 Features)
 1. **User Authentication**: Secure signup/login with bcrypt password hashing (12 salt rounds), session management via httpOnly cookies (30-day expiration).
 2. **Subscription Management**: Stripe-integrated tier system (Supporter, Pro, Business) with automatic tier assignment.
 3. **Watchlist System**: Track CVEs, IPs, domains, ransomware groups, keywords, sectors, and countries. CRUD operations with real-time updates.
@@ -71,6 +71,7 @@ Preferred communication style: Simple, everyday language.
 6. **API Rate Limiting**: Tiered rate limits (free: 10/min, pro: 60/min) with middleware enforcement.
 7. **Export Capabilities**: CSV/JSON export for CVEs, ransomware, IPs, URLs, KEV data (up to 5000 records).
 8. **Advanced Search**: Multi-filter search across all threat data with date ranges, severity, and type filters.
+9. **Advanced Nmap Port Scanner**: Nmap-style port scanner with service detection, banner grabbing, custom port ranges (up to 500 ports). Includes abuse prevention: 30-second cooldown, 20 scans/hour, daily limits (Pro: 30, Business: 100). Internal/private IP scanning blocked.
 
 ### Authentication System
 - **Backend**: `server/auth.ts` - Password hashing, session tokens, verification
