@@ -416,6 +416,26 @@ export default function SupportPage() {
           </CardContent>
         </Card>
 
+        <Card className="border-orange-500/20 bg-zinc-900/50">
+          <CardContent className="py-6">
+            <div className="max-w-3xl mx-auto text-center space-y-4">
+              <h3 className="text-lg font-bold text-white">100% Community Funded</h3>
+              <p className="text-zinc-400 text-sm leading-relaxed">
+                STBCS is funded entirely by our community. Donations, memberships, and business partnerships cover everything - 
+                the website, applications, development, research, hosting, and the APIs that power our threat intelligence feeds. 
+                Every lookup, every scan, and every query costs real money. Your support keeps the lights on and allows us 
+                to continue providing a service like no other.
+              </p>
+              <div className="flex flex-wrap justify-center gap-4 text-xs text-zinc-500 pt-2">
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" /> Hosting & Infrastructure</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" /> API & Data Feeds</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" /> Development & Research</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" /> Security Operations</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <Card className="border-white/5 bg-card/50">
           <CardHeader>
             <CardTitle className="text-xl text-white flex items-center gap-2">
