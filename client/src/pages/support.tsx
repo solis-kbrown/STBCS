@@ -582,9 +582,10 @@ export default function SupportPage() {
             </div>
             <div className="pt-4 border-t border-white/10">
               <p className="text-xs text-zinc-500 mb-3">Follow us on social media (coming soon)</p>
-              <div className="flex gap-3">
+              <div className="flex flex-wrap gap-3">
                 <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">Twitter/X</span>
                 <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">LinkedIn</span>
+                <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">Facebook</span>
                 <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">YouTube</span>
                 <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">GitHub</span>
               </div>
