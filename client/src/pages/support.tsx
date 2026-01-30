@@ -552,6 +552,46 @@ export default function SupportPage() {
           </CardContent>
         </Card>
 
+        <Card className="border-white/5 bg-card/50">
+          <CardHeader>
+            <CardTitle className="text-lg text-white">We Want to Hear From You</CardTitle>
+            <CardDescription>Feedback, questions, or just want to share your story? Reach out anytime.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-zinc-400">
+              We love hearing from our community. Whether it's feedback on the platform, a success story, 
+              or just a question - we're here. Please don't abuse these channels, but know they're always open.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+              <a href="mailto:info@stbcybersecurity.com" className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                <span className="text-orange-400">General Inquiries</span>
+                <span className="text-zinc-500 text-xs">info@stbcybersecurity.com</span>
+              </a>
+              <a href="mailto:support@stbcybersecurity.com" className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                <span className="text-orange-400">Technical Support</span>
+                <span className="text-zinc-500 text-xs">support@stbcybersecurity.com</span>
+              </a>
+              <a href="mailto:feedback@stbcybersecurity.com" className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                <span className="text-orange-400">Feedback & Stories</span>
+                <span className="text-zinc-500 text-xs">feedback@stbcybersecurity.com</span>
+              </a>
+              <a href="tel:+18557821987" className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+                <span className="text-orange-400">Emergency Hotline</span>
+                <span className="text-zinc-500 text-xs">(855) STB-1987</span>
+              </a>
+            </div>
+            <div className="pt-4 border-t border-white/10">
+              <p className="text-xs text-zinc-500 mb-3">Follow us on social media (coming soon)</p>
+              <div className="flex gap-3">
+                <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">Twitter/X</span>
+                <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">LinkedIn</span>
+                <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">YouTube</span>
+                <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">GitHub</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         <div className="text-center space-y-2 text-sm text-zinc-500 pb-8">
           <p>Questions about payments or memberships?</p>
           <p>Contact us at <a href="mailto:billing@stbcybersecurity.com" className="text-orange-400 hover:underline">billing@stbcybersecurity.com</a></p>
