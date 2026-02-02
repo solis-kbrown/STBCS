@@ -1,0 +1,12 @@
+# STB Cybersecurity Security Policy
+# https://www.stbcybersecurity.com/.well-known/security.txt
+
+Contact: mailto:security@stbcybersecurity.com
+Contact: mailto:info@stbcybersecurity.com
+Contact: tel:+1-855-782-1987
+
+Expires: 2027-02-02T00:00:00.000Z
+
+Preferred-Languages: en, es, fr, de, pt, zh, ja, ko, ar, ru
+
+Canonical: https://www.stbcybersecurity.com/.well-known/security.txt

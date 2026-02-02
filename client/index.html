@@ -58,12 +58,86 @@
         "availableLanguage": ["English", "Spanish", "French", "German", "Portuguese", "Chinese", "Japanese", "Korean", "Arabic", "Russian"]
       },
       "areaServed": "Worldwide",
-      "serviceType": ["Incident Response", "Ransomware Recovery", "Threat Hunting", "Cybersecurity Consulting", "Threat Intelligence"]
+      "serviceType": ["Incident Response", "Ransomware Recovery", "Threat Hunting", "Cybersecurity Consulting", "Threat Intelligence"],
+      "foundingDate": "2024",
+      "knowsAbout": ["Cybersecurity", "Threat Intelligence", "Ransomware", "Incident Response", "Vulnerability Management", "CISA KEV", "CVE Database"],
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Cybersecurity Services",
+        "itemListElement": [
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Incident Response",
+              "description": "24/7 emergency incident response for security breaches and cyber attacks"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Ransomware Recovery",
+              "description": "Professional ransomware recovery and restoration services"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Threat Hunting",
+              "description": "Proactive threat hunting and advanced persistent threat detection"
+            }
+          },
+          {
+            "@type": "Offer",
+            "itemOffered": {
+              "@type": "Service",
+              "name": "Cybersecurity Consulting",
+              "description": "Expert cybersecurity consulting for small to medium businesses"
+            }
+          }
+        ]
+      }
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "STB Cybersecurity",
+      "alternateName": "STBCS",
+      "url": "https://stbcybersecurity.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://stbcybersecurity.com/search?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "ProfessionalService",
+      "name": "STB Cybersecurity",
+      "@id": "https://stbcybersecurity.com/#business",
+      "url": "https://stbcybersecurity.com",
+      "telephone": "+1-855-782-1987",
+      "email": "info@stbcybersecurity.com",
+      "priceRange": "$$$",
+      "openingHours": "Mo-Su 00:00-23:59",
+      "image": "https://stbcybersecurity.com/logo.png"
     }
     </script>
 
     <link rel="icon" type="image/png" href="/favicon.png" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
+    <link rel="manifest" href="/manifest.json" />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@100..900&family=JetBrains+Mono:wght@100..800&family=Orbitron:wght@400..900&display=swap" rel="stylesheet">

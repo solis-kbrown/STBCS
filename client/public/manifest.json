@@ -1,0 +1,57 @@
+{
+  "name": "STB Cybersecurity",
+  "short_name": "STBCS",
+  "description": "Real-time threat intelligence, ransomware tracking, and 24/7 incident response services for SMBs worldwide.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#f97316",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-US",
+  "categories": ["security", "business", "utilities"],
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Search Threats",
+      "short_name": "Search",
+      "description": "Search across all threat intelligence data",
+      "url": "/search",
+      "icons": [{ "src": "/favicon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Ransomware Tracker",
+      "short_name": "Ransomware",
+      "description": "Monitor ransomware incidents and threat groups",
+      "url": "/ransomware",
+      "icons": [{ "src": "/favicon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Security Tools",
+      "short_name": "Tools",
+      "description": "Access professional security analysis tools",
+      "url": "/tools",
+      "icons": [{ "src": "/favicon.png", "sizes": "96x96" }]
+    }
+  ]
+}

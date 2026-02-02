@@ -1,11 +1,12 @@
 # STB Cybersecurity - robots.txt
 # https://www.stbcybersecurity.com
+# Last updated: 2026-02-02
 
+# Allow all search engines full access to public content
 User-agent: *
 Allow: /
+Disallow: /api/
+Disallow: /admin/
 
 # Sitemap location
 Sitemap: https://www.stbcybersecurity.com/sitemap.xml
-
-# Crawl-delay for respectful crawling
-Crawl-delay: 1
