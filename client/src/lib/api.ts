@@ -959,3 +959,225 @@ export function useNewsletterStatus(email: string) {
     enabled: !!email && email.includes("@"),
   });
 }
+
+// ==========================================
+// FREE THREAT INTELLIGENCE APIs
+// ==========================================
+
+// ThreatFox IOC Types
+export interface ThreatFoxIOC {
+  id: string;
+  iocType: string;
+  iocValue: string;
+  threatType: string;
+  threatTypeDesc: string;
+  malware: string;
+  malwareAlias: string | null;
+  malwarePrintable: string;
+  confidence: number;
+  firstSeen: string;
+  lastSeen: string | null;
+  reference: string | null;
+  reporter: string;
+  tags: string[];
+}
+
+export interface ThreatFoxResult {
+  queryStatus: string;
+  queryType: string;
+  data: ThreatFoxIOC[];
+  timestamp: string;
+}
+
+export function useThreatFoxLookup() {
+  return useMutation<ThreatFoxResult, Error, { ioc: string; iocType?: 'ip' | 'domain' | 'url' | 'hash' }>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/tools/threatfox", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("ThreatFox lookup failed");
+      return response.json();
+    },
+  });
+}
+
+// Malware Bazaar Types
+export interface MalwareSample {
+  sha256Hash: string;
+  sha1Hash: string;
+  md5Hash: string;
+  fileName: string | null;
+  fileType: string;
+  fileSize: number;
+  signature: string | null;
+  firstSeen: string;
+  lastSeen: string | null;
+  originCountry: string | null;
+  imphash: string | null;
+  tlsh: string | null;
+  tags: string[];
+  deliveryMethod: string | null;
+  intelligence: {
+    downloads: number;
+    uploads: number;
+    mailIntelligence: number;
+  };
+}
+
+export interface MalwareBazaarResult {
+  queryStatus: string;
+  data: MalwareSample[];
+  timestamp: string;
+}
+
+export function useMalwareBazaarLookup() {
+  return useMutation<MalwareBazaarResult, Error, { hash: string }>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/tools/malware-bazaar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Malware Bazaar lookup failed");
+      return response.json();
+    },
+  });
+}
+
+// SSL Labs Types
+export interface SSLLabsResult {
+  host: string;
+  port: number;
+  protocol: string;
+  grade: string;
+  gradeTrustIgnored: string;
+  hasWarnings: boolean;
+  isExceptional: boolean;
+  progress: number;
+  status: string;
+  statusMessage: string;
+  endpoints: {
+    ipAddress: string;
+    grade: string;
+    hasWarnings: boolean;
+    isExceptional: boolean;
+    progress: number;
+    statusMessage: string;
+  }[];
+  timestamp: string;
+}
+
+export function useSSLLabsCheck() {
+  return useMutation<SSLLabsResult, Error, { host: string }>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/tools/ssl-labs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("SSL Labs check failed");
+      return response.json();
+    },
+  });
+}
+
+// URLScan.io Types
+export interface URLScanResult {
+  uuid: string;
+  url: string;
+  domain: string;
+  ip: string | null;
+  country: string | null;
+  server: string | null;
+  city: string | null;
+  asn: string | null;
+  asnname: string | null;
+  malicious: boolean;
+  score: number;
+  categories: string[];
+  brands: string[];
+  screenshotUrl: string | null;
+  reportUrl: string;
+  status: string;
+  timestamp: string;
+}
+
+export function useURLScanSearch() {
+  return useMutation<{ results: URLScanResult[]; timestamp: string }, Error, { query: string }>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/tools/urlscan", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("URLScan.io search failed");
+      return response.json();
+    },
+  });
+}
+
+// PhishTank Types
+export interface PhishTankResult {
+  url: string;
+  inDatabase: boolean;
+  phishId: string | null;
+  verified: boolean;
+  verifiedAt: string | null;
+  valid: boolean;
+  target: string | null;
+  submissionTime: string | null;
+  timestamp: string;
+}
+
+export function usePhishTankCheck() {
+  return useMutation<PhishTankResult, Error, { url: string }>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/tools/phishtank", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("PhishTank check failed");
+      return response.json();
+    },
+  });
+}
+
+// Enhanced IP Geolocation Types
+export interface EnhancedIPInfo {
+  ip: string;
+  hostname: string | null;
+  continent: string | null;
+  continentCode: string | null;
+  country: string;
+  countryCode: string;
+  region: string;
+  regionName: string;
+  city: string;
+  district: string | null;
+  zip: string;
+  lat: number;
+  lon: number;
+  timezone: string;
+  offset: number;
+  currency: string | null;
+  isp: string;
+  org: string;
+  as: string;
+  asname: string;
+  reverse: string | null;
+  mobile: boolean;
+  proxy: boolean;
+  hosting: boolean;
+  timestamp: string;
+}
+
+export function useEnhancedIPInfo(ip: string) {
+  return useQuery<EnhancedIPInfo>({
+    queryKey: ["/api/tools/ip-geo", ip],
+    queryFn: () => fetchApi(`/api/tools/ip-geo?ip=${encodeURIComponent(ip)}`),
+    enabled: !!ip && ip.length >= 7,
+  });
+}

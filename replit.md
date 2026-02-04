@@ -56,7 +56,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Features
 - **Threat Intelligence**: Aggregates NVD, CISA KEV, URLhaus, OpenPhish, Feodo Tracker, SANS DShield, Tor Exit Nodes, SSL Blacklist, and many more. Refreshes every 15 minutes.
-- **Security Tools**: IP WHOIS Lookup, Domain WHOIS Lookup, Port Scanner, Threat Database Check, Shodan InternetDB Integration, Password Strength Checker, Subnet/CIDR Calculator, Base64/URL Encoder-Decoder, Email Header Analyzer, SSL Certificate Checker, Hash Analyzer, Advanced Nmap Port Scanner (Pro/Business), Email Security Check (MXToolbox-style: MX, SPF, DMARC analysis with scoring/grading - DKIM requires manual selector).
+- **Security Tools**: IP WHOIS Lookup, Domain WHOIS Lookup, Port Scanner, Threat Database Check, Shodan InternetDB Integration, Password Strength Checker, Subnet/CIDR Calculator, Base64/URL Encoder-Decoder, Email Header Analyzer, SSL Certificate Checker, Hash Analyzer, Advanced Nmap Port Scanner (Pro/Business), Email Security Check (MXToolbox-style: MX, SPF, DMARC analysis with scoring/grading - DKIM requires manual selector), ThreatFox IOC Lookup (malware IOCs), Malware Bazaar Hash Lookup, SSL Labs Security Grade, URLScan.io Domain Search, PhishTank URL Check, Enhanced IP Geolocation.
 - **Newsletter System**: Subscription management with customizable frequency and content preferences.
 - **Quo Phone System Integration**: Emergency hotline (855) STB-1987, SMS notifications, and incident alerts.
 - **Email Notifications**: Automated daily/weekly security digests and alert notifications (ransomware, CVE, breach).

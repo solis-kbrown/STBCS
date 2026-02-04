@@ -28,7 +28,13 @@ import {
   Bug,
   Tag,
   Newspaper,
-  Bell
+  Bell,
+  ShieldAlert,
+  FileSearch,
+  Link2,
+  Fingerprint,
+  Hash,
+  KeyRound
 } from "lucide-react";
 import { 
   useIpLookup, 
@@ -41,6 +47,11 @@ import {
   useNmapScan,
   useNmapUsage,
   useEmailSecurity,
+  useThreatFoxLookup,
+  useMalwareBazaarLookup,
+  useSSLLabsCheck,
+  useURLScanSearch,
+  usePhishTankCheck,
   IpLookupResult, 
   DomainLookupResult, 
   PortScanResult, 
@@ -1061,6 +1072,442 @@ function NewsletterSubscribeTool() {
   );
 }
 
+function ThreatFoxTool() {
+  const [ioc, setIoc] = useState("");
+  const [iocType, setIocType] = useState<'ip' | 'domain' | 'url' | 'hash'>('hash');
+  const { mutate: lookup, data, isPending, error, reset } = useThreatFoxLookup();
+
+  const handleLookup = () => {
+    if (ioc.trim()) {
+      lookup({ ioc: ioc.trim(), iocType });
+    }
+  };
+
+  return (
+    <ToolCard
+      title="ThreatFox IOC Lookup"
+      description="Check if an IP, domain, URL, or hash is associated with known malware (Abuse.ch)"
+      icon={Bug}
+      tier="free"
+    >
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <Select value={iocType} onValueChange={(v) => setIocType(v as any)}>
+            <SelectTrigger className="w-24 bg-background border-white/10">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="hash">Hash</SelectItem>
+              <SelectItem value="ip">IP</SelectItem>
+              <SelectItem value="domain">Domain</SelectItem>
+              <SelectItem value="url">URL</SelectItem>
+            </SelectContent>
+          </Select>
+          <Input
+            placeholder={iocType === 'hash' ? "Enter MD5/SHA256 hash" : `Enter ${iocType}`}
+            value={ioc}
+            onChange={(e) => { setIoc(e.target.value); reset(); }}
+            onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
+            className="bg-background border-white/10 flex-1"
+            data-testid="input-threatfox-ioc"
+          />
+          <Button onClick={handleLookup} disabled={isPending || !ioc.trim()} data-testid="button-threatfox-lookup">
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Lookup"}
+          </Button>
+        </div>
+
+        {error && (
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            {error.message}
+          </div>
+        )}
+
+        {data && (
+          <div className="space-y-3">
+            {data.queryStatus === 'ok' && data.data.length > 0 ? (
+              <>
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+                  <div className="flex items-center gap-2 text-red-400 font-bold">
+                    <AlertTriangle className="h-4 w-4" />
+                    MALICIOUS - {data.data.length} IOC(s) found
+                  </div>
+                </div>
+                {data.data.slice(0, 3).map((item, i) => (
+                  <div key={i} className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Badge className="bg-red-600">{item.malwarePrintable}</Badge>
+                      <span className="text-xs text-muted-foreground">Confidence: {item.confidence}%</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      <span className="font-mono">{item.iocValue}</span>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {item.tags.slice(0, 5).map((tag, j) => (
+                        <Badge key={j} variant="outline" className="text-xs">{tag}</Badge>
+                      ))}
+                    </div>
+                    <div className="text-xs text-muted-foreground">First seen: {item.firstSeen}</div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                <div className="flex items-center gap-2 text-green-400">
+                  <Check className="h-4 w-4" />
+                  No malware associations found in ThreatFox database
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </ToolCard>
+  );
+}
+
+function MalwareBazaarTool() {
+  const [hash, setHash] = useState("");
+  const { mutate: lookup, data, isPending, error, reset } = useMalwareBazaarLookup();
+
+  const handleLookup = () => {
+    if (hash.trim() && /^[a-fA-F0-9]{32,64}$/.test(hash.trim())) {
+      lookup({ hash: hash.trim() });
+    }
+  };
+
+  return (
+    <ToolCard
+      title="Malware Bazaar Hash Lookup"
+      description="Check if a file hash (MD5/SHA256) is associated with known malware samples"
+      icon={Hash}
+      tier="free"
+    >
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Enter MD5, SHA1, or SHA256 hash"
+            value={hash}
+            onChange={(e) => { setHash(e.target.value); reset(); }}
+            onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
+            className="bg-background border-white/10 font-mono text-sm"
+            data-testid="input-malwarebazaar-hash"
+          />
+          <Button onClick={handleLookup} disabled={isPending || !/^[a-fA-F0-9]{32,64}$/.test(hash.trim())} data-testid="button-malwarebazaar-lookup">
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Lookup"}
+          </Button>
+        </div>
+
+        {error && (
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            {error.message}
+          </div>
+        )}
+
+        {data && (
+          <div className="space-y-3">
+            {data.queryStatus === 'ok' && data.data.length > 0 ? (
+              <>
+                <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/30">
+                  <div className="flex items-center gap-2 text-red-400 font-bold">
+                    <AlertTriangle className="h-4 w-4" />
+                    MALWARE FOUND
+                  </div>
+                </div>
+                {data.data.map((sample, i) => (
+                  <div key={i} className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-2">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      {sample.signature && <Badge className="bg-red-600">{sample.signature}</Badge>}
+                      <span className="text-xs text-muted-foreground">{sample.fileType}</span>
+                    </div>
+                    {sample.fileName && (
+                      <div className="text-sm text-white">{sample.fileName}</div>
+                    )}
+                    <div className="text-xs font-mono text-muted-foreground truncate">
+                      SHA256: {sample.sha256Hash}
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {sample.tags.slice(0, 5).map((tag, j) => (
+                        <Badge key={j} variant="outline" className="text-xs">{tag}</Badge>
+                      ))}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      First seen: {sample.firstSeen} | Size: {(sample.fileSize / 1024).toFixed(1)} KB
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                <div className="flex items-center gap-2 text-green-400">
+                  <Check className="h-4 w-4" />
+                  No malware samples found with this hash
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </ToolCard>
+  );
+}
+
+function SSLLabsTool() {
+  const [host, setHost] = useState("");
+  const { mutate: check, data, isPending, error, reset } = useSSLLabsCheck();
+
+  const handleCheck = () => {
+    if (host.trim()) {
+      check({ host: host.trim().replace(/^https?:\/\//, '').split('/')[0] });
+    }
+  };
+
+  const getGradeColor = (grade: string) => {
+    if (grade.startsWith('A')) return 'bg-green-600';
+    if (grade.startsWith('B')) return 'bg-blue-600';
+    if (grade.startsWith('C')) return 'bg-yellow-600';
+    if (grade.startsWith('D')) return 'bg-orange-600';
+    if (grade.startsWith('F')) return 'bg-red-600';
+    return 'bg-gray-600';
+  };
+
+  return (
+    <ToolCard
+      title="SSL/TLS Security Grade"
+      description="Check the SSL/TLS configuration and get a security grade (A+ to F) using Qualys SSL Labs"
+      icon={KeyRound}
+      tier="free"
+    >
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Enter domain (e.g., google.com)"
+            value={host}
+            onChange={(e) => { setHost(e.target.value); reset(); }}
+            onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
+            className="bg-background border-white/10"
+            data-testid="input-ssllabs-host"
+          />
+          <Button onClick={handleCheck} disabled={isPending || !host.trim()} data-testid="button-ssllabs-check">
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Check"}
+          </Button>
+        </div>
+
+        {error && (
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            {error.message}
+          </div>
+        )}
+
+        {data && (
+          <div className="space-y-3">
+            <div className="p-4 rounded-lg bg-white/5 border border-white/10">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <div className="text-lg font-bold text-white">{data.host}</div>
+                  <div className="text-xs text-muted-foreground">{data.statusMessage}</div>
+                </div>
+                <div className={`text-3xl font-bold px-4 py-2 rounded-lg ${getGradeColor(data.grade)}`}>
+                  {data.grade}
+                </div>
+              </div>
+              {data.status === 'READY' && data.endpoints.length > 0 && (
+                <div className="space-y-2 mt-3">
+                  {data.endpoints.map((ep, i) => (
+                    <div key={i} className="flex items-center justify-between p-2 rounded bg-white/5">
+                      <span className="font-mono text-sm text-muted-foreground">{ep.ipAddress}</span>
+                      <Badge className={getGradeColor(ep.grade)}>{ep.grade}</Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {data.hasWarnings && (
+                <div className="flex items-center gap-2 text-yellow-400 text-sm mt-3">
+                  <AlertTriangle className="h-4 w-4" />
+                  Configuration has warnings
+                </div>
+              )}
+              {data.isExceptional && (
+                <div className="flex items-center gap-2 text-green-400 text-sm mt-3">
+                  <Check className="h-4 w-4" />
+                  Exceptional security configuration
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </ToolCard>
+  );
+}
+
+function URLScanTool() {
+  const [query, setQuery] = useState("");
+  const { mutate: search, data, isPending, error, reset } = useURLScanSearch();
+
+  const handleSearch = () => {
+    if (query.trim()) {
+      search({ query: query.trim() });
+    }
+  };
+
+  return (
+    <ToolCard
+      title="URLScan.io Domain Search"
+      description="Search for scan history and threat analysis of any domain using URLScan.io"
+      icon={Link2}
+      tier="free"
+    >
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Enter domain to search (e.g., example.com)"
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); reset(); }}
+            onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+            className="bg-background border-white/10"
+            data-testid="input-urlscan-query"
+          />
+          <Button onClick={handleSearch} disabled={isPending || !query.trim()} data-testid="button-urlscan-search">
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Search"}
+          </Button>
+        </div>
+
+        {error && (
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            {error.message}
+          </div>
+        )}
+
+        {data && (
+          <div className="space-y-3">
+            {data.results.length > 0 ? (
+              <>
+                <div className="text-sm text-muted-foreground">
+                  Found {data.results.length} scan result(s)
+                </div>
+                {data.results.slice(0, 5).map((result, i) => (
+                  <div key={i} className="p-3 rounded-lg bg-white/5 border border-white/10 space-y-2">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <span className="font-mono text-sm text-white truncate max-w-xs">{result.domain}</span>
+                      {result.malicious ? (
+                        <Badge className="bg-red-600">Malicious</Badge>
+                      ) : (
+                        <Badge className="bg-green-600">Clean</Badge>
+                      )}
+                    </div>
+                    {result.ip && (
+                      <div className="text-xs text-muted-foreground flex items-center gap-2">
+                        <Server className="h-3 w-3" />
+                        {result.ip} {result.country && `(${result.country})`}
+                      </div>
+                    )}
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(result.timestamp).toLocaleDateString()}
+                      </span>
+                      <a 
+                        href={result.reportUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline flex items-center gap-1"
+                      >
+                        View Report <ExternalLink className="h-3 w-3" />
+                      </a>
+                    </div>
+                  </div>
+                ))}
+              </>
+            ) : (
+              <div className="p-3 rounded-lg bg-white/5 border border-white/10 text-center text-muted-foreground">
+                No scan results found for this domain
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </ToolCard>
+  );
+}
+
+function PhishTankTool() {
+  const [url, setUrl] = useState("");
+  const { mutate: check, data, isPending, error, reset } = usePhishTankCheck();
+
+  const handleCheck = () => {
+    if (url.trim() && url.includes('://')) {
+      check({ url: url.trim() });
+    }
+  };
+
+  return (
+    <ToolCard
+      title="PhishTank URL Check"
+      description="Check if a URL is a known phishing site using PhishTank's community database"
+      icon={Fingerprint}
+      tier="free"
+    >
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Enter full URL (e.g., https://example.com/page)"
+            value={url}
+            onChange={(e) => { setUrl(e.target.value); reset(); }}
+            onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
+            className="bg-background border-white/10"
+            data-testid="input-phishtank-url"
+          />
+          <Button onClick={handleCheck} disabled={isPending || !url.includes('://')} data-testid="button-phishtank-check">
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Check"}
+          </Button>
+        </div>
+
+        {error && (
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            {error.message}
+          </div>
+        )}
+
+        {data && (
+          <div className="space-y-3">
+            {data.inDatabase ? (
+              <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/30 space-y-3">
+                <div className="flex items-center gap-2 text-red-400 font-bold">
+                  <AlertTriangle className="h-5 w-5" />
+                  PHISHING SITE DETECTED
+                </div>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  {data.verified && (
+                    <div className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-red-400" />
+                      Verified phishing site
+                    </div>
+                  )}
+                  {data.target && (
+                    <div>Target: <span className="text-white">{data.target}</span></div>
+                  )}
+                  {data.phishId && (
+                    <div>PhishTank ID: <span className="font-mono">{data.phishId}</span></div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                <div className="flex items-center gap-2 text-green-400">
+                  <Check className="h-4 w-4" />
+                  URL not found in PhishTank database
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Note: A URL not being in the database doesn't guarantee it's safe. Always exercise caution.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </ToolCard>
+  );
+}
+
 export default function ToolsPage() {
   useDocumentTitle("Free Security Tools | STB Cybersecurity");
   return (
@@ -1125,8 +1572,13 @@ export default function ToolsPage() {
               <DomainLookupTool />
               <PortScanTool />
               <NmapScanTool />
+              <SSLLabsTool />
               <EmailSecurityTool />
               <ThreatCheckTool />
+              <ThreatFoxTool />
+              <MalwareBazaarTool />
+              <URLScanTool />
+              <PhishTankTool />
               <NewsletterSubscribeTool />
             </div>
           </TabsContent>
@@ -1137,19 +1589,24 @@ export default function ToolsPage() {
               <DomainLookupTool />
               <PortScanTool />
               <NmapScanTool />
+              <SSLLabsTool />
               <ShodanLookupTool />
             </div>
           </TabsContent>
 
           <TabsContent value="email" className="space-y-6">
-            <div className="max-w-2xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <EmailSecurityTool />
+              <PhishTankTool />
             </div>
           </TabsContent>
 
           <TabsContent value="threat" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <ThreatCheckTool />
+              <ThreatFoxTool />
+              <MalwareBazaarTool />
+              <URLScanTool />
               <ShodanLookupTool />
             </div>
           </TabsContent>
