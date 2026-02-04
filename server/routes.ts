@@ -1198,6 +1198,137 @@ export async function registerRoutes(
   });
 
   // ==========================================
+  // FREE THREAT INTELLIGENCE APIs
+  // ==========================================
+
+  // ThreatFox IOC Lookup (No API key required)
+  app.post("/api/tools/threatfox", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        ioc: z.string().min(1).max(500),
+        iocType: z.enum(['ip', 'domain', 'url', 'hash']).optional().default('hash'),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid IOC value" });
+      }
+      
+      const { lookupThreatFox } = await import("./tools.js");
+      const result = await lookupThreatFox(parsed.data.ioc, parsed.data.iocType);
+      res.json(result);
+    } catch (error) {
+      console.error("ThreatFox lookup error:", error);
+      res.status(500).json({ error: "Failed to lookup IOC in ThreatFox" });
+    }
+  });
+
+  // Malware Bazaar Hash Lookup (No API key required)
+  app.post("/api/tools/malware-bazaar", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        hash: z.string().min(32).max(64).regex(/^[a-fA-F0-9]+$/),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid hash (MD5, SHA1, or SHA256)" });
+      }
+      
+      const { lookupMalwareBazaar } = await import("./tools.js");
+      const result = await lookupMalwareBazaar(parsed.data.hash);
+      res.json(result);
+    } catch (error) {
+      console.error("Malware Bazaar lookup error:", error);
+      res.status(500).json({ error: "Failed to lookup hash in Malware Bazaar" });
+    }
+  });
+
+  // SSL Labs Grade Check (No API key required)
+  app.post("/api/tools/ssl-labs", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        host: z.string().min(3).max(255),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid hostname" });
+      }
+      
+      const { checkSSLLabs } = await import("./tools.js");
+      const result = await checkSSLLabs(parsed.data.host);
+      res.json(result);
+    } catch (error) {
+      console.error("SSL Labs check error:", error);
+      res.status(500).json({ error: "Failed to check SSL configuration" });
+    }
+  });
+
+  // URLScan.io Domain Search (Free tier)
+  app.post("/api/tools/urlscan", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        query: z.string().min(3).max(255),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid domain" });
+      }
+      
+      const { searchURLScan } = await import("./tools.js");
+      const result = await searchURLScan(parsed.data.query);
+      res.json({ results: result, timestamp: new Date().toISOString() });
+    } catch (error) {
+      console.error("URLScan.io search error:", error);
+      res.status(500).json({ error: "Failed to search URLScan.io" });
+    }
+  });
+
+  // PhishTank URL Check (Free with limitations)
+  app.post("/api/tools/phishtank", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        url: z.string().min(10).max(2000).url(),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid URL" });
+      }
+      
+      const { checkPhishTank } = await import("./tools.js");
+      const result = await checkPhishTank(parsed.data.url);
+      res.json(result);
+    } catch (error) {
+      console.error("PhishTank check error:", error);
+      res.status(500).json({ error: "Failed to check URL in PhishTank" });
+    }
+  });
+
+  // Enhanced IP Geolocation (No API key required)
+  app.get("/api/tools/ip-geo", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        ip: z.string().min(7).max(45),
+      });
+      
+      const parsed = schema.safeParse({ ip: req.query.ip });
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid IP address" });
+      }
+      
+      const { getEnhancedIPInfo } = await import("./tools.js");
+      const result = await getEnhancedIPInfo(parsed.data.ip);
+      res.json(result);
+    } catch (error) {
+      console.error("Enhanced IP geo error:", error);
+      res.status(500).json({ error: "Failed to get IP geolocation" });
+    }
+  });
+
+  // ==========================================
   // NEW FREE SECURITY TOOLS
   // ==========================================
 

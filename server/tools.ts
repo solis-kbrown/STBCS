@@ -1396,3 +1396,510 @@ export async function checkEmailSecurity(domain: string): Promise<EmailSecurityR
     timestamp,
   };
 }
+
+// ==========================================
+// FREE THREAT INTELLIGENCE APIs
+// ==========================================
+
+// ThreatFox IOC Types
+export interface ThreatFoxIOC {
+  id: string;
+  iocType: string;
+  iocValue: string;
+  threatType: string;
+  threatTypeDesc: string;
+  malware: string;
+  malwareAlias: string | null;
+  malwarePrintable: string;
+  confidence: number;
+  firstSeen: string;
+  lastSeen: string | null;
+  reference: string | null;
+  reporter: string;
+  tags: string[];
+}
+
+export interface ThreatFoxResult {
+  queryStatus: string;
+  queryType: string;
+  data: ThreatFoxIOC[];
+  timestamp: string;
+}
+
+// ThreatFox IOC Lookup (No API key required)
+export async function lookupThreatFox(ioc: string, iocType: 'ip' | 'domain' | 'url' | 'hash'): Promise<ThreatFoxResult> {
+  try {
+    const response = await fetch('https://threatfox-api.abuse.ch/api/v1/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        query: 'search_ioc',
+        search_term: ioc,
+      }),
+    });
+    
+    if (!response.ok) {
+      return { queryStatus: 'error', queryType: iocType, data: [], timestamp: new Date().toISOString() };
+    }
+    
+    const result = await response.json();
+    
+    if (result.query_status === 'ok' && result.data) {
+      return {
+        queryStatus: 'ok',
+        queryType: iocType,
+        data: result.data.map((item: any) => ({
+          id: item.id,
+          iocType: item.ioc_type,
+          iocValue: item.ioc,
+          threatType: item.threat_type,
+          threatTypeDesc: item.threat_type_desc,
+          malware: item.malware,
+          malwareAlias: item.malware_alias,
+          malwarePrintable: item.malware_printable,
+          confidence: item.confidence_level,
+          firstSeen: item.first_seen,
+          lastSeen: item.last_seen,
+          reference: item.reference,
+          reporter: item.reporter,
+          tags: item.tags || [],
+        })),
+        timestamp: new Date().toISOString(),
+      };
+    }
+    
+    return { queryStatus: result.query_status || 'no_result', queryType: iocType, data: [], timestamp: new Date().toISOString() };
+  } catch (error) {
+    console.error('ThreatFox lookup error:', error);
+    return { queryStatus: 'error', queryType: iocType, data: [], timestamp: new Date().toISOString() };
+  }
+}
+
+// Malware Bazaar Types
+export interface MalwareSample {
+  sha256Hash: string;
+  sha1Hash: string;
+  md5Hash: string;
+  fileName: string | null;
+  fileType: string;
+  fileSize: number;
+  signature: string | null;
+  firstSeen: string;
+  lastSeen: string | null;
+  originCountry: string | null;
+  imphash: string | null;
+  tlsh: string | null;
+  tags: string[];
+  deliveryMethod: string | null;
+  intelligence: {
+    downloads: number;
+    uploads: number;
+    mailIntelligence: number;
+  };
+}
+
+export interface MalwareBazaarResult {
+  queryStatus: string;
+  data: MalwareSample[];
+  timestamp: string;
+}
+
+// Malware Bazaar Hash Lookup (No API key required)
+export async function lookupMalwareBazaar(hash: string): Promise<MalwareBazaarResult> {
+  try {
+    const formData = new URLSearchParams();
+    formData.append('query', 'get_info');
+    formData.append('hash', hash);
+    
+    const response = await fetch('https://mb-api.abuse.ch/api/v1/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: formData.toString(),
+    });
+    
+    if (!response.ok) {
+      return { queryStatus: 'error', data: [], timestamp: new Date().toISOString() };
+    }
+    
+    const result = await response.json();
+    
+    if (result.query_status === 'ok' && result.data) {
+      const samples = (Array.isArray(result.data) ? result.data : [result.data]).map((item: any) => ({
+        sha256Hash: item.sha256_hash,
+        sha1Hash: item.sha1_hash,
+        md5Hash: item.md5_hash,
+        fileName: item.file_name,
+        fileType: item.file_type || item.file_type_mime,
+        fileSize: item.file_size,
+        signature: item.signature,
+        firstSeen: item.first_seen,
+        lastSeen: item.last_seen,
+        originCountry: item.origin_country,
+        imphash: item.imphash,
+        tlsh: item.tlsh,
+        tags: item.tags || [],
+        deliveryMethod: item.delivery_method,
+        intelligence: {
+          downloads: item.intelligence?.downloads || 0,
+          uploads: item.intelligence?.uploads || 0,
+          mailIntelligence: item.intelligence?.mail || 0,
+        },
+      }));
+      
+      return { queryStatus: 'ok', data: samples, timestamp: new Date().toISOString() };
+    }
+    
+    return { queryStatus: result.query_status || 'no_result', data: [], timestamp: new Date().toISOString() };
+  } catch (error) {
+    console.error('Malware Bazaar lookup error:', error);
+    return { queryStatus: 'error', data: [], timestamp: new Date().toISOString() };
+  }
+}
+
+// SSL Labs Types
+export interface SSLLabsResult {
+  host: string;
+  port: number;
+  protocol: string;
+  grade: string;
+  gradeTrustIgnored: string;
+  hasWarnings: boolean;
+  isExceptional: boolean;
+  progress: number;
+  status: string;
+  statusMessage: string;
+  endpoints: {
+    ipAddress: string;
+    grade: string;
+    hasWarnings: boolean;
+    isExceptional: boolean;
+    progress: number;
+    statusMessage: string;
+  }[];
+  timestamp: string;
+}
+
+// SSL Labs Grade Lookup (No API key required)
+export async function checkSSLLabs(host: string): Promise<SSLLabsResult> {
+  try {
+    // First check if we have a cached result
+    const response = await fetch(
+      `https://api.ssllabs.com/api/v3/analyze?host=${encodeURIComponent(host)}&fromCache=on&all=done`,
+      { headers: { 'Accept': 'application/json' } }
+    );
+    
+    if (!response.ok) {
+      return {
+        host,
+        port: 443,
+        protocol: 'https',
+        grade: 'N/A',
+        gradeTrustIgnored: 'N/A',
+        hasWarnings: false,
+        isExceptional: false,
+        progress: 0,
+        status: 'ERROR',
+        statusMessage: 'Failed to analyze SSL configuration',
+        endpoints: [],
+        timestamp: new Date().toISOString(),
+      };
+    }
+    
+    const result = await response.json();
+    
+    return {
+      host: result.host || host,
+      port: result.port || 443,
+      protocol: result.protocol || 'https',
+      grade: result.endpoints?.[0]?.grade || result.grade || 'PENDING',
+      gradeTrustIgnored: result.endpoints?.[0]?.gradeTrustIgnored || 'N/A',
+      hasWarnings: result.endpoints?.[0]?.hasWarnings || false,
+      isExceptional: result.endpoints?.[0]?.isExceptional || false,
+      progress: result.endpoints?.[0]?.progress || 0,
+      status: result.status || 'PENDING',
+      statusMessage: result.statusMessage || 'Analysis in progress',
+      endpoints: (result.endpoints || []).map((ep: any) => ({
+        ipAddress: ep.ipAddress,
+        grade: ep.grade || 'PENDING',
+        hasWarnings: ep.hasWarnings || false,
+        isExceptional: ep.isExceptional || false,
+        progress: ep.progress || 0,
+        statusMessage: ep.statusMessage || '',
+      })),
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('SSL Labs check error:', error);
+    return {
+      host,
+      port: 443,
+      protocol: 'https',
+      grade: 'ERROR',
+      gradeTrustIgnored: 'N/A',
+      hasWarnings: false,
+      isExceptional: false,
+      progress: 0,
+      status: 'ERROR',
+      statusMessage: 'Failed to connect to SSL Labs API',
+      endpoints: [],
+      timestamp: new Date().toISOString(),
+    };
+  }
+}
+
+// URLScan.io Types
+export interface URLScanResult {
+  uuid: string;
+  url: string;
+  domain: string;
+  ip: string | null;
+  country: string | null;
+  server: string | null;
+  city: string | null;
+  asn: string | null;
+  asnname: string | null;
+  malicious: boolean;
+  score: number;
+  categories: string[];
+  brands: string[];
+  screenshotUrl: string | null;
+  reportUrl: string;
+  status: string;
+  timestamp: string;
+}
+
+// URLScan.io Search (Limited free tier - 100/day for public scans)
+export async function searchURLScan(query: string): Promise<URLScanResult[]> {
+  try {
+    const response = await fetch(
+      `https://urlscan.io/api/v1/search/?q=domain:${encodeURIComponent(query)}`,
+      { headers: { 'Accept': 'application/json' } }
+    );
+    
+    if (!response.ok) {
+      return [];
+    }
+    
+    const result = await response.json();
+    
+    if (result.results && result.results.length > 0) {
+      return result.results.slice(0, 10).map((item: any) => ({
+        uuid: item._id,
+        url: item.page?.url || item.task?.url,
+        domain: item.page?.domain || item.task?.domain,
+        ip: item.page?.ip,
+        country: item.page?.country,
+        server: item.page?.server,
+        city: item.page?.city,
+        asn: item.page?.asn,
+        asnname: item.page?.asnname,
+        malicious: item.verdicts?.overall?.malicious || false,
+        score: item.verdicts?.overall?.score || 0,
+        categories: item.verdicts?.overall?.categories || [],
+        brands: item.verdicts?.overall?.brands || [],
+        screenshotUrl: item.screenshot ? `https://urlscan.io/screenshots/${item._id}.png` : null,
+        reportUrl: `https://urlscan.io/result/${item._id}/`,
+        status: 'complete',
+        timestamp: item.task?.time || new Date().toISOString(),
+      }));
+    }
+    
+    return [];
+  } catch (error) {
+    console.error('URLScan.io search error:', error);
+    return [];
+  }
+}
+
+// PhishTank URL Check Types
+export interface PhishTankResult {
+  url: string;
+  inDatabase: boolean;
+  phishId: string | null;
+  verified: boolean;
+  verifiedAt: string | null;
+  valid: boolean;
+  target: string | null;
+  submissionTime: string | null;
+  timestamp: string;
+}
+
+// PhishTank check using their free checkurl API
+export async function checkPhishTank(url: string): Promise<PhishTankResult> {
+  try {
+    // PhishTank has a public online database check
+    // For the API, you'd need a key, but we can check against their public database
+    const formData = new URLSearchParams();
+    formData.append('url', url);
+    formData.append('format', 'json');
+    
+    // Note: PhishTank requires API key for production use
+    // This is a simplified check against their public data
+    const response = await fetch('https://checkurl.phishtank.com/checkurl/', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'STBCS-ThreatIntel/1.0'
+      },
+      body: formData.toString(),
+    });
+    
+    if (!response.ok) {
+      // If API fails, return as not in database
+      return {
+        url,
+        inDatabase: false,
+        phishId: null,
+        verified: false,
+        verifiedAt: null,
+        valid: true,
+        target: null,
+        submissionTime: null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    
+    const result = await response.json();
+    
+    if (result.results) {
+      return {
+        url: result.results.url || url,
+        inDatabase: result.results.in_database || false,
+        phishId: result.results.phish_id?.toString() || null,
+        verified: result.results.verified === 'yes' || result.results.verified === true,
+        verifiedAt: result.results.verified_at || null,
+        valid: result.results.valid !== false,
+        target: result.results.target || null,
+        submissionTime: result.results.submission_time || null,
+        timestamp: new Date().toISOString(),
+      };
+    }
+    
+    return {
+      url,
+      inDatabase: false,
+      phishId: null,
+      verified: false,
+      verifiedAt: null,
+      valid: true,
+      target: null,
+      submissionTime: null,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('PhishTank check error:', error);
+    return {
+      url,
+      inDatabase: false,
+      phishId: null,
+      verified: false,
+      verifiedAt: null,
+      valid: true,
+      target: null,
+      submissionTime: null,
+      timestamp: new Date().toISOString(),
+    };
+  }
+}
+
+// IP Geolocation with enhanced data (using ip-api.com - free, no key required)
+export interface EnhancedIPInfo {
+  ip: string;
+  hostname: string | null;
+  continent: string | null;
+  continentCode: string | null;
+  country: string;
+  countryCode: string;
+  region: string;
+  regionName: string;
+  city: string;
+  district: string | null;
+  zip: string;
+  lat: number;
+  lon: number;
+  timezone: string;
+  offset: number;
+  currency: string | null;
+  isp: string;
+  org: string;
+  as: string;
+  asname: string;
+  reverse: string | null;
+  mobile: boolean;
+  proxy: boolean;
+  hosting: boolean;
+  timestamp: string;
+}
+
+export async function getEnhancedIPInfo(ip: string): Promise<EnhancedIPInfo> {
+  try {
+    const response = await fetch(`http://ip-api.com/json/${ip}?fields=status,message,continent,continentCode,country,countryCode,region,regionName,city,district,zip,lat,lon,timezone,offset,currency,isp,org,as,asname,reverse,mobile,proxy,hosting,query`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch IP info');
+    }
+    
+    const data = await response.json();
+    
+    if (data.status === 'fail') {
+      throw new Error(data.message || 'IP lookup failed');
+    }
+    
+    return {
+      ip: data.query || ip,
+      hostname: data.reverse || null,
+      continent: data.continent || null,
+      continentCode: data.continentCode || null,
+      country: data.country || 'Unknown',
+      countryCode: data.countryCode || 'XX',
+      region: data.region || '',
+      regionName: data.regionName || '',
+      city: data.city || 'Unknown',
+      district: data.district || null,
+      zip: data.zip || '',
+      lat: data.lat || 0,
+      lon: data.lon || 0,
+      timezone: data.timezone || '',
+      offset: data.offset || 0,
+      currency: data.currency || null,
+      isp: data.isp || '',
+      org: data.org || '',
+      as: data.as || '',
+      asname: data.asname || '',
+      reverse: data.reverse || null,
+      mobile: data.mobile || false,
+      proxy: data.proxy || false,
+      hosting: data.hosting || false,
+      timestamp: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('Enhanced IP info error:', error);
+    return {
+      ip,
+      hostname: null,
+      continent: null,
+      continentCode: null,
+      country: 'Unknown',
+      countryCode: 'XX',
+      region: '',
+      regionName: '',
+      city: 'Unknown',
+      district: null,
+      zip: '',
+      lat: 0,
+      lon: 0,
+      timezone: '',
+      offset: 0,
+      currency: null,
+      isp: '',
+      org: '',
+      as: '',
+      asname: '',
+      reverse: null,
+      mobile: false,
+      proxy: false,
+      hosting: false,
+      timestamp: new Date().toISOString(),
+    };
+  }
+}
