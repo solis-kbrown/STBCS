@@ -23,8 +23,10 @@ const donationAmounts = [
 const membershipTiers = [
   {
     name: "Supporter",
-    price: "$9.99",
+    originalPrice: "$9.99",
+    price: "$4.99",
     interval: "month",
+    discount: "50% OFF",
     description: "Support our mission and the cybersecurity community",
     icon: Coffee,
     features: [
@@ -38,8 +40,10 @@ const membershipTiers = [
   },
   {
     name: "Pro",
-    price: "$29.99",
+    originalPrice: "$29.99",
+    price: "$14.99",
     interval: "month",
+    discount: "50% OFF",
     description: "Full access to all STBCS Pro features",
     icon: Rocket,
     popular: true,
@@ -56,8 +60,10 @@ const membershipTiers = [
   },
   {
     name: "Business",
-    price: "$99.99",
+    originalPrice: "$99.99",
+    price: "$49.99",
     interval: "month",
+    discount: "50% OFF",
     description: "Enterprise-grade threat intelligence",
     icon: Building2,
     features: [
@@ -187,6 +193,16 @@ export default function SupportPage() {
             </CardContent>
           </Card>
         )}
+
+        <div className="bg-gradient-to-r from-green-500/20 via-green-600/30 to-green-500/20 border border-green-500/50 rounded-xl p-4 mb-6 text-center">
+          <div className="flex items-center justify-center gap-3 flex-wrap">
+            <Badge className="bg-green-500 text-white text-sm px-3 py-1 animate-pulse">
+              GRAND OPENING SALE
+            </Badge>
+            <span className="text-white font-bold text-lg">50% OFF All Memberships!</span>
+            <span className="text-green-300 text-sm">Limited time offer</span>
+          </div>
+        </div>
 
         <div className="text-center space-y-4">
           <div className="inline-flex items-center justify-center gap-2">
@@ -357,11 +373,19 @@ export default function SupportPage() {
                     Most Popular
                   </Badge>
                 )}
+                {tier.discount && (
+                  <Badge className="absolute -top-3 right-3 bg-green-500 text-white animate-pulse">
+                    {tier.discount}
+                  </Badge>
+                )}
                 <CardHeader className="text-center pb-2">
                   <tier.icon className={`h-12 w-12 mx-auto mb-2 ${tier.popular ? 'text-orange-400' : 'text-zinc-400'}`} />
                   <CardTitle className="text-xl text-white">{tier.name}</CardTitle>
                   <div className="mt-2">
-                    <span className="text-3xl font-bold text-white">{tier.price}</span>
+                    {tier.originalPrice && (
+                      <span className="text-lg text-zinc-500 line-through mr-2">{tier.originalPrice}</span>
+                    )}
+                    <span className="text-3xl font-bold text-green-400">{tier.price}</span>
                     <span className="text-zinc-500">/{tier.interval}</span>
                   </div>
                   <CardDescription className="mt-2 text-zinc-400">{tier.description}</CardDescription>
