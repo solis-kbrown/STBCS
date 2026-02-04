@@ -481,3 +481,5 @@ export const insertNewsletterSchema = createInsertSchema(newsletterSubscriptions
 
 export type InsertNewsletter = z.infer<typeof insertNewsletterSchema>;
 export type NewsletterSubscription = typeof newsletterSubscriptions.$inferSelect;
+
+export type SystemConfig = typeof systemConfig.$inferSelect;

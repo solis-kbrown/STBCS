@@ -1,12 +1,70 @@
 import { storage } from "./storage";
 import { sendEmail } from "./email";
+import { db } from "./db";
+import { systemConfig } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 const ADMIN_EMAIL = "kbpc.inc@gmail.com";
-const GRAND_OPENING_END_DATE = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+const SALE_DURATION_DAYS = 30;
 
 let maintenanceInterval: NodeJS.Timeout | null = null;
-let errorCount = 0;
-let lastErrorReportTime = 0;
+let errorRateWindow: { count: number; windowStart: number } = { count: 0, windowStart: Date.now() };
+let saleEndNotificationSent = false;
+
+async function getConfig(configKey: string): Promise<string | null> {
+  try {
+    const result = await db.select().from(systemConfig).where(eq(systemConfig.key, configKey)).limit(1);
+    return result.length > 0 ? result[0].value : null;
+  } catch (error) {
+    console.error(`[Maintenance] Error getting config ${configKey}:`, error);
+    return null;
+  }
+}
+
+async function setConfig(configKey: string, value: string): Promise<boolean> {
+  try {
+    const existing = await db.select().from(systemConfig).where(eq(systemConfig.key, configKey)).limit(1);
+    
+    if (existing.length > 0) {
+      await db.update(systemConfig)
+        .set({ value, updatedAt: new Date() })
+        .where(eq(systemConfig.key, configKey));
+    } else {
+      await db.insert(systemConfig)
+        .values({ key: configKey, value, updatedAt: new Date() });
+    }
+    return true;
+  } catch (error) {
+    console.error(`[Maintenance] Error setting config ${configKey}:`, error);
+    return false;
+  }
+}
+
+async function getOrInitializeSaleDate(): Promise<Date> {
+  const existingEnd = await getConfig("grand_opening_end");
+  
+  if (existingEnd) {
+    return new Date(existingEnd);
+  }
+
+  const endDate = new Date(Date.now() + SALE_DURATION_DAYS * 24 * 60 * 60 * 1000);
+  const success = await setConfig("grand_opening_end", endDate.toISOString());
+  
+  if (!success) {
+    console.error("[Maintenance] Failed to persist sale end date - using in-memory fallback");
+  }
+  
+  return endDate;
+}
+
+async function getLastRun(taskName: string): Promise<number> {
+  const value = await getConfig(`last_run_${taskName}`);
+  return value ? parseInt(value, 10) : 0;
+}
+
+async function setLastRun(taskName: string): Promise<void> {
+  await setConfig(`last_run_${taskName}`, Date.now().toString());
+}
 
 export async function sendAdminNotification(params: {
   type: "error" | "warning" | "info" | "maintenance";
@@ -99,27 +157,32 @@ export async function sendAdminNotification(params: {
 }
 
 export function reportCriticalError(error: Error, context?: string): void {
-  errorCount++;
   const now = Date.now();
-  
-  if (now - lastErrorReportTime < 5 * 60 * 1000 && errorCount > 10) {
-    console.log("[Maintenance] Suppressing error email (rate limit)");
+  const WINDOW_MS = 5 * 60 * 1000;
+  const MAX_ERRORS_PER_WINDOW = 10;
+
+  if (now - errorRateWindow.windowStart > WINDOW_MS) {
+    errorRateWindow = { count: 0, windowStart: now };
+  }
+
+  errorRateWindow.count++;
+
+  if (errorRateWindow.count > MAX_ERRORS_PER_WINDOW) {
+    console.log(`[Maintenance] Suppressing error email (${errorRateWindow.count} errors in window, max ${MAX_ERRORS_PER_WINDOW})`);
     return;
   }
-  
-  lastErrorReportTime = now;
-  
+
   sendAdminNotification({
     type: "error",
     title: context ? `Error in ${context}` : "Critical System Error",
     message: "A critical error occurred that may require immediate attention.",
-    details: `Error: ${error.message}\n\nStack: ${error.stack || 'No stack trace'}\n\nTimestamp: ${new Date().toISOString()}\nError count (last 5 min): ${errorCount}`
+    details: `Error: ${error.message}\n\nStack: ${error.stack || 'No stack trace'}\n\nTimestamp: ${new Date().toISOString()}\nErrors in current window: ${errorRateWindow.count}`
   }).catch(console.error);
 }
 
 async function runCleanupTasks(): Promise<void> {
   console.log("[Maintenance] Running scheduled cleanup tasks...");
-  
+
   try {
     await storage.cleanupExpiredSessions();
     console.log("[Maintenance] Expired sessions cleaned up");
@@ -127,15 +190,18 @@ async function runCleanupTasks(): Promise<void> {
     console.error("[Maintenance] Session cleanup failed:", error);
     reportCriticalError(error as Error, "Session Cleanup");
   }
-  
+
+  const now = Date.now();
   const dayOfWeek = new Date().getUTCDay();
-  const hour = new Date().getUTCHours();
-  
-  if (dayOfWeek === 0 && hour === 3) {
+  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+  const lastWeeklyRun = await getLastRun("weekly_cleanup");
+
+  if (dayOfWeek === 0 && now - lastWeeklyRun > WEEK_MS - 24 * 60 * 60 * 1000) {
     try {
       const result = await storage.cleanupOldData(365);
       console.log("[Maintenance] Weekly data cleanup completed:", result);
-      
+      await setLastRun("weekly_cleanup");
+
       await sendAdminNotification({
         type: "maintenance",
         title: "Weekly Maintenance Complete",
@@ -150,37 +216,53 @@ async function runCleanupTasks(): Promise<void> {
 }
 
 async function checkGrandOpeningSale(): Promise<void> {
+  if (saleEndNotificationSent) return;
+
   const now = new Date();
-  
-  if (now >= GRAND_OPENING_END_DATE) {
+  const endDate = await getOrInitializeSaleDate();
+
+  if (now >= endDate) {
+    const notificationSent = await getConfig("sale_end_notification_sent");
+    if (notificationSent === "true") {
+      saleEndNotificationSent = true;
+      return;
+    }
+
+    saleEndNotificationSent = true;
+    await setConfig("sale_end_notification_sent", "true");
     console.log("[Maintenance] Grand Opening sale period has ended");
-    
+
     await sendAdminNotification({
       type: "info",
       title: "Grand Opening Sale Has Ended",
-      message: `The 30-day Grand Opening sale period has concluded as of ${GRAND_OPENING_END_DATE.toISOString()}.`,
+      message: `The 30-day Grand Opening sale period has concluded as of ${endDate.toISOString()}.`,
       details: `Action Required:\n1. Deactivate the GRANDOPENING50 coupon in Stripe Dashboard\n2. Update any promotional materials on the website\n3. Consider sending a final promotional email to subscribers\n\nNote: New subscriptions will no longer receive the automatic 50% discount after the coupon is deactivated in Stripe.`
     });
-    
+
     console.log("[Maintenance] Grand Opening sale end notification sent to admin");
   }
 }
 
 async function sendDailyHealthCheck(): Promise<void> {
-  const now = new Date();
-  
-  if (now.getUTCHours() === 8 && now.getUTCMinutes() < 5) {
+  const now = Date.now();
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const currentHour = new Date().getUTCHours();
+  const lastHealthCheck = await getLastRun("daily_health_check");
+
+  if (currentHour >= 8 && currentHour < 9 && now - lastHealthCheck > DAY_MS - 60 * 60 * 1000) {
     try {
       const stats = await storage.getDashboardStats();
-      
+      const endDate = await getOrInitializeSaleDate();
+
       await sendAdminNotification({
         type: "info",
         title: "Daily Health Check Report",
         message: "STBCS platform is operational. Here's today's summary:",
-        details: `Platform Statistics:\n- Active Ransomware Groups: ${stats.activeGroups}\n- Critical CVEs: ${stats.criticalCves}\n- Active Exploits: ${stats.activeExploits}\n- Total Incidents: ${stats.totalIncidents}\n- Malicious IPs: ${stats.maliciousIps}\n- Malicious URLs: ${stats.maliciousUrls}\n- CISA KEV Count: ${stats.cisaKevCount}\n\nSystem Status: All systems operational\nError Count (24h): ${errorCount}\n\nGrand Opening Sale Ends: ${GRAND_OPENING_END_DATE.toLocaleDateString()}`
+        details: `Platform Statistics:\n- Active Ransomware Groups: ${stats.activeGroups}\n- Critical CVEs: ${stats.criticalCves}\n- Active Exploits: ${stats.activeExploits}\n- Total Incidents: ${stats.totalIncidents}\n- Malicious IPs: ${stats.maliciousIps}\n- Malicious URLs: ${stats.maliciousUrls}\n- CISA KEV Count: ${stats.cisaKevCount}\n\nSystem Status: All systems operational\nErrors in current window: ${errorRateWindow.count}\n\nGrand Opening Sale Ends: ${endDate.toLocaleDateString()}`
       });
-      
-      errorCount = 0;
+
+      await setLastRun("daily_health_check");
+      errorRateWindow = { count: 0, windowStart: now };
     } catch (error) {
       console.error("[Maintenance] Health check failed:", error);
       reportCriticalError(error as Error, "Daily Health Check");
@@ -188,15 +270,21 @@ async function sendDailyHealthCheck(): Promise<void> {
   }
 }
 
-export function startMaintenanceScheduler(): void {
+export async function startMaintenanceScheduler(): Promise<void> {
+  const endDate = await getOrInitializeSaleDate();
   console.log("[Maintenance] Starting maintenance scheduler");
-  console.log(`[Maintenance] Grand Opening sale ends: ${GRAND_OPENING_END_DATE.toISOString()}`);
+  console.log(`[Maintenance] Grand Opening sale ends: ${endDate.toISOString()}`);
   console.log(`[Maintenance] Admin notifications will be sent to: ${ADMIN_EMAIL}`);
-  
+
+  const notificationSent = await getConfig("sale_end_notification_sent");
+  if (notificationSent === "true") {
+    saleEndNotificationSent = true;
+  }
+
   if (maintenanceInterval) {
     clearInterval(maintenanceInterval);
   }
-  
+
   maintenanceInterval = setInterval(async () => {
     try {
       await runCleanupTasks();
@@ -207,14 +295,15 @@ export function startMaintenanceScheduler(): void {
       reportCriticalError(error as Error, "Maintenance Scheduler");
     }
   }, 5 * 60 * 1000);
-  
+
   setTimeout(async () => {
     try {
+      const currentEndDate = await getOrInitializeSaleDate();
       await sendAdminNotification({
         type: "info",
         title: "STBCS Platform Started",
         message: "The STB Cybersecurity platform has been started successfully.",
-        details: `Startup Time: ${new Date().toISOString()}\nGrand Opening Sale Active Until: ${GRAND_OPENING_END_DATE.toISOString()}\nAdmin Email: ${ADMIN_EMAIL}\n\nAll systems are operational.`
+        details: `Startup Time: ${new Date().toISOString()}\nGrand Opening Sale Active Until: ${currentEndDate.toISOString()}\nAdmin Email: ${ADMIN_EMAIL}\n\nAll systems are operational.`
       });
     } catch (error) {
       console.error("[Maintenance] Failed to send startup notification:", error);
@@ -230,10 +319,11 @@ export function stopMaintenanceScheduler(): void {
   }
 }
 
-export function getGrandOpeningEndDate(): Date {
-  return GRAND_OPENING_END_DATE;
+export async function getGrandOpeningEndDate(): Promise<Date> {
+  return await getOrInitializeSaleDate();
 }
 
-export function isGrandOpeningActive(): boolean {
-  return new Date() < GRAND_OPENING_END_DATE;
+export async function isGrandOpeningActive(): Promise<boolean> {
+  const endDate = await getOrInitializeSaleDate();
+  return new Date() < endDate;
 }

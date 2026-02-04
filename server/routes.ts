@@ -543,8 +543,8 @@ export async function registerRoutes(
   app.get("/api/sale-status", async (req: Request, res: Response) => {
     try {
       const { isGrandOpeningActive, getGrandOpeningEndDate } = await import("./maintenance");
-      const endDate = getGrandOpeningEndDate();
-      const isActive = isGrandOpeningActive();
+      const endDate = await getGrandOpeningEndDate();
+      const isActive = await isGrandOpeningActive();
       const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
       
       res.json({
