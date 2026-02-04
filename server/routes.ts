@@ -2598,5 +2598,139 @@ export async function registerRoutes(
     }
   });
 
+  // ========================================
+  // SMS Messaging Routes (Pro/Business Only)
+  // ========================================
+
+  // Get all SMS conversations
+  app.get("/api/messages/conversations", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const conversations = await storage.getSmsConversations();
+      res.json(conversations);
+    } catch (error) {
+      console.error("Error fetching conversations:", error);
+      res.status(500).json({ error: "Failed to fetch conversations" });
+    }
+  });
+
+  // Get messages for a specific conversation
+  app.get("/api/messages/conversation/:phoneNumber", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const phoneNumber = decodeURIComponent(req.params.phoneNumber);
+      const messages = await storage.getConversationMessages(phoneNumber);
+      res.json(messages);
+    } catch (error) {
+      console.error("Error fetching conversation messages:", error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  // Send a new SMS message
+  app.post("/api/messages/send", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schema = z.object({
+        to: z.string().min(10).max(20),
+        content: z.string().min(1).max(1600),
+      });
+      
+      const data = schema.parse(req.body);
+      
+      if (!isQuoConfigured()) {
+        res.status(503).json({ error: "SMS service not configured" });
+        return;
+      }
+      
+      const quoService = getQuoService();
+      const result = await quoService.sendSMS(data.to, data.content);
+      
+      // Store the message in our database
+      const fromNumber = '+18557821987'; // STBCS number
+      const message = await storage.createSmsMessage({
+        externalId: result.data.id,
+        direction: 'outbound',
+        fromNumber: fromNumber,
+        toNumber: data.to.startsWith('+') ? data.to : `+1${data.to.replace(/\\D/g, '')}`,
+        content: data.content,
+        status: 'delivered',
+        conversationId: data.to.replace(/\\D/g, ''),
+        userId: req.user?.id,
+        isRead: true,
+      });
+      
+      res.json({ success: true, message });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors[0].message });
+        return;
+      }
+      console.error("Error sending SMS:", error);
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  // Mark a message as read
+  app.post("/api/messages/:id/read", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      await storage.markMessageRead(req.params.id);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking message read:", error);
+      res.status(500).json({ error: "Failed to mark message as read" });
+    }
+  });
+
+  // Mark entire conversation as read
+  app.post("/api/messages/conversation/:phoneNumber/read", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const phoneNumber = decodeURIComponent(req.params.phoneNumber);
+      await storage.markConversationRead(phoneNumber);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Error marking conversation read:", error);
+      res.status(500).json({ error: "Failed to mark conversation as read" });
+    }
+  });
+
+  // Get unread message count
+  app.get("/api/messages/unread-count", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const count = await storage.getUnreadMessageCount();
+      res.json({ count });
+    } catch (error) {
+      console.error("Error getting unread count:", error);
+      res.status(500).json({ error: "Failed to get unread count" });
+    }
+  });
+
+  // Webhook for incoming SMS (from Quo/OpenPhone)
+  app.post("/api/webhooks/sms", async (req: Request, res: Response) => {
+    try {
+      // Validate webhook signature if configured
+      const payload = req.body;
+      
+      // Handle different webhook event types from OpenPhone
+      if (payload.type === 'message.received' && payload.data) {
+        const messageData = payload.data;
+        
+        await storage.createSmsMessage({
+          externalId: messageData.id,
+          direction: 'inbound',
+          fromNumber: messageData.from || '',
+          toNumber: messageData.to?.[0] || '+18557821987',
+          content: messageData.content || messageData.body || '',
+          status: 'delivered',
+          conversationId: (messageData.from || '').replace(/\\D/g, ''),
+          isRead: false,
+        });
+      }
+      
+      res.json({ received: true });
+    } catch (error) {
+      console.error("Webhook processing error:", error);
+      // Return 200 to acknowledge receipt even on error (avoid retries)
+      res.json({ received: true, error: "Processing failed" });
+    }
+  });
+
   return httpServer;
 }
