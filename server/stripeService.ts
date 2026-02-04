@@ -20,7 +20,8 @@ export class StripeService {
     metadata?: Record<string, string>;
   }) {
     const stripe = await getUncachableStripeClient();
-    return await stripe.checkout.sessions.create({
+    
+    const sessionParams: any = {
       payment_method_types: ['card'],
       line_items: [{ price: params.priceId, quantity: 1 }],
       mode: params.mode,
@@ -29,8 +30,14 @@ export class StripeService {
       customer_email: params.customerEmail,
       metadata: params.metadata,
       billing_address_collection: 'auto',
-      allow_promotion_codes: true,
-    });
+    };
+    
+    // Apply Grand Opening 50% discount automatically for subscriptions
+    if (params.mode === 'subscription') {
+      sessionParams.discounts = [{ coupon: 'GRANDOPENING50' }];
+    }
+    
+    return await stripe.checkout.sessions.create(sessionParams);
   }
 
   async createDonationCheckout(params: {
