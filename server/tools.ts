@@ -1103,14 +1103,56 @@ export interface DmarcLookupResult {
   warnings?: string[];
 }
 
+// Frontend-compatible response types for email security
+export interface MxResponse {
+  domain: string;
+  records: { priority: number; exchange: string; ip?: string }[];
+  valid: boolean;
+  timestamp: string;
+}
+
+export interface SpfResponse {
+  domain: string;
+  record: string | null;
+  valid: boolean;
+  policy: string;
+  includes: string[];
+  mechanisms: string[];
+  timestamp: string;
+}
+
+export interface DkimResponse {
+  domain: string;
+  selector: string;
+  record: string | null;
+  valid: boolean;
+  keyType: string | null;
+  publicKey: string | null;
+  timestamp: string;
+}
+
+export interface DmarcResponse {
+  domain: string;
+  record: string | null;
+  valid: boolean;
+  policy: string;
+  subdomainPolicy: string;
+  reportEmail: string[];
+  forensicEmail: string[];
+  percentage: number;
+  timestamp: string;
+}
+
 export interface EmailSecurityReport {
   domain: string;
-  mx: MxLookupResult;
-  spf: SpfLookupResult;
-  dmarc: DmarcLookupResult;
   overallScore: number;
   grade: string;
+  mx: MxResponse;
+  spf: SpfResponse;
+  dkim: DkimResponse;
+  dmarc: DmarcResponse;
   recommendations: string[];
+  timestamp: string;
 }
 
 // MX Record Lookup
@@ -1257,7 +1299,7 @@ export async function lookupDmarcRecord(domain: string): Promise<DmarcLookupResu
 
 // Comprehensive Email Security Check
 export async function checkEmailSecurity(domain: string): Promise<EmailSecurityReport> {
-  const [mx, spf, dmarc] = await Promise.all([
+  const [mxResult, spfResult, dmarcResult] = await Promise.all([
     lookupMxRecords(domain),
     lookupSpfRecord(domain),
     lookupDmarcRecord(domain),
@@ -1267,16 +1309,16 @@ export async function checkEmailSecurity(domain: string): Promise<EmailSecurityR
   let score = 0;
   
   // MX scoring (20 points)
-  if (mx.hasMx) {
+  if (mxResult.hasMx) {
     score += 20;
   } else {
     recommendations.push('Configure MX records to receive email');
   }
   
   // SPF scoring (30 points)
-  if (spf.hasSpf) {
+  if (spfResult.hasSpf) {
     score += 15;
-    if (spf.isValid) {
+    if (spfResult.isValid) {
       score += 15;
     } else {
       recommendations.push('Tighten SPF policy to -all or ~all');
@@ -1286,11 +1328,11 @@ export async function checkEmailSecurity(domain: string): Promise<EmailSecurityR
   }
   
   // DMARC scoring (50 points)
-  if (dmarc.hasDmarc) {
+  if (dmarcResult.hasDmarc) {
     score += 20;
-    if (dmarc.policy === 'reject') {
+    if (dmarcResult.policy === 'reject') {
       score += 30;
-    } else if (dmarc.policy === 'quarantine') {
+    } else if (dmarcResult.policy === 'quarantine') {
       score += 20;
       recommendations.push('Consider upgrading DMARC policy from quarantine to reject');
     } else {
@@ -1308,13 +1350,49 @@ export async function checkEmailSecurity(domain: string): Promise<EmailSecurityR
   else if (score >= 50) grade = 'D';
   else grade = 'F';
   
+  // Transform to match frontend expected interface
+  const timestamp = new Date().toISOString();
+  
   return {
     domain,
-    mx,
-    spf,
-    dmarc,
     overallScore: score,
     grade,
+    mx: {
+      domain,
+      records: mxResult.mxRecords.map(r => ({ priority: r.priority, exchange: r.exchange, ip: r.ip })),
+      valid: mxResult.hasMx,
+      timestamp,
+    },
+    spf: {
+      domain,
+      record: spfResult.spfRecord || null,
+      valid: spfResult.isValid,
+      policy: spfResult.all || 'none',
+      includes: spfResult.includes || [],
+      mechanisms: spfResult.mechanisms || [],
+      timestamp,
+    },
+    dkim: {
+      domain,
+      selector: 'default',
+      record: null,
+      valid: false,
+      keyType: null,
+      publicKey: null,
+      timestamp,
+    },
+    dmarc: {
+      domain,
+      record: dmarcResult.dmarcRecord || null,
+      valid: dmarcResult.isValid,
+      policy: dmarcResult.policy || 'none',
+      subdomainPolicy: 'none',
+      reportEmail: dmarcResult.reportUri || [],
+      forensicEmail: [],
+      percentage: dmarcResult.percentage || 100,
+      timestamp,
+    },
     recommendations,
+    timestamp,
   };
 }

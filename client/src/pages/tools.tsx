@@ -818,7 +818,7 @@ function EmailSecurityTool() {
   return (
     <ToolCard
       title="Email Security Check"
-      description="Comprehensive MXToolbox-style email security analysis - MX, SPF, DKIM, DMARC"
+      description="MXToolbox-style email security analysis - MX, SPF, DMARC records with scoring"
       icon={Mail}
       tier="free"
     >
@@ -878,7 +878,10 @@ function EmailSecurityTool() {
             <div className="grid grid-cols-2 gap-3">
               {renderCheckStatus(data.mx.valid, "MX Records")}
               {renderCheckStatus(data.spf.valid, "SPF Record")}
-              {renderCheckStatus(data.dkim.valid, "DKIM Record")}
+              <div className="flex items-center gap-2">
+                <span className="h-4 w-4 text-yellow-400">-</span>
+                <span className="text-yellow-400">DKIM (selector required)</span>
+              </div>
               {renderCheckStatus(data.dmarc.valid, "DMARC Policy")}
             </div>
 
@@ -1110,6 +1113,7 @@ export default function ToolsPage() {
           <TabsList className="bg-background border border-white/10" data-testid="tabs-tools">
             <TabsTrigger value="all" className="data-[state=active]:bg-primary/20">All Tools</TabsTrigger>
             <TabsTrigger value="network" className="data-[state=active]:bg-primary/20">Network</TabsTrigger>
+            <TabsTrigger value="email" className="data-[state=active]:bg-primary/20">Email Security</TabsTrigger>
             <TabsTrigger value="threat" className="data-[state=active]:bg-primary/20">Threat Intel</TabsTrigger>
             <TabsTrigger value="subscribe" className="data-[state=active]:bg-primary/20">Newsletter</TabsTrigger>
           </TabsList>
@@ -1121,6 +1125,7 @@ export default function ToolsPage() {
               <DomainLookupTool />
               <PortScanTool />
               <NmapScanTool />
+              <EmailSecurityTool />
               <ThreatCheckTool />
               <NewsletterSubscribeTool />
             </div>
@@ -1133,6 +1138,12 @@ export default function ToolsPage() {
               <PortScanTool />
               <NmapScanTool />
               <ShodanLookupTool />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="email" className="space-y-6">
+            <div className="max-w-2xl mx-auto">
+              <EmailSecurityTool />
             </div>
           </TabsContent>
 
