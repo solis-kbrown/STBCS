@@ -483,3 +483,30 @@ export type InsertNewsletter = z.infer<typeof insertNewsletterSchema>;
 export type NewsletterSubscription = typeof newsletterSubscriptions.$inferSelect;
 
 export type SystemConfig = typeof systemConfig.$inferSelect;
+
+// SMS Messages for Pro/Business users
+export const smsMessages = pgTable("sms_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  externalId: text("external_id").unique(),
+  direction: text("direction").notNull(), // 'inbound' or 'outbound'
+  fromNumber: text("from_number").notNull(),
+  toNumber: text("to_number").notNull(),
+  content: text("content").notNull(),
+  status: text("status").default("delivered"), // pending, delivered, failed
+  conversationId: varchar("conversation_id"),
+  userId: varchar("user_id"), // who sent/received (for outbound, staff member)
+  isRead: boolean("is_read").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("sms_conversation_idx").on(table.conversationId),
+  index("sms_from_idx").on(table.fromNumber),
+  index("sms_created_idx").on(table.createdAt),
+]);
+
+export const insertSmsMessageSchema = createInsertSchema(smsMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertSmsMessage = z.infer<typeof insertSmsMessageSchema>;
+export type SmsMessage = typeof smsMessages.$inferSelect;

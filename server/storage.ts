@@ -14,9 +14,11 @@ import {
   type WatchlistItem, type InsertWatchlistItem,
   type BreachIncident, type InsertBreach,
   type NewsletterSubscription, type InsertNewsletter,
+  type SmsMessage, type InsertSmsMessage,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
-  userNotifications, watchlistItems, breachIncidents, newsletterSubscriptions
+  userNotifications, watchlistItems, breachIncidents, newsletterSubscriptions,
+  smsMessages
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and } from "drizzle-orm";
@@ -120,6 +122,15 @@ export interface IStorage {
   upsertBreachIncident(breach: InsertBreach): Promise<BreachIncident>;
   searchBreaches(query: string, limit?: number): Promise<BreachIncident[]>;
   getBreachCount(): Promise<number>;
+  
+  // SMS Messages (Pro/Business feature)
+  getSmsMessages(limit?: number, offset?: number): Promise<SmsMessage[]>;
+  getSmsConversations(): Promise<{ phoneNumber: string; lastMessage: SmsMessage; unreadCount: number }[]>;
+  getConversationMessages(phoneNumber: string, limit?: number): Promise<SmsMessage[]>;
+  createSmsMessage(message: InsertSmsMessage): Promise<SmsMessage>;
+  markMessageRead(id: string): Promise<void>;
+  markConversationRead(phoneNumber: string): Promise<void>;
+  getUnreadMessageCount(): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -934,6 +945,85 @@ export class DatabaseStorage implements IStorage {
         sql`${newsletterSubscriptions.unsubscribedAt} IS NULL`
       ))
       .orderBy(desc(newsletterSubscriptions.subscribedAt));
+  }
+
+  // SMS Messages (Pro/Business feature)
+  async getSmsMessages(limit: number = 100, offset: number = 0): Promise<SmsMessage[]> {
+    return db.select().from(smsMessages)
+      .orderBy(desc(smsMessages.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getSmsConversations(): Promise<{ phoneNumber: string; lastMessage: SmsMessage; unreadCount: number }[]> {
+    const messages = await db.select().from(smsMessages)
+      .orderBy(desc(smsMessages.createdAt));
+    
+    const conversationMap = new Map<string, { lastMessage: SmsMessage; unreadCount: number }>();
+    
+    for (const msg of messages) {
+      const phoneNumber = msg.direction === 'inbound' ? msg.fromNumber : msg.toNumber;
+      
+      if (!conversationMap.has(phoneNumber)) {
+        conversationMap.set(phoneNumber, {
+          lastMessage: msg,
+          unreadCount: 0
+        });
+      }
+      
+      if (msg.direction === 'inbound' && !msg.isRead) {
+        const conv = conversationMap.get(phoneNumber)!;
+        conv.unreadCount++;
+      }
+    }
+    
+    return Array.from(conversationMap.entries())
+      .map(([phoneNumber, data]) => ({
+        phoneNumber,
+        lastMessage: data.lastMessage,
+        unreadCount: data.unreadCount
+      }))
+      .sort((a, b) => new Date(b.lastMessage.createdAt!).getTime() - new Date(a.lastMessage.createdAt!).getTime());
+  }
+
+  async getConversationMessages(phoneNumber: string, limit: number = 100): Promise<SmsMessage[]> {
+    return db.select().from(smsMessages)
+      .where(or(
+        eq(smsMessages.fromNumber, phoneNumber),
+        eq(smsMessages.toNumber, phoneNumber)
+      ))
+      .orderBy(desc(smsMessages.createdAt))
+      .limit(limit);
+  }
+
+  async createSmsMessage(message: InsertSmsMessage): Promise<SmsMessage> {
+    const [created] = await db.insert(smsMessages).values(message).returning();
+    return created;
+  }
+
+  async markMessageRead(id: string): Promise<void> {
+    await db.update(smsMessages)
+      .set({ isRead: true })
+      .where(eq(smsMessages.id, id));
+  }
+
+  async markConversationRead(phoneNumber: string): Promise<void> {
+    await db.update(smsMessages)
+      .set({ isRead: true })
+      .where(and(
+        eq(smsMessages.fromNumber, phoneNumber),
+        eq(smsMessages.direction, 'inbound')
+      ));
+  }
+
+  async getUnreadMessageCount(): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` })
+      .from(smsMessages)
+      .where(and(
+        eq(smsMessages.isRead, false),
+        eq(smsMessages.direction, 'inbound')
+      ));
+    return Number(result[0]?.count || 0);
   }
 }
 
