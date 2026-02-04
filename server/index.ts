@@ -152,11 +152,20 @@ app.use((req, res, next) => {
   const { startDigestScheduler } = await import("./digest");
   startDigestScheduler();
 
+  // Start maintenance scheduler (cleanup, error reporting, sale expiration)
+  const { startMaintenanceScheduler, reportCriticalError } = await import("./maintenance");
+  startMaintenanceScheduler();
+
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const message = err.message || "Internal Server Error";
 
     console.error("Internal Server Error:", err);
+    
+    // Report critical server errors to admin
+    if (status >= 500) {
+      reportCriticalError(err instanceof Error ? err : new Error(message), "Express Error Handler");
+    }
 
     if (res.headersSent) {
       return next(err);

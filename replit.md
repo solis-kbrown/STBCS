@@ -80,6 +80,15 @@ Preferred communication style: Simple, everyday language.
 - **Middleware**: `requireAuth` and `requirePro` for protected routes
 - **Sessions**: Stored in database with 30-day expiration, automatic cleanup
 
+### Maintenance & Monitoring
+- **Backend**: `server/maintenance.ts` - Scheduled cleanup, error reporting, sale management
+- **Admin Email**: kbpc.inc@gmail.com - Receives critical errors, daily health checks, maintenance alerts
+- **Cleanup**: Expired sessions cleaned every 5 minutes, old data (365 days) cleaned weekly on Sundays at 3am UTC
+- **Error Reporting**: Critical server errors (500+) automatically emailed to admin with stack traces
+- **Health Checks**: Daily at 8am UTC with platform statistics
+- **Grand Opening Sale**: Automatically expires 30 days after deployment, admin notified when it ends
+- **API**: GET `/api/sale-status` - Returns sale active status, end date, and days remaining
+
 ### Deployment
 - **Development**: `npm run dev` (Express + Vite HMR).
 - **Production**: `npm run build` (esbuild for server, Vite for client). Serves client from `dist/public`.

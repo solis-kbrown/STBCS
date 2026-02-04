@@ -32,9 +32,17 @@ export class StripeService {
       billing_address_collection: 'auto',
     };
     
-    // Apply Grand Opening 50% discount automatically for subscriptions
+    // Apply Grand Opening 50% discount automatically for subscriptions (if still active)
     if (params.mode === 'subscription') {
-      sessionParams.discounts = [{ coupon: 'GRANDOPENING50' }];
+      try {
+        const { isGrandOpeningActive } = await import("./maintenance");
+        if (isGrandOpeningActive()) {
+          sessionParams.discounts = [{ coupon: 'GRANDOPENING50' }];
+        }
+      } catch (error) {
+        // If maintenance module fails, still apply discount as fallback
+        sessionParams.discounts = [{ coupon: 'GRANDOPENING50' }];
+      }
     }
     
     return await stripe.checkout.sessions.create(sessionParams);

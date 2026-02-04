@@ -539,6 +539,27 @@ export async function registerRoutes(
     }
   });
 
+  // Get grand opening sale status
+  app.get("/api/sale-status", async (req: Request, res: Response) => {
+    try {
+      const { isGrandOpeningActive, getGrandOpeningEndDate } = await import("./maintenance");
+      const endDate = getGrandOpeningEndDate();
+      const isActive = isGrandOpeningActive();
+      const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
+      
+      res.json({
+        active: isActive,
+        endDate: endDate.toISOString(),
+        daysRemaining,
+        discount: isActive ? "50%" : null,
+        coupon: isActive ? "GRANDOPENING50" : null
+      });
+    } catch (error) {
+      console.error("Error fetching sale status:", error);
+      res.status(500).json({ error: "Failed to fetch sale status" });
+    }
+  });
+
   // Export data (Pro feature)
   app.get("/api/export/:type", strictLimiter, async (req: Request, res: Response) => {
     try {
