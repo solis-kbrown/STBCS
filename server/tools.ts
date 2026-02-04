@@ -1058,3 +1058,263 @@ export async function nmapScan(
     hostUp: openPorts > 0 || closedPorts > 0,
   };
 }
+
+// ==========================================
+// EMAIL SECURITY TOOLS (MXToolbox-style)
+// ==========================================
+
+export interface MxLookupResult {
+  domain: string;
+  mxRecords: { priority: number; exchange: string; ip?: string }[];
+  hasMx: boolean;
+}
+
+export interface SpfLookupResult {
+  domain: string;
+  hasSpf: boolean;
+  spfRecord?: string;
+  mechanisms?: string[];
+  includes?: string[];
+  all?: string;
+  isValid: boolean;
+  warnings?: string[];
+}
+
+export interface DkimLookupResult {
+  domain: string;
+  selector: string;
+  hasDkim: boolean;
+  dkimRecord?: string;
+  keyType?: string;
+  publicKey?: string;
+  isValid: boolean;
+}
+
+export interface DmarcLookupResult {
+  domain: string;
+  hasDmarc: boolean;
+  dmarcRecord?: string;
+  policy?: string;
+  subdomainPolicy?: string;
+  reportUri?: string[];
+  forensicUri?: string[];
+  percentage?: number;
+  isValid: boolean;
+  warnings?: string[];
+}
+
+export interface EmailSecurityReport {
+  domain: string;
+  mx: MxLookupResult;
+  spf: SpfLookupResult;
+  dmarc: DmarcLookupResult;
+  overallScore: number;
+  grade: string;
+  recommendations: string[];
+}
+
+// MX Record Lookup
+export async function lookupMxRecords(domain: string): Promise<MxLookupResult> {
+  try {
+    const mxRecords = await dnsResolveMx(domain);
+    const recordsWithIp = await Promise.all(
+      mxRecords.map(async (mx) => {
+        try {
+          const ips = await dnsResolve4(mx.exchange);
+          return { priority: mx.priority, exchange: mx.exchange, ip: ips[0] };
+        } catch {
+          return { priority: mx.priority, exchange: mx.exchange };
+        }
+      })
+    );
+    
+    return {
+      domain,
+      mxRecords: recordsWithIp.sort((a, b) => a.priority - b.priority),
+      hasMx: recordsWithIp.length > 0,
+    };
+  } catch (error) {
+    return { domain, mxRecords: [], hasMx: false };
+  }
+}
+
+// SPF Record Lookup
+export async function lookupSpfRecord(domain: string): Promise<SpfLookupResult> {
+  try {
+    const txtRecords = await dnsResolveTxt(domain);
+    const spfRecord = txtRecords.flat().find(r => r.startsWith('v=spf1'));
+    
+    if (!spfRecord) {
+      return { domain, hasSpf: false, isValid: false, warnings: ['No SPF record found'] };
+    }
+    
+    const mechanisms = spfRecord.split(' ').filter(m => m && m !== 'v=spf1');
+    const includes = mechanisms.filter(m => m.startsWith('include:')).map(m => m.replace('include:', ''));
+    const allMechanism = mechanisms.find(m => m.match(/^[+\-~?]?all$/));
+    
+    const warnings: string[] = [];
+    if (allMechanism === '+all' || allMechanism === 'all') {
+      warnings.push('SPF allows any server to send email (+all) - highly insecure');
+    }
+    if (allMechanism === '?all') {
+      warnings.push('SPF is neutral (?all) - provides no protection');
+    }
+    if (includes.length > 10) {
+      warnings.push('Too many include statements may cause DNS lookup limit issues');
+    }
+    
+    return {
+      domain,
+      hasSpf: true,
+      spfRecord,
+      mechanisms,
+      includes,
+      all: allMechanism,
+      isValid: !!spfRecord && (allMechanism === '-all' || allMechanism === '~all'),
+      warnings: warnings.length > 0 ? warnings : undefined,
+    };
+  } catch (error) {
+    return { domain, hasSpf: false, isValid: false, warnings: ['Failed to query SPF record'] };
+  }
+}
+
+// DKIM Record Lookup
+export async function lookupDkimRecord(domain: string, selector: string = 'default'): Promise<DkimLookupResult> {
+  const commonSelectors = [selector, 'google', 'selector1', 'selector2', 'k1', 's1', 's2', 'mail', 'email', 'dkim'];
+  
+  for (const sel of commonSelectors) {
+    try {
+      const dkimDomain = `${sel}._domainkey.${domain}`;
+      const txtRecords = await dnsResolveTxt(dkimDomain);
+      const dkimRecord = txtRecords.flat().join('');
+      
+      if (dkimRecord && dkimRecord.includes('v=DKIM1')) {
+        const keyType = dkimRecord.match(/k=(\w+)/)?.[1] || 'rsa';
+        const publicKey = dkimRecord.match(/p=([A-Za-z0-9+/=]+)/)?.[1];
+        
+        return {
+          domain,
+          selector: sel,
+          hasDkim: true,
+          dkimRecord,
+          keyType,
+          publicKey: publicKey ? `${publicKey.substring(0, 50)}...` : undefined,
+          isValid: !!publicKey && publicKey.length > 0,
+        };
+      }
+    } catch {
+      continue;
+    }
+  }
+  
+  return { domain, selector, hasDkim: false, isValid: false };
+}
+
+// DMARC Record Lookup
+export async function lookupDmarcRecord(domain: string): Promise<DmarcLookupResult> {
+  try {
+    const dmarcDomain = `_dmarc.${domain}`;
+    const txtRecords = await dnsResolveTxt(dmarcDomain);
+    const dmarcRecord = txtRecords.flat().find(r => r.startsWith('v=DMARC1'));
+    
+    if (!dmarcRecord) {
+      return { domain, hasDmarc: false, isValid: false, warnings: ['No DMARC record found'] };
+    }
+    
+    const policy = dmarcRecord.match(/p=(\w+)/)?.[1];
+    const subdomainPolicy = dmarcRecord.match(/sp=(\w+)/)?.[1];
+    const reportUri = dmarcRecord.match(/rua=([^;]+)/)?.[1]?.split(',').map(u => u.trim());
+    const forensicUri = dmarcRecord.match(/ruf=([^;]+)/)?.[1]?.split(',').map(u => u.trim());
+    const percentage = parseInt(dmarcRecord.match(/pct=(\d+)/)?.[1] || '100');
+    
+    const warnings: string[] = [];
+    if (policy === 'none') {
+      warnings.push('DMARC policy is "none" - no enforcement, monitoring only');
+    }
+    if (!reportUri) {
+      warnings.push('No aggregate report URI (rua) configured');
+    }
+    if (percentage < 100) {
+      warnings.push(`DMARC only applies to ${percentage}% of messages`);
+    }
+    
+    return {
+      domain,
+      hasDmarc: true,
+      dmarcRecord,
+      policy,
+      subdomainPolicy,
+      reportUri,
+      forensicUri,
+      percentage,
+      isValid: policy === 'quarantine' || policy === 'reject',
+      warnings: warnings.length > 0 ? warnings : undefined,
+    };
+  } catch (error) {
+    return { domain, hasDmarc: false, isValid: false, warnings: ['Failed to query DMARC record'] };
+  }
+}
+
+// Comprehensive Email Security Check
+export async function checkEmailSecurity(domain: string): Promise<EmailSecurityReport> {
+  const [mx, spf, dmarc] = await Promise.all([
+    lookupMxRecords(domain),
+    lookupSpfRecord(domain),
+    lookupDmarcRecord(domain),
+  ]);
+  
+  const recommendations: string[] = [];
+  let score = 0;
+  
+  // MX scoring (20 points)
+  if (mx.hasMx) {
+    score += 20;
+  } else {
+    recommendations.push('Configure MX records to receive email');
+  }
+  
+  // SPF scoring (30 points)
+  if (spf.hasSpf) {
+    score += 15;
+    if (spf.isValid) {
+      score += 15;
+    } else {
+      recommendations.push('Tighten SPF policy to -all or ~all');
+    }
+  } else {
+    recommendations.push('Add SPF record to prevent email spoofing');
+  }
+  
+  // DMARC scoring (50 points)
+  if (dmarc.hasDmarc) {
+    score += 20;
+    if (dmarc.policy === 'reject') {
+      score += 30;
+    } else if (dmarc.policy === 'quarantine') {
+      score += 20;
+      recommendations.push('Consider upgrading DMARC policy from quarantine to reject');
+    } else {
+      recommendations.push('Upgrade DMARC policy from none to quarantine or reject');
+    }
+  } else {
+    recommendations.push('Add DMARC record for email authentication policy');
+  }
+  
+  let grade: string;
+  if (score >= 90) grade = 'A+';
+  else if (score >= 80) grade = 'A';
+  else if (score >= 70) grade = 'B';
+  else if (score >= 60) grade = 'C';
+  else if (score >= 50) grade = 'D';
+  else grade = 'F';
+  
+  return {
+    domain,
+    mx,
+    spf,
+    dmarc,
+    overallScore: score,
+    grade,
+    recommendations,
+  };
+}

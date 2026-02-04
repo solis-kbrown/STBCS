@@ -1088,6 +1088,116 @@ export async function registerRoutes(
   });
 
   // ==========================================
+  // EMAIL SECURITY TOOLS (MXToolbox-style)
+  // ==========================================
+
+  // MX Record Lookup
+  app.post("/api/tools/mx-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        domain: z.string().min(3).max(255),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid domain" });
+      }
+      
+      const { lookupMxRecords } = await import("./tools.js");
+      const result = await lookupMxRecords(parsed.data.domain);
+      res.json(result);
+    } catch (error) {
+      console.error("MX lookup error:", error);
+      res.status(500).json({ error: "Failed to lookup MX records" });
+    }
+  });
+
+  // SPF Record Lookup
+  app.post("/api/tools/spf-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        domain: z.string().min(3).max(255),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid domain" });
+      }
+      
+      const { lookupSpfRecord } = await import("./tools.js");
+      const result = await lookupSpfRecord(parsed.data.domain);
+      res.json(result);
+    } catch (error) {
+      console.error("SPF lookup error:", error);
+      res.status(500).json({ error: "Failed to lookup SPF record" });
+    }
+  });
+
+  // DKIM Record Lookup
+  app.post("/api/tools/dkim-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        domain: z.string().min(3).max(255),
+        selector: z.string().max(100).optional(),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid domain" });
+      }
+      
+      const { lookupDkimRecord } = await import("./tools.js");
+      const result = await lookupDkimRecord(parsed.data.domain, parsed.data.selector);
+      res.json(result);
+    } catch (error) {
+      console.error("DKIM lookup error:", error);
+      res.status(500).json({ error: "Failed to lookup DKIM record" });
+    }
+  });
+
+  // DMARC Record Lookup
+  app.post("/api/tools/dmarc-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        domain: z.string().min(3).max(255),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid domain" });
+      }
+      
+      const { lookupDmarcRecord } = await import("./tools.js");
+      const result = await lookupDmarcRecord(parsed.data.domain);
+      res.json(result);
+    } catch (error) {
+      console.error("DMARC lookup error:", error);
+      res.status(500).json({ error: "Failed to lookup DMARC record" });
+    }
+  });
+
+  // Comprehensive Email Security Check
+  app.post("/api/tools/email-security", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        domain: z.string().min(3).max(255),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid domain" });
+      }
+      
+      const { checkEmailSecurity } = await import("./tools.js");
+      const result = await checkEmailSecurity(parsed.data.domain);
+      res.json(result);
+    } catch (error) {
+      console.error("Email security check error:", error);
+      res.status(500).json({ error: "Failed to check email security" });
+    }
+  });
+
+  // ==========================================
   // NEW FREE SECURITY TOOLS
   // ==========================================
 
@@ -1271,7 +1381,7 @@ export async function registerRoutes(
     standardHeaders: true,
     legacyHeaders: false,
     validate: { xForwardedForHeader: false },
-    keyGenerator: (req: AuthenticatedRequest) => req.user?.id || req.ip || 'unknown',
+    keyGenerator: (req: AuthenticatedRequest) => req.user?.id || 'anonymous',
   });
 
   app.post("/api/tools/nmap-scan", requirePro as any, nmapScannerLimiter, async (req: AuthenticatedRequest, res: Response) => {

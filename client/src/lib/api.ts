@@ -537,6 +537,150 @@ export function useNmapUsage() {
   });
 }
 
+// Email Security Types
+export interface MxRecord {
+  priority: number;
+  exchange: string;
+  ip?: string;
+}
+
+export interface MxLookupResult {
+  domain: string;
+  records: MxRecord[];
+  valid: boolean;
+  timestamp: string;
+}
+
+export interface SpfLookupResult {
+  domain: string;
+  record: string | null;
+  valid: boolean;
+  policy: string;
+  includes: string[];
+  mechanisms: string[];
+  timestamp: string;
+}
+
+export interface DkimLookupResult {
+  domain: string;
+  selector: string;
+  record: string | null;
+  valid: boolean;
+  keyType: string | null;
+  publicKey: string | null;
+  timestamp: string;
+}
+
+export interface DmarcLookupResult {
+  domain: string;
+  record: string | null;
+  valid: boolean;
+  policy: string;
+  subdomainPolicy: string;
+  reportEmail: string[];
+  forensicEmail: string[];
+  percentage: number;
+  timestamp: string;
+}
+
+export interface EmailSecurityResult {
+  domain: string;
+  overallScore: number;
+  grade: string;
+  mx: MxLookupResult;
+  spf: SpfLookupResult;
+  dkim: DkimLookupResult;
+  dmarc: DmarcLookupResult;
+  recommendations: string[];
+  timestamp: string;
+}
+
+// Email Security Hooks
+export function useMxLookup() {
+  return useMutation({
+    mutationFn: async (domain: string): Promise<MxLookupResult> => {
+      const response = await fetch('/api/tools/mx-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to lookup MX records");
+      }
+      return response.json();
+    },
+  });
+}
+
+export function useSpfLookup() {
+  return useMutation({
+    mutationFn: async (domain: string): Promise<SpfLookupResult> => {
+      const response = await fetch('/api/tools/spf-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to lookup SPF record");
+      }
+      return response.json();
+    },
+  });
+}
+
+export function useDkimLookup() {
+  return useMutation({
+    mutationFn: async ({ domain, selector }: { domain: string; selector?: string }): Promise<DkimLookupResult> => {
+      const response = await fetch('/api/tools/dkim-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain, selector }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to lookup DKIM record");
+      }
+      return response.json();
+    },
+  });
+}
+
+export function useDmarcLookup() {
+  return useMutation({
+    mutationFn: async (domain: string): Promise<DmarcLookupResult> => {
+      const response = await fetch('/api/tools/dmarc-lookup', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to lookup DMARC record");
+      }
+      return response.json();
+    },
+  });
+}
+
+export function useEmailSecurity() {
+  return useMutation({
+    mutationFn: async (domain: string): Promise<EmailSecurityResult> => {
+      const response = await fetch('/api/tools/email-security', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ domain }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to check email security");
+      }
+      return response.json();
+    },
+  });
+}
+
 export function useThreatCheck() {
   return useMutation({
     mutationFn: async (ip: string): Promise<ThreatCheckResult> => {

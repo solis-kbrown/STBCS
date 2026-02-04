@@ -40,11 +40,13 @@ import {
   useNewsletterSubscribe,
   useNmapScan,
   useNmapUsage,
+  useEmailSecurity,
   IpLookupResult, 
   DomainLookupResult, 
   PortScanResult, 
   ThreatCheckResult,
-  ShodanLookupResult
+  ShodanLookupResult,
+  EmailSecurityResult
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -765,6 +767,215 @@ function ShodanLookupTool() {
                 )}
               </>
             )}
+          </div>
+        )}
+      </div>
+    </ToolCard>
+  );
+}
+
+function EmailSecurityTool() {
+  const [domain, setDomain] = useState("");
+  const { mutate: checkSecurity, data, isPending, error, reset } = useEmailSecurity();
+
+  const handleCheck = () => {
+    const cleanDomain = domain.trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    if (cleanDomain && cleanDomain.includes(".")) {
+      checkSecurity(cleanDomain);
+    }
+  };
+
+  const getGradeColor = (grade: string) => {
+    switch (grade) {
+      case "A+": case "A": return "text-green-400";
+      case "B": return "text-lime-400";
+      case "C": return "text-yellow-400";
+      case "D": return "text-orange-400";
+      case "F": return "text-red-400";
+      default: return "text-muted-foreground";
+    }
+  };
+
+  const getScoreColor = (score: number) => {
+    if (score >= 90) return "bg-green-500";
+    if (score >= 70) return "bg-lime-500";
+    if (score >= 50) return "bg-yellow-500";
+    if (score >= 30) return "bg-orange-500";
+    return "bg-red-500";
+  };
+
+  const renderCheckStatus = (valid: boolean, label: string) => (
+    <div className="flex items-center gap-2">
+      {valid ? (
+        <Check className="h-4 w-4 text-green-400" />
+      ) : (
+        <X className="h-4 w-4 text-red-400" />
+      )}
+      <span className={valid ? "text-green-400" : "text-red-400"}>{label}</span>
+    </div>
+  );
+
+  return (
+    <ToolCard
+      title="Email Security Check"
+      description="Comprehensive MXToolbox-style email security analysis - MX, SPF, DKIM, DMARC"
+      icon={Mail}
+      tier="free"
+    >
+      <div className="space-y-4" data-testid="tool-email-security">
+        <div className="flex gap-2">
+          <Input
+            placeholder="Enter domain (e.g., google.com)"
+            value={domain}
+            onChange={(e) => setDomain(e.target.value)}
+            onKeyDown={(e) => e.key === "Enter" && handleCheck()}
+            disabled={isPending}
+            data-testid="input-email-domain"
+          />
+          <Button 
+            onClick={handleCheck} 
+            disabled={isPending || !domain.trim()}
+            data-testid="button-email-check"
+          >
+            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Check"}
+          </Button>
+        </div>
+
+        {error && (
+          <div className="p-3 bg-red-900/20 border border-red-500/30 rounded text-red-400 text-sm">
+            {error.message}
+          </div>
+        )}
+
+        {data && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between p-4 bg-background/50 rounded-lg border border-white/10">
+              <div>
+                <h4 className="font-medium text-white">{data.domain}</h4>
+                <p className="text-sm text-muted-foreground">Email Security Score</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="text-right">
+                  <div className={`text-3xl font-bold ${getGradeColor(data.grade)}`}>
+                    {data.grade}
+                  </div>
+                  <div className="text-sm text-muted-foreground">{data.overallScore}/100</div>
+                </div>
+                <div className="w-16 h-16 relative">
+                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 36 36">
+                    <circle cx="18" cy="18" r="16" fill="none" stroke="currentColor" strokeWidth="2" className="text-white/10" />
+                    <circle
+                      cx="18" cy="18" r="16" fill="none"
+                      stroke="currentColor" strokeWidth="2"
+                      strokeDasharray={`${data.overallScore} 100`}
+                      className={getScoreColor(data.overallScore).replace('bg-', 'text-')}
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              {renderCheckStatus(data.mx.valid, "MX Records")}
+              {renderCheckStatus(data.spf.valid, "SPF Record")}
+              {renderCheckStatus(data.dkim.valid, "DKIM Record")}
+              {renderCheckStatus(data.dmarc.valid, "DMARC Policy")}
+            </div>
+
+            <div className="space-y-3">
+              <div className="p-3 bg-background/30 rounded border border-white/5">
+                <h5 className="font-medium text-white flex items-center gap-2 mb-2">
+                  <Server className="h-4 w-4 text-orange-400" /> MX Records
+                </h5>
+                {data.mx.records.length > 0 ? (
+                  <div className="space-y-1 text-sm">
+                    {data.mx.records.slice(0, 5).map((mx, i) => (
+                      <div key={i} className="flex justify-between text-muted-foreground">
+                        <span className="font-mono">{mx.exchange}</span>
+                        <span>Priority: {mx.priority}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-red-400">No MX records found</p>
+                )}
+              </div>
+
+              <div className="p-3 bg-background/30 rounded border border-white/5">
+                <h5 className="font-medium text-white flex items-center gap-2 mb-2">
+                  <Shield className="h-4 w-4 text-orange-400" /> SPF Record
+                </h5>
+                {data.spf.record ? (
+                  <div className="text-sm">
+                    <code className="text-xs break-all text-muted-foreground bg-black/30 px-2 py-1 rounded block">
+                      {data.spf.record}
+                    </code>
+                    <div className="mt-2 flex gap-2 flex-wrap">
+                      <Badge variant="outline" className="text-xs">
+                        Policy: {data.spf.policy}
+                      </Badge>
+                      {data.spf.includes.slice(0, 3).map((inc, i) => (
+                        <Badge key={i} variant="secondary" className="text-xs">
+                          {inc}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-sm text-red-400">No SPF record found - emails may be spoofed</p>
+                )}
+              </div>
+
+              <div className="p-3 bg-background/30 rounded border border-white/5">
+                <h5 className="font-medium text-white flex items-center gap-2 mb-2">
+                  <Lock className="h-4 w-4 text-orange-400" /> DMARC Policy
+                </h5>
+                {data.dmarc.record ? (
+                  <div className="text-sm">
+                    <div className="flex gap-2 flex-wrap mb-2">
+                      <Badge variant="outline" className="text-xs">
+                        Policy: {data.dmarc.policy}
+                      </Badge>
+                      {data.dmarc.subdomainPolicy && data.dmarc.subdomainPolicy !== "none" && (
+                        <Badge variant="outline" className="text-xs">
+                          Subdomain: {data.dmarc.subdomainPolicy}
+                        </Badge>
+                      )}
+                      <Badge variant="secondary" className="text-xs">
+                        {data.dmarc.percentage}% enforcement
+                      </Badge>
+                    </div>
+                    {data.dmarc.reportEmail.length > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Reports: {data.dmarc.reportEmail.slice(0, 2).join(", ")}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-sm text-red-400">No DMARC policy - domain vulnerable to spoofing</p>
+                )}
+              </div>
+            </div>
+
+            {data.recommendations.length > 0 && (
+              <div className="p-3 bg-yellow-900/20 border border-yellow-500/30 rounded">
+                <h5 className="font-medium text-yellow-400 mb-2 flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4" /> Recommendations
+                </h5>
+                <ul className="text-sm text-muted-foreground space-y-1">
+                  {data.recommendations.map((rec, i) => (
+                    <li key={i} className="flex gap-2">
+                      <span className="text-yellow-400">•</span>
+                      {rec}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            <p className="text-xs text-muted-foreground text-center">
+              Checked at {new Date(data.timestamp).toLocaleString()}
+            </p>
           </div>
         )}
       </div>
