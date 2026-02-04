@@ -5,6 +5,11 @@ import { storage } from "./storage";
 import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema } from "@shared/schema";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
+
+// Helper to safely extract string from Express params/query
+function asString(val: string | string[] | undefined): string {
+  return Array.isArray(val) ? val[0] : (val ?? '');
+}
 import { lookupIp, lookupDomain, scanPorts, isValidIp, isValidDomain, isPrivateIp, COMMON_PORTS, lookupShodanInternetDB } from "./tools";
 import crypto from "crypto";
 import { stripeService } from "./stripeService";
@@ -294,7 +299,7 @@ export async function registerRoutes(
 
   app.get("/api/cves/:id", async (req: Request, res: Response) => {
     try {
-      const cve = await storage.getCveById(req.params.id);
+      const cve = await storage.getCveById(asString(req.params.id));
       if (!cve) {
         return res.status(404).json({ error: "CVE not found" });
       }
@@ -354,7 +359,7 @@ export async function registerRoutes(
 
   app.get("/api/ransomware/:id", async (req: Request, res: Response) => {
     try {
-      const incident = await storage.getRansomwareById(req.params.id);
+      const incident = await storage.getRansomwareById(asString(req.params.id));
       if (!incident) {
         return res.status(404).json({ error: "Incident not found" });
       }
@@ -402,7 +407,7 @@ export async function registerRoutes(
 
   app.get("/api/news/:id", async (req: Request, res: Response) => {
     try {
-      const article = await storage.getNewsById(req.params.id);
+      const article = await storage.getNewsById(asString(req.params.id));
       if (!article) {
         return res.status(404).json({ error: "Article not found" });
       }
@@ -821,7 +826,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Invalid request body" });
       }
       
-      await storage.markNotificationRead(req.params.id, parsed.data.userId);
+      await storage.markNotificationRead(asString(req.params.id), parsed.data.userId);
       res.json({ success: true });
     } catch (error) {
       console.error("Mark notification read error:", error);
@@ -861,7 +866,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Invalid request body" });
       }
       
-      await storage.dismissNotification(req.params.id, parsed.data.userId);
+      await storage.dismissNotification(asString(req.params.id), parsed.data.userId);
       res.json({ success: true });
     } catch (error) {
       console.error("Dismiss notification error:", error);
@@ -941,7 +946,7 @@ export async function registerRoutes(
       }
       
       const { userId, ...updates } = parsed.data;
-      const item = await storage.updateWatchlistItem(req.params.id, userId, updates);
+      const item = await storage.updateWatchlistItem(asString(req.params.id), userId, updates);
       res.json(item);
     } catch (error) {
       console.error("Update watchlist item error:", error);
@@ -961,7 +966,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Invalid request parameters" });
       }
       
-      await storage.deleteWatchlistItem(req.params.id, parsed.data.userId);
+      await storage.deleteWatchlistItem(asString(req.params.id), parsed.data.userId);
       res.json({ success: true });
     } catch (error) {
       console.error("Delete watchlist item error:", error);
@@ -1024,7 +1029,7 @@ export async function registerRoutes(
   // Get single breach
   app.get("/api/breaches/:id", strictLimiter, async (req: Request, res: Response) => {
     try {
-      const breach = await storage.getBreachById(req.params.id);
+      const breach = await storage.getBreachById(asString(req.params.id));
       if (!breach) {
         return res.status(404).json({ error: "Breach incident not found" });
       }
@@ -2323,7 +2328,7 @@ export async function registerRoutes(
       });
       
       const data = schema.parse(req.body);
-      const item = await storage.updateWatchlistItem(id, req.user!.id, data);
+      const item = await storage.updateWatchlistItem(asString(id), req.user!.id, data);
       
       if (!item) {
         res.status(404).json({ error: "Watchlist item not found" });
@@ -2341,7 +2346,7 @@ export async function registerRoutes(
   app.delete("/api/watchlist/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { id } = req.params;
-      await storage.deleteWatchlistItem(id, req.user!.id);
+      await storage.deleteWatchlistItem(asString(id), req.user!.id);
       res.json({ success: true });
     } catch (error) {
       console.error("Watchlist delete error:", error);
@@ -2372,7 +2377,7 @@ export async function registerRoutes(
   app.post("/api/notifications/:id/read", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { id } = req.params;
-      await storage.markNotificationRead(id, req.user!.id);
+      await storage.markNotificationRead(asString(id), req.user!.id);
       res.json({ success: true });
     } catch (error) {
       console.error("Notification read error:", error);
@@ -2395,7 +2400,7 @@ export async function registerRoutes(
   app.post("/api/notifications/:id/dismiss", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const { id } = req.params;
-      await storage.dismissNotification(id, req.user!.id);
+      await storage.dismissNotification(asString(id), req.user!.id);
       res.json({ success: true });
     } catch (error) {
       console.error("Notification dismiss error:", error);
