@@ -56,6 +56,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/search", labelKey: "nav.search", icon: Scan },
     { href: "/tools", labelKey: "nav.tools", icon: Wrench },
     { href: "/alerts", labelKey: "nav.alerts", icon: Activity, isPro: true },
+    { href: "/messages", labelKey: "nav.messages", icon: MessageSquare, isPro: true },
     { href: "/ransomware", labelKey: "nav.ransomware", icon: ShieldOff },
     { href: "/exploits", labelKey: "nav.exploits", icon: Bug },
     { href: "/threat-feeds", labelKey: "nav.threatFeeds", icon: Satellite },

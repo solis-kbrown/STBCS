@@ -18,6 +18,7 @@ const SearchPage = lazy(() => import("@/pages/search"));
 const ToolsPage = lazy(() => import("@/pages/tools"));
 const LogoGallery = lazy(() => import("@/pages/logo-gallery"));
 const Alerts = lazy(() => import("@/pages/alerts"));
+const Messages = lazy(() => import("@/pages/messages"));
 const Support = lazy(() => import("@/pages/support"));
 const StylePreview = lazy(() => import("@/pages/style-preview"));
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -47,6 +48,7 @@ function Router() {
         <Route path="/tools" component={ToolsPage}/>
         <Route path="/logos" component={LogoGallery}/>
         <Route path="/alerts" component={Alerts}/>
+        <Route path="/messages" component={Messages}/>
         <Route path="/support" component={Support}/>
         <Route path="/style-preview" component={StylePreview}/>
         <Route component={NotFound} />

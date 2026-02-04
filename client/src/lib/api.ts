@@ -1181,3 +1181,89 @@ export function useEnhancedIPInfo(ip: string) {
     enabled: !!ip && ip.length >= 7,
   });
 }
+
+// SMS Messaging Types (Pro/Business Feature)
+export interface SmsMessage {
+  id: string;
+  externalId: string | null;
+  direction: string;
+  fromNumber: string;
+  toNumber: string;
+  content: string;
+  status: string | null;
+  conversationId: string | null;
+  userId: string | null;
+  isRead: boolean | null;
+  createdAt: string | null;
+}
+
+export interface SmsConversation {
+  phoneNumber: string;
+  lastMessage: SmsMessage;
+  unreadCount: number;
+}
+
+export function useSmsConversations() {
+  return useQuery<SmsConversation[]>({
+    queryKey: ["/api/messages/conversations"],
+    queryFn: () => fetchApi("/api/messages/conversations"),
+    refetchInterval: 30000,
+  });
+}
+
+export function useConversationMessages(phoneNumber: string) {
+  return useQuery<SmsMessage[]>({
+    queryKey: ["/api/messages/conversation", phoneNumber],
+    queryFn: () => fetchApi(`/api/messages/conversation/${encodeURIComponent(phoneNumber)}`),
+    enabled: !!phoneNumber,
+    refetchInterval: 15000,
+  });
+}
+
+export function useSendSms() {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean; message: SmsMessage }, Error, { to: string; content: string }>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/messages/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to send message");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/conversation"] });
+    },
+  });
+}
+
+export function useMarkConversationRead() {
+  const queryClient = useQueryClient();
+  return useMutation<{ success: boolean }, Error, string>({
+    mutationFn: async (phoneNumber) => {
+      const response = await fetch(`/api/messages/conversation/${encodeURIComponent(phoneNumber)}/read`, {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) throw new Error("Failed to mark conversation read");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/messages/conversations"] });
+    },
+  });
+}
+
+export function useUnreadMessageCount() {
+  return useQuery<{ count: number }>({
+    queryKey: ["/api/messages/unread-count"],
+    queryFn: () => fetchApi("/api/messages/unread-count"),
+    refetchInterval: 30000,
+  });
+}
