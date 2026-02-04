@@ -58,7 +58,7 @@ export default function Ransomware() {
             <Button 
               className="bg-primary hover:bg-primary/90" 
               data-testid="button-report-incident"
-              onClick={() => alert('Report Incident feature coming soon! Contact us to report incidents manually.')}
+              onClick={() => window.location.href = 'mailto:info@stbcybersecurity.com?subject=Ransomware%20Incident%20Report&body=Please%20provide%20details%20about%20the%20ransomware%20incident.'}
             >
               Report Incident
             </Button>

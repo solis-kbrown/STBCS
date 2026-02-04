@@ -326,7 +326,7 @@ export default function ThreatFeeds() {
             <Button 
               className="bg-primary hover:bg-primary/90 font-bold px-8" 
               data-testid="button-upgrade-pro"
-              onClick={() => alert('Pro subscription coming soon! Contact us for early access.')}
+              onClick={() => window.location.href = '/support'}
             >
               UPGRADE TO PRO
             </Button>

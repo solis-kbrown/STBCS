@@ -219,10 +219,10 @@ export default function Dashboard() {
               variant="outline" 
               className="border-white/10 hover:bg-white/5 text-xs" 
               data-testid="button-export-csv"
-              onClick={() => alert('CSV export coming soon! This feature will be available in the Pro tier.')}
+              onClick={() => window.location.href = '/support'}
             >
               <ExternalLink className="h-3 w-3 mr-2" />
-              EXPORT CSV
+              EXPORT CSV (PRO)
             </Button>
           </CardHeader>
           <CardContent>

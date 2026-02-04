@@ -140,7 +140,7 @@ export default function News() {
                 <Button 
                   className="w-full bg-primary hover:bg-primary/90" 
                   data-testid="button-subscribe"
-                  onClick={() => alert('Newsletter subscription coming soon! Check back later.')}
+                  onClick={() => window.location.href = '/support'}
                 >SUBSCRIBE</Button>
               </CardContent>
             </Card>

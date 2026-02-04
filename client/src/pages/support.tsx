@@ -581,13 +581,13 @@ export default function SupportPage() {
               </a>
             </div>
             <div className="pt-4 border-t border-white/10">
-              <p className="text-xs text-zinc-500 mb-3">Follow us on social media (coming soon)</p>
+              <p className="text-xs text-zinc-500 mb-3">Connect with us</p>
               <div className="flex flex-wrap gap-3">
-                <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">Twitter/X</span>
-                <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">LinkedIn</span>
-                <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">Facebook</span>
-                <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">YouTube</span>
-                <span className="px-3 py-1.5 rounded bg-white/5 text-zinc-500 text-xs">GitHub</span>
+                <a href="https://twitter.com/stbcybersecurity" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded bg-white/5 text-zinc-400 hover:text-orange-400 hover:bg-white/10 text-xs transition-colors">Twitter/X</a>
+                <a href="https://linkedin.com/company/stbcybersecurity" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded bg-white/5 text-zinc-400 hover:text-orange-400 hover:bg-white/10 text-xs transition-colors">LinkedIn</a>
+                <a href="https://facebook.com/stbcybersecurity" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded bg-white/5 text-zinc-400 hover:text-orange-400 hover:bg-white/10 text-xs transition-colors">Facebook</a>
+                <a href="https://youtube.com/@stbcybersecurity" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded bg-white/5 text-zinc-400 hover:text-orange-400 hover:bg-white/10 text-xs transition-colors">YouTube</a>
+                <a href="https://github.com/stbcybersecurity" target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 rounded bg-white/5 text-zinc-400 hover:text-orange-400 hover:bg-white/10 text-xs transition-colors">GitHub</a>
               </div>
             </div>
           </CardContent>
