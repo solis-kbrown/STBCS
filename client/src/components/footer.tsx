@@ -13,8 +13,7 @@ export default function Footer() {
               <span className="font-display font-bold text-lg text-primary">STBCS</span>
             </div>
             <p className="text-sm text-muted-foreground mb-4 max-w-md">
-              STB Cybersecurity provides frontline incident response, ransomware recovery, threat hunting, 
-              and real-time threat intelligence for small to medium-sized businesses.
+              Your trusted partner in cybersecurity. We help small to medium-sized businesses stay ahead of threats with proactive security consulting and rapid incident response when it matters most. Whether you're strengthening defenses or navigating a crisis, our experts are here for you.
             </p>
             
             <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mb-4 max-w-md">

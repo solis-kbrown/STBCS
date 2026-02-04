@@ -49,7 +49,7 @@ export default function Dashboard() {
               FRONTLINE THREAT <span className="text-primary">INTELLIGENCE</span>
             </h1>
             <p className="text-muted-foreground text-lg mb-6">
-              Real-time monitoring powered by frontline Incident Response, Ransomware Recovery, and Threat Hunting experts.
+              Real-time threat monitoring backed by expert consulting. We help small to medium-sized businesses build proactive defenses and respond decisively when incidents occur.
             </p>
             <div className="flex gap-4">
               <Button 
