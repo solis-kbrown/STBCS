@@ -634,7 +634,7 @@ export async function registerRoutes(
   // Admin: Data cleanup (trigger old data removal)
   app.post("/api/admin/cleanup", strictLimiter, async (req: Request, res: Response) => {
     try {
-      const result = await storage.cleanupOldData(365); // 1 year retention
+      const result = await storage.cleanupOldData(730); // 2 year retention
       res.json({ success: true, ...result });
     } catch (error) {
       console.error("Error cleaning up data:", error);
@@ -667,7 +667,7 @@ export async function registerRoutes(
   app.get("/api/export/:type", strictLimiter, async (req: Request, res: Response) => {
     try {
       const { type } = req.params;
-      const limit = 1000; // Max export limit
+      const limit = 5000; // Max export limit
       
       let data: any[] = [];
       switch (type) {
@@ -2044,7 +2044,7 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Invalid content type" });
       }
       
-      const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
+      const limit = Math.min(parseInt(req.query.limit as string) || 50, 200);
       const trending = await storage.getTrendingContent(contentType, limit);
       
       res.json({ trending });

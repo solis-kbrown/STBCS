@@ -1551,7 +1551,7 @@ export async function fetchPulsedive(): Promise<number> {
     console.log(`[Pulsedive] API connected - community intel available`);
     
     // Fetch recent threats feed
-    const feedResponse = await secureFetch(`${PULSEDIVE_API}/explore.php?q=type%3Aip+risk%3Ahigh&limit=25&pretty=1&key=${apiKey}`);
+    const feedResponse = await secureFetch(`${PULSEDIVE_API}/explore.php?q=type%3Aip+risk%3Ahigh&limit=100&pretty=1&key=${apiKey}`);
     
     let count = 0;
     
@@ -1717,7 +1717,7 @@ export async function fetchAlienVaultOTX(): Promise<number> {
     console.log("[OTX] Fetching threat intelligence pulses...");
     
     // Get subscribed pulses (latest threat intel)
-    const response = await secureFetch(`${OTX_API}/pulses/subscribed?limit=20&modified_since=${getOneDayAgo()}`, {
+    const response = await secureFetch(`${OTX_API}/pulses/subscribed?limit=50&modified_since=${getOneDayAgo()}`, {
       headers: {
         "X-OTX-API-KEY": apiKey,
       }
@@ -2858,7 +2858,7 @@ export async function fetchAbuseIPDB(): Promise<number> {
     console.log("[AbuseIPDB] Fetching IP reputation blacklist...");
     
     // Get the most abusive IPs (confidence score 100)
-    const response = await secureFetch(`${ABUSEIPDB_API}/blacklist?limit=500&confidenceMinimum=90`, {
+    const response = await secureFetch(`${ABUSEIPDB_API}/blacklist?limit=1000&confidenceMinimum=90`, {
       headers: {
         "Key": apiKey,
         "Accept": "application/json",

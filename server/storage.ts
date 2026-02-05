@@ -225,7 +225,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // CVEs
-  async getCves(limit = 50, offset = 0, search?: string): Promise<Cve[]> {
+  async getCves(limit = 500, offset = 0, search?: string): Promise<Cve[]> {
     if (search) {
       return db.select().from(cves)
         .where(or(
@@ -270,7 +270,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Ransomware Incidents
-  async getRansomwareIncidents(limit = 50, offset = 0, group?: string, sector?: string): Promise<RansomwareIncident[]> {
+  async getRansomwareIncidents(limit = 500, offset = 0, group?: string, sector?: string): Promise<RansomwareIncident[]> {
     let baseQuery = db.select().from(ransomwareIncidents);
     
     if (group) {
@@ -362,7 +362,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Threat Actors
-  async getThreatActors(limit = 50): Promise<ThreatActor[]> {
+  async getThreatActors(limit = 200): Promise<ThreatActor[]> {
     return db.select().from(threatActors).orderBy(desc(threatActors.lastActive)).limit(limit);
   }
 
@@ -385,7 +385,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // News
-  async getNews(limit = 50, offset = 0, category?: string): Promise<NewsArticle[]> {
+  async getNews(limit = 500, offset = 0, category?: string): Promise<NewsArticle[]> {
     let baseQuery = db.select().from(newsArticles);
     
     if (category) {
@@ -411,7 +411,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Malicious IPs
-  async getMaliciousIps(limit = 50, offset = 0, source?: string, threatType?: string): Promise<MaliciousIp[]> {
+  async getMaliciousIps(limit = 500, offset = 0, source?: string, threatType?: string): Promise<MaliciousIp[]> {
     let baseQuery = db.select().from(maliciousIps);
     
     if (source && threatType) {
@@ -458,7 +458,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Malicious URLs
-  async getMaliciousUrls(limit = 50, offset = 0, source?: string, threatType?: string): Promise<MaliciousUrl[]> {
+  async getMaliciousUrls(limit = 500, offset = 0, source?: string, threatType?: string): Promise<MaliciousUrl[]> {
     let baseQuery = db.select().from(maliciousUrls);
     
     if (source && threatType) {
@@ -499,7 +499,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // CISA KEV
-  async getCisaKev(limit = 50, offset = 0): Promise<CisaKev[]> {
+  async getCisaKev(limit = 500, offset = 0): Promise<CisaKev[]> {
     return db.select().from(cisaKev).orderBy(desc(cisaKev.dateAdded)).limit(limit).offset(offset);
   }
 

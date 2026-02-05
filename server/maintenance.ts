@@ -198,7 +198,7 @@ async function runCleanupTasks(): Promise<void> {
 
   if (dayOfWeek === 0 && now - lastWeeklyRun > WEEK_MS - 24 * 60 * 60 * 1000) {
     try {
-      const result = await storage.cleanupOldData(365);
+      const result = await storage.cleanupOldData(730); // 2 year retention
       console.log("[Maintenance] Weekly data cleanup completed:", result);
       await setLastRun("weekly_cleanup");
 
