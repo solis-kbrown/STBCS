@@ -13,6 +13,12 @@ export interface Cve {
   lastModified: string | null;
   references: string | null;
   exploitAvailable: boolean | null;
+  epssScore: number | null;
+  epssPercentile: number | null;
+  cweId: string | null;
+  cweName: string | null;
+  inCisaKev: boolean | null;
+  affectedProducts: string | null;
   createdAt: string | null;
 }
 
@@ -34,6 +40,13 @@ export interface RansomwareIncident {
   proofUrl: string | null;
   activity: string | null;
   sourceApi: string | null;
+  ransomAmount: string | null;
+  ransomCurrency: string | null;
+  bitcoinWallet: string | null;
+  paymentStatus: string | null;
+  attackVector: string | null;
+  victimRevenue: string | null;
+  employeeCount: string | null;
 }
 
 export interface ThreatActor {
@@ -85,6 +98,13 @@ export interface MaliciousIp {
   lastSeen: string | null;
   firstSeen: string | null;
   reportCount: number | null;
+  abuseConfidenceScore: number | null;
+  isp: string | null;
+  domain: string | null;
+  usageType: string | null;
+  reverseDns: string | null;
+  openPorts: string | null;
+  tags: string | null;
   createdAt: string | null;
 }
 

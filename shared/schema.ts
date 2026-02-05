@@ -44,11 +44,18 @@ export const cves = pgTable("cves", {
   lastModified: timestamp("last_modified"),
   references: text("references"),
   exploitAvailable: boolean("exploit_available").default(false),
+  epssScore: real("epss_score"),
+  epssPercentile: real("epss_percentile"),
+  cweId: text("cwe_id"),
+  cweName: text("cwe_name"),
+  inCisaKev: boolean("in_cisa_kev").default(false),
+  affectedProducts: text("affected_products"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("cve_severity_idx").on(table.severity),
   index("cve_score_idx").on(table.score),
   index("cve_published_idx").on(table.publishedDate),
+  index("cve_epss_idx").on(table.epssScore),
 ]);
 
 export const ransomwareIncidents = pgTable("ransomware_incidents", {
@@ -64,17 +71,24 @@ export const ransomwareIncidents = pgTable("ransomware_incidents", {
   discoveredAt: timestamp("discovered_at").defaultNow(),
   deadline: timestamp("deadline"),
   createdAt: timestamp("created_at").defaultNow(),
-  // Enhanced fields from ransomware.live
   postUrl: text("post_url"),
   screenshotUrl: text("screenshot_url"),
   proofUrl: text("proof_url"),
   activity: text("activity"),
   sourceApi: text("source_api").default("ransomware.live"),
+  ransomAmount: text("ransom_amount"),
+  ransomCurrency: text("ransom_currency"),
+  bitcoinWallet: text("bitcoin_wallet"),
+  paymentStatus: text("payment_status"),
+  attackVector: text("attack_vector"),
+  victimRevenue: text("victim_revenue"),
+  employeeCount: text("employee_count"),
 }, (table) => [
   index("ransom_group_idx").on(table.groupName),
   index("ransom_sector_idx").on(table.sector),
   index("ransom_status_idx").on(table.status),
   index("ransom_victim_idx").on(table.victim),
+  index("ransom_country_idx").on(table.country),
 ]);
 
 export const threatActors = pgTable("threat_actors", {
@@ -112,19 +126,27 @@ export const newsArticles = pgTable("news_articles", {
 export const maliciousIps = pgTable("malicious_ips", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   ipAddress: text("ip_address").notNull(),
-  source: text("source").notNull(), // DShield, Tor, Feodo, etc.
-  threatType: text("threat_type"), // scanner, botnet, tor_exit, c2, etc.
+  source: text("source").notNull(),
+  threatType: text("threat_type"),
   riskScore: real("risk_score"),
   country: text("country"),
   asn: text("asn"),
   lastSeen: timestamp("last_seen"),
   firstSeen: timestamp("first_seen"),
   reportCount: real("report_count"),
+  abuseConfidenceScore: real("abuse_confidence_score"),
+  isp: text("isp"),
+  domain: text("domain"),
+  usageType: text("usage_type"),
+  reverseDns: text("reverse_dns"),
+  openPorts: text("open_ports"),
+  tags: text("tags"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("ip_address_idx").on(table.ipAddress),
   index("ip_source_idx").on(table.source),
   index("ip_threat_idx").on(table.threatType),
+  index("ip_abuse_score_idx").on(table.abuseConfidenceScore),
 ]);
 
 // Malicious URLs from URLhaus, PhishTank, etc.
