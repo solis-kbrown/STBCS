@@ -535,3 +535,59 @@ export const insertSmsMessageSchema = createInsertSchema(smsMessages).omit({
 
 export type InsertSmsMessage = z.infer<typeof insertSmsMessageSchema>;
 export type SmsMessage = typeof smsMessages.$inferSelect;
+
+export const exploitSubmissions = pgTable("exploit_submissions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  submitterEmail: text("submitter_email").notNull(),
+  submitterName: text("submitter_name"),
+  cveId: text("cve_id"),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  affectedProduct: text("affected_product"),
+  affectedVersions: text("affected_versions"),
+  severity: text("severity"),
+  exploitType: text("exploit_type"),
+  pocCode: text("poc_code"),
+  pocUrl: text("poc_url"),
+  stepsToReproduce: text("steps_to_reproduce"),
+  impact: text("impact"),
+  mitigation: text("mitigation"),
+  references: text("references"),
+  status: text("status").default("pending"),
+  reviewedBy: varchar("reviewed_by"),
+  reviewNotes: text("review_notes"),
+  isPublic: boolean("is_public").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("exploit_sub_email_idx").on(table.submitterEmail),
+  index("exploit_sub_status_idx").on(table.status),
+  index("exploit_sub_cve_idx").on(table.cveId),
+]);
+
+export const insertExploitSubmissionSchema = createInsertSchema(exploitSubmissions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+  reviewedBy: true,
+  reviewNotes: true,
+  isPublic: true,
+  status: true,
+});
+
+export type InsertExploitSubmission = z.infer<typeof insertExploitSubmissionSchema>;
+export type ExploitSubmission = typeof exploitSubmissions.$inferSelect;
+
+export const contentViews = pgTable("content_views", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  contentType: text("content_type").notNull(),
+  contentId: text("content_id").notNull(),
+  viewCount: real("view_count").default(1),
+  lastViewedAt: timestamp("last_viewed_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("views_content_idx").on(table.contentType, table.contentId),
+  index("views_count_idx").on(table.viewCount),
+]);
+
+export type ContentView = typeof contentViews.$inferSelect;

@@ -1970,6 +1970,90 @@ export async function registerRoutes(
     }
   });
 
+  // ===== EXPLOIT/CVE SUBMISSION ROUTES =====
+  
+  // Submit an exploit or CVE
+  app.post("/api/exploits/submit", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        submitterEmail: z.string().email().max(255),
+        submitterName: z.string().max(100).optional(),
+        cveId: z.string().max(50).optional(),
+        title: z.string().min(5).max(200),
+        description: z.string().min(20).max(5000),
+        affectedProduct: z.string().max(200).optional(),
+        affectedVersions: z.string().max(200).optional(),
+        severity: z.enum(["low", "medium", "high", "critical"]).optional(),
+        exploitType: z.enum(["rce", "sqli", "xss", "lfi", "rfi", "auth_bypass", "privilege_escalation", "dos", "other"]).optional(),
+        pocCode: z.string().max(10000).optional(),
+        pocUrl: z.string().url().max(500).optional(),
+        stepsToReproduce: z.string().max(5000).optional(),
+        impact: z.string().max(2000).optional(),
+        mitigation: z.string().max(2000).optional(),
+        references: z.string().max(2000).optional(),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid submission data", details: parsed.error.issues });
+      }
+      
+      const submission = await storage.createExploitSubmission(parsed.data);
+      
+      res.status(201).json({ 
+        success: true,
+        message: "Exploit submission received. Our security team will review it shortly.",
+        submissionId: submission.id
+      });
+    } catch (error) {
+      console.error("Exploit submission error:", error);
+      res.status(500).json({ error: "Failed to submit exploit" });
+    }
+  });
+
+  // ===== VIEW TRACKING & POPULARITY ROUTES =====
+  
+  // Track a content view
+  app.post("/api/views/track", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        contentType: z.enum(["cve", "ransomware", "ip", "url", "actor", "news", "tool"]),
+        contentId: z.string().max(100),
+      });
+      
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid request" });
+      }
+      
+      await storage.trackView(parsed.data.contentType, parsed.data.contentId);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("View tracking error:", error);
+      res.status(500).json({ error: "Failed to track view" });
+    }
+  });
+
+  // Get trending content
+  app.get("/api/trending/:contentType", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const contentType = req.params.contentType;
+      const validTypes = ["cve", "ransomware", "ip", "url", "actor", "news", "tool"];
+      
+      if (!validTypes.includes(contentType)) {
+        return res.status(400).json({ error: "Invalid content type" });
+      }
+      
+      const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
+      const trending = await storage.getTrendingContent(contentType, limit);
+      
+      res.json({ trending });
+    } catch (error) {
+      console.error("Trending content error:", error);
+      res.status(500).json({ error: "Failed to get trending content" });
+    }
+  });
+
   // ===== STRIPE PAYMENT ROUTES =====
   
   // Get Stripe publishable key for frontend

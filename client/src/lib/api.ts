@@ -1313,3 +1313,62 @@ export function useUnreadMessageCount() {
     refetchInterval: 30000,
   });
 }
+
+// Exploit/CVE Submission
+export interface ExploitSubmission {
+  submitterEmail: string;
+  submitterName?: string;
+  cveId?: string;
+  title: string;
+  description: string;
+  affectedProduct?: string;
+  affectedVersions?: string;
+  severity?: "low" | "medium" | "high" | "critical";
+  exploitType?: "rce" | "sqli" | "xss" | "lfi" | "rfi" | "auth_bypass" | "privilege_escalation" | "dos" | "other";
+  pocCode?: string;
+  pocUrl?: string;
+  stepsToReproduce?: string;
+  impact?: string;
+  mitigation?: string;
+  references?: string;
+}
+
+export function useSubmitExploit() {
+  return useMutation<{ success: boolean; submissionId: string }, Error, ExploitSubmission>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/exploits/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to submit exploit");
+      }
+      return response.json();
+    },
+  });
+}
+
+// View Tracking & Popularity
+export function useTrackView() {
+  return useMutation<{ success: boolean }, Error, { contentType: string; contentId: string }>({
+    mutationFn: async (data) => {
+      const response = await fetch("/api/views/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error("Failed to track view");
+      return response.json();
+    },
+  });
+}
+
+export function useTrending(contentType: string, limit = 10) {
+  return useQuery<{ trending: { contentId: string; viewCount: number }[] }>({
+    queryKey: ["/api/trending", contentType, limit],
+    queryFn: () => fetchApi(`/api/trending/${contentType}?limit=${limit}`),
+    enabled: !!contentType,
+  });
+}

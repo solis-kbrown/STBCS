@@ -15,10 +15,12 @@ import {
   type BreachIncident, type InsertBreach,
   type NewsletterSubscription, type InsertNewsletter,
   type SmsMessage, type InsertSmsMessage,
+  type ExploitSubmission, type InsertExploitSubmission,
+  type ContentView,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
   userNotifications, watchlistItems, breachIncidents, newsletterSubscriptions,
-  smsMessages
+  smsMessages, exploitSubmissions, contentViews
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte } from "drizzle-orm";
@@ -139,6 +141,17 @@ export interface IStorage {
   markMessageRead(id: string): Promise<void>;
   markConversationRead(phoneNumber: string): Promise<void>;
   getUnreadMessageCount(): Promise<number>;
+  
+  // Exploit Submissions
+  createExploitSubmission(submission: InsertExploitSubmission): Promise<ExploitSubmission>;
+  getExploitSubmissions(limit?: number, offset?: number): Promise<ExploitSubmission[]>;
+  getExploitSubmissionById(id: string): Promise<ExploitSubmission | undefined>;
+  updateExploitSubmissionStatus(id: string, status: string, reviewedBy?: string, reviewNotes?: string): Promise<void>;
+  
+  // Content Views & Popularity
+  trackView(contentType: string, contentId: string): Promise<void>;
+  getViewCount(contentType: string, contentId: string): Promise<number>;
+  getTrendingContent(contentType: string, limit?: number): Promise<{ contentId: string; viewCount: number }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1107,6 +1120,84 @@ export class DatabaseStorage implements IStorage {
         eq(smsMessages.direction, 'inbound')
       ));
     return Number(result[0]?.count || 0);
+  }
+
+  // Exploit Submissions
+  async createExploitSubmission(submission: InsertExploitSubmission): Promise<ExploitSubmission> {
+    const [result] = await db.insert(exploitSubmissions).values(submission).returning();
+    return result;
+  }
+
+  async getExploitSubmissions(limit: number = 100, offset: number = 0): Promise<ExploitSubmission[]> {
+    return db.select().from(exploitSubmissions)
+      .orderBy(desc(exploitSubmissions.createdAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getExploitSubmissionById(id: string): Promise<ExploitSubmission | undefined> {
+    const [result] = await db.select().from(exploitSubmissions).where(eq(exploitSubmissions.id, id));
+    return result;
+  }
+
+  async updateExploitSubmissionStatus(id: string, status: string, reviewedBy?: string, reviewNotes?: string): Promise<void> {
+    await db.update(exploitSubmissions)
+      .set({ 
+        status, 
+        reviewedBy, 
+        reviewNotes,
+        updatedAt: new Date()
+      })
+      .where(eq(exploitSubmissions.id, id));
+  }
+
+  // Content Views & Popularity
+  async trackView(contentType: string, contentId: string): Promise<void> {
+    const existing = await db.select().from(contentViews)
+      .where(and(
+        eq(contentViews.contentType, contentType),
+        eq(contentViews.contentId, contentId)
+      ));
+    
+    if (existing.length > 0) {
+      await db.update(contentViews)
+        .set({ 
+          viewCount: (existing[0].viewCount || 0) + 1,
+          lastViewedAt: new Date()
+        })
+        .where(eq(contentViews.id, existing[0].id));
+    } else {
+      await db.insert(contentViews).values({
+        contentType,
+        contentId,
+        viewCount: 1
+      });
+    }
+  }
+
+  async getViewCount(contentType: string, contentId: string): Promise<number> {
+    const [result] = await db.select().from(contentViews)
+      .where(and(
+        eq(contentViews.contentType, contentType),
+        eq(contentViews.contentId, contentId)
+      ));
+    return result?.viewCount || 0;
+  }
+
+  async getTrendingContent(contentType: string, limit: number = 10): Promise<{ contentId: string; viewCount: number }[]> {
+    const results = await db.select({
+      contentId: contentViews.contentId,
+      viewCount: contentViews.viewCount
+    })
+      .from(contentViews)
+      .where(eq(contentViews.contentType, contentType))
+      .orderBy(desc(contentViews.viewCount))
+      .limit(limit);
+    
+    return results.map(r => ({ 
+      contentId: r.contentId, 
+      viewCount: r.viewCount || 0 
+    }));
   }
 }
 

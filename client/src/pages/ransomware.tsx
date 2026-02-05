@@ -1,6 +1,6 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
-import { useRansomware, useRansomwareGroups, useRansomwareSearch, useExportData } from "@/lib/api";
+import { useRansomware, useRansomwareGroups, useRansomwareSearch, useExportData, useTrackView } from "@/lib/api";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +18,7 @@ export default function Ransomware() {
   
   const { data, isLoading } = useRansomware(100, 0, selectedGroup);
   const { data: groups } = useRansomwareGroups();
+  const trackView = useTrackView();
   const { data: searchResults, isLoading: isSearching } = useRansomwareSearch(activeSearch);
   const exportMutation = useExportData();
   
@@ -154,7 +155,12 @@ export default function Ransomware() {
             ))
           ) : incidents.length > 0 ? (
             incidents.map((incident) => (
-              <Card key={incident.id} className="border-white/5 bg-card/40 hover:bg-card/60 transition-colors group" data-testid={`card-incident-${incident.id}`}>
+              <Card 
+                key={incident.id} 
+                className="border-white/5 bg-card/40 hover:bg-card/60 transition-colors group cursor-pointer" 
+                data-testid={`card-incident-${incident.id}`}
+                onClick={() => trackView.mutate({ contentType: 'ransomware', contentId: incident.id })}
+              >
                 <CardContent className="p-6">
                   <div className="flex flex-col md:flex-row justify-between gap-4">
                     <div className="flex-1 space-y-2">
