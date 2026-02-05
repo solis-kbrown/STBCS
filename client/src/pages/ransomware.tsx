@@ -16,7 +16,7 @@ export default function Ransomware() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
   
-  const { data, isLoading } = useRansomware(100, 0, selectedGroup);
+  const { data, isLoading } = useRansomware(1000, 0, selectedGroup);
   const { data: groups } = useRansomwareGroups();
   const trackView = useTrackView();
   const { data: searchResults, isLoading: isSearching } = useRansomwareSearch(activeSearch);
