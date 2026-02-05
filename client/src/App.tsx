@@ -21,6 +21,9 @@ const Alerts = lazy(() => import("@/pages/alerts"));
 const Messages = lazy(() => import("@/pages/messages"));
 const Support = lazy(() => import("@/pages/support"));
 const StylePreview = lazy(() => import("@/pages/style-preview"));
+const Privacy = lazy(() => import("@/pages/privacy"));
+const Terms = lazy(() => import("@/pages/terms"));
+const ApiDocs = lazy(() => import("@/pages/api-docs"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -51,6 +54,9 @@ function Router() {
         <Route path="/messages" component={Messages}/>
         <Route path="/support" component={Support}/>
         <Route path="/style-preview" component={StylePreview}/>
+        <Route path="/privacy" component={Privacy}/>
+        <Route path="/terms" component={Terms}/>
+        <Route path="/api-docs" component={ApiDocs}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

@@ -372,7 +372,7 @@ export async function registerRoutes(
   // IP Reputation Aggregator - Check IP against all threat feeds
   app.get("/api/ip/reputation/:ip", async (req: Request, res: Response) => {
     try {
-      const ip = req.params.ip;
+      const ip = req.params.ip as string;
       if (!ip || !/^(\d{1,3}\.){3}\d{1,3}$/.test(ip)) {
         return res.status(400).json({ error: "Invalid IP address format" });
       }
@@ -2037,7 +2037,7 @@ export async function registerRoutes(
   // Get trending content
   app.get("/api/trending/:contentType", strictLimiter, async (req: Request, res: Response) => {
     try {
-      const contentType = req.params.contentType;
+      const contentType = req.params.contentType as string;
       const validTypes = ["cve", "ransomware", "ip", "url", "actor", "news", "tool"];
       
       if (!validTypes.includes(contentType)) {
@@ -2818,7 +2818,7 @@ export async function registerRoutes(
   // Get messages for a specific conversation
   app.get("/api/messages/conversation/:phoneNumber", requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const phoneNumber = decodeURIComponent(req.params.phoneNumber);
+      const phoneNumber = decodeURIComponent(req.params.phoneNumber as string);
       const messages = await storage.getConversationMessages(phoneNumber);
       res.json(messages);
     } catch (error) {
@@ -2873,7 +2873,7 @@ export async function registerRoutes(
   // Mark a message as read
   app.post("/api/messages/:id/read", requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      await storage.markMessageRead(req.params.id);
+      await storage.markMessageRead(req.params.id as string);
       res.json({ success: true });
     } catch (error) {
       console.error("Error marking message read:", error);
@@ -2884,7 +2884,7 @@ export async function registerRoutes(
   // Mark entire conversation as read
   app.post("/api/messages/conversation/:phoneNumber/read", requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      const phoneNumber = decodeURIComponent(req.params.phoneNumber);
+      const phoneNumber = decodeURIComponent(req.params.phoneNumber as string);
       await storage.markConversationRead(phoneNumber);
       res.json({ success: true });
     } catch (error) {

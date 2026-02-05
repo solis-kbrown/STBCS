@@ -341,8 +341,8 @@ export default function Messages() {
               <p className="text-zinc-400 mb-6">
                 Two-way SMS messaging is an exclusive feature for Business subscribers. Upgrade to our Business plan to unlock direct client communication.
               </p>
-              <Button className="bg-orange-500 hover:bg-orange-600">
-                Upgrade to Business
+              <Button className="bg-orange-500 hover:bg-orange-600" asChild>
+                <a href="/support#pricing">Upgrade to Business</a>
               </Button>
             </CardContent>
           </Card>

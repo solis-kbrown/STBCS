@@ -138,8 +138,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <div className="bg-zinc-900/50 rounded-lg p-4 border border-zinc-800">
           <h4 className="font-display text-sm font-bold text-orange-400 mb-1">PRO ACCOUNT</h4>
           <p className="text-xs text-zinc-500 mb-3">Upgrade for unlimited tools, real-time API access, and custom alerts.</p>
-          <Button size="sm" className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold tracking-wide">
-            UPGRADE
+          <Button size="sm" className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold tracking-wide" asChild>
+            <a href="/support#pricing">UPGRADE</a>
           </Button>
         </div>
         <div className="px-2 space-y-1">

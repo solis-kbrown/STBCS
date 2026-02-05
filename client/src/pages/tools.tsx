@@ -1791,8 +1791,10 @@ export default function ToolsPage() {
                     <Mail className="h-4 w-4 mr-2" /> Contact Sales
                   </a>
                 </Button>
-                <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold">
-                  <Crown className="h-4 w-4 mr-2" /> Upgrade to Pro
+                <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold" asChild>
+                  <a href="/support#pricing">
+                    <Crown className="h-4 w-4 mr-2" /> Upgrade to Pro
+                  </a>
                 </Button>
               </div>
             </div>
