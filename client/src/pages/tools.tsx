@@ -1508,6 +1508,249 @@ function PhishTankTool() {
   );
 }
 
+function CVEPriorityTool() {
+  const [cveInput, setCveInput] = useState("");
+  const [priorityResults, setPriorityResults] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  const analyzePriority = async () => {
+    if (!cveInput.trim()) return;
+    setIsLoading(true);
+    try {
+      const cveIds = cveInput.split(/[,\n\s]+/).filter(id => id.trim()).map(id => id.trim().toUpperCase());
+      const res = await fetch(`/api/cves/priority`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cveIds })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setPriorityResults(data.results || []);
+      }
+    } catch (error) {
+      console.error('Priority analysis failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getPriorityColor = (score: number) => {
+    if (score >= 0.7) return 'text-red-500 bg-red-500/20';
+    if (score >= 0.4) return 'text-orange-500 bg-orange-500/20';
+    if (score >= 0.1) return 'text-yellow-500 bg-yellow-500/20';
+    return 'text-green-500 bg-green-500/20';
+  };
+
+  const getPriorityLabel = (score: number) => {
+    if (score >= 0.7) return 'CRITICAL - Patch Immediately';
+    if (score >= 0.4) return 'HIGH - Patch This Week';
+    if (score >= 0.1) return 'MEDIUM - Schedule Patch';
+    return 'LOW - Monitor';
+  };
+
+  return (
+    <ToolCard
+      title="CVE Patch Prioritization"
+      description="Prioritize which vulnerabilities to patch first using EPSS (Exploit Prediction Scoring System) data"
+      icon={Shield}
+      tier="free"
+    >
+      <div className="space-y-4">
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-white">Enter CVE IDs (comma or newline separated)</label>
+          <textarea
+            value={cveInput}
+            onChange={(e) => setCveInput(e.target.value)}
+            placeholder="CVE-2024-1234, CVE-2024-5678&#10;CVE-2023-9999"
+            className="w-full h-24 px-3 py-2 bg-background border border-white/10 rounded-md text-sm text-white placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/50"
+            data-testid="input-cve-priority"
+          />
+        </div>
+        <Button 
+          onClick={analyzePriority} 
+          disabled={isLoading || !cveInput.trim()}
+          className="w-full"
+          data-testid="button-analyze-priority"
+        >
+          {isLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Shield className="h-4 w-4 mr-2" />}
+          Analyze Patch Priority
+        </Button>
+        
+        {priorityResults.length > 0 && (
+          <div className="space-y-3 mt-4">
+            <h4 className="text-sm font-bold text-white flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-orange-400" />
+              Priority Rankings (Highest First)
+            </h4>
+            <div className="space-y-2">
+              {priorityResults.sort((a, b) => (b.epssScore || 0) - (a.epssScore || 0)).map((cve, idx) => (
+                <div key={cve.cveId || idx} className="p-3 rounded-lg border border-white/10 bg-white/5">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-zinc-400">#{idx + 1}</span>
+                      <Badge variant="outline" className="font-mono">{cve.cveId}</Badge>
+                      {cve.inCisaKev && (
+                        <Badge className="bg-red-600 text-white text-[10px]">CISA KEV</Badge>
+                      )}
+                    </div>
+                    <div className={`px-2 py-1 rounded text-xs font-bold ${getPriorityColor(cve.epssScore || 0)}`}>
+                      {((cve.epssScore || 0) * 100).toFixed(1)}% exploit probability
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground line-clamp-2 mb-2">{cve.description || 'No description available'}</p>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className={`font-medium ${getPriorityColor(cve.epssScore || 0).split(' ')[0]}`}>
+                      {getPriorityLabel(cve.epssScore || 0)}
+                    </span>
+                    <div className="flex items-center gap-2 text-muted-foreground">
+                      {cve.cweId && <span>CWE: {cve.cweId}</span>}
+                      <span>CVSS: {cve.score?.toFixed(1) || 'N/A'}</span>
+                    </div>
+                  </div>
+                  <Progress value={(cve.epssScore || 0) * 100} className="h-1 mt-2" />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </ToolCard>
+  );
+}
+
+function IPReputationAggregator() {
+  const [ipInput, setIpInput] = useState("");
+  const [results, setResults] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const checkReputation = async () => {
+    if (!ipInput.trim()) return;
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/ip/reputation/${encodeURIComponent(ipInput.trim())}`);
+      if (res.ok) {
+        const data = await res.json();
+        setResults(data);
+      }
+    } catch (error) {
+      console.error('IP reputation check failed:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const getRiskColor = (score: number) => {
+    if (score >= 80) return 'text-red-500';
+    if (score >= 50) return 'text-orange-500';
+    if (score >= 20) return 'text-yellow-500';
+    return 'text-green-500';
+  };
+
+  return (
+    <ToolCard
+      title="IP Reputation Aggregator"
+      description="Check any IP against all our threat intelligence feeds for a unified risk assessment"
+      icon={Globe}
+      tier="free"
+    >
+      <div className="space-y-4">
+        <div className="flex gap-2">
+          <Input
+            value={ipInput}
+            onChange={(e) => setIpInput(e.target.value)}
+            placeholder="Enter IP address (e.g., 8.8.8.8)"
+            className="bg-background border-white/10"
+            data-testid="input-ip-reputation"
+          />
+          <Button 
+            onClick={checkReputation}
+            disabled={isLoading || !ipInput.trim()}
+            data-testid="button-check-reputation"
+          >
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Shield className="h-4 w-4" />}
+          </Button>
+        </div>
+        
+        {results && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-lg border border-white/10 bg-gradient-to-r from-zinc-900 to-zinc-800">
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="font-bold text-white">{results.ip}</h4>
+                <div className={`text-2xl font-bold ${getRiskColor(results.riskScore || 0)}`}>
+                  {results.riskScore || 0}/100
+                </div>
+              </div>
+              <Progress value={results.riskScore || 0} className="h-2 mb-3" />
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                {results.country && (
+                  <div className="flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-muted-foreground" />
+                    <span>{results.country}</span>
+                  </div>
+                )}
+                {results.isp && (
+                  <div className="flex items-center gap-2">
+                    <Building className="h-4 w-4 text-muted-foreground" />
+                    <span className="truncate">{results.isp}</span>
+                  </div>
+                )}
+                {results.asn && (
+                  <div className="flex items-center gap-2">
+                    <Network className="h-4 w-4 text-muted-foreground" />
+                    <span>{results.asn}</span>
+                  </div>
+                )}
+                {results.threatType && (
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-orange-400" />
+                    <span className="text-orange-400">{results.threatType}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {results.feedMatches && results.feedMatches.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-red-400" />
+                  Found in {results.feedMatches.length} Threat Feed(s)
+                </h4>
+                <div className="space-y-1">
+                  {results.feedMatches.map((feed: any, idx: number) => (
+                    <div key={idx} className="flex items-center justify-between p-2 rounded bg-red-500/10 border border-red-500/20">
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="border-red-500/50 text-red-400">{feed.source}</Badge>
+                        <span className="text-xs text-muted-foreground">{feed.threatType}</span>
+                      </div>
+                      {feed.lastSeen && (
+                        <span className="text-xs text-muted-foreground">
+                          Last seen: {new Date(feed.lastSeen).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            
+            {results.feedMatches && results.feedMatches.length === 0 && (
+              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/20">
+                <div className="flex items-center gap-2 text-green-400">
+                  <Check className="h-4 w-4" />
+                  <span className="font-medium">Not found in any threat feeds</span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  This IP is not currently listed in our threat intelligence databases.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </ToolCard>
+  );
+}
+
 export default function ToolsPage() {
   useDocumentTitle("Free Security Tools | STB Cybersecurity");
   return (
@@ -1562,11 +1805,14 @@ export default function ToolsPage() {
             <TabsTrigger value="network" className="data-[state=active]:bg-primary/20">Network</TabsTrigger>
             <TabsTrigger value="email" className="data-[state=active]:bg-primary/20">Email Security</TabsTrigger>
             <TabsTrigger value="threat" className="data-[state=active]:bg-primary/20">Threat Intel</TabsTrigger>
+            <TabsTrigger value="analytics" className="data-[state=active]:bg-primary/20">Analytics</TabsTrigger>
             <TabsTrigger value="subscribe" className="data-[state=active]:bg-primary/20">Newsletter</TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <CVEPriorityTool />
+              <IPReputationAggregator />
               <IpLookupTool />
               <ShodanLookupTool />
               <DomainLookupTool />
@@ -1608,6 +1854,13 @@ export default function ToolsPage() {
               <MalwareBazaarTool />
               <URLScanTool />
               <ShodanLookupTool />
+            </div>
+          </TabsContent>
+
+          <TabsContent value="analytics" className="space-y-6">
+            <div className="grid grid-cols-1 gap-6">
+              <CVEPriorityTool />
+              <IPReputationAggregator />
             </div>
           </TabsContent>
 

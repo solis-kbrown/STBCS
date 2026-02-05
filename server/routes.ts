@@ -279,6 +279,18 @@ export async function registerRoutes(
     }
   });
 
+  // Threat Trends - Analytics data for threat trends over time
+  app.get("/api/trends", async (req: Request, res: Response) => {
+    try {
+      const days = Math.min(parseInt(req.query.days as string) || 30, 90);
+      const trends = await storage.getThreatTrends(days);
+      res.json(trends);
+    } catch (error) {
+      console.error("Error fetching threat trends:", error);
+      res.status(500).json({ error: "Failed to fetch threat trends" });
+    }
+  });
+
   // CVEs
   app.get("/api/cves", async (req: Request, res: Response) => {
     try {
@@ -308,6 +320,96 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching CVE:", error);
       res.status(500).json({ error: "Failed to fetch CVE" });
+    }
+  });
+
+  // CVE Priority Analysis - Uses EPSS scores to prioritize patching
+  app.post("/api/cves/priority", async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        cveIds: z.array(z.string().min(1).max(50)).min(1).max(50)
+      });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid CVE IDs" });
+      }
+      
+      const results = [];
+      for (const cveId of parsed.data.cveIds) {
+        const cve = await storage.getCveById(cveId);
+        if (cve) {
+          results.push({
+            cveId: cve.cveId,
+            description: cve.description,
+            score: cve.score,
+            severity: cve.severity,
+            epssScore: cve.epssScore || 0,
+            epssPercentile: cve.epssPercentile || 0,
+            cweId: cve.cweId,
+            cweName: cve.cweName,
+            inCisaKev: cve.inCisaKev || false,
+            exploitAvailable: cve.exploitAvailable,
+            publishedDate: cve.publishedDate
+          });
+        } else {
+          results.push({
+            cveId: cveId,
+            description: 'CVE not found in database',
+            score: null,
+            epssScore: 0,
+            inCisaKev: false
+          });
+        }
+      }
+      
+      res.json({ results });
+    } catch (error) {
+      console.error("CVE priority analysis error:", error);
+      res.status(500).json({ error: "Failed to analyze CVE priorities" });
+    }
+  });
+
+  // IP Reputation Aggregator - Check IP against all threat feeds
+  app.get("/api/ip/reputation/:ip", async (req: Request, res: Response) => {
+    try {
+      const ip = req.params.ip;
+      if (!ip || !/^(\d{1,3}\.){3}\d{1,3}$/.test(ip)) {
+        return res.status(400).json({ error: "Invalid IP address format" });
+      }
+      
+      const feedMatches = await storage.getMaliciousIpsByAddress(ip);
+      
+      let riskScore = 0;
+      let threatType = null;
+      let country = null;
+      let asn = null;
+      let isp = null;
+      
+      if (feedMatches.length > 0) {
+        riskScore = Math.min(100, feedMatches.length * 20 + (feedMatches[0].abuseConfidenceScore || 0));
+        threatType = feedMatches[0].threatType;
+        country = feedMatches[0].country;
+        asn = feedMatches[0].asn;
+        isp = feedMatches[0].isp;
+      }
+      
+      res.json({
+        ip,
+        riskScore,
+        threatType,
+        country,
+        asn,
+        isp,
+        feedMatches: feedMatches.map(m => ({
+          source: m.source,
+          threatType: m.threatType,
+          lastSeen: m.lastSeen,
+          riskScore: m.riskScore
+        }))
+      });
+    } catch (error) {
+      console.error("IP reputation check error:", error);
+      res.status(500).json({ error: "Failed to check IP reputation" });
     }
   });
 

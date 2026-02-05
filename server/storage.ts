@@ -21,7 +21,7 @@ import {
   smsMessages
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, ilike, or, sql, and } from "drizzle-orm";
+import { eq, desc, ilike, or, sql, and, gte } from "drizzle-orm";
 
 export interface IStorage {
   // Users
@@ -72,6 +72,7 @@ export interface IStorage {
   
   // Malicious IPs
   getMaliciousIps(limit?: number, offset?: number, source?: string, threatType?: string): Promise<MaliciousIp[]>;
+  getMaliciousIpsByAddress(ipAddress: string): Promise<MaliciousIp[]>;
   upsertMaliciousIp(ip: InsertMaliciousIp): Promise<MaliciousIp>;
   getMaliciousIpCount(): Promise<number>;
   checkIpThreat(ip: string): Promise<MaliciousIp | null>;
@@ -100,6 +101,12 @@ export interface IStorage {
     maliciousIps: number;
     maliciousUrls: number;
     cisaKevCount: number;
+  }>;
+  getThreatTrends(days: number): Promise<{
+    cvesByDay: { date: string; count: number; critical: number }[];
+    ransomwareByDay: { date: string; count: number }[];
+    topThreats: { type: string; count: number }[];
+    topGroups: { name: string; count: number }[];
   }>;
   
   // User Notifications
@@ -431,6 +438,12 @@ export class DatabaseStorage implements IStorage {
     return Number(result[0]?.count || 0);
   }
 
+  async getMaliciousIpsByAddress(ipAddress: string): Promise<MaliciousIp[]> {
+    return await db.select().from(maliciousIps)
+      .where(eq(maliciousIps.ipAddress, ipAddress))
+      .orderBy(desc(maliciousIps.lastSeen));
+  }
+
   // Malicious URLs
   async getMaliciousUrls(limit = 50, offset = 0, source?: string, threatType?: string): Promise<MaliciousUrl[]> {
     let baseQuery = db.select().from(maliciousUrls);
@@ -554,6 +567,71 @@ export class DatabaseStorage implements IStorage {
       maliciousIps: maliciousIpCount,
       maliciousUrls: maliciousUrlCount,
       cisaKevCount: kevCount,
+    };
+  }
+
+  async getThreatTrends(days: number): Promise<{
+    cvesByDay: { date: string; count: number; critical: number }[];
+    ransomwareByDay: { date: string; count: number }[];
+    topThreats: { type: string; count: number }[];
+    topGroups: { name: string; count: number }[];
+  }> {
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - days);
+
+    const cvesByDayResult = await db.select({
+      date: sql<string>`DATE(${cves.publishedDate})`,
+      count: sql<number>`count(*)`,
+      critical: sql<number>`SUM(CASE WHEN ${cves.severity} = 'CRITICAL' THEN 1 ELSE 0 END)`
+    }).from(cves)
+      .where(gte(cves.publishedDate, startDate))
+      .groupBy(sql`DATE(${cves.publishedDate})`)
+      .orderBy(sql`DATE(${cves.publishedDate})`);
+
+    const ransomwareByDayResult = await db.select({
+      date: sql<string>`DATE(${ransomwareIncidents.discoveredAt})`,
+      count: sql<number>`count(*)`
+    }).from(ransomwareIncidents)
+      .where(gte(ransomwareIncidents.discoveredAt, startDate))
+      .groupBy(sql`DATE(${ransomwareIncidents.discoveredAt})`)
+      .orderBy(sql`DATE(${ransomwareIncidents.discoveredAt})`);
+
+    const topThreatsResult = await db.select({
+      type: maliciousIps.threatType,
+      count: sql<number>`count(*)`
+    }).from(maliciousIps)
+      .where(gte(maliciousIps.lastSeen, startDate))
+      .groupBy(maliciousIps.threatType)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+
+    const topGroupsResult = await db.select({
+      name: ransomwareIncidents.groupName,
+      count: sql<number>`count(*)`
+    }).from(ransomwareIncidents)
+      .where(gte(ransomwareIncidents.discoveredAt, startDate))
+      .groupBy(ransomwareIncidents.groupName)
+      .orderBy(desc(sql`count(*)`))
+      .limit(10);
+
+    return {
+      cvesByDay: cvesByDayResult.map(r => ({
+        date: String(r.date),
+        count: Number(r.count),
+        critical: Number(r.critical || 0)
+      })),
+      ransomwareByDay: ransomwareByDayResult.map(r => ({
+        date: String(r.date),
+        count: Number(r.count)
+      })),
+      topThreats: topThreatsResult.filter(r => r.type).map(r => ({
+        type: r.type || 'unknown',
+        count: Number(r.count)
+      })),
+      topGroups: topGroupsResult.map(r => ({
+        name: r.name,
+        count: Number(r.count)
+      }))
     };
   }
 

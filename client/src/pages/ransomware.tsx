@@ -190,6 +190,12 @@ export default function Ransomware() {
                             {incident.country}
                           </span>
                         )}
+                        {incident.attackVector && (
+                          <span className="flex items-center gap-1 text-orange-400">
+                            <span className="w-2 h-2 rounded-full bg-orange-400/50"></span>
+                            Vector: {incident.attackVector}
+                          </span>
+                        )}
                         {incident.website && (
                           <a 
                             href={incident.website.startsWith('http') ? incident.website : `https://${incident.website}`}
@@ -204,6 +210,30 @@ export default function Ransomware() {
                           </a>
                         )}
                       </div>
+                      {(incident.ransomAmount || incident.bitcoinWallet || incident.victimRevenue) && (
+                        <div className="flex flex-wrap gap-4 text-xs mt-2 pt-2 border-t border-white/5">
+                          {incident.ransomAmount && (
+                            <span className="flex items-center gap-1 text-red-400">
+                              Ransom: {incident.ransomCurrency || '$'}{incident.ransomAmount}
+                            </span>
+                          )}
+                          {incident.paymentStatus && (
+                            <span className={`flex items-center gap-1 ${incident.paymentStatus === 'Paid' ? 'text-red-400' : 'text-green-400'}`}>
+                              {incident.paymentStatus}
+                            </span>
+                          )}
+                          {incident.victimRevenue && (
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              Est. Revenue: {incident.victimRevenue}
+                            </span>
+                          )}
+                          {incident.employeeCount && (
+                            <span className="flex items-center gap-1 text-muted-foreground">
+                              Employees: {incident.employeeCount}
+                            </span>
+                          )}
+                        </div>
+                      )}
                     </div>
                     
                     <div className="flex flex-col items-end justify-between gap-4 min-w-[160px]">
