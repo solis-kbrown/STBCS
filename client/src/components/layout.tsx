@@ -56,7 +56,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/search", labelKey: "nav.search", icon: Scan },
     { href: "/tools", labelKey: "nav.tools", icon: Wrench },
     { href: "/alerts", labelKey: "nav.alerts", icon: Activity, isPro: true },
-    { href: "/messages", labelKey: "nav.messages", icon: MessageSquare, isPro: true },
+    { href: "/messages", labelKey: "nav.messages", icon: MessageSquare, isBusiness: true },
     { href: "/ransomware", labelKey: "nav.ransomware", icon: ShieldOff },
     { href: "/exploits", labelKey: "nav.exploits", icon: Bug },
     { href: "/threat-feeds", labelKey: "nav.threatFeeds", icon: Satellite },
@@ -95,6 +95,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <span className="font-medium">{t(item.labelKey)}</span>
                 {'isPro' in item && item.isPro && (
                   <span className="ml-auto text-[10px] font-bold bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded">PRO</span>
+                )}
+                {'isBusiness' in item && item.isBusiness && (
+                  <span className="ml-auto text-[10px] font-bold bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">BIZ</span>
                 )}
               </div>
             </Link>

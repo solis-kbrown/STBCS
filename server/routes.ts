@@ -23,6 +23,7 @@ import {
   authMiddleware, 
   requireAuth, 
   requirePro,
+  requireBusiness,
   type AuthenticatedRequest 
 } from "./auth";
 
@@ -2599,11 +2600,11 @@ export async function registerRoutes(
   });
 
   // ========================================
-  // SMS Messaging Routes (Pro/Business Only)
+  // SMS Messaging Routes (Business Only - Exclusive Feature)
   // ========================================
 
   // Get all SMS conversations
-  app.get("/api/messages/conversations", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+  app.get("/api/messages/conversations", requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const conversations = await storage.getSmsConversations();
       res.json(conversations);
@@ -2614,7 +2615,7 @@ export async function registerRoutes(
   });
 
   // Get messages for a specific conversation
-  app.get("/api/messages/conversation/:phoneNumber", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+  app.get("/api/messages/conversation/:phoneNumber", requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const phoneNumber = decodeURIComponent(req.params.phoneNumber);
       const messages = await storage.getConversationMessages(phoneNumber);
@@ -2626,7 +2627,7 @@ export async function registerRoutes(
   });
 
   // Send a new SMS message
-  app.post("/api/messages/send", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+  app.post("/api/messages/send", requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const schema = z.object({
         to: z.string().min(10).max(20),
@@ -2669,7 +2670,7 @@ export async function registerRoutes(
   });
 
   // Mark a message as read
-  app.post("/api/messages/:id/read", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+  app.post("/api/messages/:id/read", requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
       await storage.markMessageRead(req.params.id);
       res.json({ success: true });
@@ -2680,7 +2681,7 @@ export async function registerRoutes(
   });
 
   // Mark entire conversation as read
-  app.post("/api/messages/conversation/:phoneNumber/read", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+  app.post("/api/messages/conversation/:phoneNumber/read", requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const phoneNumber = decodeURIComponent(req.params.phoneNumber);
       await storage.markConversationRead(phoneNumber);
@@ -2692,7 +2693,7 @@ export async function registerRoutes(
   });
 
   // Get unread message count
-  app.get("/api/messages/unread-count", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+  app.get("/api/messages/unread-count", requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const count = await storage.getUnreadMessageCount();
       res.json({ count });

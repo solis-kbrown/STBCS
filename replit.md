@@ -67,7 +67,7 @@ Preferred communication style: Simple, everyday language.
 2. **Subscription Management**: Stripe-integrated tier system (Supporter, Pro, Business) with automatic tier assignment.
 3. **Watchlist System**: Track CVEs, IPs, domains, ransomware groups, keywords, sectors, and countries. CRUD operations with real-time updates.
 4. **Real-time Alerts**: Notification system for watchlist matches with severity levels and read/unread tracking.
-5. **Two-Way SMS Messaging**: Messages page for Pro/Business subscribers with conversation threading, send/receive SMS via (855) STB-1987, read/unread tracking, and OpenPhone webhook integration for incoming messages.
+5. **Two-Way SMS Messaging** (Business Exclusive): Messages page for Business subscribers with conversation threading, send/receive SMS via (855) STB-1987, read/unread tracking, and OpenPhone webhook integration for incoming messages.
 6. **Breach Database**: Searchable breach intelligence with verified status, data classes, and affected account counts.
 7. **API Rate Limiting**: Tiered rate limits (free: 10/min, pro: 60/min) with middleware enforcement.
 8. **Export Capabilities**: CSV/JSON export for CVEs, ransomware, IPs, URLs, KEV data (up to 5000 records).

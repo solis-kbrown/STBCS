@@ -298,7 +298,7 @@ function NewConversation({ onStart }: { onStart: (phone: string) => void }) {
 
 export default function Messages() {
   useDocumentTitle("Messages | STB Cybersecurity");
-  const { user, isAuthenticated, isPro } = useAuth();
+  const { user, isAuthenticated, isBusiness } = useAuth();
   const [selectedPhone, setSelectedPhone] = useState<string | null>(null);
   const [showNewConversation, setShowNewConversation] = useState(false);
   
@@ -313,9 +313,9 @@ export default function Messages() {
               <div className="mx-auto w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center mb-6">
                 <Lock className="h-8 w-8 text-orange-400" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-3">Pro Feature</h2>
+              <h2 className="text-2xl font-bold text-white mb-3">Business Exclusive</h2>
               <p className="text-zinc-400 mb-6">
-                The Messages Center allows two-way SMS communication with clients. Sign in with a Pro or Business subscription to access this feature.
+                The Messages Center allows two-way SMS communication with clients. Sign in with a Business subscription to access this exclusive feature.
               </p>
               <p className="text-sm text-zinc-500">
                 Click "Sign In" in the header to continue.
@@ -328,7 +328,7 @@ export default function Messages() {
     );
   }
 
-  if (!isPro) {
+  if (!isBusiness) {
     return (
       <Layout>
         <div className="min-h-[60vh] flex items-center justify-center">
@@ -337,12 +337,12 @@ export default function Messages() {
               <div className="mx-auto w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center mb-6">
                 <Crown className="h-8 w-8 text-orange-400" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-3">Pro/Business Feature</h2>
+              <h2 className="text-2xl font-bold text-white mb-3">Business Exclusive Feature</h2>
               <p className="text-zinc-400 mb-6">
-                Two-way SMS messaging is available for Pro and Business subscribers. Upgrade your subscription to unlock this feature.
+                Two-way SMS messaging is an exclusive feature for Business subscribers. Upgrade to our Business plan to unlock direct client communication.
               </p>
               <Button className="bg-orange-500 hover:bg-orange-600">
-                Upgrade to Pro
+                Upgrade to Business
               </Button>
             </CardContent>
           </Card>

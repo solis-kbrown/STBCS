@@ -13,6 +13,7 @@ interface AuthContextType {
   isLoading: boolean;
   isAuthenticated: boolean;
   isPro: boolean;
+  isBusiness: boolean;
   login: (username: string, password: string) => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -90,7 +91,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const proTiers = ["supporter", "pro", "business", "enterprise"];
+  const businessTiers = ["business", "enterprise"];
   const isPro = user ? proTiers.includes(user.tier) : false;
+  const isBusiness = user ? businessTiers.includes(user.tier) : false;
 
   return (
     <AuthContext.Provider
@@ -99,6 +102,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         isAuthenticated: !!user,
         isPro,
+        isBusiness,
         login,
         signup,
         logout,
