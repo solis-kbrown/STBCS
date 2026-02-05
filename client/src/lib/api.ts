@@ -733,6 +733,7 @@ export interface WatchlistItem {
   label: string | null;
   alertOnMatch: boolean;
   emailOnMatch: boolean;
+  smsOnMatch: boolean;
   notes: string | null;
   createdAt: string | null;
 }
@@ -841,6 +842,31 @@ export function useDeleteWatchlistItem() {
         method: "DELETE",
       });
       if (!response.ok) throw new Error("Failed to delete watchlist item");
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/watchlist"] });
+    },
+  });
+}
+
+export function useUpdateWatchlistItem() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ 
+      itemId, 
+      updates 
+    }: { 
+      itemId: string; 
+      updates: { label?: string; alertOnMatch?: boolean; emailOnMatch?: boolean; smsOnMatch?: boolean; notes?: string } 
+    }) => {
+      const response = await fetch(`/api/watchlist/${itemId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(updates),
+      });
+      if (!response.ok) throw new Error("Failed to update watchlist item");
       return response.json();
     },
     onSuccess: () => {

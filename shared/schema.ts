@@ -8,10 +8,12 @@ export const users = pgTable("users", {
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
   email: text("email").unique(),
+  phone: text("phone"),
   tier: text("tier").default("free"),
   stripeCustomerId: text("stripe_customer_id"),
   stripeSubscriptionId: text("stripe_subscription_id"),
   emailVerified: boolean("email_verified").default(false),
+  smsAlertsEnabled: boolean("sms_alerts_enabled").default(false),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("users_email_idx").on(table.email),
@@ -332,6 +334,7 @@ export const watchlistItems = pgTable("watchlist_items", {
   label: text("label"), // user-friendly label
   alertOnMatch: boolean("alert_on_match").default(true),
   emailOnMatch: boolean("email_on_match").default(false),
+  smsOnMatch: boolean("sms_on_match").default(false),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [

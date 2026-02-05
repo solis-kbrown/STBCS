@@ -1,5 +1,6 @@
 import { storage } from "./storage";
 import { Resend } from "resend";
+import { QuoService } from "./quoService";
 
 export interface EmailOptions {
   to: string;
@@ -368,7 +369,7 @@ export async function processWatchlistAlerts(userId: string): Promise<void> {
 
 async function createWatchlistNotification(
   userId: string,
-  watchlistItem: { itemType: string; itemValue: string },
+  watchlistItem: { itemType: string; itemValue: string; emailOnMatch?: boolean | null; smsOnMatch?: boolean | null },
   matchType: string,
   title: string,
   description: string
@@ -384,4 +385,150 @@ async function createWatchlistNotification(
   });
 
   console.log(`[Alerts] Created notification for user ${userId}: ${title}`);
+  
+  const user = await storage.getUser(userId);
+  
+  if (watchlistItem.emailOnMatch && user?.email) {
+    const emailContent = generateAlertEmail({
+      type: "watchlist",
+      title: title,
+      description: description.substring(0, 500),
+      severity: matchType === "cve" ? "HIGH" : "MEDIUM",
+      matchedItem: watchlistItem.itemValue,
+      link: `https://stbcybersecurity.com/alerts`
+    });
+    
+    await sendEmail({
+      to: user.email,
+      subject: emailContent.subject,
+      html: emailContent.html,
+      text: emailContent.text
+    });
+    
+    console.log(`[Alerts] Sent email alert to ${user.email} for watchlist match: ${title}`);
+  }
+  
+  if (watchlistItem.smsOnMatch && user?.phone && user?.tier === "business" && user?.smsAlertsEnabled) {
+    try {
+      const quoService = new QuoService();
+      await quoService.sendThreatAlert(
+        user.phone,
+        matchType === "cve" ? "Vulnerability" : matchType === "ransomware" ? "Ransomware" : "Threat",
+        matchType === "cve" ? "HIGH" : "MEDIUM",
+        `Watchlist match: ${title} - ${description.substring(0, 100)}`
+      );
+      console.log(`[Alerts] Sent SMS alert to ${user.phone} for watchlist match: ${title}`);
+    } catch (error) {
+      console.error(`[Alerts] Failed to send SMS alert:`, error);
+    }
+  }
+}
+
+export async function sendCriticalThreatAlert(
+  userEmail: string,
+  alertType: "ransomware" | "cve",
+  title: string,
+  description: string,
+  severity: string
+): Promise<boolean> {
+  const emailContent = generateAlertEmail({
+    type: alertType,
+    title,
+    description,
+    severity,
+    link: alertType === "cve" 
+      ? `https://stbcybersecurity.com/exploits` 
+      : `https://stbcybersecurity.com/ransomware`
+  });
+  
+  return sendEmail({
+    to: userEmail,
+    subject: emailContent.subject,
+    html: emailContent.html,
+    text: emailContent.text
+  });
+}
+
+export async function processBusinessCriticalAlerts(): Promise<void> {
+  console.log(`[Alerts] Processing critical alerts for Business users...`);
+  
+  const businessTiers = ["business", "enterprise"];
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
+  
+  const [criticalCves, recentRansomware] = await Promise.all([
+    storage.getCves(50, 0),
+    storage.getRansomwareIncidents(50, 0)
+  ]);
+  
+  const newCriticalCves = criticalCves.filter(cve => 
+    cve.severity === "CRITICAL" && 
+    cve.createdAt && 
+    new Date(cve.createdAt) > oneHourAgo
+  );
+  
+  const newRansomware = recentRansomware.filter(incident =>
+    incident.discoveredAt && 
+    new Date(incident.discoveredAt) > oneHourAgo
+  );
+  
+  if (newCriticalCves.length === 0 && newRansomware.length === 0) {
+    return;
+  }
+  
+  const users = await storage.getAllUsers();
+  const businessUsers = users.filter((u: { tier: string; email: string | null; phone: string | null; smsAlertsEnabled: boolean | null }) => 
+    businessTiers.includes(u.tier) && u.email
+  );
+  
+  for (const user of businessUsers) {
+    for (const cve of newCriticalCves.slice(0, 3)) {
+      await sendCriticalThreatAlert(
+        user.email!,
+        "cve",
+        `Critical CVE: ${cve.cveId}`,
+        cve.description || "A critical vulnerability has been discovered.",
+        "CRITICAL"
+      );
+      
+      if (user.phone && user.smsAlertsEnabled) {
+        try {
+          const quoService = new QuoService();
+          await quoService.sendThreatAlert(
+            user.phone,
+            "Critical CVE",
+            "CRITICAL",
+            `${cve.cveId}: ${(cve.description || "Critical vulnerability").substring(0, 100)}`
+          );
+        } catch (error) {
+          console.error(`[Alerts] Failed to send SMS for CVE ${cve.cveId}:`, error);
+        }
+      }
+    }
+    
+    for (const incident of newRansomware.slice(0, 3)) {
+      await sendCriticalThreatAlert(
+        user.email!,
+        "ransomware",
+        `Ransomware Attack: ${incident.victim}`,
+        `${incident.groupName}: ${incident.description || "New ransomware incident detected."}`,
+        "HIGH"
+      );
+      
+      if (user.phone && user.smsAlertsEnabled) {
+        try {
+          const quoService = new QuoService();
+          await quoService.sendThreatAlert(
+            user.phone,
+            "Ransomware Attack",
+            "HIGH",
+            `${incident.victim} targeted by ${incident.groupName}`
+          );
+        } catch (error) {
+          console.error(`[Alerts] Failed to send SMS for ransomware incident:`, error);
+        }
+      }
+    }
+  }
+  
+  console.log(`[Alerts] Sent critical alerts to ${businessUsers.length} Business users`);
 }

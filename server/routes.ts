@@ -935,6 +935,7 @@ export async function registerRoutes(
         label: z.string().max(200).nullable().optional(),
         alertOnMatch: z.boolean().default(true),
         emailOnMatch: z.boolean().default(false),
+        smsOnMatch: z.boolean().default(false),
         notes: z.string().max(1000).nullable().optional(),
       });
       
@@ -2307,15 +2308,21 @@ export async function registerRoutes(
   app.post("/api/watchlist", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const schema = z.object({
-        itemType: z.enum(["cve", "ip", "domain", "ransomware_group", "keyword", "sector", "country"]),
+        itemType: z.enum(["cve", "ip", "domain", "ransomware_group", "keyword", "sector", "country", "company"]),
         itemValue: z.string().min(1).max(500),
         label: z.string().max(100).optional(),
         alertOnMatch: z.boolean().default(true),
         emailOnMatch: z.boolean().default(false),
+        smsOnMatch: z.boolean().default(false),
         notes: z.string().max(1000).optional(),
       });
       
       const data = schema.parse(req.body);
+      
+      if (data.smsOnMatch && req.user!.tier !== "business") {
+        res.status(403).json({ error: "SMS alerts are only available for Business tier" });
+        return;
+      }
       
       const item = await storage.createWatchlistItem({
         userId: req.user!.id,
@@ -2324,6 +2331,7 @@ export async function registerRoutes(
         label: data.label,
         alertOnMatch: data.alertOnMatch,
         emailOnMatch: data.emailOnMatch,
+        smsOnMatch: data.smsOnMatch,
         notes: data.notes,
       });
       
@@ -2346,10 +2354,17 @@ export async function registerRoutes(
         label: z.string().max(100).optional(),
         alertOnMatch: z.boolean().optional(),
         emailOnMatch: z.boolean().optional(),
+        smsOnMatch: z.boolean().optional(),
         notes: z.string().max(1000).optional(),
       });
       
       const data = schema.parse(req.body);
+      
+      if (data.smsOnMatch && req.user!.tier !== "business") {
+        res.status(403).json({ error: "SMS alerts are only available for Business tier" });
+        return;
+      }
+      
       const item = await storage.updateWatchlistItem(asString(id), req.user!.id, data);
       
       if (!item) {

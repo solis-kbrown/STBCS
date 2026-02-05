@@ -8,6 +8,7 @@ import {
   useWatchlist, 
   useAddWatchlistItem, 
   useDeleteWatchlistItem,
+  useUpdateWatchlistItem,
   useMarkNotificationRead,
   useMarkAllNotificationsRead,
   useBreaches,
@@ -38,7 +39,11 @@ import {
   ExternalLink,
   CheckCheck,
   Lock,
-  Crown
+  Crown,
+  Mail,
+  MailX,
+  MessageSquare,
+  MessageSquareOff
 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -81,7 +86,7 @@ function getTypeIcon(type: string) {
 
 export default function Alerts() {
   useDocumentTitle("Pro Alerts & Watchlist | STB Cybersecurity");
-  const { user, isAuthenticated, isPro } = useAuth();
+  const { user, isAuthenticated, isPro, isBusiness } = useAuth();
   const [activeTab, setActiveTab] = useState("notifications");
   const [newWatchItem, setNewWatchItem] = useState({ type: "company", value: "" });
   const [breachSearch, setBreachSearch] = useState("");
@@ -94,6 +99,7 @@ export default function Alerts() {
   
   const addWatchlistItem = useAddWatchlistItem();
   const deleteWatchlistItem = useDeleteWatchlistItem();
+  const updateWatchlistItem = useUpdateWatchlistItem();
   const markRead = useMarkNotificationRead();
   const markAllRead = useMarkAllNotificationsRead();
 
@@ -111,6 +117,7 @@ export default function Alerts() {
       label: null,
       alertOnMatch: true,
       emailOnMatch: false,
+      smsOnMatch: false,
       notes: null,
     });
     setNewWatchItem({ type: "company", value: "" });
@@ -119,6 +126,14 @@ export default function Alerts() {
   const handleDeleteWatchItem = (itemId: string) => {
     if (!userId) return;
     deleteWatchlistItem.mutate({ itemId, userId });
+  };
+
+  const handleToggleEmailAlerts = (itemId: string, currentValue: boolean) => {
+    updateWatchlistItem.mutate({ itemId, updates: { emailOnMatch: !currentValue } });
+  };
+
+  const handleToggleSmsAlerts = (itemId: string, currentValue: boolean) => {
+    updateWatchlistItem.mutate({ itemId, updates: { smsOnMatch: !currentValue } });
   };
 
   const handleMarkRead = (notificationId: string) => {
@@ -381,7 +396,7 @@ export default function Alerts() {
                           </div>
                           <div className="flex-1">
                             <h4 className="font-bold text-white">{item.itemValue}</h4>
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-2 mt-1 flex-wrap">
                               <Badge variant="outline" className="text-xs">{typeInfo?.label || item.itemType}</Badge>
                               {item.alertOnMatch && (
                                 <Badge className="bg-primary/20 text-primary text-xs">
@@ -389,20 +404,60 @@ export default function Alerts() {
                                   Alerts On
                                 </Badge>
                               )}
+                              {item.emailOnMatch && (
+                                <Badge className="bg-blue-500/20 text-blue-400 text-xs">
+                                  <Mail className="h-3 w-3 mr-1" />
+                                  Email On
+                                </Badge>
+                              )}
+                              {item.smsOnMatch && (
+                                <Badge className="bg-purple-500/20 text-purple-400 text-xs">
+                                  <MessageSquare className="h-3 w-3 mr-1" />
+                                  SMS On
+                                </Badge>
+                              )}
                               <span className="text-xs text-muted-foreground">
                                 Added {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Unknown'}
                               </span>
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeleteWatchItem(item.id)}
-                            className="text-destructive hover:bg-destructive/10"
-                            data-testid={`button-delete-watchlist-${item.id}`}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleToggleEmailAlerts(item.id, item.emailOnMatch)}
+                              className={item.emailOnMatch 
+                                ? "text-blue-400 hover:bg-blue-500/10" 
+                                : "text-muted-foreground hover:bg-muted/10"}
+                              title={item.emailOnMatch ? "Disable email alerts" : "Enable email alerts"}
+                              data-testid={`button-toggle-email-${item.id}`}
+                            >
+                              {item.emailOnMatch ? <Mail className="h-4 w-4" /> : <MailX className="h-4 w-4" />}
+                            </Button>
+                            {isBusiness && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => handleToggleSmsAlerts(item.id, item.smsOnMatch)}
+                                className={item.smsOnMatch 
+                                  ? "text-purple-400 hover:bg-purple-500/10" 
+                                  : "text-muted-foreground hover:bg-muted/10"}
+                                title={item.smsOnMatch ? "Disable SMS alerts" : "Enable SMS alerts (Business)"}
+                                data-testid={`button-toggle-sms-${item.id}`}
+                              >
+                                {item.smsOnMatch ? <MessageSquare className="h-4 w-4" /> : <MessageSquareOff className="h-4 w-4" />}
+                              </Button>
+                            )}
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleDeleteWatchItem(item.id)}
+                              className="text-destructive hover:bg-destructive/10"
+                              data-testid={`button-delete-watchlist-${item.id}`}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </div>
                       </CardContent>
                     </Card>

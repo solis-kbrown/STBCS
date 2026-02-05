@@ -65,14 +65,15 @@ Preferred communication style: Simple, everyday language.
 ### Pro Tier Features (10 Features)
 1. **User Authentication**: Secure signup/login with bcrypt password hashing (12 salt rounds), session management via httpOnly cookies (30-day expiration).
 2. **Subscription Management**: Stripe-integrated tier system (Supporter, Pro, Business) with automatic tier assignment.
-3. **Watchlist System**: Track CVEs, IPs, domains, ransomware groups, keywords, sectors, and countries. CRUD operations with real-time updates.
-4. **Real-time Alerts**: Notification system for watchlist matches with severity levels and read/unread tracking.
+3. **Watchlist System**: Track CVEs, IPs, domains, ransomware groups, keywords, sectors, and countries. CRUD operations with real-time updates. Toggle email alerts (Pro+) and SMS alerts (Business only) per item.
+4. **Real-time Alerts**: Notification system for watchlist matches with severity levels and read/unread tracking. Email notifications when `emailOnMatch` is enabled. SMS alerts for Business users when `smsOnMatch` is enabled.
 5. **Two-Way SMS Messaging** (Business Exclusive): Messages page for Business subscribers with conversation threading, send/receive SMS via (855) STB-1987, read/unread tracking, and OpenPhone webhook integration for incoming messages.
 6. **Breach Database**: Searchable breach intelligence with verified status, data classes, and affected account counts.
 7. **API Rate Limiting**: Tiered rate limits (free: 10/min, pro: 60/min) with middleware enforcement.
 8. **Export Capabilities**: CSV/JSON export for CVEs, ransomware, IPs, URLs, KEV data (up to 5000 records).
 9. **Advanced Search**: Multi-filter search across all threat data with date ranges, severity, and type filters.
 10. **Advanced Nmap Port Scanner**: Nmap-style port scanner with service detection, banner grabbing, custom port ranges (up to 500 ports). Includes abuse prevention: 30-second cooldown, 20 scans/hour, daily limits (Pro: 30, Business: 100). Internal/private IP scanning blocked.
+11. **Instant Critical Alerts** (Business Exclusive): Automatic email and SMS notifications for critical CVEs (CVSS 9.0+) and new ransomware incidents. Business users with phone numbers and SMS enabled receive real-time alerts via OpenPhone integration.
 
 ### Authentication System
 - **Backend**: `server/auth.ts` - Password hashing, session tokens, verification

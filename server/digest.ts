@@ -1,5 +1,5 @@
 import { storage } from "./storage";
-import { sendEmail, generateWeeklyDigestEmail } from "./email";
+import { sendEmail, generateWeeklyDigestEmail, processBusinessCriticalAlerts } from "./email";
 import { subDays, format } from "date-fns";
 
 export interface DigestData {
