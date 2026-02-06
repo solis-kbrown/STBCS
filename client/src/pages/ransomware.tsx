@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Search, Filter, Download, ExternalLink, Globe, Loader2, ArrowUpDown, SlidersHorizontal, Calendar, RotateCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useMemo, KeyboardEvent } from "react";
+import { useState, useMemo, useCallback, KeyboardEvent } from "react";
+import PaginationControls from "@/components/pagination-controls";
 
 type SortOption = "newest" | "oldest" | "group-az" | "group-za" | "status";
 
@@ -23,6 +24,8 @@ export default function Ransomware() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showAllGroups, setShowAllGroups] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   
   const { data, isLoading } = useRansomware(1000, 0, selectedGroup);
   const { data: groups } = useRansomwareGroups();
@@ -34,12 +37,14 @@ export default function Ransomware() {
     if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
       setActiveSearch(searchQuery.trim());
       setSelectedGroup(undefined);
+      setCurrentPage(1);
     }
   };
   
   const clearSearch = () => {
     setSearchQuery("");
     setActiveSearch("");
+    setCurrentPage(1);
   };
   
   const rawIncidents = activeSearch ? (searchResults?.data || []) : (data?.data || []);
@@ -55,7 +60,13 @@ export default function Ransomware() {
     setSortBy("newest");
     setDateRange("all");
     setStatusFilter("all");
+    setCurrentPage(1);
   };
+
+  const handlePageSizeChange = useCallback((size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  }, []);
 
   const incidents = useMemo(() => {
     let filtered = [...rawIncidents];
@@ -89,6 +100,10 @@ export default function Ransomware() {
 
     return filtered;
   }, [rawIncidents, sortBy, dateRange, statusFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(incidents.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedIncidents = incidents.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   return (
     <Layout>
@@ -145,7 +160,7 @@ export default function Ransomware() {
                 )}
               </div>
               <div className="flex gap-2">
-                <Select value={sortBy} onValueChange={(v) => setSortBy(v as SortOption)}>
+                <Select value={sortBy} onValueChange={(v) => { setSortBy(v as SortOption); setCurrentPage(1); }}>
                   <SelectTrigger className="w-[170px] bg-background/50 border-white/10 h-10" data-testid="select-sort-ransomware">
                     <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Sort by" />
@@ -178,7 +193,7 @@ export default function Ransomware() {
 
             {showFilters && (
               <div className="flex flex-wrap gap-3 pt-2 border-t border-white/5 animate-in slide-in-from-top-2 duration-200">
-                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
                   <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-status-filter">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -190,7 +205,7 @@ export default function Ransomware() {
                   </SelectContent>
                 </Select>
 
-                <Select value={dateRange} onValueChange={setDateRange}>
+                <Select value={dateRange} onValueChange={(v) => { setDateRange(v); setCurrentPage(1); }}>
                   <SelectTrigger className="w-[150px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-date-range">
                     <Calendar className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Date Range" />
@@ -224,7 +239,7 @@ export default function Ransomware() {
                 variant={!selectedGroup ? "default" : "ghost"} 
                 size="sm" 
                 className={`h-7 text-xs ${!selectedGroup ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border border-white/10 bg-white/5 text-muted-foreground hover:text-white'}`}
-                onClick={() => setSelectedGroup(undefined)}
+                onClick={() => { setSelectedGroup(undefined); setCurrentPage(1); }}
                 data-testid="button-filter-all"
               >
                 All Groups
@@ -235,7 +250,7 @@ export default function Ransomware() {
                   variant={selectedGroup === g.name ? "default" : "ghost"} 
                   size="sm" 
                   className={`h-7 text-xs ${selectedGroup === g.name ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border border-white/10 bg-white/5 text-muted-foreground hover:text-white'}`}
-                  onClick={() => setSelectedGroup(g.name)}
+                  onClick={() => { setSelectedGroup(g.name); setCurrentPage(1); }}
                   data-testid={`button-filter-${g.name.replace(/[^a-zA-Z0-9]/g, '')}`}
                 >
                   {g.name} ({g.count})
@@ -256,8 +271,8 @@ export default function Ransomware() {
 
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span data-testid="text-result-count">
-                Showing {incidents.length} of {rawIncidents.length} incidents
-                {activeFilterCount > 0 && ` (${activeFilterCount} filter${activeFilterCount > 1 ? 's' : ''} active)`}
+                {incidents.length} incidents{incidents.length !== rawIncidents.length ? ` (filtered from ${rawIncidents.length})` : ''}
+                {activeFilterCount > 0 && ` | ${activeFilterCount} filter${activeFilterCount > 1 ? 's' : ''} active`}
               </span>
               <span>{data?.total || 0} total in database</span>
             </div>
@@ -299,8 +314,8 @@ export default function Ransomware() {
                 </CardContent>
               </Card>
             ))
-          ) : incidents.length > 0 ? (
-            incidents.map((incident) => (
+          ) : paginatedIncidents.length > 0 ? (
+            paginatedIncidents.map((incident) => (
               <Card 
                 key={incident.id} 
                 className="border-white/5 bg-card/40 hover:bg-card/60 transition-colors group cursor-pointer" 
@@ -439,6 +454,16 @@ export default function Ransomware() {
             </Card>
           )}
         </div>
+        {!loading && incidents.length > 0 && (
+          <PaginationControls
+            currentPage={safePage}
+            totalPages={totalPages}
+            pageSize={pageSize}
+            totalItems={incidents.length}
+            onPageChange={setCurrentPage}
+            onPageSizeChange={handlePageSizeChange}
+          />
+        )}
         <Footer />
       </div>
     </Layout>

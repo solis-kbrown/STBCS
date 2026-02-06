@@ -7,12 +7,24 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Globe, Share2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState, useCallback } from "react";
+import PaginationControls from "@/components/pagination-controls";
 
 export default function News() {
   useDocumentTitle("Cybersecurity Intel & News | STB Cybersecurity");
-  const { data, isLoading } = useNews(20);
+  const { data, isLoading } = useNews(1000);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
   
   const news = data?.data || [];
+  const totalPages = Math.max(1, Math.ceil(news.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedNews = news.slice((safePage - 1) * pageSize, safePage * pageSize);
+  
+  const handlePageSizeChange = useCallback((size: number) => {
+    setPageSize(size);
+    setCurrentPage(1);
+  }, []);
 
   return (
     <Layout>
@@ -45,8 +57,8 @@ export default function News() {
                   </CardContent>
                 </Card>
               ))
-            ) : news.length > 0 ? (
-              news.map((article) => (
+            ) : paginatedNews.length > 0 ? (
+              paginatedNews.map((article) => (
                 <Card key={article.id} className="border-white/5 bg-card/40 hover:bg-card/60 transition-colors group overflow-hidden" data-testid={`card-news-${article.id}`}>
                   <CardContent className="p-0 flex flex-col sm:flex-row">
                     <div className="w-full sm:w-48 bg-white/5 shrink-0 flex items-center justify-center p-8 sm:p-0">
@@ -107,6 +119,16 @@ export default function News() {
                   <p className="text-muted-foreground">No news articles loaded yet. Data will appear after the first refresh cycle.</p>
                 </CardContent>
               </Card>
+            )}
+            {!isLoading && news.length > 0 && (
+              <PaginationControls
+                currentPage={safePage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalItems={news.length}
+                onPageChange={setCurrentPage}
+                onPageSizeChange={handlePageSizeChange}
+              />
             )}
           </div>
 

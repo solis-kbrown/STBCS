@@ -10,7 +10,8 @@ import { Globe, Shield, Link2, Lock, AlertTriangle, CheckCircle, Clock, Zap, Dow
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
+import PaginationControls from "@/components/pagination-controls";
 
 type IpSortOption = "newest" | "oldest" | "source" | "threat";
 type UrlSortOption = "newest" | "oldest" | "source" | "status";
@@ -18,9 +19,9 @@ type UrlSortOption = "newest" | "oldest" | "source" | "status";
 export default function ThreatFeeds() {
   useDocumentTitle("Threat Intelligence Feeds | STB Cybersecurity");
   const { data: feeds, isLoading: feedsLoading } = useThreatFeeds();
-  const { data: ipsData, isLoading: ipsLoading } = useMaliciousIps(100);
-  const { data: urlsData, isLoading: urlsLoading } = useMaliciousUrls(100);
-  const { data: kevData, isLoading: kevLoading } = useCisaKev(100);
+  const { data: ipsData, isLoading: ipsLoading } = useMaliciousIps(1000);
+  const { data: urlsData, isLoading: urlsLoading } = useMaliciousUrls(1000);
+  const { data: kevData, isLoading: kevLoading } = useCisaKev(1000);
   const exportMutation = useExportData();
 
   const [ipSearch, setIpSearch] = useState("");
@@ -33,6 +34,13 @@ export default function ThreatFeeds() {
   const [urlStatusFilter, setUrlStatusFilter] = useState("all");
 
   const [kevSearch, setKevSearch] = useState("");
+
+  const [ipPage, setIpPage] = useState(1);
+  const [ipPageSize, setIpPageSize] = useState(25);
+  const [urlPage, setUrlPage] = useState(1);
+  const [urlPageSize, setUrlPageSize] = useState(25);
+  const [kevPage, setKevPage] = useState(1);
+  const [kevPageSize, setKevPageSize] = useState(25);
 
   const rawIps = ipsData?.data || [];
   const rawUrls = urlsData?.data || [];
@@ -91,6 +99,18 @@ export default function ThreatFeeds() {
     const q = kevSearch.toLowerCase();
     return rawKev.filter(k => k.cveId?.toLowerCase().includes(q) || k.vulnerabilityName?.toLowerCase().includes(q) || k.vendorProject?.toLowerCase().includes(q) || k.product?.toLowerCase().includes(q));
   }, [rawKev, kevSearch]);
+
+  const ipTotalPages = Math.max(1, Math.ceil(maliciousIps.length / ipPageSize));
+  const ipSafePage = Math.min(ipPage, ipTotalPages);
+  const paginatedIps = maliciousIps.slice((ipSafePage - 1) * ipPageSize, ipSafePage * ipPageSize);
+
+  const urlTotalPages = Math.max(1, Math.ceil(maliciousUrls.length / urlPageSize));
+  const urlSafePage = Math.min(urlPage, urlTotalPages);
+  const paginatedUrls = maliciousUrls.slice((urlSafePage - 1) * urlPageSize, urlSafePage * urlPageSize);
+
+  const kevTotalPages = Math.max(1, Math.ceil(cisaKev.length / kevPageSize));
+  const kevSafePage = Math.min(kevPage, kevTotalPages);
+  const paginatedKev = cisaKev.slice((kevSafePage - 1) * kevPageSize, kevSafePage * kevPageSize);
 
   return (
     <Layout>
@@ -219,12 +239,12 @@ export default function ThreatFeeds() {
                       placeholder="Search IPs, sources, threat types..."
                       className="pl-10 bg-background/50 border-white/10 h-9 text-sm"
                       value={ipSearch}
-                      onChange={(e) => setIpSearch(e.target.value)}
+                      onChange={(e) => { setIpSearch(e.target.value); setIpPage(1); }}
                       data-testid="input-search-ips"
                     />
                   </div>
                   <div className="flex gap-2">
-                    <Select value={ipSort} onValueChange={(v) => setIpSort(v as IpSortOption)}>
+                    <Select value={ipSort} onValueChange={(v) => { setIpSort(v as IpSortOption); setIpPage(1); }}>
                       <SelectTrigger className="w-[150px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-sort-ips">
                         <ArrowUpDown className="h-3 w-3 mr-2 text-muted-foreground" />
                         <SelectValue />
@@ -236,7 +256,7 @@ export default function ThreatFeeds() {
                         <SelectItem value="threat">By Threat</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Select value={ipSourceFilter} onValueChange={setIpSourceFilter}>
+                    <Select value={ipSourceFilter} onValueChange={(v) => { setIpSourceFilter(v); setIpPage(1); }}>
                       <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-source-ips">
                         <SelectValue placeholder="All Sources" />
                       </SelectTrigger>
@@ -250,9 +270,9 @@ export default function ThreatFeeds() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Showing {maliciousIps.length} of {rawIps.length} IPs</span>
+                  <span>{maliciousIps.length} IPs{maliciousIps.length !== rawIps.length ? ` (filtered from ${rawIps.length})` : ''}</span>
                   {(ipSearch || ipSourceFilter !== "all" || ipSort !== "newest") && (
-                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-white px-2" onClick={() => { setIpSearch(""); setIpSort("newest"); setIpSourceFilter("all"); }} data-testid="button-clear-ip-filters">
+                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-white px-2" onClick={() => { setIpSearch(""); setIpSort("newest"); setIpSourceFilter("all"); setIpPage(1); }} data-testid="button-clear-ip-filters">
                       <RotateCcw className="h-3 w-3 mr-1" />
                       Clear
                     </Button>
@@ -262,33 +282,43 @@ export default function ThreatFeeds() {
                   <div className="space-y-2">
                     {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
                   </div>
-                ) : maliciousIps.length > 0 ? (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="text-xs uppercase bg-white/5 text-gray-300">
-                        <tr>
-                          <th className="px-4 py-3 text-left">IP Address</th>
-                          <th className="px-4 py-3 text-left">Source</th>
-                          <th className="px-4 py-3 text-left">Threat Type</th>
-                          <th className="px-4 py-3 text-left">Last Seen</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {maliciousIps.map((ip) => (
-                          <tr key={ip.id} className="border-b border-white/5 hover:bg-white/5">
-                            <td className="px-4 py-3 font-mono text-primary">{ip.ipAddress}</td>
-                            <td className="px-4 py-3">
-                              <Badge variant="outline" className="border-white/20">{ip.source}</Badge>
-                            </td>
-                            <td className="px-4 py-3 text-muted-foreground">{ip.threatType || 'Unknown'}</td>
-                            <td className="px-4 py-3 text-xs text-muted-foreground">
-                              {ip.lastSeen ? new Date(ip.lastSeen).toLocaleString() : 'N/A'}
-                            </td>
+                ) : paginatedIps.length > 0 ? (
+                  <>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-sm">
+                        <thead className="text-xs uppercase bg-white/5 text-gray-300">
+                          <tr>
+                            <th className="px-4 py-3 text-left">IP Address</th>
+                            <th className="px-4 py-3 text-left">Source</th>
+                            <th className="px-4 py-3 text-left">Threat Type</th>
+                            <th className="px-4 py-3 text-left">Last Seen</th>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                        </thead>
+                        <tbody>
+                          {paginatedIps.map((ip) => (
+                            <tr key={ip.id} className="border-b border-white/5 hover:bg-white/5">
+                              <td className="px-4 py-3 font-mono text-primary">{ip.ipAddress}</td>
+                              <td className="px-4 py-3">
+                                <Badge variant="outline" className="border-white/20">{ip.source}</Badge>
+                              </td>
+                              <td className="px-4 py-3 text-muted-foreground">{ip.threatType || 'Unknown'}</td>
+                              <td className="px-4 py-3 text-xs text-muted-foreground">
+                                {ip.lastSeen ? new Date(ip.lastSeen).toLocaleString() : 'N/A'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <PaginationControls
+                      currentPage={ipSafePage}
+                      totalPages={ipTotalPages}
+                      pageSize={ipPageSize}
+                      totalItems={maliciousIps.length}
+                      onPageChange={setIpPage}
+                      onPageSizeChange={(s) => { setIpPageSize(s); setIpPage(1); }}
+                    />
+                  </>
                 ) : (
                   <p className="text-center text-muted-foreground py-8">
                     {ipSearch || ipSourceFilter !== "all" ? "No IPs match the current filters." : "No malicious IPs loaded yet."}
@@ -330,12 +360,12 @@ export default function ThreatFeeds() {
                       placeholder="Search URLs, sources, threat types..."
                       className="pl-10 bg-background/50 border-white/10 h-9 text-sm"
                       value={urlSearch}
-                      onChange={(e) => setUrlSearch(e.target.value)}
+                      onChange={(e) => { setUrlSearch(e.target.value); setUrlPage(1); }}
                       data-testid="input-search-urls"
                     />
                   </div>
                   <div className="flex gap-2">
-                    <Select value={urlSort} onValueChange={(v) => setUrlSort(v as UrlSortOption)}>
+                    <Select value={urlSort} onValueChange={(v) => { setUrlSort(v as UrlSortOption); setUrlPage(1); }}>
                       <SelectTrigger className="w-[150px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-sort-urls">
                         <ArrowUpDown className="h-3 w-3 mr-2 text-muted-foreground" />
                         <SelectValue />
@@ -347,7 +377,7 @@ export default function ThreatFeeds() {
                         <SelectItem value="status">By Status</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Select value={urlSourceFilter} onValueChange={setUrlSourceFilter}>
+                    <Select value={urlSourceFilter} onValueChange={(v) => { setUrlSourceFilter(v); setUrlPage(1); }}>
                       <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-source-urls">
                         <SelectValue placeholder="All Sources" />
                       </SelectTrigger>
@@ -358,7 +388,7 @@ export default function ThreatFeeds() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <Select value={urlStatusFilter} onValueChange={setUrlStatusFilter}>
+                    <Select value={urlStatusFilter} onValueChange={(v) => { setUrlStatusFilter(v); setUrlPage(1); }}>
                       <SelectTrigger className="w-[140px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-status-urls">
                         <SelectValue placeholder="All Statuses" />
                       </SelectTrigger>
@@ -371,9 +401,9 @@ export default function ThreatFeeds() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>Showing {maliciousUrls.length} of {rawUrls.length} URLs</span>
+                  <span>{maliciousUrls.length} URLs{maliciousUrls.length !== rawUrls.length ? ` (filtered from ${rawUrls.length})` : ''}</span>
                   {(urlSearch || urlSourceFilter !== "all" || urlStatusFilter !== "all" || urlSort !== "newest") && (
-                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-white px-2" onClick={() => { setUrlSearch(""); setUrlSort("newest"); setUrlSourceFilter("all"); setUrlStatusFilter("all"); }} data-testid="button-clear-url-filters">
+                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-white px-2" onClick={() => { setUrlSearch(""); setUrlSort("newest"); setUrlSourceFilter("all"); setUrlStatusFilter("all"); setUrlPage(1); }} data-testid="button-clear-url-filters">
                       <RotateCcw className="h-3 w-3 mr-1" />
                       Clear
                     </Button>
@@ -383,29 +413,39 @@ export default function ThreatFeeds() {
                   <div className="space-y-2">
                     {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
                   </div>
-                ) : maliciousUrls.length > 0 ? (
-                  <div className="space-y-3">
-                    {maliciousUrls.map((url) => (
-                      <div key={url.id} className="p-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1 min-w-0">
-                            <p className="font-mono text-sm text-primary truncate">{url.url}</p>
-                            <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
-                              <Badge variant="outline" className="border-white/20">{url.source}</Badge>
-                              <span>{url.threatType || 'Unknown'}</span>
-                              {url.malwareFamily && <span className="text-orange-400">{url.malwareFamily}</span>}
+                ) : paginatedUrls.length > 0 ? (
+                  <>
+                    <div className="space-y-3">
+                      {paginatedUrls.map((url) => (
+                        <div key={url.id} className="p-3 rounded-lg border border-white/5 bg-white/5 hover:bg-white/10 transition-colors">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-mono text-sm text-primary truncate">{url.url}</p>
+                              <div className="flex items-center gap-3 mt-2 text-xs text-muted-foreground">
+                                <Badge variant="outline" className="border-white/20">{url.source}</Badge>
+                                <span>{url.threatType || 'Unknown'}</span>
+                                {url.malwareFamily && <span className="text-orange-400">{url.malwareFamily}</span>}
+                              </div>
                             </div>
+                            <Badge className={
+                              url.status === 'active' ? 'bg-destructive' : 
+                              url.status === 'offline' ? 'bg-green-600' : 'bg-gray-600'
+                            }>
+                              {url.status}
+                            </Badge>
                           </div>
-                          <Badge className={
-                            url.status === 'active' ? 'bg-destructive' : 
-                            url.status === 'offline' ? 'bg-green-600' : 'bg-gray-600'
-                          }>
-                            {url.status}
-                          </Badge>
                         </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                    <PaginationControls
+                      currentPage={urlSafePage}
+                      totalPages={urlTotalPages}
+                      pageSize={urlPageSize}
+                      totalItems={maliciousUrls.length}
+                      onPageChange={setUrlPage}
+                      onPageSizeChange={(s) => { setUrlPageSize(s); setUrlPage(1); }}
+                    />
+                  </>
                 ) : (
                   <p className="text-center text-muted-foreground py-8">
                     {urlSearch || urlSourceFilter !== "all" || urlStatusFilter !== "all" ? "No URLs match the current filters." : "No malicious URLs loaded yet."}
@@ -446,56 +486,66 @@ export default function ThreatFeeds() {
                     placeholder="Search CVEs, vendors, products..."
                     className="pl-10 bg-background/50 border-white/10 h-9 text-sm"
                     value={kevSearch}
-                    onChange={(e) => setKevSearch(e.target.value)}
+                    onChange={(e) => { setKevSearch(e.target.value); setKevPage(1); }}
                     data-testid="input-search-kev"
                   />
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  Showing {cisaKev.length} of {rawKev.length} entries
+                  {cisaKev.length} entries{cisaKev.length !== rawKev.length ? ` (filtered from ${rawKev.length})` : ''}
                 </div>
                 {kevLoading ? (
                   <div className="space-y-2">
                     {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
                   </div>
-                ) : cisaKev.length > 0 ? (
-                  <div className="space-y-3">
-                    {cisaKev.map((kev) => (
-                      <div key={kev.id} className="p-4 rounded-lg border border-white/5 bg-white/5 hover:border-yellow-500/30 transition-colors">
-                        <div className="flex items-start justify-between gap-4 mb-2">
-                          <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <Badge variant="outline" className="font-mono border-yellow-500/50 text-yellow-400">
-                                {kev.cveId}
-                              </Badge>
-                              {kev.knownRansomware && (
-                                <Badge className="bg-destructive text-[10px]">RANSOMWARE</Badge>
-                              )}
+                ) : paginatedKev.length > 0 ? (
+                  <>
+                    <div className="space-y-3">
+                      {paginatedKev.map((kev) => (
+                        <div key={kev.id} className="p-4 rounded-lg border border-white/5 bg-white/5 hover:border-yellow-500/30 transition-colors">
+                          <div className="flex items-start justify-between gap-4 mb-2">
+                            <div>
+                              <div className="flex items-center gap-2 mb-1">
+                                <Badge variant="outline" className="font-mono border-yellow-500/50 text-yellow-400">
+                                  {kev.cveId}
+                                </Badge>
+                                {kev.knownRansomware && (
+                                  <Badge className="bg-destructive text-[10px]">RANSOMWARE</Badge>
+                                )}
+                              </div>
+                              <h4 className="font-bold text-white">{kev.vulnerabilityName}</h4>
                             </div>
-                            <h4 className="font-bold text-white">{kev.vulnerabilityName}</h4>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="border-white/10 text-xs"
+                              data-testid={`button-view-cve-${kev.cveId}`}
+                              onClick={() => window.open(`https://nvd.nist.gov/vuln/detail/${kev.cveId}`, '_blank')}
+                            >
+                              View CVE
+                            </Button>
                           </div>
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            className="border-white/10 text-xs"
-                            data-testid={`button-view-cve-${kev.cveId}`}
-                            onClick={() => window.open(`https://nvd.nist.gov/vuln/detail/${kev.cveId}`, '_blank')}
-                          >
-                            View CVE
-                          </Button>
+                          <p className="text-sm text-muted-foreground mb-2">{kev.shortDescription}</p>
+                          <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                            <span><strong>Vendor:</strong> {kev.vendorProject}</span>
+                            <span><strong>Product:</strong> {kev.product}</span>
+                            {kev.dueDate && (
+                              <span className="text-yellow-400">
+                                <strong>Due:</strong> {new Date(kev.dueDate).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
                         </div>
-                        <p className="text-sm text-muted-foreground mb-2">{kev.shortDescription}</p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span><strong>Vendor:</strong> {kev.vendorProject}</span>
-                          <span><strong>Product:</strong> {kev.product}</span>
-                          {kev.dueDate && (
-                            <span className="text-yellow-400">
-                              <strong>Due:</strong> {new Date(kev.dueDate).toLocaleDateString()}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                    <PaginationControls
+                      currentPage={kevSafePage}
+                      totalPages={kevTotalPages}
+                      pageSize={kevPageSize}
+                      totalItems={cisaKev.length}
+                      onPageChange={setKevPage}
+                      onPageSizeChange={(s) => { setKevPageSize(s); setKevPage(1); }}
+                    />
+                  </>
                 ) : (
                   <p className="text-center text-muted-foreground py-8">No CISA KEV data loaded yet.</p>
                 )}
