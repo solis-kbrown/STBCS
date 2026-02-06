@@ -2967,12 +2967,24 @@ let refreshInterval: NodeJS.Timeout | null = null;
 export function startDataRefreshScheduler(intervalMinutes = 15): void {
   console.log(`[Scheduler] Starting threat intel refresh every ${intervalMinutes} minutes (40+ sources)`);
   
+  const fetchAndInvalidate = async () => {
+    try {
+      await fetchAllData();
+    } finally {
+      try {
+        const { cache } = await import("./cache");
+        cache.invalidateAll();
+        console.log("[Cache] Cleared after data refresh");
+      } catch {}
+    }
+  };
+  
   // Initial fetch
-  fetchAllData().catch(console.error);
+  fetchAndInvalidate().catch(console.error);
   
   // Schedule recurring fetches
   refreshInterval = setInterval(() => {
-    fetchAllData().catch(console.error);
+    fetchAndInvalidate().catch(console.error);
   }, intervalMinutes * 60 * 1000);
 }
 

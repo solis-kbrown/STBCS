@@ -41,6 +41,9 @@ Preferred communication style: Simple, everyday language.
 - **API Design**: RESTful JSON API (`/api/*`) with Zod validation.
 - **Security**: `express-rate-limit` for rate limiting, input validation.
 - **Data Scraping**: Server-side scrapers collect data from external threat intelligence sources.
+- **Caching**: In-memory response cache (`server/cache.ts`) with TTL-based expiration. Cache auto-clears after every 15-minute scraper refresh. Cache-Control headers for browser/CDN caching. X-Cache header indicates HIT/MISS.
+  - Stats: 2min, CVEs/Ransomware/IPs/URLs/News: 3min, KEV/Feeds/Actors/Trends: 5min, Search: 1min, Sale: 10min
+  - Client-side React Query uses staleTime (2-5min) and refetchInterval (5-15min) aligned with server cache TTLs.
 
 ### Data Storage
 - **Database**: PostgreSQL via Drizzle ORM.

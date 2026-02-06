@@ -5,6 +5,7 @@ import { storage } from "./storage";
 import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema } from "@shared/schema";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
+import { cache, cachedJson, cacheAndSend, TTL } from "./cache";
 
 // Helper to safely extract string from Express params/query
 function asString(val: string | string[] | undefined): string {
@@ -271,8 +272,10 @@ export async function registerRoutes(
   // Dashboard Stats
   app.get("/api/stats", async (req: Request, res: Response) => {
     try {
+      const key = "stats";
+      if (cachedJson(res, key, TTL.STATS)) return;
       const stats = await storage.getDashboardStats();
-      res.json(stats);
+      cacheAndSend(res, key, stats, TTL.STATS);
     } catch (error) {
       console.error("Error fetching stats:", error);
       res.status(500).json({ error: "Failed to fetch dashboard stats" });
@@ -283,8 +286,10 @@ export async function registerRoutes(
   app.get("/api/trends", async (req: Request, res: Response) => {
     try {
       const days = Math.min(parseInt(req.query.days as string) || 30, 90);
+      const key = `trends:${days}`;
+      if (cachedJson(res, key, TTL.TRENDS)) return;
       const trends = await storage.getThreatTrends(days);
-      res.json(trends);
+      cacheAndSend(res, key, trends, TTL.TRENDS);
     } catch (error) {
       console.error("Error fetching threat trends:", error);
       res.status(500).json({ error: "Failed to fetch threat trends" });
@@ -300,10 +305,12 @@ export async function registerRoutes(
       }
       const { limit, offset, search } = parsed.data;
       
+      const key = `cves:${limit}:${offset}:${search || ''}`;
+      if (cachedJson(res, key, TTL.CVE_LIST)) return;
       const cves = await storage.getCves(limit, offset, search);
       const total = await storage.getCveCount();
-      
-      res.json({ data: cves, total, limit, offset });
+      const result = { data: cves, total, limit, offset };
+      cacheAndSend(res, key, result, TTL.CVE_LIST);
     } catch (error) {
       console.error("Error fetching CVEs:", error);
       res.status(500).json({ error: "Failed to fetch CVEs" });
@@ -312,11 +319,14 @@ export async function registerRoutes(
 
   app.get("/api/cves/:id", async (req: Request, res: Response) => {
     try {
-      const cve = await storage.getCveById(asString(req.params.id));
+      const id = asString(req.params.id);
+      const key = `cve:${id}`;
+      if (cachedJson(res, key, TTL.CVE_DETAIL)) return;
+      const cve = await storage.getCveById(id);
       if (!cve) {
         return res.status(404).json({ error: "CVE not found" });
       }
-      res.json(cve);
+      cacheAndSend(res, key, cve, TTL.CVE_DETAIL);
     } catch (error) {
       console.error("Error fetching CVE:", error);
       res.status(500).json({ error: "Failed to fetch CVE" });
@@ -422,10 +432,12 @@ export async function registerRoutes(
       }
       const { limit, offset, group, sector } = parsed.data;
       
+      const key = `ransomware:${limit}:${offset}:${group || ''}:${sector || ''}`;
+      if (cachedJson(res, key, TTL.RANSOMWARE_LIST)) return;
       const incidents = await storage.getRansomwareIncidents(limit, offset, group, sector);
       const total = await storage.getRansomwareCount();
-      
-      res.json({ data: incidents, total, limit, offset });
+      const result = { data: incidents, total, limit, offset };
+      cacheAndSend(res, key, result, TTL.RANSOMWARE_LIST);
     } catch (error) {
       console.error("Error fetching ransomware incidents:", error);
       res.status(500).json({ error: "Failed to fetch ransomware incidents" });
@@ -434,8 +446,10 @@ export async function registerRoutes(
 
   app.get("/api/ransomware/groups", async (req: Request, res: Response) => {
     try {
+      const key = "ransomware:groups";
+      if (cachedJson(res, key, TTL.RANSOMWARE_GROUPS)) return;
       const groups = await storage.getActiveGroups();
-      res.json(groups);
+      cacheAndSend(res, key, groups, TTL.RANSOMWARE_GROUPS);
     } catch (error) {
       console.error("Error fetching groups:", error);
       res.status(500).json({ error: "Failed to fetch active groups" });
@@ -452,8 +466,11 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Search query must be at least 2 characters" });
       }
       
+      const key = `ransomware:search:${query}:${limit}`;
+      if (cachedJson(res, key, TTL.SEARCH)) return;
       const results = await storage.searchRansomware(query, limit);
-      res.json({ data: results, query, count: results.length });
+      const result = { data: results, query, count: results.length };
+      cacheAndSend(res, key, result, TTL.SEARCH);
     } catch (error) {
       console.error("Error searching ransomware:", error);
       res.status(500).json({ error: "Failed to search ransomware data" });
@@ -462,11 +479,14 @@ export async function registerRoutes(
 
   app.get("/api/ransomware/:id", async (req: Request, res: Response) => {
     try {
-      const incident = await storage.getRansomwareById(asString(req.params.id));
+      const id = asString(req.params.id);
+      const key = `ransomware:${id}`;
+      if (cachedJson(res, key, TTL.RANSOMWARE_DETAIL)) return;
+      const incident = await storage.getRansomwareById(id);
       if (!incident) {
         return res.status(404).json({ error: "Incident not found" });
       }
-      res.json(incident);
+      cacheAndSend(res, key, incident, TTL.RANSOMWARE_DETAIL);
     } catch (error) {
       console.error("Error fetching incident:", error);
       res.status(500).json({ error: "Failed to fetch incident" });
@@ -481,8 +501,10 @@ export async function registerRoutes(
         return res.status(400).json({ error: "Invalid query parameters", details: parsed.error.issues });
       }
       const { limit } = parsed.data;
+      const key = `actors:${limit}`;
+      if (cachedJson(res, key, TTL.THREAT_ACTORS)) return;
       const actors = await storage.getThreatActors(limit);
-      res.json(actors);
+      cacheAndSend(res, key, actors, TTL.THREAT_ACTORS);
     } catch (error) {
       console.error("Error fetching threat actors:", error);
       res.status(500).json({ error: "Failed to fetch threat actors" });
@@ -498,10 +520,12 @@ export async function registerRoutes(
       }
       const { limit, offset, category } = parsed.data;
       
+      const key = `news:${limit}:${offset}:${category || ''}`;
+      if (cachedJson(res, key, TTL.NEWS)) return;
       const news = await storage.getNews(limit, offset, category);
       const total = await storage.getNewsCount();
-      
-      res.json({ data: news, total, limit, offset });
+      const result = { data: news, total, limit, offset };
+      cacheAndSend(res, key, result, TTL.NEWS);
     } catch (error) {
       console.error("Error fetching news:", error);
       res.status(500).json({ error: "Failed to fetch news" });
@@ -530,10 +554,12 @@ export async function registerRoutes(
       }
       const { limit, offset, source, threatType } = parsed.data;
       
+      const key = `ips:${limit}:${offset}:${source || ''}:${threatType || ''}`;
+      if (cachedJson(res, key, TTL.MALICIOUS_IPS)) return;
       const ips = await storage.getMaliciousIps(limit, offset, source, threatType);
       const total = await storage.getMaliciousIpCount();
-      
-      res.json({ data: ips, total, limit, offset });
+      const result = { data: ips, total, limit, offset };
+      cacheAndSend(res, key, result, TTL.MALICIOUS_IPS);
     } catch (error) {
       console.error("Error fetching malicious IPs:", error);
       res.status(500).json({ error: "Failed to fetch malicious IPs" });
@@ -549,10 +575,12 @@ export async function registerRoutes(
       }
       const { limit, offset, source, threatType } = parsed.data;
       
+      const key = `urls:${limit}:${offset}:${source || ''}:${threatType || ''}`;
+      if (cachedJson(res, key, TTL.MALICIOUS_URLS)) return;
       const urls = await storage.getMaliciousUrls(limit, offset, source, threatType);
       const total = await storage.getMaliciousUrlCount();
-      
-      res.json({ data: urls, total, limit, offset });
+      const result = { data: urls, total, limit, offset };
+      cacheAndSend(res, key, result, TTL.MALICIOUS_URLS);
     } catch (error) {
       console.error("Error fetching malicious URLs:", error);
       res.status(500).json({ error: "Failed to fetch malicious URLs" });
@@ -568,10 +596,12 @@ export async function registerRoutes(
       }
       const { limit, offset } = parsed.data;
       
+      const key = `kev:${limit}:${offset}`;
+      if (cachedJson(res, key, TTL.CISA_KEV)) return;
       const kev = await storage.getCisaKev(limit, offset);
       const total = await storage.getCisaKevCount();
-      
-      res.json({ data: kev, total, limit, offset });
+      const result = { data: kev, total, limit, offset };
+      cacheAndSend(res, key, result, TTL.CISA_KEV);
     } catch (error) {
       console.error("Error fetching CISA KEV:", error);
       res.status(500).json({ error: "Failed to fetch CISA KEV" });
@@ -581,8 +611,10 @@ export async function registerRoutes(
   // Threat Feeds
   app.get("/api/threat-feeds", async (req: Request, res: Response) => {
     try {
+      const key = "feeds";
+      if (cachedJson(res, key, TTL.FEEDS_LIST)) return;
       const feeds = await storage.getThreatFeeds();
-      res.json(feeds);
+      cacheAndSend(res, key, feeds, TTL.FEEDS_LIST);
     } catch (error) {
       console.error("Error fetching threat feeds:", error);
       res.status(500).json({ error: "Failed to fetch threat feeds" });
@@ -603,6 +635,8 @@ export async function registerRoutes(
       }
       
       const { q, limit } = parsed.data;
+      const key = `search:${q}:${limit}`;
+      if (cachedJson(res, key, TTL.SEARCH)) return;
       const results = await storage.globalSearch(q, limit);
       
       const totalResults = 
@@ -613,7 +647,8 @@ export async function registerRoutes(
         results.kev.length + 
         results.news.length;
       
-      res.json({ query: q, totalResults, ...results });
+      const result = { query: q, totalResults, ...results };
+      cacheAndSend(res, key, result, TTL.SEARCH);
     } catch (error) {
       console.error("Error searching:", error);
       res.status(500).json({ error: "Failed to search" });
@@ -645,18 +680,21 @@ export async function registerRoutes(
   // Get grand opening sale status
   app.get("/api/sale-status", async (req: Request, res: Response) => {
     try {
+      const key = "sale-status";
+      if (cachedJson(res, key, TTL.SALE_STATUS)) return;
       const { isGrandOpeningActive, getGrandOpeningEndDate } = await import("./maintenance");
       const endDate = await getGrandOpeningEndDate();
       const isActive = await isGrandOpeningActive();
       const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
       
-      res.json({
+      const result = {
         active: isActive,
         endDate: endDate.toISOString(),
         daysRemaining,
         discount: isActive ? "50%" : null,
         coupon: isActive ? "GRANDOPENING50" : null
-      });
+      };
+      cacheAndSend(res, key, result, TTL.SALE_STATUS);
     } catch (error) {
       console.error("Error fetching sale status:", error);
       res.status(500).json({ error: "Failed to fetch sale status" });
@@ -704,9 +742,11 @@ export async function registerRoutes(
     try {
       const { fetchAllData } = await import("./scrapers");
       await fetchAllData();
+      cache.invalidateAll();
       res.json({ success: true, message: "Data refresh initiated" });
     } catch (error) {
       console.error("Error refreshing data:", error);
+      cache.invalidateAll();
       res.status(500).json({ error: "Failed to refresh data" });
     }
   });

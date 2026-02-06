@@ -169,7 +169,8 @@ export function useStats() {
   return useQuery<DashboardStats>({
     queryKey: ["/api/stats"],
     queryFn: () => fetchApi<DashboardStats>("/api/stats"),
-    refetchInterval: 60000,
+    staleTime: 120000,
+    refetchInterval: 300000,
   });
 }
 
@@ -183,7 +184,8 @@ export function useCves(limit = 50, offset = 0, search?: string) {
   return useQuery<PaginatedResponse<Cve>>({
     queryKey: ["/api/cves", limit, offset, search],
     queryFn: () => fetchApi<PaginatedResponse<Cve>>(`/api/cves?${queryString}`),
-    refetchInterval: 120000,
+    staleTime: 180000,
+    refetchInterval: 300000,
   });
 }
 
@@ -198,7 +200,8 @@ export function useRansomware(limit = 50, offset = 0, group?: string, sector?: s
   return useQuery<PaginatedResponse<RansomwareIncident>>({
     queryKey: ["/api/ransomware", limit, offset, group, sector],
     queryFn: () => fetchApi<PaginatedResponse<RansomwareIncident>>(`/api/ransomware?${queryString}`),
-    refetchInterval: 120000,
+    staleTime: 180000,
+    refetchInterval: 300000,
   });
 }
 
@@ -206,7 +209,8 @@ export function useRansomwareGroups() {
   return useQuery<{ name: string; count: number }[]>({
     queryKey: ["/api/ransomware/groups"],
     queryFn: () => fetchApi<{ name: string; count: number }[]>("/api/ransomware/groups"),
-    refetchInterval: 300000,
+    staleTime: 300000,
+    refetchInterval: 600000,
   });
 }
 
@@ -224,7 +228,8 @@ export function useThreatActors(limit = 50) {
   return useQuery<ThreatActor[]>({
     queryKey: ["/api/threat-actors", limit],
     queryFn: () => fetchApi<ThreatActor[]>(`/api/threat-actors?limit=${limit}`),
-    refetchInterval: 300000,
+    staleTime: 300000,
+    refetchInterval: 600000,
   });
 }
 
@@ -238,7 +243,8 @@ export function useNews(limit = 50, offset = 0, category?: string) {
   return useQuery<PaginatedResponse<NewsArticle>>({
     queryKey: ["/api/news", limit, offset, category],
     queryFn: () => fetchApi<PaginatedResponse<NewsArticle>>(`/api/news?${queryString}`),
-    refetchInterval: 120000,
+    staleTime: 180000,
+    refetchInterval: 300000,
   });
 }
 
@@ -253,7 +259,8 @@ export function useMaliciousIps(limit = 50, offset = 0, source?: string, threatT
   return useQuery<PaginatedResponse<MaliciousIp>>({
     queryKey: ["/api/malicious-ips", limit, offset, source, threatType],
     queryFn: () => fetchApi<PaginatedResponse<MaliciousIp>>(`/api/malicious-ips?${queryString}`),
-    refetchInterval: 120000,
+    staleTime: 180000,
+    refetchInterval: 300000,
   });
 }
 
@@ -268,7 +275,8 @@ export function useMaliciousUrls(limit = 50, offset = 0, source?: string, threat
   return useQuery<PaginatedResponse<MaliciousUrl>>({
     queryKey: ["/api/malicious-urls", limit, offset, source, threatType],
     queryFn: () => fetchApi<PaginatedResponse<MaliciousUrl>>(`/api/malicious-urls?${queryString}`),
-    refetchInterval: 120000,
+    staleTime: 180000,
+    refetchInterval: 300000,
   });
 }
 
@@ -281,7 +289,8 @@ export function useCisaKev(limit = 50, offset = 0) {
   return useQuery<PaginatedResponse<CisaKev>>({
     queryKey: ["/api/cisa-kev", limit, offset],
     queryFn: () => fetchApi<PaginatedResponse<CisaKev>>(`/api/cisa-kev?${queryString}`),
-    refetchInterval: 300000,
+    staleTime: 300000,
+    refetchInterval: 600000,
   });
 }
 
@@ -289,7 +298,8 @@ export function useThreatFeeds() {
   return useQuery<ThreatFeed[]>({
     queryKey: ["/api/threat-feeds"],
     queryFn: () => fetchApi<ThreatFeed[]>("/api/threat-feeds"),
-    refetchInterval: 600000,
+    staleTime: 300000,
+    refetchInterval: 900000,
   });
 }
 
