@@ -847,7 +847,7 @@ export async function fetchBambenekC2(): Promise<number> {
 // ============================================
 // 16. PhishTank - Verified Phishing URLs
 // ============================================
-const PHISHTANK_URL = "http://data.phishtank.com/data/online-valid.csv";
+const PHISHTANK_URL = "https://data.phishtank.com/data/online-valid.csv";
 
 export async function fetchPhishTank(): Promise<number> {
   try {
@@ -856,7 +856,9 @@ export async function fetchPhishTank(): Promise<number> {
     const response = await secureFetch(PHISHTANK_URL);
     
     if (!response.ok) {
-      throw new Error(`PhishTank error: ${response.status}`);
+      console.log(`[PhishTank] Feed unavailable (${response.status}) - PhishTank requires API registration for bulk downloads`);
+      console.log("[PhishTank] Phishing URLs still collected via OpenPhish and OTX feeds");
+      return 0;
     }
     
     const text = await response.text();
