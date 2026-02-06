@@ -10,6 +10,7 @@ const SALE_DURATION_DAYS = 30;
 let maintenanceInterval: NodeJS.Timeout | null = null;
 let errorRateWindow: { count: number; windowStart: number } = { count: 0, windowStart: Date.now() };
 let saleEndNotificationSent = false;
+let sessionCleanupFailures = 0;
 
 async function getConfig(configKey: string): Promise<string | null> {
   try {
@@ -186,9 +187,14 @@ async function runCleanupTasks(): Promise<void> {
   try {
     await storage.cleanupExpiredSessions();
     console.log("[Maintenance] Expired sessions cleaned up");
+    sessionCleanupFailures = 0;
   } catch (error) {
+    sessionCleanupFailures++;
     console.error("[Maintenance] Session cleanup failed:", error);
-    reportCriticalError(error as Error, "Session Cleanup");
+    if (sessionCleanupFailures >= 3) {
+      reportCriticalError(error as Error, "Session Cleanup (failed 3+ times consecutively)");
+      sessionCleanupFailures = 0;
+    }
   }
 
   const now = Date.now();
