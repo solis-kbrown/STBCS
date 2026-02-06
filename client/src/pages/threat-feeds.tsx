@@ -6,20 +6,91 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Globe, Shield, Link2, Lock, AlertTriangle, CheckCircle, Clock, Zap, Download, Loader2 } from "lucide-react";
+import { Globe, Shield, Link2, Lock, AlertTriangle, CheckCircle, Clock, Zap, Download, Loader2, Search, ArrowUpDown, SlidersHorizontal, RotateCcw } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useState, useMemo } from "react";
+
+type IpSortOption = "newest" | "oldest" | "source" | "threat";
+type UrlSortOption = "newest" | "oldest" | "source" | "status";
 
 export default function ThreatFeeds() {
   useDocumentTitle("Threat Intelligence Feeds | STB Cybersecurity");
   const { data: feeds, isLoading: feedsLoading } = useThreatFeeds();
-  const { data: ipsData, isLoading: ipsLoading } = useMaliciousIps(20);
-  const { data: urlsData, isLoading: urlsLoading } = useMaliciousUrls(20);
-  const { data: kevData, isLoading: kevLoading } = useCisaKev(20);
+  const { data: ipsData, isLoading: ipsLoading } = useMaliciousIps(100);
+  const { data: urlsData, isLoading: urlsLoading } = useMaliciousUrls(100);
+  const { data: kevData, isLoading: kevLoading } = useCisaKev(100);
   const exportMutation = useExportData();
-  
-  const maliciousIps = ipsData?.data || [];
-  const maliciousUrls = urlsData?.data || [];
-  const cisaKev = kevData?.data || [];
+
+  const [ipSearch, setIpSearch] = useState("");
+  const [ipSort, setIpSort] = useState<IpSortOption>("newest");
+  const [ipSourceFilter, setIpSourceFilter] = useState("all");
+
+  const [urlSearch, setUrlSearch] = useState("");
+  const [urlSort, setUrlSort] = useState<UrlSortOption>("newest");
+  const [urlSourceFilter, setUrlSourceFilter] = useState("all");
+  const [urlStatusFilter, setUrlStatusFilter] = useState("all");
+
+  const [kevSearch, setKevSearch] = useState("");
+
+  const rawIps = ipsData?.data || [];
+  const rawUrls = urlsData?.data || [];
+  const rawKev = kevData?.data || [];
+
+  const ipSources = useMemo(() => Array.from(new Set(rawIps.map(ip => ip.source).filter(Boolean))).sort(), [rawIps]);
+  const urlSources = useMemo(() => Array.from(new Set(rawUrls.map(u => u.source).filter(Boolean))).sort(), [rawUrls]);
+
+  const maliciousIps = useMemo(() => {
+    let filtered = [...rawIps];
+    if (ipSearch) {
+      const q = ipSearch.toLowerCase();
+      filtered = filtered.filter(ip => ip.ipAddress?.toLowerCase().includes(q) || ip.source?.toLowerCase().includes(q) || ip.threatType?.toLowerCase().includes(q));
+    }
+    if (ipSourceFilter !== "all") {
+      filtered = filtered.filter(ip => ip.source === ipSourceFilter);
+    }
+    filtered.sort((a, b) => {
+      switch (ipSort) {
+        case "newest": return new Date(b.lastSeen || 0).getTime() - new Date(a.lastSeen || 0).getTime();
+        case "oldest": return new Date(a.lastSeen || 0).getTime() - new Date(b.lastSeen || 0).getTime();
+        case "source": return (a.source || "").localeCompare(b.source || "");
+        case "threat": return (a.threatType || "").localeCompare(b.threatType || "");
+        default: return 0;
+      }
+    });
+    return filtered;
+  }, [rawIps, ipSearch, ipSort, ipSourceFilter]);
+
+  const maliciousUrls = useMemo(() => {
+    let filtered = [...rawUrls];
+    if (urlSearch) {
+      const q = urlSearch.toLowerCase();
+      filtered = filtered.filter(u => u.url?.toLowerCase().includes(q) || u.source?.toLowerCase().includes(q) || u.threatType?.toLowerCase().includes(q));
+    }
+    if (urlSourceFilter !== "all") {
+      filtered = filtered.filter(u => u.source === urlSourceFilter);
+    }
+    if (urlStatusFilter !== "all") {
+      filtered = filtered.filter(u => u.status === urlStatusFilter);
+    }
+    filtered.sort((a, b) => {
+      switch (urlSort) {
+        case "newest": return new Date(b.reportedAt || b.createdAt || 0).getTime() - new Date(a.reportedAt || a.createdAt || 0).getTime();
+        case "oldest": return new Date(a.reportedAt || a.createdAt || 0).getTime() - new Date(b.reportedAt || b.createdAt || 0).getTime();
+        case "source": return (a.source || "").localeCompare(b.source || "");
+        case "status": return (a.status || "").localeCompare(b.status || "");
+        default: return 0;
+      }
+    });
+    return filtered;
+  }, [rawUrls, urlSearch, urlSort, urlSourceFilter, urlStatusFilter]);
+
+  const cisaKev = useMemo(() => {
+    if (!kevSearch) return rawKev;
+    const q = kevSearch.toLowerCase();
+    return rawKev.filter(k => k.cveId?.toLowerCase().includes(q) || k.vulnerabilityName?.toLowerCase().includes(q) || k.vendorProject?.toLowerCase().includes(q) || k.product?.toLowerCase().includes(q));
+  }, [rawKev, kevSearch]);
 
   return (
     <Layout>
@@ -140,7 +211,53 @@ export default function ThreatFeeds() {
                   Export
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col md:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search IPs, sources, threat types..."
+                      className="pl-10 bg-background/50 border-white/10 h-9 text-sm"
+                      value={ipSearch}
+                      onChange={(e) => setIpSearch(e.target.value)}
+                      data-testid="input-search-ips"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Select value={ipSort} onValueChange={(v) => setIpSort(v as IpSortOption)}>
+                      <SelectTrigger className="w-[150px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-sort-ips">
+                        <ArrowUpDown className="h-3 w-3 mr-2 text-muted-foreground" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="newest">Newest</SelectItem>
+                        <SelectItem value="oldest">Oldest</SelectItem>
+                        <SelectItem value="source">By Source</SelectItem>
+                        <SelectItem value="threat">By Threat</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={ipSourceFilter} onValueChange={setIpSourceFilter}>
+                      <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-source-ips">
+                        <SelectValue placeholder="All Sources" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Sources</SelectItem>
+                        {ipSources.map(s => (
+                          <SelectItem key={s} value={s as string}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Showing {maliciousIps.length} of {rawIps.length} IPs</span>
+                  {(ipSearch || ipSourceFilter !== "all" || ipSort !== "newest") && (
+                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-white px-2" onClick={() => { setIpSearch(""); setIpSort("newest"); setIpSourceFilter("all"); }} data-testid="button-clear-ip-filters">
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
                 {ipsLoading ? (
                   <div className="space-y-2">
                     {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
@@ -173,7 +290,9 @@ export default function ThreatFeeds() {
                     </table>
                   </div>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8">No malicious IPs loaded yet.</p>
+                  <p className="text-center text-muted-foreground py-8">
+                    {ipSearch || ipSourceFilter !== "all" ? "No IPs match the current filters." : "No malicious IPs loaded yet."}
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -203,7 +322,63 @@ export default function ThreatFeeds() {
                   Export
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <div className="flex flex-col md:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search URLs, sources, threat types..."
+                      className="pl-10 bg-background/50 border-white/10 h-9 text-sm"
+                      value={urlSearch}
+                      onChange={(e) => setUrlSearch(e.target.value)}
+                      data-testid="input-search-urls"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Select value={urlSort} onValueChange={(v) => setUrlSort(v as UrlSortOption)}>
+                      <SelectTrigger className="w-[150px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-sort-urls">
+                        <ArrowUpDown className="h-3 w-3 mr-2 text-muted-foreground" />
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="newest">Newest</SelectItem>
+                        <SelectItem value="oldest">Oldest</SelectItem>
+                        <SelectItem value="source">By Source</SelectItem>
+                        <SelectItem value="status">By Status</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={urlSourceFilter} onValueChange={setUrlSourceFilter}>
+                      <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-source-urls">
+                        <SelectValue placeholder="All Sources" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Sources</SelectItem>
+                        {urlSources.map(s => (
+                          <SelectItem key={s} value={s as string}>{s}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={urlStatusFilter} onValueChange={setUrlStatusFilter}>
+                      <SelectTrigger className="w-[140px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-status-urls">
+                        <SelectValue placeholder="All Statuses" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Statuses</SelectItem>
+                        <SelectItem value="active">Active</SelectItem>
+                        <SelectItem value="offline">Offline</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Showing {maliciousUrls.length} of {rawUrls.length} URLs</span>
+                  {(urlSearch || urlSourceFilter !== "all" || urlStatusFilter !== "all" || urlSort !== "newest") && (
+                    <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-white px-2" onClick={() => { setUrlSearch(""); setUrlSort("newest"); setUrlSourceFilter("all"); setUrlStatusFilter("all"); }} data-testid="button-clear-url-filters">
+                      <RotateCcw className="h-3 w-3 mr-1" />
+                      Clear
+                    </Button>
+                  )}
+                </div>
                 {urlsLoading ? (
                   <div className="space-y-2">
                     {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}
@@ -232,7 +407,9 @@ export default function ThreatFeeds() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-center text-muted-foreground py-8">No malicious URLs loaded yet.</p>
+                  <p className="text-center text-muted-foreground py-8">
+                    {urlSearch || urlSourceFilter !== "all" || urlStatusFilter !== "all" ? "No URLs match the current filters." : "No malicious URLs loaded yet."}
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -262,7 +439,20 @@ export default function ThreatFeeds() {
                   Export
                 </Button>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search CVEs, vendors, products..."
+                    className="pl-10 bg-background/50 border-white/10 h-9 text-sm"
+                    value={kevSearch}
+                    onChange={(e) => setKevSearch(e.target.value)}
+                    data-testid="input-search-kev"
+                  />
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  Showing {cisaKev.length} of {rawKev.length} entries
+                </div>
                 {kevLoading ? (
                   <div className="space-y-2">
                     {Array(5).fill(0).map((_, i) => <Skeleton key={i} className="h-16 w-full" />)}
