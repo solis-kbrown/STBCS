@@ -5,26 +5,81 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Globe, Share2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { ArrowRight, Globe, Share2, Search, ArrowUpDown, SlidersHorizontal, RotateCcw } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useState, useCallback } from "react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useState, useCallback, useMemo } from "react";
 import PaginationControls from "@/components/pagination-controls";
+
+type SortOption = "newest" | "oldest" | "source-az";
 
 export default function News() {
   useDocumentTitle("Cybersecurity Intel & News | STB Cybersecurity");
   const { data, isLoading } = useNews(1000);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+  const [search, setSearch] = useState("");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [showFilters, setShowFilters] = useState(false);
   
-  const news = data?.data || [];
-  const totalPages = Math.max(1, Math.ceil(news.length / pageSize));
-  const safePage = Math.min(currentPage, totalPages);
-  const paginatedNews = news.slice((safePage - 1) * pageSize, safePage * pageSize);
-  
+  const rawNews = data?.data || [];
+
+  const categories = useMemo(() => {
+    const cats = new Set<string>();
+    rawNews.forEach(a => { if (a.category) cats.add(a.category); });
+    return Array.from(cats).sort();
+  }, [rawNews]);
+
+  const activeFilterCount = [
+    sortBy !== "newest",
+    categoryFilter !== "all",
+  ].filter(Boolean).length;
+
+  const clearAllFilters = () => {
+    setSortBy("newest");
+    setCategoryFilter("all");
+    setCurrentPage(1);
+  };
+
   const handlePageSizeChange = useCallback((size: number) => {
     setPageSize(size);
     setCurrentPage(1);
   }, []);
+
+  const news = useMemo(() => {
+    let filtered = [...rawNews];
+
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      filtered = filtered.filter(a =>
+        (a.title || "").toLowerCase().includes(q) ||
+        (a.summary || "").toLowerCase().includes(q) ||
+        (a.source || "").toLowerCase().includes(q) ||
+        (a.category || "").toLowerCase().includes(q)
+      );
+    }
+
+    if (categoryFilter !== "all") {
+      filtered = filtered.filter(a => a.category === categoryFilter);
+    }
+
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "newest": return new Date(b.publishedAt || 0).getTime() - new Date(a.publishedAt || 0).getTime();
+        case "oldest": return new Date(a.publishedAt || 0).getTime() - new Date(b.publishedAt || 0).getTime();
+        case "source-az": return (a.source || "").localeCompare(b.source || "");
+        default: return 0;
+      }
+    });
+
+    return filtered;
+  }, [rawNews, search, sortBy, categoryFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(news.length / pageSize));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedNews = news.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   return (
     <Layout>
@@ -33,6 +88,89 @@ export default function News() {
           <h1 className="text-3xl font-display font-bold text-white mb-2">Intel & News</h1>
           <p className="text-muted-foreground">Curated cybersecurity news, policy updates, and threat intelligence reports.</p>
         </div>
+
+        <Card className="border-white/5 bg-card/50">
+          <CardContent className="p-4 space-y-3">
+            <div className="flex flex-col md:flex-row gap-3 items-stretch">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search by title, summary, source, or category..." 
+                  className="pl-10 bg-background/50 border-white/10 h-10"
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
+                  data-testid="input-search-news"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Select value={sortBy} onValueChange={(v) => { setSortBy(v as SortOption); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-[180px] bg-background/50 border-white/10 h-10" data-testid="select-sort-news">
+                    <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">Newest First</SelectItem>
+                    <SelectItem value="oldest">Oldest First</SelectItem>
+                    <SelectItem value="source-az">Source A-Z</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className={`border-white/10 h-10 px-3 ${showFilters ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'text-muted-foreground hover:text-white'}`}
+                  onClick={() => setShowFilters(!showFilters)}
+                  data-testid="button-toggle-filters"
+                >
+                  <SlidersHorizontal className="h-4 w-4 mr-2" />
+                  Filters
+                  {activeFilterCount > 0 && (
+                    <Badge className="ml-2 bg-orange-500 text-white text-[10px] h-5 w-5 p-0 flex items-center justify-center rounded-full">
+                      {activeFilterCount}
+                    </Badge>
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {showFilters && (
+              <div className="flex flex-wrap gap-3 pt-2 border-t border-white/5 animate-in slide-in-from-top-2 duration-200">
+                <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-[200px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-category-filter">
+                    <SlidersHorizontal className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Categories</SelectItem>
+                    {categories.map(cat => (
+                      <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {activeFilterCount > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 text-sm text-muted-foreground hover:text-white"
+                    onClick={clearAllFilters}
+                    data-testid="button-clear-filters"
+                  >
+                    <RotateCcw className="h-3.5 w-3.5 mr-1" />
+                    Clear All
+                  </Button>
+                )}
+              </div>
+            )}
+
+            <div className="flex items-center justify-between text-xs text-muted-foreground">
+              <span data-testid="text-result-count">
+                {news.length} articles{news.length !== rawNews.length ? ` (filtered from ${rawNews.length})` : ''}
+                {activeFilterCount > 0 && ` | ${activeFilterCount} filter${activeFilterCount > 1 ? 's' : ''} active`}
+              </span>
+              <span>{data?.total || 0} total in database</span>
+            </div>
+          </CardContent>
+        </Card>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Feed */}
@@ -116,7 +254,7 @@ export default function News() {
             ) : (
               <Card className="border-white/5 bg-card/40">
                 <CardContent className="p-12 text-center">
-                  <p className="text-muted-foreground">No news articles loaded yet. Data will appear after the first refresh cycle.</p>
+                  <p className="text-muted-foreground">{search ? `No articles found matching "${search}".` : activeFilterCount > 0 ? 'No articles match the current filters. Try adjusting your filters.' : 'No news articles loaded yet. Data will appear after the first refresh cycle.'}</p>
                 </CardContent>
               </Card>
             )}

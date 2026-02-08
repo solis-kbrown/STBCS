@@ -274,6 +274,8 @@ export interface RansomwareAnalytics {
   monthlyTrend: { month: string; count: number }[];
   totalGroups: number;
   totalVictims: number;
+  totalCountries: number;
+  totalSectors: number;
   activeGroupsLast30d: number;
 }
 
