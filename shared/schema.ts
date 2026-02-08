@@ -615,3 +615,23 @@ export const contentViews = pgTable("content_views", {
 ]);
 
 export type ContentView = typeof contentViews.$inferSelect;
+
+export const siteVisitors = pgTable("site_visitors", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  visitorHash: text("visitor_hash").notNull().unique(),
+  firstSeen: timestamp("first_seen").defaultNow(),
+  lastSeen: timestamp("last_seen").defaultNow(),
+}, (table) => [
+  index("visitors_hash_idx").on(table.visitorHash),
+  index("visitors_first_seen_idx").on(table.firstSeen),
+]);
+
+export const dailyVisitorCounts = pgTable("daily_visitor_counts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: text("date").notNull().unique(),
+  uniqueCount: real("unique_count").default(0),
+  totalHits: real("total_hits").default(0),
+});
+
+export type SiteVisitor = typeof siteVisitors.$inferSelect;
+export type DailyVisitorCount = typeof dailyVisitorCounts.$inferSelect;
