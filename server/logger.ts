@@ -7,7 +7,8 @@ const LEVEL_PRIORITY: Record<LogLevel, number> = {
   error: 3,
 };
 
-const MIN_LEVEL: LogLevel = (process.env.LOG_LEVEL as LogLevel) || "info";
+const envLevel = process.env.LOG_LEVEL as string | undefined;
+const MIN_LEVEL: LogLevel = envLevel && envLevel in LEVEL_PRIORITY ? (envLevel as LogLevel) : "info";
 
 function shouldLog(level: LogLevel): boolean {
   return LEVEL_PRIORITY[level] >= LEVEL_PRIORITY[MIN_LEVEL];

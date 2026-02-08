@@ -85,11 +85,18 @@ Preferred communication style: Simple, everyday language.
 - **Middleware**: `requireAuth` and `requirePro` for protected routes
 - **Sessions**: Stored in database with 30-day expiration, automatic cleanup
 
+### Logging System
+- **Logger**: `server/logger.ts` - Structured logging with debug/info/warn/error levels
+- **Log Level**: Controlled by `LOG_LEVEL` env var (default: "info"). Set to "debug" for verbose output.
+- **Scraper Logging**: Single summary line per 15-min cycle instead of 80+ individual feed logs. Failed feeds listed in warnings.
+- **Maintenance/Digest/Email**: Routine operations logged at debug level; only meaningful events (errors, weekly cleanup results, actual sends) logged at info level.
+
 ### Maintenance & Monitoring
 - **Backend**: `server/maintenance.ts` - Scheduled cleanup, error reporting, sale management
 - **Admin Email**: kbpc.inc@gmail.com - Receives critical errors, daily health checks, maintenance alerts
-- **Cleanup**: Expired sessions cleaned every 5 minutes, old data (365 days) cleaned weekly on Sundays at 3am UTC
-- **Error Reporting**: Critical server errors (500+) automatically emailed to admin with stack traces
+- **Cleanup**: Expired sessions cleaned every 5 minutes, old data (730 days / 2 years) cleaned weekly on Sundays. Cleanup uses COUNT(*) then DELETE to avoid memory spikes.
+- **Data Retention**: CVEs, ransomware incidents, KEV entries, and threat actors are never auto-deleted. Only malicious IPs, URLs, and news older than 2 years are cleaned up.
+- **Error Reporting**: Critical server errors (500+) automatically emailed to admin with stack traces (rate-limited to 10 per 5-min window)
 - **Health Checks**: Daily at 8am UTC with platform statistics
 - **Grand Opening Sale**: Automatically expires 30 days after deployment, admin notified when it ends
 - **API**: GET `/api/sale-status` - Returns sale active status, end date, and days remaining
