@@ -91,13 +91,20 @@ Preferred communication style: Simple, everyday language.
 - **Scraper Logging**: Single summary line per 15-min cycle instead of 80+ individual feed logs. Failed feeds listed in warnings.
 - **Maintenance/Digest/Email**: Routine operations logged at debug level; only meaningful events (errors, weekly cleanup results, actual sends) logged at info level.
 
+### Visitor Tracking (Private)
+- **Middleware**: `server/visitors.ts` - Tracks unique visitors via IP+UA hash, cookie-based identification
+- **Storage**: `siteVisitors` table (unique hashes), `dailyVisitorCounts` table (daily unique + total hits)
+- **Admin API**: GET `/api/admin/visitors` - Requires `x-admin-key` header matching `ADMIN_STATS_KEY` env var
+- **No public display** - Stats are only accessible via admin API and weekly email report
+
 ### Maintenance & Monitoring
 - **Backend**: `server/maintenance.ts` - Scheduled cleanup, error reporting, sale management
-- **Admin Email**: kbpc.inc@gmail.com - Receives critical errors, daily health checks, maintenance alerts
+- **Admin Email**: kbpc.inc@gmail.com - Receives critical errors, daily health checks, maintenance alerts, weekly site reports
 - **Cleanup**: Expired sessions cleaned every 5 minutes, old data (730 days / 2 years) cleaned weekly on Sundays. Cleanup uses COUNT(*) then DELETE to avoid memory spikes.
 - **Data Retention**: CVEs, ransomware incidents, KEV entries, and threat actors are never auto-deleted. Only malicious IPs, URLs, and news older than 2 years are cleaned up.
 - **Error Reporting**: Critical server errors (500+) automatically emailed to admin with stack traces (rate-limited to 10 per 5-min window)
 - **Health Checks**: Daily at 8am UTC with platform statistics
+- **Weekly Admin Report**: Mondays at 9am UTC - visitor stats, new signups, registered users, platform data summary
 - **Grand Opening Sale**: Automatically expires 30 days after deployment, admin notified when it ends
 - **API**: GET `/api/sale-status` - Returns sale active status, end date, and days remaining
 

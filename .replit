@@ -41,3 +41,8 @@ waitForPort = 5000
 [agent]
 mockupState = "FULLSTACK"
 integrations = ["resend:1.0.0", "stripe:2.0.0"]
+
+[userenv]
+
+[userenv.shared]
+ADMIN_STATS_KEY = "stbcs-x7k9m2p4-admin-stats"

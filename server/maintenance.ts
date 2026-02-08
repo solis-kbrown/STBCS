@@ -275,6 +275,63 @@ async function sendDailyHealthCheck(): Promise<void> {
   }
 }
 
+async function sendWeeklyAdminReport(): Promise<void> {
+  const now = Date.now();
+  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
+  const currentDay = new Date().getUTCDay();
+  const currentHour = new Date().getUTCHours();
+  const lastReport = await getLastRun("weekly_admin_report");
+
+  if (currentDay === 1 && currentHour >= 9 && currentHour < 10 && now - lastReport > WEEK_MS - 60 * 60 * 1000) {
+    try {
+      const stats = await storage.getDashboardStats();
+      const visitorStats = await storage.getVisitorStats();
+      const dailyCounts = await storage.getDailyVisitorCounts(7);
+      const weekAgo = new Date(now - WEEK_MS);
+      const newSignups = await storage.getNewSignupsCount(weekAgo);
+      const totalUsers = (await storage.getAllUsers()).length;
+
+      const dailyBreakdown = dailyCounts
+        .map(d => `  ${d.date}: ${d.uniqueCount || 0} unique / ${d.totalHits || 0} hits`)
+        .join("\n");
+
+      await sendAdminNotification({
+        type: "info",
+        title: "Weekly Site Report",
+        message: "Here's your weekly overview of STB Cybersecurity activity:",
+        details: [
+          "VISITOR STATISTICS",
+          `- All-Time Unique Visitors: ${visitorStats.totalUnique.toLocaleString()}`,
+          `- Unique Visitors This Week: ${visitorStats.thisWeek.toLocaleString()}`,
+          `- Unique Visitors This Month: ${visitorStats.thisMonth.toLocaleString()}`,
+          `- Today's Unique Visitors: ${visitorStats.today.toLocaleString()}`,
+          "",
+          "DAILY BREAKDOWN (Last 7 Days)",
+          dailyBreakdown || "  No data yet",
+          "",
+          "USER ACCOUNTS",
+          `- Total Registered Users: ${totalUsers}`,
+          `- New Signups This Week: ${newSignups}`,
+          "",
+          "PLATFORM DATA",
+          `- Active Ransomware Groups: ${stats.activeGroups}`,
+          `- Critical CVEs: ${stats.criticalCves}`,
+          `- Active Exploits: ${stats.activeExploits}`,
+          `- Total Incidents: ${stats.totalIncidents}`,
+          `- Malicious IPs Tracked: ${stats.maliciousIps.toLocaleString()}`,
+          `- Malicious URLs Tracked: ${stats.maliciousUrls.toLocaleString()}`,
+          `- CISA KEV Entries: ${stats.cisaKevCount}`,
+        ].join("\n")
+      });
+
+      await setLastRun("weekly_admin_report");
+      log.info(`Weekly admin report sent: ${visitorStats.thisWeek} visitors, ${newSignups} signups`);
+    } catch (error) {
+      log.error("Weekly admin report failed:", error);
+    }
+  }
+}
+
 export async function startMaintenanceScheduler(): Promise<void> {
   const endDate = await getOrInitializeSaleDate();
   log.info(`Maintenance scheduler started | Sale ends: ${endDate.toLocaleDateString()} | Admin: ${ADMIN_EMAIL}`);
@@ -293,6 +350,7 @@ export async function startMaintenanceScheduler(): Promise<void> {
       await runCleanupTasks();
       await checkGrandOpeningSale();
       await sendDailyHealthCheck();
+      await sendWeeklyAdminReport();
     } catch (error) {
       log.error("Scheduler error:", error);
       reportCriticalError(error as Error, "Maintenance Scheduler");
