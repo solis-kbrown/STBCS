@@ -17,10 +17,11 @@ import {
   type SmsMessage, type InsertSmsMessage,
   type ExploitSubmission, type InsertExploitSubmission,
   type ContentView,
+  type DailyVisitorCount,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
   userNotifications, watchlistItems, breachIncidents, newsletterSubscriptions,
-  smsMessages, exploitSubmissions, contentViews
+  smsMessages, exploitSubmissions, contentViews, siteVisitors, dailyVisitorCounts
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte } from "drizzle-orm";
@@ -175,6 +176,12 @@ export interface IStorage {
   trackView(contentType: string, contentId: string): Promise<void>;
   getViewCount(contentType: string, contentId: string): Promise<number>;
   getTrendingContent(contentType: string, limit?: number): Promise<{ contentId: string; viewCount: number }[]>;
+
+  // Visitor Tracking
+  trackVisitor(visitorHash: string): Promise<boolean>;
+  getVisitorStats(): Promise<{ totalUnique: number; today: number; thisWeek: number; thisMonth: number }>;
+  getDailyVisitorCounts(days: number): Promise<DailyVisitorCount[]>;
+  getNewSignupsCount(since: Date): Promise<number>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1291,6 +1298,75 @@ export class DatabaseStorage implements IStorage {
       contentId: r.contentId, 
       viewCount: r.viewCount || 0 
     }));
+  }
+
+  async trackVisitor(visitorHash: string): Promise<boolean> {
+    const today = new Date().toISOString().split("T")[0];
+    const [existing] = await db.select().from(siteVisitors)
+      .where(eq(siteVisitors.visitorHash, visitorHash));
+
+    if (existing) {
+      await db.update(siteVisitors)
+        .set({ lastSeen: new Date() })
+        .where(eq(siteVisitors.visitorHash, visitorHash));
+
+      await db.insert(dailyVisitorCounts)
+        .values({ date: today, totalHits: 1 })
+        .onConflictDoUpdate({
+          target: dailyVisitorCounts.date,
+          set: { totalHits: sql`${dailyVisitorCounts.totalHits} + 1` }
+        });
+      return false;
+    }
+
+    await db.insert(siteVisitors).values({ visitorHash });
+    await db.insert(dailyVisitorCounts)
+      .values({ date: today, uniqueCount: 1, totalHits: 1 })
+      .onConflictDoUpdate({
+        target: dailyVisitorCounts.date,
+        set: {
+          uniqueCount: sql`${dailyVisitorCounts.uniqueCount} + 1`,
+          totalHits: sql`${dailyVisitorCounts.totalHits} + 1`
+        }
+      });
+    return true;
+  }
+
+  async getVisitorStats(): Promise<{ totalUnique: number; today: number; thisWeek: number; thisMonth: number }> {
+    const now = new Date();
+    const todayStr = now.toISOString().split("T")[0];
+    const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+
+    const [totalResult] = await db.select({ count: sql<number>`count(*)` }).from(siteVisitors);
+    const totalUnique = Number(totalResult?.count || 0);
+
+    const [todayResult] = await db.select({ count: sql<number>`coalesce(unique_count, 0)` })
+      .from(dailyVisitorCounts).where(eq(dailyVisitorCounts.date, todayStr));
+    const today = Number(todayResult?.count || 0);
+
+    const weekResults = await db.select({ count: sql<number>`coalesce(sum(unique_count), 0)` })
+      .from(dailyVisitorCounts).where(gte(dailyVisitorCounts.date, weekAgo));
+    const thisWeek = Number(weekResults[0]?.count || 0);
+
+    const monthResults = await db.select({ count: sql<number>`coalesce(sum(unique_count), 0)` })
+      .from(dailyVisitorCounts).where(gte(dailyVisitorCounts.date, monthAgo));
+    const thisMonth = Number(monthResults[0]?.count || 0);
+
+    return { totalUnique, today, thisWeek, thisMonth };
+  }
+
+  async getDailyVisitorCounts(days: number): Promise<DailyVisitorCount[]> {
+    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    return db.select().from(dailyVisitorCounts)
+      .where(gte(dailyVisitorCounts.date, cutoff))
+      .orderBy(desc(dailyVisitorCounts.date));
+  }
+
+  async getNewSignupsCount(since: Date): Promise<number> {
+    const [result] = await db.select({ count: sql<number>`count(*)` })
+      .from(users).where(gte(users.createdAt, since));
+    return Number(result?.count || 0);
   }
 }
 
