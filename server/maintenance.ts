@@ -3,7 +3,9 @@ import { sendEmail } from "./email";
 import { db } from "./db";
 import { systemConfig } from "@shared/schema";
 import { eq } from "drizzle-orm";
+import { createLogger } from "./logger";
 
+const log = createLogger("Maintenance");
 const ADMIN_EMAIL = "kbpc.inc@gmail.com";
 const SALE_DURATION_DAYS = 30;
 
@@ -17,7 +19,7 @@ async function getConfig(configKey: string): Promise<string | null> {
     const result = await db.select().from(systemConfig).where(eq(systemConfig.key, configKey)).limit(1);
     return result.length > 0 ? result[0].value : null;
   } catch (error) {
-    console.error(`[Maintenance] Error getting config ${configKey}:`, error);
+    log.error(`Error getting config ${configKey}:`, error);
     return null;
   }
 }
@@ -36,7 +38,7 @@ async function setConfig(configKey: string, value: string): Promise<boolean> {
     }
     return true;
   } catch (error) {
-    console.error(`[Maintenance] Error setting config ${configKey}:`, error);
+    log.error(`Error setting config ${configKey}:`, error);
     return false;
   }
 }
@@ -52,7 +54,7 @@ async function getOrInitializeSaleDate(): Promise<Date> {
   const success = await setConfig("grand_opening_end", endDate.toISOString());
   
   if (!success) {
-    console.error("[Maintenance] Failed to persist sale end date - using in-memory fallback");
+    log.error("Failed to persist sale end date - using in-memory fallback");
   }
   
   return endDate;
@@ -151,9 +153,9 @@ export async function sendAdminNotification(params: {
       html,
       text
     });
-    console.log(`[Maintenance] Admin notification sent: ${params.title}`);
+    log.debug(`Admin notification sent: ${params.title}`);
   } catch (error) {
-    console.error("[Maintenance] Failed to send admin notification:", error);
+    log.error("Failed to send admin notification:", error);
   }
 }
 
@@ -169,7 +171,7 @@ export function reportCriticalError(error: Error, context?: string): void {
   errorRateWindow.count++;
 
   if (errorRateWindow.count > MAX_ERRORS_PER_WINDOW) {
-    console.log(`[Maintenance] Suppressing error email (${errorRateWindow.count} errors in window, max ${MAX_ERRORS_PER_WINDOW})`);
+    log.debug(`Suppressing error email (${errorRateWindow.count} errors in window, max ${MAX_ERRORS_PER_WINDOW})`);
     return;
   }
 
@@ -182,15 +184,12 @@ export function reportCriticalError(error: Error, context?: string): void {
 }
 
 async function runCleanupTasks(): Promise<void> {
-  console.log("[Maintenance] Running scheduled cleanup tasks...");
-
   try {
     await storage.cleanupExpiredSessions();
-    console.log("[Maintenance] Expired sessions cleaned up");
     sessionCleanupFailures = 0;
   } catch (error) {
     sessionCleanupFailures++;
-    console.error("[Maintenance] Session cleanup failed:", error);
+    log.error("Session cleanup failed:", error);
     if (sessionCleanupFailures >= 3) {
       reportCriticalError(error as Error, "Session Cleanup (failed 3+ times consecutively)");
       sessionCleanupFailures = 0;
@@ -205,7 +204,7 @@ async function runCleanupTasks(): Promise<void> {
   if (dayOfWeek === 0 && now - lastWeeklyRun > WEEK_MS - 24 * 60 * 60 * 1000) {
     try {
       const result = await storage.cleanupOldData(730); // 2 year retention
-      console.log("[Maintenance] Weekly data cleanup completed:", result);
+      log.info(`Weekly cleanup: ${result.ipsDeleted} IPs, ${result.urlsDeleted} URLs, ${result.newsDeleted} news removed`);
       await setLastRun("weekly_cleanup");
 
       await sendAdminNotification({
@@ -215,7 +214,7 @@ async function runCleanupTasks(): Promise<void> {
         details: `Cleaned up:\n- IPs: ${result.ipsDeleted || 0}\n- URLs: ${result.urlsDeleted || 0}\n- News: ${result.newsDeleted || 0}`
       });
     } catch (error) {
-      console.error("[Maintenance] Weekly cleanup failed:", error);
+      log.error("Weekly cleanup failed:", error);
       reportCriticalError(error as Error, "Weekly Data Cleanup");
     }
   }
@@ -236,7 +235,7 @@ async function checkGrandOpeningSale(): Promise<void> {
 
     saleEndNotificationSent = true;
     await setConfig("sale_end_notification_sent", "true");
-    console.log("[Maintenance] Grand Opening sale period has ended");
+    log.info("Grand Opening sale period has ended");
 
     await sendAdminNotification({
       type: "info",
@@ -245,7 +244,7 @@ async function checkGrandOpeningSale(): Promise<void> {
       details: `Action Required:\n1. Deactivate the GRANDOPENING50 coupon in Stripe Dashboard\n2. Update any promotional materials on the website\n3. Consider sending a final promotional email to subscribers\n\nNote: New subscriptions will no longer receive the automatic 50% discount after the coupon is deactivated in Stripe.`
     });
 
-    console.log("[Maintenance] Grand Opening sale end notification sent to admin");
+    log.info("Grand Opening sale end notification sent to admin");
   }
 }
 
@@ -270,7 +269,7 @@ async function sendDailyHealthCheck(): Promise<void> {
       await setLastRun("daily_health_check");
       errorRateWindow = { count: 0, windowStart: now };
     } catch (error) {
-      console.error("[Maintenance] Health check failed:", error);
+      log.error("Health check failed:", error);
       reportCriticalError(error as Error, "Daily Health Check");
     }
   }
@@ -278,9 +277,7 @@ async function sendDailyHealthCheck(): Promise<void> {
 
 export async function startMaintenanceScheduler(): Promise<void> {
   const endDate = await getOrInitializeSaleDate();
-  console.log("[Maintenance] Starting maintenance scheduler");
-  console.log(`[Maintenance] Grand Opening sale ends: ${endDate.toISOString()}`);
-  console.log(`[Maintenance] Admin notifications will be sent to: ${ADMIN_EMAIL}`);
+  log.info(`Maintenance scheduler started | Sale ends: ${endDate.toLocaleDateString()} | Admin: ${ADMIN_EMAIL}`);
 
   const notificationSent = await getConfig("sale_end_notification_sent");
   if (notificationSent === "true") {
@@ -297,7 +294,7 @@ export async function startMaintenanceScheduler(): Promise<void> {
       await checkGrandOpeningSale();
       await sendDailyHealthCheck();
     } catch (error) {
-      console.error("[Maintenance] Scheduler error:", error);
+      log.error("Scheduler error:", error);
       reportCriticalError(error as Error, "Maintenance Scheduler");
     }
   }, 5 * 60 * 1000);
@@ -312,7 +309,7 @@ export async function startMaintenanceScheduler(): Promise<void> {
         details: `Startup Time: ${new Date().toISOString()}\nGrand Opening Sale Active Until: ${currentEndDate.toISOString()}\nAdmin Email: ${ADMIN_EMAIL}\n\nAll systems are operational.`
       });
     } catch (error) {
-      console.error("[Maintenance] Failed to send startup notification:", error);
+      log.error("Failed to send startup notification:", error);
     }
   }, 10000);
 }
@@ -321,7 +318,7 @@ export function stopMaintenanceScheduler(): void {
   if (maintenanceInterval) {
     clearInterval(maintenanceInterval);
     maintenanceInterval = null;
-    console.log("[Maintenance] Maintenance scheduler stopped");
+    log.info("Maintenance scheduler stopped");
   }
 }
 

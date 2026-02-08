@@ -1,6 +1,9 @@
 import { storage } from "./storage";
 import { Resend } from "resend";
 import { QuoService } from "./quoService";
+import { createLogger } from "./logger";
+
+const log = createLogger("Email");
 
 export interface EmailOptions {
   to: string;
@@ -64,14 +67,14 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     });
     
     if (result.error) {
-      console.error("[Email] Resend error:", result.error);
+      log.error("Resend error:", result.error);
       return false;
     }
     
-    console.log(`[Email] Sent to ${options.to}: ${options.subject}`);
+    log.debug(`Sent to ${options.to}: ${options.subject}`);
     return true;
   } catch (error) {
-    console.error("[Email] Failed to send:", error);
+    log.error("Failed to send:", error);
     return false;
   }
 }
@@ -322,7 +325,7 @@ export async function sendAlertNotification(
 }
 
 export async function processWatchlistAlerts(userId: string): Promise<void> {
-  console.log(`[Alerts] Processing watchlist alerts for user ${userId}...`);
+  log.debug(`Processing watchlist alerts for user ${userId}...`);
   
   const watchlistItems = await storage.getWatchlistItems(userId);
   if (watchlistItems.length === 0) return;
@@ -362,7 +365,7 @@ export async function processWatchlistAlerts(userId: string): Promise<void> {
           break;
       }
     } catch (error) {
-      console.error(`[Alerts] Error processing watchlist item ${item.id}:`, error);
+      log.error(`Error processing watchlist item ${item.id}:`, error);
     }
   }
 }
@@ -384,7 +387,7 @@ async function createWatchlistNotification(
     relatedId: `${matchType}:${watchlistItem.itemValue}`
   });
 
-  console.log(`[Alerts] Created notification for user ${userId}: ${title}`);
+  log.debug(`Created notification for user ${userId}: ${title}`);
   
   const user = await storage.getUser(userId);
   
@@ -405,7 +408,7 @@ async function createWatchlistNotification(
       text: emailContent.text
     });
     
-    console.log(`[Alerts] Sent email alert to ${user.email} for watchlist match: ${title}`);
+    log.debug(`Sent email alert to ${user.email} for watchlist match: ${title}`);
   }
   
   if (watchlistItem.smsOnMatch && user?.phone && user?.tier === "business" && user?.smsAlertsEnabled) {
@@ -417,9 +420,9 @@ async function createWatchlistNotification(
         matchType === "cve" ? "HIGH" : "MEDIUM",
         `Watchlist match: ${title} - ${description.substring(0, 100)}`
       );
-      console.log(`[Alerts] Sent SMS alert to ${user.phone} for watchlist match: ${title}`);
+      log.debug(`Sent SMS alert to ${user.phone} for watchlist match: ${title}`);
     } catch (error) {
-      console.error(`[Alerts] Failed to send SMS alert:`, error);
+      log.error("Failed to send SMS alert:", error);
     }
   }
 }
@@ -450,7 +453,7 @@ export async function sendCriticalThreatAlert(
 }
 
 export async function processBusinessCriticalAlerts(): Promise<void> {
-  console.log(`[Alerts] Processing critical alerts for Business users...`);
+  log.debug("Processing critical alerts for Business users...");
   
   const businessTiers = ["business", "enterprise"];
   const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
@@ -500,7 +503,7 @@ export async function processBusinessCriticalAlerts(): Promise<void> {
             `${cve.cveId}: ${(cve.description || "Critical vulnerability").substring(0, 100)}`
           );
         } catch (error) {
-          console.error(`[Alerts] Failed to send SMS for CVE ${cve.cveId}:`, error);
+          log.error(`Failed to send SMS for CVE ${cve.cveId}:`, error);
         }
       }
     }
@@ -524,11 +527,11 @@ export async function processBusinessCriticalAlerts(): Promise<void> {
             `${incident.victim} targeted by ${incident.groupName}`
           );
         } catch (error) {
-          console.error(`[Alerts] Failed to send SMS for ransomware incident:`, error);
+          log.error("Failed to send SMS for ransomware incident:", error);
         }
       }
     }
   }
   
-  console.log(`[Alerts] Sent critical alerts to ${businessUsers.length} Business users`);
+  if (businessUsers.length > 0) log.info(`Sent critical alerts to ${businessUsers.length} Business users`);
 }

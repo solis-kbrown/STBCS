@@ -1,6 +1,9 @@
 import { storage } from "./storage";
 import { sendEmail, generateWeeklyDigestEmail, processBusinessCriticalAlerts } from "./email";
 import { subDays, format } from "date-fns";
+import { createLogger } from "./logger";
+
+const log = createLogger("Digest");
 
 export interface DigestData {
   ransomwareCount: number;
@@ -59,10 +62,10 @@ export async function generateDigestData(): Promise<DigestData> {
 }
 
 export async function sendWeeklyDigests(): Promise<number> {
-  console.log("[Digest] Starting weekly digest distribution...");
+  log.debug("Starting weekly digest distribution...");
   
   const subscribers = await storage.getActiveNewsletterSubscribers("weekly");
-  console.log(`[Digest] Found ${subscribers.length} weekly subscribers`);
+  log.debug(`Found ${subscribers.length} weekly subscribers`);
   
   if (subscribers.length === 0) return 0;
   
@@ -91,19 +94,19 @@ export async function sendWeeklyDigests(): Promise<number> {
       
       if (success) sent++;
     } catch (error) {
-      console.error(`[Digest] Failed to send to ${subscriber.email}:`, error);
+      log.error(`Failed to send weekly to ${subscriber.email}:`, error);
     }
   }
   
-  console.log(`[Digest] Sent ${sent}/${subscribers.length} weekly digests`);
+  if (sent > 0) log.info(`Sent ${sent}/${subscribers.length} weekly digests`);
   return sent;
 }
 
 export async function sendDailyDigests(): Promise<number> {
-  console.log("[Digest] Starting daily digest distribution...");
+  log.debug("Starting daily digest distribution...");
   
   const subscribers = await storage.getActiveNewsletterSubscribers("daily");
-  console.log(`[Digest] Found ${subscribers.length} daily subscribers`);
+  log.debug(`Found ${subscribers.length} daily subscribers`);
   
   if (subscribers.length === 0) return 0;
   
@@ -136,11 +139,11 @@ export async function sendDailyDigests(): Promise<number> {
       
       if (success) sent++;
     } catch (error) {
-      console.error(`[Digest] Failed to send to ${subscriber.email}:`, error);
+      log.error(`Failed to send daily to ${subscriber.email}:`, error);
     }
   }
   
-  console.log(`[Digest] Sent ${sent}/${subscribers.length} daily digests`);
+  if (sent > 0) log.info(`Sent ${sent}/${subscribers.length} daily digests`);
   return sent;
 }
 
@@ -151,7 +154,7 @@ export function startDigestScheduler(): void {
     clearInterval(digestSchedulerInterval);
   }
   
-  console.log("[Digest] Starting digest scheduler (checks every hour)");
+  log.info("Digest scheduler started (hourly checks)");
   
   digestSchedulerInterval = setInterval(async () => {
     const now = new Date();
@@ -172,6 +175,6 @@ export function stopDigestScheduler(): void {
   if (digestSchedulerInterval) {
     clearInterval(digestSchedulerInterval);
     digestSchedulerInterval = null;
-    console.log("[Digest] Digest scheduler stopped");
+    log.info("Digest scheduler stopped");
   }
 }

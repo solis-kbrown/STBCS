@@ -835,25 +835,22 @@ export class DatabaseStorage implements IStorage {
   }> {
     const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
     
-    // Delete old malicious IPs (keep last seen within retention)
-    const ipsResult = await db.delete(maliciousIps)
-      .where(sql`${maliciousIps.lastSeen} < ${cutoffDate} OR (${maliciousIps.lastSeen} IS NULL AND ${maliciousIps.createdAt} < ${cutoffDate})`)
-      .returning();
-    
-    // Delete old malicious URLs
-    const urlsResult = await db.delete(maliciousUrls)
-      .where(sql`${maliciousUrls.reportedAt} < ${cutoffDate} OR (${maliciousUrls.reportedAt} IS NULL AND ${maliciousUrls.createdAt} < ${cutoffDate})`)
-      .returning();
-    
-    // Delete old news (but keep important ones)
-    const newsResult = await db.delete(newsArticles)
-      .where(sql`${newsArticles.publishedAt} < ${cutoffDate}`)
-      .returning();
+    const ipCondition = sql`${maliciousIps.lastSeen} < ${cutoffDate} OR (${maliciousIps.lastSeen} IS NULL AND ${maliciousIps.createdAt} < ${cutoffDate})`;
+    const urlCondition = sql`${maliciousUrls.reportedAt} < ${cutoffDate} OR (${maliciousUrls.reportedAt} IS NULL AND ${maliciousUrls.createdAt} < ${cutoffDate})`;
+    const newsCondition = sql`${newsArticles.publishedAt} < ${cutoffDate}`;
+
+    const [ipsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(maliciousIps).where(ipCondition);
+    const [urlsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(maliciousUrls).where(urlCondition);
+    const [newsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(newsArticles).where(newsCondition);
+
+    if (ipsCount.count > 0) await db.delete(maliciousIps).where(ipCondition);
+    if (urlsCount.count > 0) await db.delete(maliciousUrls).where(urlCondition);
+    if (newsCount.count > 0) await db.delete(newsArticles).where(newsCondition);
     
     return {
-      ipsDeleted: ipsResult.length,
-      urlsDeleted: urlsResult.length,
-      newsDeleted: newsResult.length,
+      ipsDeleted: ipsCount.count,
+      urlsDeleted: urlsCount.count,
+      newsDeleted: newsCount.count,
     };
   }
 
