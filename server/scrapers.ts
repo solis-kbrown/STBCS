@@ -222,8 +222,8 @@ export async function fetchCISAKev(): Promise<number> {
     const data: CISAKevResponse = await response.json();
     let count = 0;
     
-    // Get the latest 100 entries
-    const recentVulns = data.vulnerabilities.slice(-100);
+    // Get the latest 300 entries
+    const recentVulns = data.vulnerabilities.slice(-300);
     
     for (const vuln of recentVulns) {
       const kevData: InsertCisaKev = {
@@ -280,7 +280,7 @@ export async function fetchURLhaus(): Promise<number> {
     let count = 0;
     
     if (data.urls) {
-      for (const entry of data.urls.slice(0, 100)) {
+      for (const entry of data.urls.slice(0, 500)) {
         const urlData: InsertMaliciousUrl = {
           url: entry.url,
           source: "URLhaus",
@@ -336,7 +336,7 @@ export async function fetchFeodoTracker(): Promise<number> {
     const entries: FeodoEntry[] = await response.json();
     let count = 0;
     
-    for (const entry of entries.slice(0, 200)) {
+    for (const entry of entries.slice(0, 500)) {
       const ipData: InsertMaliciousIp = {
         ipAddress: entry.ip_address,
         source: "Feodo Tracker",
@@ -363,7 +363,7 @@ export async function fetchFeodoTracker(): Promise<number> {
 // ============================================
 // 5. SANS DShield - Top Attacking IPs
 // ============================================
-const DSHIELD_API = "https://isc.sans.edu/api/sources/attacks/100?json";
+const DSHIELD_API = "https://isc.sans.edu/api/sources/attacks/500?json";
 
 export async function fetchDShield(): Promise<number> {
   try {
@@ -379,7 +379,7 @@ export async function fetchDShield(): Promise<number> {
     let count = 0;
     
     if (Array.isArray(data)) {
-      for (const entry of data.slice(0, 100)) {
+      for (const entry of data.slice(0, 500)) {
         if (entry.ip) {
           const ipData: InsertMaliciousIp = {
             ipAddress: entry.ip,
@@ -423,8 +423,8 @@ export async function fetchTorExitNodes(): Promise<number> {
     const ips = text.split("\n").filter(line => line.trim() && !line.startsWith("#"));
     let count = 0;
     
-    // Limit to 200 entries
-    for (const ip of ips.slice(0, 200)) {
+    // Limit to 500 entries
+    for (const ip of ips.slice(0, 500)) {
       const ipData: InsertMaliciousIp = {
         ipAddress: ip.trim(),
         source: "Tor Project",
@@ -464,7 +464,7 @@ export async function fetchOpenPhish(): Promise<number> {
     const urls = text.split("\n").filter(line => line.trim());
     let count = 0;
     
-    for (const url of urls.slice(0, 100)) {
+    for (const url of urls.slice(0, 300)) {
       const urlData: InsertMaliciousUrl = {
         url: url.trim(),
         source: "OpenPhish",
@@ -548,7 +548,7 @@ export async function fetchIPsum(): Promise<number> {
     const lines = text.split("\n").filter(line => !line.startsWith("#") && line.trim());
     let count = 0;
     
-    for (const line of lines.slice(0, 200)) {
+    for (const line of lines.slice(0, 500)) {
       const parts = line.trim().split("\t");
       if (parts.length >= 2) {
         const ip = parts[0];
@@ -596,7 +596,7 @@ export async function fetchBlocklistDe(): Promise<number> {
     const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
     let count = 0;
     
-    for (const ip of ips.slice(0, 150)) {
+    for (const ip of ips.slice(0, 500)) {
       const ipData: InsertMaliciousIp = {
         ipAddress: ip.trim(),
         source: "Blocklist.de",
@@ -636,7 +636,7 @@ export async function fetchCINS(): Promise<number> {
     const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
     let count = 0;
     
-    for (const ip of ips.slice(0, 150)) {
+    for (const ip of ips.slice(0, 500)) {
       const ipData: InsertMaliciousIp = {
         ipAddress: ip.trim(),
         source: "CINS Army",
@@ -676,7 +676,7 @@ export async function fetchGreenSnow(): Promise<number> {
     const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
     let count = 0;
     
-    for (const ip of ips.slice(0, 150)) {
+    for (const ip of ips.slice(0, 500)) {
       const ipData: InsertMaliciousIp = {
         ipAddress: ip.trim(),
         source: "GreenSnow",
@@ -716,7 +716,7 @@ export async function fetchEmergingThreats(): Promise<number> {
     const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
     let count = 0;
     
-    for (const ip of ips.slice(0, 150)) {
+    for (const ip of ips.slice(0, 500)) {
       const ipData: InsertMaliciousIp = {
         ipAddress: ip.trim(),
         source: "EmergingThreats",
@@ -1082,7 +1082,7 @@ export async function fetchFireHOL(): Promise<number> {
     const lines = text.split("\n").filter(line => !line.startsWith("#") && line.trim());
     let count = 0;
     
-    for (const line of lines.slice(0, 150)) {
+    for (const line of lines.slice(0, 500)) {
       const ip = line.split("/")[0].trim();
       if (/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
         const ipData: InsertMaliciousIp = {
@@ -1125,7 +1125,7 @@ export async function fetchSSLBLAggressive(): Promise<number> {
     const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
     let count = 0;
     
-    for (const ip of ips.slice(0, 100)) {
+    for (const ip of ips.slice(0, 300)) {
       const ipData: InsertMaliciousIp = {
         ipAddress: ip.trim(),
         source: "SSLBL Aggressive",
@@ -1165,7 +1165,7 @@ export async function fetchC2Tracker(): Promise<number> {
     const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()));
     let count = 0;
     
-    for (const ip of ips.slice(0, 150)) {
+    for (const ip of ips.slice(0, 500)) {
       const ipData: InsertMaliciousIp = {
         ipAddress: ip.trim(),
         source: "C2 Tracker",
@@ -1207,7 +1207,7 @@ export async function fetchCleanTalk(): Promise<number> {
     const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+/.test(line.trim()) && !line.startsWith("#"));
     let count = 0;
     
-    for (const ip of ips.slice(0, 200)) {
+    for (const ip of ips.slice(0, 500)) {
       const ipData: InsertMaliciousIp = {
         ipAddress: ip.trim().split("/")[0],
         source: "CleanTalk",
@@ -1245,7 +1245,7 @@ export async function fetchC2IntelFeeds(): Promise<number> {
     const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#") && !line.startsWith("ioc"));
     let count = 0;
     
-    for (const line of lines.slice(0, 200)) {
+    for (const line of lines.slice(0, 500)) {
       const parts = line.split(",");
       const ip = parts[0]?.trim();
       
@@ -1288,7 +1288,7 @@ export async function fetchDataplaneSsh(): Promise<number> {
     const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#"));
     let count = 0;
     
-    for (const line of lines.slice(0, 200)) {
+    for (const line of lines.slice(0, 500)) {
       // Format: ASN | AS Name | IP Address | Timestamp | Category
       const parts = line.split("|");
       const ip = parts[2]?.trim();
@@ -1334,7 +1334,7 @@ export async function fetchBinaryDefense(): Promise<number> {
     const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()) && !line.startsWith("#"));
     let count = 0;
     
-    for (const ip of ips.slice(0, 200)) {
+    for (const ip of ips.slice(0, 500)) {
       const ipData: InsertMaliciousIp = {
         ipAddress: ip.trim(),
         source: "BinaryDefense",
@@ -1372,7 +1372,7 @@ export async function fetchTurrisSentinel(): Promise<number> {
     const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#") && !line.startsWith("Address"));
     let count = 0;
     
-    for (const line of lines.slice(0, 200)) {
+    for (const line of lines.slice(0, 500)) {
       const parts = line.split(",");
       const ip = parts[0]?.trim();
       
@@ -1737,7 +1737,7 @@ export async function fetchAlienVaultOTX(): Promise<number> {
     let urlCount = 0;
     
     for (const pulse of pulses) {
-      for (const indicator of (pulse.indicators || []).slice(0, 50)) {
+      for (const indicator of (pulse.indicators || []).slice(0, 100)) {
         try {
           if (indicator.type === "IPv4" && /^\d+\.\d+\.\d+\.\d+$/.test(indicator.indicator)) {
             const ipData: InsertMaliciousIp = {
@@ -1918,7 +1918,7 @@ export async function fetchCIRCLCves(): Promise<number> {
   try {
     console.log("[CIRCL] Fetching enhanced CVE data...");
     
-    const response = await secureFetch(`${CIRCL_CVE_API}/last/50`);
+    const response = await secureFetch(`${CIRCL_CVE_API}/last/100`);
     
     if (!response.ok) {
       throw new Error(`CIRCL error: ${response.status}`);
@@ -1927,7 +1927,7 @@ export async function fetchCIRCLCves(): Promise<number> {
     const cves = await response.json();
     let count = 0;
     
-    for (const cve of cves.slice(0, 50)) {
+    for (const cve of cves.slice(0, 100)) {
       try {
         // Map CIRCL data to our CVE format (supplements NVD data)
         const cveData: InsertCve = {
@@ -1987,6 +1987,10 @@ interface RansomwareLiveVictim {
   activity?: string;
   post_url?: string;
   screenshot?: string;
+  sector?: string;
+  data_size?: string;
+  revenue?: string;
+  employees?: string;
 }
 
 interface RansomwareLiveGroup {
@@ -1995,6 +1999,11 @@ interface RansomwareLiveGroup {
   url?: string;
   locations?: string[];
   profile?: string[];
+  first_seen?: string;
+  last_seen?: string;
+  meta?: string;
+  captcha?: boolean;
+  parser?: boolean;
 }
 
 // Fetch recent ransomware victims from ransomware.live
@@ -2019,6 +2028,7 @@ export async function fetchRansomwareLiveVictims(): Promise<number> {
           victim: victim.name || "Unknown Victim",
           groupName: victim.group_name || "Unknown Group",
           country: victim.country || null,
+          sector: victim.sector || null,
           website: victim.website || null,
           description: victim.description || `Victim posted by ${victim.group_name} ransomware group`,
           status: "Published",
@@ -2027,6 +2037,8 @@ export async function fetchRansomwareLiveVictims(): Promise<number> {
           screenshotUrl: victim.screenshot || null,
           activity: victim.activity || null,
           sourceApi: "ransomware.live",
+          dataSize: victim.data_size || null,
+          victimRevenue: victim.revenue || null,
         };
         
         const result = await storage.upsertRansomwareIncidentWithFlag(incident);
@@ -2075,13 +2087,19 @@ export async function fetchRansomwareLiveGroups(): Promise<number> {
     
     for (const group of groups) {
       try {
+        const profileDesc = group.profile?.join(" ") || "";
+        const description = group.description || profileDesc || group.meta || `Active ransomware group`;
+        
         await storage.upsertThreatActor({
           name: group.name,
-          description: group.description || group.profile?.join(" ") || `Active ransomware group`,
+          description: description.slice(0, 5000),
           type: "Ransomware Operator",
           origin: group.locations?.join(", ") || "Unknown",
-          lastActive: new Date(),
+          firstSeen: group.first_seen ? new Date(group.first_seen) : null,
+          lastActive: group.last_seen ? new Date(group.last_seen) : new Date(),
           active: true,
+          targetSectors: null,
+          ttps: null,
         });
         count++;
       } catch (err) {
@@ -2129,8 +2147,8 @@ export async function fetchRansomLookVictims(): Promise<number> {
   try {
     console.log("[RansomLook] Fetching ransomware intelligence from ransomlook.io...");
     
-    // Fetch last 200 recent posts for comprehensive coverage
-    const response = await secureFetch(`${RANSOMLOOK_API}/recent/200`);
+    // Fetch last 500 recent posts for comprehensive coverage
+    const response = await secureFetch(`${RANSOMLOOK_API}/recent/500`);
     
     if (!response.ok) {
       throw new Error(`RansomLook API error: ${response.status}`);
@@ -2256,7 +2274,7 @@ export async function fetchRansomLookBreaches(): Promise<number> {
     // Process breaches if available
     let count = 0;
     if (Array.isArray(leaks)) {
-      for (const leak of leaks.slice(0, 100)) { // Limit to 100 for efficiency
+      for (const leak of leaks.slice(0, 300)) { // Limit to 300 for efficiency
         try {
           await storage.upsertBreachIncident({
             name: leak.name || leak.title || "Unknown",
@@ -2372,7 +2390,7 @@ export async function fetchTalosBlocklist(): Promise<number> {
     console.log(`[Talos] Retrieved ${lines.length} IPs from Cisco threat network`);
     
     let count = 0;
-    for (const ip of lines.slice(0, 200)) {
+    for (const ip of lines.slice(0, 500)) {
       const cleanIp = ip.trim();
       if (cleanIp && /^[\d.]+$/.test(cleanIp)) {
         try {
@@ -2397,6 +2415,231 @@ export async function fetchTalosBlocklist(): Promise<number> {
     return count;
   } catch (error) {
     console.error("[Talos] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// CYBERCURE - Infected/Malicious IPs (FREE, no auth)
+// Real-time infected host detection
+// ============================================
+const CYBERCURE_IP_URL = "https://api.cybercure.ai/feed/get_ips?type=json";
+const CYBERCURE_URL_URL = "https://api.cybercure.ai/feed/get_url?type=json";
+
+export async function fetchCyberCureIPs(): Promise<number> {
+  try {
+    console.log("[CyberCure] Fetching infected/malicious host IPs...");
+    
+    const response = await secureFetch(CYBERCURE_IP_URL);
+    
+    if (!response.ok) {
+      throw new Error(`CyberCure IP API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const ips: string[] = data?.data?.ip || data?.ips || data?.ip || [];
+    
+    console.log(`[CyberCure] Retrieved ${Array.isArray(ips) ? ips.length : 0} infected host IPs`);
+    
+    let count = 0;
+    const ipList = Array.isArray(ips) ? ips : [];
+    
+    for (const ip of ipList.slice(0, 500)) {
+      const cleanIp = typeof ip === 'string' ? ip.trim() : String(ip).trim();
+      if (cleanIp && /^[\d.]+$/.test(cleanIp)) {
+        try {
+          await storage.upsertMaliciousIp({
+            ipAddress: cleanIp,
+            source: "CyberCure",
+            threatType: "infected_host",
+            lastSeen: new Date(),
+          });
+          count++;
+        } catch (err) {
+          continue;
+        }
+      }
+    }
+    
+    console.log(`[CyberCure] Processed ${count} infected host IPs`);
+    await storage.updateFeedLastFetched("CyberCure");
+    return count;
+  } catch (error) {
+    console.error("[CyberCure] IP feed error:", error);
+    return 0;
+  }
+}
+
+export async function fetchCyberCureURLs(): Promise<number> {
+  try {
+    console.log("[CyberCure] Fetching malicious URLs...");
+    
+    const response = await secureFetch(CYBERCURE_URL_URL);
+    
+    if (!response.ok) {
+      throw new Error(`CyberCure URL API error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const urls: string[] = data?.data?.url || data?.urls || data?.url || [];
+    
+    console.log(`[CyberCure] Retrieved ${Array.isArray(urls) ? urls.length : 0} malicious URLs`);
+    
+    let count = 0;
+    const urlList = Array.isArray(urls) ? urls : [];
+    
+    for (const url of urlList.slice(0, 300)) {
+      const cleanUrl = typeof url === 'string' ? url.trim() : String(url).trim();
+      if (cleanUrl && cleanUrl.length > 5) {
+        try {
+          await storage.upsertMaliciousUrl({
+            url: cleanUrl.slice(0, 500),
+            source: "CyberCure",
+            threatType: "malware",
+            status: "active",
+            reportedAt: new Date(),
+          });
+          count++;
+        } catch (err) {
+          continue;
+        }
+      }
+    }
+    
+    console.log(`[CyberCure] Processed ${count} malicious URLs`);
+    return count;
+  } catch (error) {
+    console.error("[CyberCure] URL feed error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// THREATFOX RECENT IOCs (FREE, no auth for exports)
+// Fresh IOCs from abuse.ch ThreatFox
+// ============================================
+const THREATFOX_EXPORT_URL = "https://threatfox.abuse.ch/export/json/recent/";
+
+export async function fetchThreatFoxRecent(): Promise<number> {
+  try {
+    console.log("[ThreatFox] Fetching recent IOCs from abuse.ch...");
+    
+    const response = await secureFetch(THREATFOX_EXPORT_URL);
+    
+    if (!response.ok) {
+      throw new Error(`ThreatFox export error: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    let count = 0;
+    let ipCount = 0;
+    let urlCount = 0;
+    
+    const entries = Object.values(data).flat() as any[];
+    
+    for (const ioc of entries.slice(0, 500)) {
+      try {
+        if (!ioc || (!ioc.ioc_value && !ioc.ioc)) continue;
+        
+        const iocValue = String(ioc.ioc_value || ioc.ioc).trim();
+        const malwareFamily = ioc.malware_printable || ioc.malware || "unknown";
+        const threatType = ioc.threat_type_desc || ioc.threat_type || "malware";
+        
+        if (ioc.ioc_type === "ip:port" || ioc.ioc_type === "ip") {
+          const ip = iocValue.split(':')[0];
+          if (ip && /^[\d.]+$/.test(ip)) {
+            await storage.upsertMaliciousIp({
+              ipAddress: ip,
+              source: "ThreatFox",
+              threatType: threatType,
+              tags: malwareFamily,
+              lastSeen: ioc.first_seen_utc ? new Date(ioc.first_seen_utc) : new Date(),
+            });
+            ipCount++;
+          }
+        } else if (ioc.ioc_type === "url" || ioc.ioc_type === "domain") {
+          await storage.upsertMaliciousUrl({
+            url: iocValue.slice(0, 500),
+            source: "ThreatFox",
+            threatType: threatType,
+            malwareFamily: malwareFamily,
+            status: "active",
+            reportedAt: ioc.first_seen_utc ? new Date(ioc.first_seen_utc) : new Date(),
+          });
+          urlCount++;
+        }
+        
+        count++;
+      } catch (err) {
+        continue;
+      }
+    }
+    
+    console.log(`[ThreatFox] Processed ${count} IOCs (${ipCount} IPs, ${urlCount} URLs)`);
+    await storage.updateFeedLastFetched("ThreatFox");
+    return count;
+  } catch (error) {
+    console.error("[ThreatFox] Error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// MALWAREBAZAAR RECENT SAMPLES (FREE CSV export)
+// Recent malware hash data for threat awareness
+// ============================================
+const MALWAREBAZAAR_EXPORT_URL = "https://bazaar.abuse.ch/export/csv/recent/";
+
+export async function fetchMalwareBazaarRecent(): Promise<number> {
+  try {
+    console.log("[MalwareBazaar] Fetching recent malware sample data...");
+    
+    const response = await secureFetch(MALWAREBAZAAR_EXPORT_URL);
+    
+    if (!response.ok) {
+      console.log(`[MalwareBazaar] Export feed unavailable (${response.status}) - using existing data`);
+      return 0;
+    }
+    
+    const text = await response.text();
+    const lines = text.split('\n').filter(l => l.trim() && !l.startsWith('#'));
+    let count = 0;
+    
+    for (const line of lines.slice(1, 101)) {
+      try {
+        const parts = line.split(',').map(p => p.replace(/"/g, '').trim());
+        if (parts.length < 8) continue;
+        
+        const [_firstSeen, sha256, _md5, _sha1, reporter, fileName, fileType, _mimeType, signature, ...rest] = parts;
+        
+        if (signature && signature !== "n/a" && signature.length > 2) {
+          const isRansomware = signature.toLowerCase().includes('ransom') ||
+            signature.toLowerCase().includes('lockbit') ||
+            signature.toLowerCase().includes('blackcat') ||
+            signature.toLowerCase().includes('akira');
+          
+          if (isRansomware && sha256) {
+            await storage.upsertMaliciousUrl({
+              url: `malware://${sha256.slice(0, 16)}`,
+              source: "MalwareBazaar",
+              threatType: "ransomware_sample",
+              malwareFamily: signature,
+              status: "active",
+              reportedAt: new Date(),
+            });
+          }
+          count++;
+        }
+      } catch (err) {
+        continue;
+      }
+    }
+    
+    console.log(`[MalwareBazaar] Processed ${count} recent malware samples`);
+    await storage.updateFeedLastFetched("MalwareBazaar");
+    return count;
+  } catch (error) {
+    console.error("[MalwareBazaar] Error:", error);
     return 0;
   }
 }
@@ -2571,6 +2814,10 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "BinaryDefense", url: "https://www.binarydefense.com/banlist.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Threat intelligence IPs" },
     { name: "Turris Sentinel", url: "https://view.sentinel.turris.cz/greylist-data/greylist-latest.csv", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Router-based attack detection" },
     
+    // CyberCure - Infected Host Detection
+    { name: "CyberCure IPs", url: "https://api.cybercure.ai/feed/get_ips", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Real-time infected/malicious host IPs" },
+    { name: "CyberCure URLs", url: "https://api.cybercure.ai/feed/get_url", feedType: "url", updateFrequency: "15min", requiresProTier: false, description: "Real-time malicious URLs from infected hosts" },
+    
     // Free Enhanced Feeds (no API key needed)
     { name: "CIRCL CVE", url: "https://cve.circl.lu/api", feedType: "cve", updateFrequency: "15min", requiresProTier: false, description: "Enhanced CVE data from CIRCL" },
     
@@ -2609,7 +2856,7 @@ export async function initializeThreatFeeds(): Promise<void> {
 export async function fetchAllData(): Promise<void> {
   console.log("[Scraper] ========================================");
   console.log("[Scraper] Starting comprehensive threat data fetch...");
-  console.log("[Scraper] 40+ threat intelligence sources");
+  console.log("[Scraper] 45+ threat intelligence sources");
   console.log("[Scraper] ========================================");
   
   // Initialize feed registry
@@ -2709,11 +2956,19 @@ export async function fetchAllData(): Promise<void> {
   await delay(1000);
   
   // ===========================================
-  // NEW THREAT FEEDS (2025 Additions)
+  // NEW THREAT FEEDS (2025-2026 Additions)
   // ===========================================
-  // Talos URL changed (404), ThreatFeeds.io returning empty - skipping for now
-  // await fetchTalosBlocklist();
-  // await fetchThreatFeedsIO();
+  await fetchCyberCureIPs();
+  await delay(1000);
+  
+  await fetchCyberCureURLs();
+  await delay(1000);
+  
+  await fetchThreatFoxRecent();
+  await delay(1000);
+  
+  await fetchMalwareBazaarRecent();
+  await delay(1000);
   
   // ===========================================
   // COMMUNITY APIS (Free Tier - Require API Keys)
@@ -2764,7 +3019,7 @@ export async function fetchAllData(): Promise<void> {
   await generateNewsData();
   
   console.log("[Scraper] ========================================");
-  console.log("[Scraper] All 40+ threat feeds processed successfully");
+  console.log("[Scraper] All 45+ threat feeds processed successfully");
   console.log("[Scraper] ========================================");
 }
 
@@ -2812,7 +3067,7 @@ export async function fetchHoneyDB(): Promise<number> {
     
     // Process bad hosts (IPs that connected to honeypots)
     if (Array.isArray(badHosts)) {
-      for (const host of badHosts.slice(0, 200)) {
+      for (const host of badHosts.slice(0, 500)) {
         try {
           if (host.remote_host && /^\d+\.\d+\.\d+\.\d+$/.test(host.remote_host)) {
             const ipData: InsertMaliciousIp = {
@@ -2883,7 +3138,7 @@ export async function fetchAbuseIPDB(): Promise<number> {
     
     // Process blacklisted IPs
     if (data.data && Array.isArray(data.data)) {
-      for (const entry of data.data.slice(0, 500)) {
+      for (const entry of data.data.slice(0, 1000)) {
         try {
           const ipData: InsertMaliciousIp = {
             ipAddress: entry.ipAddress,
