@@ -479,8 +479,8 @@ export async function processBusinessCriticalAlerts(): Promise<void> {
   }
   
   const users = await storage.getAllUsers();
-  const businessUsers = users.filter((u: { tier: string; email: string | null; phone: string | null; smsAlertsEnabled: boolean | null }) => 
-    businessTiers.includes(u.tier) && u.email
+  const businessUsers = users.filter((u) => 
+    u.tier && businessTiers.includes(u.tier) && u.email
   );
   
   for (const user of businessUsers) {
