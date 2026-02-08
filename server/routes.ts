@@ -115,6 +115,49 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
+  app.use((_req: Request, res: Response, next: Function) => {
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    res.setHeader("X-Frame-Options", "SAMEORIGIN");
+    res.setHeader("X-XSS-Protection", "1; mode=block");
+    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+    res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
+    next();
+  });
+
+  app.get("/sitemap.xml", async (_req: Request, res: Response) => {
+    try {
+      const today = new Date().toISOString().split("T")[0];
+      const actors = await storage.getThreatActors(500);
+      const groupEntries = (actors || [])
+        .filter((a: any) => a.name)
+        .map((a: any) => `  <url>\n    <loc>https://www.stbcybersecurity.com/group/${encodeURIComponent(a.name)}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`)
+        .join("\n");
+
+      const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://www.stbcybersecurity.com/</loc><lastmod>${today}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>
+  <url><loc>https://www.stbcybersecurity.com/search</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.stbcybersecurity.com/tools</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.stbcybersecurity.com/ransomware</loc><lastmod>${today}</lastmod><changefreq>hourly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.stbcybersecurity.com/exploits</loc><lastmod>${today}</lastmod><changefreq>hourly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://www.stbcybersecurity.com/threat-feeds</loc><lastmod>${today}</lastmod><changefreq>hourly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.stbcybersecurity.com/news</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.stbcybersecurity.com/alerts</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
+  <url><loc>https://www.stbcybersecurity.com/support</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://www.stbcybersecurity.com/privacy</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://www.stbcybersecurity.com/terms</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://www.stbcybersecurity.com/api-docs</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://www.stbcybersecurity.com/logos</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
+${groupEntries}
+</urlset>`;
+      res.setHeader("Content-Type", "application/xml");
+      res.setHeader("Cache-Control", "public, max-age=3600");
+      res.send(xml);
+    } catch {
+      res.status(500).send("Error generating sitemap");
+    }
+  });
+
   // Cookie parser for session tokens
   app.use(cookieParser());
   

@@ -1752,7 +1752,7 @@ function IPReputationAggregator() {
 }
 
 export default function ToolsPage() {
-  useDocumentTitle("Free Security Tools | STB Cybersecurity");
+  useDocumentTitle("Free Security Tools | STB Cybersecurity", "Free online cybersecurity tools: IP WHOIS, Domain WHOIS, Port Scanner, SSL Checker, Password Strength Checker, Hash Analyzer, Email Header Analyzer, Subnet Calculator, and more. No account required.");
   return (
     <Layout>
       <div className="space-y-6 animate-in fade-in duration-500">

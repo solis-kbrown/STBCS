@@ -20,7 +20,7 @@ const chartData = [
 ];
 
 export default function Dashboard() {
-  useDocumentTitle("Threat Intelligence Dashboard | STB Cybersecurity");
+  useDocumentTitle("Threat Intelligence Dashboard | STB Cybersecurity", "Real-time cybersecurity threat intelligence dashboard tracking ransomware groups, critical CVEs, malicious IPs, phishing URLs, and CISA KEV data from 45+ feeds. Updated every 15 minutes.");
   const { data: stats, isLoading: statsLoading } = useStats();
   const { data: cvesData, isLoading: cvesLoading } = useCves(5);
   const { data: ransomwareData, isLoading: ransomwareLoading } = useRansomware(5);

@@ -41,7 +41,7 @@ export default function GroupProfile() {
   const groupName = decodeURIComponent(params.name || "");
   const [, setLocation] = useLocation();
   
-  useDocumentTitle(`${groupName} - Threat Actor Profile | STB Cybersecurity`);
+  useDocumentTitle(`${groupName} Ransomware Group Profile | STB Cybersecurity`, `Detailed threat intelligence profile for ${groupName} ransomware group including TTPs, targeted sectors, victim countries, attack timeline, and MITRE ATT&CK mapping.`);
   
   const { data: profile, isLoading } = useGroupProfile(groupName || undefined);
   

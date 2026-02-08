@@ -81,7 +81,7 @@ const membershipTiers = [
 ];
 
 export default function SupportPage() {
-  useDocumentTitle("Support & Membership | STB Cybersecurity");
+  useDocumentTitle("Support & Membership | STB Cybersecurity", "Subscribe to STBCS Supporter, Pro, or Business plans for advanced threat intelligence, real-time alerts, watchlists, and priority incident response. Donate to support free cybersecurity tools for the community.");
   const [location] = useLocation();
   const searchParams = new URLSearchParams(location.split('?')[1] || '');
   const success = searchParams.get('success') === 'true';
@@ -555,7 +555,7 @@ export default function SupportPage() {
               ))}
             </div>
             <p className="text-xs text-zinc-500 mt-4 text-center">
-              Want your name listed? Become a Supporter for $9.99/month.
+              Want your name listed? Become a Supporter for $4.99/month.
             </p>
           </CardContent>
         </Card>

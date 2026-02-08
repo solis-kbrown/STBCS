@@ -144,7 +144,7 @@ app.use((req, res, next) => {
 (async () => {
   await registerRoutes(httpServer, app);
 
-  // Start the data scraper scheduler (fetches every 15 minutes from 30+ sources)
+  // Start the data scraper scheduler (fetches every 15 minutes from 45+ sources)
   const { startDataRefreshScheduler } = await import("./scrapers");
   startDataRefreshScheduler(15);
 

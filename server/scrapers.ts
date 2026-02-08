@@ -73,7 +73,7 @@ async function triggerWatchlistNotifications(
 // ============================================
 // THREAT INTELLIGENCE FEED SOURCES
 // ============================================
-// This system integrates 15+ free public threat intel feeds
+// This system integrates 45+ free and premium threat intel feeds
 // to provide comprehensive, real-time threat data
 
 const USER_AGENT = "STBCS/1.0 (STB Cybersecurity Threat Intelligence Platform)";

@@ -17,6 +17,7 @@ Allow: /terms
 Allow: /api-docs
 Allow: /alerts
 Allow: /logos
+Allow: /group/
 
 # Block internal/API routes
 Disallow: /api/

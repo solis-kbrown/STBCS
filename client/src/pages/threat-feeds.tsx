@@ -15,9 +15,10 @@ import PaginationControls from "@/components/pagination-controls";
 
 type IpSortOption = "newest" | "oldest" | "source" | "threat";
 type UrlSortOption = "newest" | "oldest" | "source" | "status";
+type KevSortOption = "newest" | "oldest" | "vendor-az" | "due-soonest";
 
 export default function ThreatFeeds() {
-  useDocumentTitle("Threat Intelligence Feeds | STB Cybersecurity");
+  useDocumentTitle("Threat Intelligence Feeds | STB Cybersecurity", "Real-time malicious IP addresses, phishing URLs, CISA Known Exploited Vulnerabilities (KEV), and threat indicators from 45+ intelligence feeds including SANS DShield, Feodo Tracker, and more.");
   const { data: feeds, isLoading: feedsLoading } = useThreatFeeds();
   const { data: ipsData, isLoading: ipsLoading } = useMaliciousIps(1000);
   const { data: urlsData, isLoading: urlsLoading } = useMaliciousUrls(1000);
@@ -34,6 +35,8 @@ export default function ThreatFeeds() {
   const [urlStatusFilter, setUrlStatusFilter] = useState("all");
 
   const [kevSearch, setKevSearch] = useState("");
+  const [kevSort, setKevSort] = useState<KevSortOption>("newest");
+  const [kevVendorFilter, setKevVendorFilter] = useState("all");
 
   const [ipPage, setIpPage] = useState(1);
   const [ipPageSize, setIpPageSize] = useState(25);
@@ -48,6 +51,7 @@ export default function ThreatFeeds() {
 
   const ipSources = useMemo(() => Array.from(new Set(rawIps.map(ip => ip.source).filter(Boolean))).sort(), [rawIps]);
   const urlSources = useMemo(() => Array.from(new Set(rawUrls.map(u => u.source).filter(Boolean))).sort(), [rawUrls]);
+  const kevVendors = useMemo(() => Array.from(new Set(rawKev.map(k => k.vendorProject).filter(Boolean))).sort(), [rawKev]);
 
   const maliciousIps = useMemo(() => {
     let filtered = [...rawIps];
@@ -95,10 +99,25 @@ export default function ThreatFeeds() {
   }, [rawUrls, urlSearch, urlSort, urlSourceFilter, urlStatusFilter]);
 
   const cisaKev = useMemo(() => {
-    if (!kevSearch) return rawKev;
-    const q = kevSearch.toLowerCase();
-    return rawKev.filter(k => k.cveId?.toLowerCase().includes(q) || k.vulnerabilityName?.toLowerCase().includes(q) || k.vendorProject?.toLowerCase().includes(q) || k.product?.toLowerCase().includes(q));
-  }, [rawKev, kevSearch]);
+    let filtered = [...rawKev];
+    if (kevSearch) {
+      const q = kevSearch.toLowerCase();
+      filtered = filtered.filter(k => k.cveId?.toLowerCase().includes(q) || k.vulnerabilityName?.toLowerCase().includes(q) || k.vendorProject?.toLowerCase().includes(q) || k.product?.toLowerCase().includes(q));
+    }
+    if (kevVendorFilter !== "all") {
+      filtered = filtered.filter(k => k.vendorProject === kevVendorFilter);
+    }
+    filtered.sort((a, b) => {
+      switch (kevSort) {
+        case "newest": return new Date(b.dateAdded || 0).getTime() - new Date(a.dateAdded || 0).getTime();
+        case "oldest": return new Date(a.dateAdded || 0).getTime() - new Date(b.dateAdded || 0).getTime();
+        case "vendor-az": return (a.vendorProject || "").localeCompare(b.vendorProject || "");
+        case "due-soonest": return new Date(a.dueDate || "9999").getTime() - new Date(b.dueDate || "9999").getTime();
+        default: return 0;
+      }
+    });
+    return filtered;
+  }, [rawKev, kevSearch, kevSort, kevVendorFilter]);
 
   const ipTotalPages = Math.max(1, Math.ceil(maliciousIps.length / ipPageSize));
   const ipSafePage = Math.min(ipPage, ipTotalPages);
@@ -119,12 +138,12 @@ export default function ThreatFeeds() {
           <div>
             <h1 className="text-3xl font-display font-bold text-white mb-2">Threat Intelligence Feeds</h1>
             <p className="text-muted-foreground">
-              Real-time data from 15+ threat intelligence sources including government feeds, abuse trackers, and security research.
+              Real-time data from 45+ threat intelligence sources including government feeds, abuse trackers, and security research.
             </p>
           </div>
           <Badge className="bg-green-600/20 text-green-400 border-green-500/50 px-4 py-2" data-testid="badge-live-status">
             <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-            15 FEEDS ACTIVE
+            45+ FEEDS ACTIVE
           </Badge>
         </div>
 
@@ -480,15 +499,43 @@ export default function ThreatFeeds() {
                 </Button>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search CVEs, vendors, products..."
-                    className="pl-10 bg-background/50 border-white/10 h-9 text-sm"
-                    value={kevSearch}
-                    onChange={(e) => { setKevSearch(e.target.value); setKevPage(1); }}
-                    data-testid="input-search-kev"
-                  />
+                <div className="flex flex-col md:flex-row gap-3 items-stretch">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Search CVEs, vendors, products..."
+                      className="pl-10 bg-background/50 border-white/10 h-9 text-sm"
+                      value={kevSearch}
+                      onChange={(e) => { setKevSearch(e.target.value); setKevPage(1); }}
+                      data-testid="input-search-kev"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <Select value={kevSort} onValueChange={(v) => { setKevSort(v as KevSortOption); setKevPage(1); }}>
+                      <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-sort-kev">
+                        <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                        <SelectValue placeholder="Sort by" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="newest">Newest First</SelectItem>
+                        <SelectItem value="oldest">Oldest First</SelectItem>
+                        <SelectItem value="vendor-az">Vendor A-Z</SelectItem>
+                        <SelectItem value="due-soonest">Due Soonest</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <Select value={kevVendorFilter} onValueChange={(v) => { setKevVendorFilter(v); setKevPage(1); }}>
+                      <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-vendor-kev">
+                        <SlidersHorizontal className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                        <SelectValue placeholder="Vendor" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Vendors</SelectItem>
+                        {kevVendors.map(v => (
+                          <SelectItem key={v} value={v!}>{v}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="text-xs text-muted-foreground">
                   {cisaKev.length} entries{cisaKev.length !== rawKev.length ? ` (filtered from ${rawKev.length})` : ''}

@@ -16,13 +16,15 @@ import PaginationControls from "@/components/pagination-controls";
 type SortOption = "newest" | "oldest" | "group-az" | "group-za" | "status";
 
 export default function Ransomware() {
-  useDocumentTitle("Ransomware Tracker | STB Cybersecurity");
+  useDocumentTitle("Ransomware Tracker | STB Cybersecurity", "Monitor active ransomware groups, victim postings, attack analytics, and negotiation statuses in real-time. Track groups like LockBit, BlackCat, Cl0p with detailed profiles, TTPs, and sector targeting data.");
   const [selectedGroup, setSelectedGroup] = useState<string | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [dateRange, setDateRange] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [countryFilter, setCountryFilter] = useState<string>("all");
+  const [sectorFilter, setSectorFilter] = useState<string>("all");
   const [showAllGroups, setShowAllGroups] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
   const [showAnalytics, setShowAnalytics] = useState(false);
@@ -54,16 +56,23 @@ export default function Ransomware() {
   const rawIncidents = activeSearch ? (searchResults?.data || []) : (data?.data || []);
   const loading = activeSearch ? isSearching : isLoading;
 
+  const countries = useMemo(() => Array.from(new Set(rawIncidents.map(i => i.country).filter(Boolean))).sort(), [rawIncidents]);
+  const sectors = useMemo(() => Array.from(new Set(rawIncidents.map(i => i.sector).filter(Boolean))).sort(), [rawIncidents]);
+
   const activeFilterCount = [
     sortBy !== "newest",
     dateRange !== "all",
     statusFilter !== "all",
+    countryFilter !== "all",
+    sectorFilter !== "all",
   ].filter(Boolean).length;
 
   const clearAllFilters = () => {
     setSortBy("newest");
     setDateRange("all");
     setStatusFilter("all");
+    setCountryFilter("all");
+    setSectorFilter("all");
     setCurrentPage(1);
   };
 
@@ -77,6 +86,13 @@ export default function Ransomware() {
 
     if (statusFilter !== "all") {
       filtered = filtered.filter(i => i.status === statusFilter);
+    }
+
+    if (countryFilter !== "all") {
+      filtered = filtered.filter(i => i.country === countryFilter);
+    }
+    if (sectorFilter !== "all") {
+      filtered = filtered.filter(i => i.sector === sectorFilter);
     }
 
     if (dateRange !== "all") {
@@ -103,7 +119,7 @@ export default function Ransomware() {
     });
 
     return filtered;
-  }, [rawIncidents, sortBy, dateRange, statusFilter]);
+  }, [rawIncidents, sortBy, dateRange, statusFilter, countryFilter, sectorFilter]);
 
   const totalPages = Math.max(1, Math.ceil(incidents.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
@@ -381,6 +397,32 @@ export default function Ransomware() {
                     <SelectItem value="7d">Last 7 Days</SelectItem>
                     <SelectItem value="30d">Last 30 Days</SelectItem>
                     <SelectItem value="90d">Last 90 Days</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={countryFilter} onValueChange={(v) => { setCountryFilter(v); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-country-filter">
+                    <MapPin className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Countries</SelectItem>
+                    {countries.map(c => (
+                      <SelectItem key={c} value={c!}>{c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={sectorFilter} onValueChange={(v) => { setSectorFilter(v); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-sector-filter">
+                    <Building2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                    <SelectValue placeholder="Sector" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Sectors</SelectItem>
+                    {sectors.map(s => (
+                      <SelectItem key={s} value={s!}>{s}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
 

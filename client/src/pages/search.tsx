@@ -15,7 +15,7 @@ import { useAuth } from "@/lib/auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SearchPage() {
-  useDocumentTitle("Global Threat Search | STB Cybersecurity");
+  useDocumentTitle("Global Threat Search | STB Cybersecurity", "Search across CVEs, ransomware incidents, malicious IPs, phishing URLs, threat actors, and security news. Unified cybersecurity threat intelligence search powered by 45+ data feeds.");
   const [location] = useLocation();
   const params = new URLSearchParams(location.split('?')[1] || '');
   const initialQuery = params.get('q') || '';

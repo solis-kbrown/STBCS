@@ -15,7 +15,7 @@ import PaginationControls from "@/components/pagination-controls";
 type SortOption = "newest" | "oldest" | "source-az";
 
 export default function News() {
-  useDocumentTitle("Cybersecurity Intel & News | STB Cybersecurity");
+  useDocumentTitle("Cybersecurity Intel & News | STB Cybersecurity", "Curated cybersecurity news, threat intelligence reports, policy updates, and industry analysis from trusted security sources worldwide.");
   const { data, isLoading } = useNews(1000);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
