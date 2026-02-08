@@ -24,6 +24,7 @@ const StylePreview = lazy(() => import("@/pages/style-preview"));
 const Privacy = lazy(() => import("@/pages/privacy"));
 const Terms = lazy(() => import("@/pages/terms"));
 const ApiDocs = lazy(() => import("@/pages/api-docs"));
+const GroupProfile = lazy(() => import("@/pages/group-profile"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -44,6 +45,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard}/>
         <Route path="/ransomware" component={Ransomware}/>
+        <Route path="/group/:name" component={GroupProfile}/>
         <Route path="/exploits" component={Exploits}/>
         <Route path="/news" component={News}/>
         <Route path="/threat-feeds" component={ThreatFeeds}/>

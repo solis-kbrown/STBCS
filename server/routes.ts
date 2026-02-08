@@ -456,6 +456,18 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/ransomware/analytics", async (req: Request, res: Response) => {
+    try {
+      const key = "ransomware:analytics";
+      if (cachedJson(res, key, TTL.RANSOMWARE_GROUPS)) return;
+      const analytics = await storage.getGroupAnalytics();
+      cacheAndSend(res, key, analytics, TTL.RANSOMWARE_GROUPS);
+    } catch (error) {
+      console.error("Error fetching analytics:", error);
+      res.status(500).json({ error: "Failed to fetch ransomware analytics" });
+    }
+  });
+
   // Ransomware search endpoint
   app.get("/api/ransomware/search", strictLimiter, async (req: Request, res: Response) => {
     try {
@@ -508,6 +520,22 @@ export async function registerRoutes(
     } catch (error) {
       console.error("Error fetching threat actors:", error);
       res.status(500).json({ error: "Failed to fetch threat actors" });
+    }
+  });
+
+  app.get("/api/threat-actors/:name", async (req: Request, res: Response) => {
+    try {
+      const name = decodeURIComponent(asString(req.params.name));
+      const key = `actor:profile:${name}`;
+      if (cachedJson(res, key, TTL.THREAT_ACTORS)) return;
+      const profile = await storage.getGroupProfile(name);
+      if (!profile.actor && profile.incidents.length === 0) {
+        return res.status(404).json({ error: "Group not found" });
+      }
+      cacheAndSend(res, key, profile, TTL.THREAT_ACTORS);
+    } catch (error) {
+      console.error("Error fetching group profile:", error);
+      res.status(500).json({ error: "Failed to fetch group profile" });
     }
   });
 

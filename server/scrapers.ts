@@ -1997,13 +1997,32 @@ interface RansomwareLiveGroup {
   name: string;
   description?: string;
   url?: string;
-  locations?: string[];
+  locations?: Array<{
+    fqdn?: string;
+    slug?: string;
+    title?: string;
+    type?: string;
+    available?: boolean;
+    enabled?: boolean;
+  }>;
   profile?: string[];
   first_seen?: string;
   last_seen?: string;
   meta?: string;
   captcha?: boolean;
   parser?: boolean;
+  javascript_render?: boolean;
+  tools?: Array<{
+    CredentialTheft?: string[];
+    DefenseEvasion?: string[];
+    DiscoveryEnum?: string[];
+    Exfiltration?: string[];
+    LOLBAS?: string[];
+    Networking?: string[];
+    Offsec?: string[];
+    'RMM-Tools'?: string[];
+    [key: string]: string[] | undefined;
+  }>;
 }
 
 // Fetch recent ransomware victims from ransomware.live
@@ -2084,30 +2103,67 @@ export async function fetchRansomwareLiveGroups(): Promise<number> {
     console.log(`[Ransomware.live] Retrieved ${groups.length} ransomware groups`);
     
     let count = 0;
+    let enrichedCount = 0;
     
     for (const group of groups) {
       try {
-        const profileDesc = group.profile?.join(" ") || "";
-        const description = group.description || profileDesc || group.meta || `Active ransomware group`;
+        const profileLinks = Array.isArray(group.profile) ? group.profile.filter(p => typeof p === 'string') : [];
+        const profileDesc = profileLinks.join(" | ") || "";
+        const description = group.description || group.meta || `Active ransomware group`;
         
+        const toolSet = group.tools?.[0] || {};
+        const allTools: string[] = [];
+        const ttpsFormatted: string[] = [];
+        for (const [category, tools] of Object.entries(toolSet)) {
+          if (Array.isArray(tools) && tools.length > 0) {
+            allTools.push(...tools);
+            ttpsFormatted.push(`${category}: ${tools.join(", ")}`);
+          }
+        }
+        
+        const dlsLocations = group.locations?.filter(l => l.type === 'DLS') || [];
+        const activeLocations = dlsLocations.filter(l => l.available);
+        const onionUrls = dlsLocations.map(l => l.fqdn).filter(Boolean);
+        
+        const isActive = activeLocations.length > 0 || !group.meta?.toLowerCase().includes('seized');
+        const isSeized = group.meta?.toLowerCase().includes('seized') || 
+          dlsLocations.some(l => l.title?.toLowerCase().includes('seized'));
+        
+        const statusMsg = isSeized ? "Law enforcement seizure" : 
+          group.meta || (isActive ? "Active" : "Inactive/Offline");
+
         await storage.upsertThreatActor({
           name: group.name,
-          description: description.slice(0, 5000),
+          description: description.replace(/<BR>/gi, '\n').slice(0, 8000),
           type: "Ransomware Operator",
-          origin: group.locations?.join(", ") || "Unknown",
+          origin: "Unknown",
           firstSeen: group.first_seen ? new Date(group.first_seen) : null,
           lastActive: group.last_seen ? new Date(group.last_seen) : new Date(),
-          active: true,
+          active: isActive,
           targetSectors: null,
-          ttps: null,
+          ttps: ttpsFormatted.length > 0 ? ttpsFormatted.join(" | ") : null,
+          infrastructure: allTools.length > 0 ? allTools.join(", ") : null,
+          attackVectors: ttpsFormatted.filter(t => t.startsWith('Exfiltration') || t.startsWith('LOLBAS') || t.startsWith('Offsec')).join(", ") || null,
+          profileUrl: profileLinks.length > 0 ? profileLinks[0] : null,
+          governmentAdvisories: profileLinks.filter(l => l.includes('cisa.gov') || l.includes('ic3.gov') || l.includes('fbi.gov') || l.includes('ncsc.') || l.includes('gov')).join(" | ") || null,
+          lawEnforcementActions: isSeized ? `Site seized. ${dlsLocations.filter(l => l.title?.toLowerCase().includes('seized')).map(l => l.title).join('; ')}` : null,
+          websiteUrl: onionUrls[0] || null,
+          mirrorUrls: onionUrls.length > 1 ? onionUrls.slice(1).join(", ") : null,
+          statusMessage: statusMsg,
+          doubleExtortion: description.toLowerCase().includes('double extortion') || description.toLowerCase().includes('data leak') || dlsLocations.length > 0,
+          dataExfiltration: description.toLowerCase().includes('exfiltrat') || dlsLocations.some(l => l.type === 'DLS'),
+          ransomwareAsService: description.toLowerCase().includes('raas') || description.toLowerCase().includes('as a service') || description.toLowerCase().includes('affiliate'),
+          malwareFamilies: null,
+          affiliations: profileDesc.length > 0 ? profileDesc.slice(0, 2000) : null,
         });
         count++;
+        if (ttpsFormatted.length > 0 || profileLinks.length > 0) enrichedCount++;
       } catch (err) {
         continue;
       }
     }
     
-    console.log(`[Ransomware.live] Processed ${count} ransomware groups`);
+    console.log(`[Ransomware.live] Processed ${count} ransomware groups (${enrichedCount} with enriched profiles)`);
     return count;
   } catch (error) {
     console.error("[Ransomware.live] Error fetching groups:", error);

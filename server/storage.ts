@@ -25,6 +25,27 @@ import {
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte } from "drizzle-orm";
 
+export interface GroupStats {
+  totalVictims: number;
+  sectors: { name: string; count: number }[];
+  countries: { name: string; count: number }[];
+  timeline: { month: string; count: number }[];
+  avgDataSize: string | null;
+  recentActivity: string | null;
+}
+
+export interface GroupAnalytics {
+  topGroups: { name: string; victims: number; lastActive: string | null }[];
+  topSectors: { name: string; count: number }[];
+  topCountries: { name: string; count: number }[];
+  monthlyTrend: { month: string; count: number }[];
+  totalGroups: number;
+  totalVictims: number;
+  totalCountries: number;
+  totalSectors: number;
+  activeGroupsLast30d: number;
+}
+
 export interface IStorage {
   // Users
   getUser(id: string): Promise<User | undefined>;
@@ -65,6 +86,8 @@ export interface IStorage {
   getThreatActors(limit?: number): Promise<ThreatActor[]>;
   getThreatActorByName(name: string): Promise<ThreatActor | undefined>;
   upsertThreatActor(actor: InsertThreatActor): Promise<ThreatActor>;
+  getGroupProfile(groupName: string): Promise<{ actor: ThreatActor | undefined; incidents: RansomwareIncident[]; stats: GroupStats }>;
+  getGroupAnalytics(): Promise<GroupAnalytics>;
   
   // News
   getNews(limit?: number, offset?: number, category?: string): Promise<NewsArticle[]>;
@@ -382,6 +405,79 @@ export class DatabaseStorage implements IStorage {
     }
     const [created] = await db.insert(threatActors).values(actor).returning();
     return created;
+  }
+
+  async getGroupProfile(groupName: string): Promise<{ actor: ThreatActor | undefined; incidents: RansomwareIncident[]; stats: GroupStats }> {
+    const actor = await this.getThreatActorByName(groupName);
+    const incidents = await db.select().from(ransomwareIncidents)
+      .where(eq(ransomwareIncidents.groupName, groupName))
+      .orderBy(desc(ransomwareIncidents.discoveredAt))
+      .limit(500);
+
+    const sectorCounts: Record<string, number> = {};
+    const countryCounts: Record<string, number> = {};
+    const monthlyCounts: Record<string, number> = {};
+    
+    for (const inc of incidents) {
+      if (inc.sector) sectorCounts[inc.sector] = (sectorCounts[inc.sector] || 0) + 1;
+      if (inc.country) countryCounts[inc.country] = (countryCounts[inc.country] || 0) + 1;
+      if (inc.discoveredAt) {
+        const month = new Date(inc.discoveredAt).toISOString().slice(0, 7);
+        monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
+      }
+    }
+
+    const stats: GroupStats = {
+      totalVictims: incidents.length,
+      sectors: Object.entries(sectorCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 20),
+      countries: Object.entries(countryCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 20),
+      timeline: Object.entries(monthlyCounts).map(([month, count]) => ({ month, count })).sort((a, b) => a.month.localeCompare(b.month)),
+      avgDataSize: null,
+      recentActivity: incidents.length > 0 && incidents[0].discoveredAt ? incidents[0].discoveredAt.toISOString() : null,
+    };
+
+    return { actor, incidents, stats };
+  }
+
+  async getGroupAnalytics(): Promise<GroupAnalytics> {
+    const allIncidents = await db.select().from(ransomwareIncidents)
+      .orderBy(desc(ransomwareIncidents.discoveredAt));
+
+    const groupCounts: Record<string, { victims: number; lastActive: string | null }> = {};
+    const sectorCounts: Record<string, number> = {};
+    const countryCounts: Record<string, number> = {};
+    const monthlyCounts: Record<string, number> = {};
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const activeGroups = new Set<string>();
+
+    for (const inc of allIncidents) {
+      const gn = inc.groupName;
+      if (!groupCounts[gn]) groupCounts[gn] = { victims: 0, lastActive: null };
+      groupCounts[gn].victims++;
+      if (!groupCounts[gn].lastActive && inc.discoveredAt) groupCounts[gn].lastActive = inc.discoveredAt.toISOString();
+      if (inc.sector) sectorCounts[inc.sector] = (sectorCounts[inc.sector] || 0) + 1;
+      if (inc.country) countryCounts[inc.country] = (countryCounts[inc.country] || 0) + 1;
+      if (inc.discoveredAt) {
+        const month = inc.discoveredAt.toISOString().slice(0, 7);
+        monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
+        if (inc.discoveredAt >= thirtyDaysAgo) activeGroups.add(gn);
+      }
+    }
+
+    return {
+      topGroups: Object.entries(groupCounts)
+        .map(([name, d]) => ({ name, victims: d.victims, lastActive: d.lastActive }))
+        .sort((a, b) => b.victims - a.victims)
+        .slice(0, 25),
+      topSectors: Object.entries(sectorCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 20),
+      topCountries: Object.entries(countryCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 20),
+      monthlyTrend: Object.entries(monthlyCounts).map(([month, count]) => ({ month, count })).sort((a, b) => a.month.localeCompare(b.month)),
+      totalGroups: Object.keys(groupCounts).length,
+      totalVictims: allIncidents.length,
+      totalCountries: Object.keys(countryCounts).length,
+      totalSectors: Object.keys(sectorCounts).length,
+      activeGroupsLast30d: activeGroups.size,
+    };
   }
 
   // News

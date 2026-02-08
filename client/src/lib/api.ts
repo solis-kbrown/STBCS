@@ -62,6 +62,27 @@ export interface ThreatActor {
   targetSectors: string | null;
   active: boolean | null;
   createdAt: string | null;
+  targetCountries: string | null;
+  knownCves: string | null;
+  malwareFamilies: string | null;
+  infrastructure: string | null;
+  ransomwareNote: string | null;
+  negotiationTactics: string | null;
+  affiliations: string | null;
+  governmentAdvisories: string | null;
+  lawEnforcementActions: string | null;
+  totalVictims: number | null;
+  totalRansomCollected: string | null;
+  averageRansom: string | null;
+  encryptionMethod: string | null;
+  attackVectors: string | null;
+  profileUrl: string | null;
+  ransomwareAsService: boolean | null;
+  dataExfiltration: boolean | null;
+  doubleExtortion: boolean | null;
+  websiteUrl: string | null;
+  mirrorUrls: string | null;
+  statusMessage: string | null;
 }
 
 export interface NewsArticle {
@@ -228,6 +249,48 @@ export function useThreatActors(limit = 50) {
   return useQuery<ThreatActor[]>({
     queryKey: ["/api/threat-actors", limit],
     queryFn: () => fetchApi<ThreatActor[]>(`/api/threat-actors?limit=${limit}`),
+    staleTime: 300000,
+    refetchInterval: 600000,
+  });
+}
+
+export interface GroupProfile {
+  actor: ThreatActor | null;
+  incidents: RansomwareIncident[];
+  stats: {
+    totalVictims: number;
+    sectors: { name: string; count: number }[];
+    countries: { name: string; count: number }[];
+    timeline: { month: string; count: number }[];
+    avgDataSize: string | null;
+    recentActivity: string | null;
+  };
+}
+
+export interface RansomwareAnalytics {
+  topGroups: { name: string; victims: number; lastActive: string | null }[];
+  topSectors: { name: string; count: number }[];
+  topCountries: { name: string; count: number }[];
+  monthlyTrend: { month: string; count: number }[];
+  totalGroups: number;
+  totalVictims: number;
+  activeGroupsLast30d: number;
+}
+
+export function useGroupProfile(groupName: string | undefined) {
+  return useQuery<GroupProfile>({
+    queryKey: ["/api/threat-actors", groupName],
+    queryFn: () => fetchApi<GroupProfile>(`/api/threat-actors/${encodeURIComponent(groupName!)}`),
+    enabled: !!groupName,
+    staleTime: 300000,
+    refetchInterval: 600000,
+  });
+}
+
+export function useRansomwareAnalytics() {
+  return useQuery<RansomwareAnalytics>({
+    queryKey: ["/api/ransomware/analytics"],
+    queryFn: () => fetchApi<RansomwareAnalytics>("/api/ransomware/analytics"),
     staleTime: 300000,
     refetchInterval: 600000,
   });

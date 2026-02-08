@@ -1,12 +1,13 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
-import { useRansomware, useRansomwareGroups, useRansomwareSearch, useExportData, useTrackView } from "@/lib/api";
+import { useRansomware, useRansomwareGroups, useRansomwareSearch, useExportData, useTrackView, useRansomwareAnalytics } from "@/lib/api";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Download, ExternalLink, Globe, Loader2, ArrowUpDown, SlidersHorizontal, Calendar, RotateCcw } from "lucide-react";
+import { Search, Filter, Download, ExternalLink, Globe, Loader2, ArrowUpDown, SlidersHorizontal, Calendar, RotateCcw, ChevronRight, BarChart3, TrendingUp, Users, Target, MapPin, Building2 } from "lucide-react";
+import { useLocation } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo, useCallback, KeyboardEvent } from "react";
@@ -24,13 +25,16 @@ export default function Ransomware() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showAllGroups, setShowAllGroups] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
+  const [showAnalytics, setShowAnalytics] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   
+  const [, setLocation] = useLocation();
   const { data, isLoading } = useRansomware(1000, 0, selectedGroup);
   const { data: groups } = useRansomwareGroups();
   const trackView = useTrackView();
   const { data: searchResults, isLoading: isSearching } = useRansomwareSearch(activeSearch);
+  const { data: analytics } = useRansomwareAnalytics();
   const exportMutation = useExportData();
   
   const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -114,6 +118,15 @@ export default function Ransomware() {
             <p className="text-muted-foreground">Monitor active ransomware groups, victim postings, and negotiation statuses.</p>
           </div>
           <div className="flex gap-2 w-full md:w-auto">
+            <Button 
+              variant="outline" 
+              className={`border-orange-500/30 ${showAnalytics ? 'bg-orange-500/20 text-orange-300' : 'text-orange-400'} hover:bg-orange-500/10`}
+              data-testid="button-analytics"
+              onClick={() => setShowAnalytics(!showAnalytics)}
+            >
+              <BarChart3 className="h-4 w-4 mr-2" />
+              Analytics
+            </Button>
              <Button 
               variant="outline" 
               className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" 
@@ -133,6 +146,158 @@ export default function Ransomware() {
             </Button>
           </div>
         </div>
+
+        {showAnalytics && analytics && (
+          <div className="space-y-4" data-testid="section-analytics">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <Card className="border-white/5 bg-card/40">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Target className="h-4 w-4 text-red-400" />
+                    <span className="text-xs text-zinc-400">Total Incidents</span>
+                  </div>
+                  <p className="text-2xl font-bold text-white" data-testid="text-total-incidents">{(analytics.totalVictims || 0).toLocaleString()}</p>
+                </CardContent>
+              </Card>
+              <Card className="border-white/5 bg-card/40">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Users className="h-4 w-4 text-orange-400" />
+                    <span className="text-xs text-zinc-400">Active Groups</span>
+                  </div>
+                  <p className="text-2xl font-bold text-white" data-testid="text-active-groups">{analytics.totalGroups || 0}</p>
+                </CardContent>
+              </Card>
+              <Card className="border-white/5 bg-card/40">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <MapPin className="h-4 w-4 text-yellow-400" />
+                    <span className="text-xs text-zinc-400">Countries Hit</span>
+                  </div>
+                  <p className="text-2xl font-bold text-white" data-testid="text-countries-hit">{analytics.totalCountries || analytics.topCountries?.length || 0}</p>
+                </CardContent>
+              </Card>
+              <Card className="border-white/5 bg-card/40">
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <TrendingUp className="h-4 w-4 text-green-400" />
+                    <span className="text-xs text-zinc-400">Active (30d)</span>
+                  </div>
+                  <p className="text-2xl font-bold text-white" data-testid="text-last-30-days">{analytics.activeGroupsLast30d || 0}</p>
+                  <p className="text-[10px] text-zinc-500 mt-0.5">groups w/ recent activity</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <Card className="border-white/5 bg-card/40">
+                <CardContent className="p-4">
+                  <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                    <Users className="h-4 w-4 text-orange-400" />
+                    Top 10 Active Groups
+                  </h3>
+                  <div className="space-y-2">
+                    {(analytics.topGroups || []).slice(0, 10).map((g: { name: string; victims: number }, i: number) => (
+                      <div key={g.name} className="flex items-center justify-between group cursor-pointer hover:bg-white/5 rounded px-2 py-1 transition-colors"
+                        onClick={() => setLocation(`/group/${encodeURIComponent(g.name)}`)}
+                        data-testid={`row-top-group-${i}`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-zinc-500 w-5">{i + 1}.</span>
+                          <span className="text-sm text-white group-hover:text-orange-400 transition-colors">{g.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-orange-500 rounded-full" 
+                              style={{ width: `${Math.min(100, (g.victims / (analytics.topGroups?.[0]?.victims || 1)) * 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-zinc-400 w-8 text-right">{g.victims}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="border-white/5 bg-card/40">
+                <CardContent className="p-4">
+                  <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                    <MapPin className="h-4 w-4 text-yellow-400" />
+                    Top Targeted Countries
+                  </h3>
+                  <div className="space-y-2">
+                    {(analytics.topCountries || []).slice(0, 10).map((c: { name: string; count: number }, i: number) => (
+                      <div key={c.name} className="flex items-center justify-between px-2 py-1" data-testid={`row-top-country-${i}`}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-zinc-500 w-5">{i + 1}.</span>
+                          <span className="text-sm text-white">{c.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-yellow-500 rounded-full" 
+                              style={{ width: `${Math.min(100, (c.count / (analytics.topCountries?.[0]?.count || 1)) * 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-zinc-400 w-8 text-right">{c.count}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {analytics.monthlyTrend && analytics.monthlyTrend.length > 0 && (
+              <Card className="border-white/5 bg-card/40">
+                <CardContent className="p-4">
+                  <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-green-400" />
+                    Attack Trend (Monthly)
+                  </h3>
+                  <div className="flex items-end gap-1 h-32">
+                    {analytics.monthlyTrend.slice(-12).map((m: { month: string; count: number }, i: number) => {
+                      const recentData = analytics.monthlyTrend.slice(-12);
+                      const maxCount = Math.max(...recentData.map((x: { count: number }) => x.count));
+                      const heightPct = maxCount > 0 ? (m.count / maxCount) * 100 : 0;
+                      return (
+                        <div key={m.month} className="flex-1 flex flex-col items-center gap-1" data-testid={`bar-month-${i}`}>
+                          <span className="text-[9px] text-zinc-500">{m.count}</span>
+                          <div 
+                            className="w-full bg-orange-500/60 rounded-t hover:bg-orange-500 transition-colors" 
+                            style={{ height: `${Math.max(2, heightPct)}%` }}
+                            title={`${m.month}: ${m.count} incidents`}
+                          />
+                          <span className="text-[8px] text-zinc-600 -rotate-45 origin-center">{m.month.slice(5, 7)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {analytics.topSectors && analytics.topSectors.length > 0 && (
+              <Card className="border-white/5 bg-card/40">
+                <CardContent className="p-4">
+                  <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-blue-400" />
+                    Top Targeted Sectors
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {analytics.topSectors.slice(0, 15).map((s: { name: string; count: number }, i: number) => (
+                      <Badge key={s.name} variant="outline" className="border-white/10 text-zinc-300 text-xs" data-testid={`badge-sector-${i}`}>
+                        {s.name} <span className="ml-1 text-orange-400">({s.count})</span>
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
 
         <Card className="border-white/5 bg-card/50">
           <CardContent className="p-4 space-y-3">
@@ -329,8 +494,14 @@ export default function Ransomware() {
                         <h3 className="text-xl font-bold text-white group-hover:text-primary transition-colors">
                           {incident.victim}
                         </h3>
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                        <Badge 
+                          variant="outline" 
+                          className="bg-primary/10 text-primary border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors"
+                          onClick={(e) => { e.stopPropagation(); setLocation(`/group/${encodeURIComponent(incident.groupName)}`); }}
+                          data-testid={`badge-group-${incident.id}`}
+                        >
                           {incident.groupName}
+                          <ChevronRight className="h-3 w-3 ml-1" />
                         </Badge>
                       </div>
                       <p className="text-muted-foreground text-sm">{incident.description}</p>

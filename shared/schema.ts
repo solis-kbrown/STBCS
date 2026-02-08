@@ -104,7 +104,31 @@ export const threatActors = pgTable("threat_actors", {
   targetSectors: text("target_sectors"),
   active: boolean("active").default(true),
   createdAt: timestamp("created_at").defaultNow(),
-});
+  targetCountries: text("target_countries"),
+  knownCves: text("known_cves"),
+  malwareFamilies: text("malware_families"),
+  infrastructure: text("infrastructure"),
+  ransomwareNote: text("ransomware_note"),
+  negotiationTactics: text("negotiation_tactics"),
+  affiliations: text("affiliations"),
+  governmentAdvisories: text("government_advisories"),
+  lawEnforcementActions: text("law_enforcement_actions"),
+  totalVictims: real("total_victims"),
+  totalRansomCollected: text("total_ransom_collected"),
+  averageRansom: text("average_ransom"),
+  encryptionMethod: text("encryption_method"),
+  attackVectors: text("attack_vectors"),
+  profileUrl: text("profile_url"),
+  ransomwareAsService: boolean("raas").default(false),
+  dataExfiltration: boolean("data_exfiltration").default(true),
+  doubleExtortion: boolean("double_extortion").default(false),
+  websiteUrl: text("website_url"),
+  mirrorUrls: text("mirror_urls"),
+  statusMessage: text("status_message"),
+}, (table) => [
+  index("actor_name_idx").on(table.name),
+  index("actor_active_idx").on(table.active),
+]);
 
 export const newsArticles = pgTable("news_articles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
