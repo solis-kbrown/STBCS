@@ -2,6 +2,8 @@ import { storage } from "./storage";
 import type { InsertCve, InsertRansomware, InsertNews, InsertMaliciousIp, InsertMaliciousUrl, InsertCisaKev, InsertNotification } from "@shared/schema";
 import { db } from "./db";
 import { watchlistItems } from "@shared/schema";
+import { createLogger, scraperLog } from "./logger";
+const log = createLogger("Scraper");
 
 // Notification trigger for Pro users when new threats match watchlists
 async function triggerWatchlistNotifications(
@@ -62,11 +64,11 @@ async function triggerWatchlistNotifications(
           relatedType: threatType,
         };
         await storage.createNotification(notification);
-        console.log(`[ALERT] Created notification for user ${item.userId}: ${notification.title}`);
+        log.debug(`Created notification for user ${item.userId}: ${notification.title}`);
       }
     }
   } catch (error) {
-    console.error('[ALERT] Error triggering watchlist notifications:', error);
+    log.error('Error triggering watchlist notifications:', error);
   }
 }
 
@@ -126,7 +128,7 @@ interface NVDResponse {
 
 export async function fetchNVDCves(): Promise<number> {
   try {
-    console.log("[NVD] Fetching CVEs from National Vulnerability Database...");
+    log.debug("Fetching CVEs from National Vulnerability Database...");
     
     const now = new Date();
     const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
@@ -180,11 +182,11 @@ export async function fetchNVDCves(): Promise<number> {
       count++;
     }
     
-    console.log(`[NVD] Processed ${count} CVEs`);
+    log.debug(`Processed ${count} CVEs`);
     await storage.updateFeedLastFetched("NVD");
     return count;
   } catch (error) {
-    console.error("[NVD] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -211,7 +213,7 @@ interface CISAKevResponse {
 
 export async function fetchCISAKev(): Promise<number> {
   try {
-    console.log("[CISA KEV] Fetching Known Exploited Vulnerabilities...");
+    log.debug("Fetching Known Exploited Vulnerabilities...");
     
     const response = await secureFetch(CISA_KEV_URL);
     
@@ -243,11 +245,11 @@ export async function fetchCISAKev(): Promise<number> {
       count++;
     }
     
-    console.log(`[CISA KEV] Processed ${count} known exploited vulnerabilities`);
+    log.debug(`Processed ${count} known exploited vulnerabilities`);
     await storage.updateFeedLastFetched("CISA KEV");
     return count;
   } catch (error) {
-    console.error("[CISA KEV] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -268,7 +270,7 @@ interface URLhausEntry {
 
 export async function fetchURLhaus(): Promise<number> {
   try {
-    console.log("[URLhaus] Fetching malicious URLs...");
+    log.debug("Fetching malicious URLs...");
     
     const response = await secureFetch(URLHAUS_API);
     
@@ -296,11 +298,11 @@ export async function fetchURLhaus(): Promise<number> {
       }
     }
     
-    console.log(`[URLhaus] Processed ${count} malicious URLs`);
+    log.debug(`Processed ${count} malicious URLs`);
     await storage.updateFeedLastFetched("URLhaus");
     return count;
   } catch (error) {
-    console.error("[URLhaus] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -325,7 +327,7 @@ interface FeodoEntry {
 
 export async function fetchFeodoTracker(): Promise<number> {
   try {
-    console.log("[Feodo] Fetching banking trojan C2 servers...");
+    log.debug("Fetching banking trojan C2 servers...");
     
     const response = await secureFetch(FEODO_API);
     
@@ -351,11 +353,11 @@ export async function fetchFeodoTracker(): Promise<number> {
       count++;
     }
     
-    console.log(`[Feodo] Processed ${count} C2 IPs`);
+    log.debug(`Processed ${count} C2 IPs`);
     await storage.updateFeedLastFetched("Feodo Tracker");
     return count;
   } catch (error) {
-    console.error("[Feodo] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -367,7 +369,7 @@ const DSHIELD_API = "https://isc.sans.edu/api/sources/attacks/500?json";
 
 export async function fetchDShield(): Promise<number> {
   try {
-    console.log("[DShield] Fetching top attacking IPs...");
+    log.debug("Fetching top attacking IPs...");
     
     const response = await secureFetch(DSHIELD_API);
     
@@ -395,11 +397,11 @@ export async function fetchDShield(): Promise<number> {
       }
     }
     
-    console.log(`[DShield] Processed ${count} attacking IPs`);
+    log.debug(`Processed ${count} attacking IPs`);
     await storage.updateFeedLastFetched("SANS DShield");
     return count;
   } catch (error) {
-    console.error("[DShield] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -411,7 +413,7 @@ const TOR_EXIT_URL = "https://check.torproject.org/torbulkexitlist";
 
 export async function fetchTorExitNodes(): Promise<number> {
   try {
-    console.log("[Tor] Fetching Tor exit node IPs...");
+    log.debug("Fetching Tor exit node IPs...");
     
     const response = await secureFetch(TOR_EXIT_URL);
     
@@ -436,11 +438,11 @@ export async function fetchTorExitNodes(): Promise<number> {
       count++;
     }
     
-    console.log(`[Tor] Processed ${count} exit nodes`);
+    log.debug(`Processed ${count} exit nodes`);
     await storage.updateFeedLastFetched("Tor Exit Nodes");
     return count;
   } catch (error) {
-    console.error("[Tor] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -452,7 +454,7 @@ const OPENPHISH_URL = "https://openphish.com/feed.txt";
 
 export async function fetchOpenPhish(): Promise<number> {
   try {
-    console.log("[OpenPhish] Fetching phishing URLs...");
+    log.debug("Fetching phishing URLs...");
     
     const response = await secureFetch(OPENPHISH_URL);
     
@@ -477,11 +479,11 @@ export async function fetchOpenPhish(): Promise<number> {
       count++;
     }
     
-    console.log(`[OpenPhish] Processed ${count} phishing URLs`);
+    log.debug(`Processed ${count} phishing URLs`);
     await storage.updateFeedLastFetched("OpenPhish");
     return count;
   } catch (error) {
-    console.error("[OpenPhish] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -493,7 +495,7 @@ const SSLBL_URL = "https://sslbl.abuse.ch/blacklist/sslipblacklist.json";
 
 export async function fetchSSLBlacklist(): Promise<number> {
   try {
-    console.log("[SSLBL] Fetching SSL blacklist IPs...");
+    log.debug("Fetching SSL blacklist IPs...");
     
     const response = await secureFetch(SSLBL_URL);
     
@@ -520,11 +522,11 @@ export async function fetchSSLBlacklist(): Promise<number> {
       }
     }
     
-    console.log(`[SSLBL] Processed ${count} SSL blacklist IPs`);
+    log.debug(`Processed ${count} SSL blacklist IPs`);
     await storage.updateFeedLastFetched("SSL Blacklist");
     return count;
   } catch (error) {
-    console.error("[SSLBL] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -536,7 +538,7 @@ const IPSUM_URL = "https://raw.githubusercontent.com/stamparm/ipsum/master/ipsum
 
 export async function fetchIPsum(): Promise<number> {
   try {
-    console.log("[IPsum] Fetching aggregated malicious IPs from 30+ blocklists...");
+    log.debug("Fetching aggregated malicious IPs from 30+ blocklists...");
     
     const response = await secureFetch(IPSUM_URL);
     
@@ -568,11 +570,11 @@ export async function fetchIPsum(): Promise<number> {
       }
     }
     
-    console.log(`[IPsum] Processed ${count} high-confidence malicious IPs`);
+    log.debug(`Processed ${count} high-confidence malicious IPs`);
     await storage.updateFeedLastFetched("IPsum");
     return count;
   } catch (error) {
-    console.error("[IPsum] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -584,7 +586,7 @@ const BLOCKLIST_DE_URL = "http://lists.blocklist.de/lists/all.txt";
 
 export async function fetchBlocklistDe(): Promise<number> {
   try {
-    console.log("[Blocklist.de] Fetching attack IPs...");
+    log.debug("Fetching attack IPs...");
     
     const response = await secureFetch(BLOCKLIST_DE_URL);
     
@@ -608,11 +610,11 @@ export async function fetchBlocklistDe(): Promise<number> {
       count++;
     }
     
-    console.log(`[Blocklist.de] Processed ${count} attack IPs`);
+    log.debug(`Processed ${count} attack IPs`);
     await storage.updateFeedLastFetched("Blocklist.de");
     return count;
   } catch (error) {
-    console.error("[Blocklist.de] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -624,7 +626,7 @@ const CINS_URL = "http://cinsscore.com/list/ci-badguys.txt";
 
 export async function fetchCINS(): Promise<number> {
   try {
-    console.log("[CINS] Fetching CINS Army bad actors list...");
+    log.debug("Fetching CINS Army bad actors list...");
     
     const response = await secureFetch(CINS_URL);
     
@@ -648,11 +650,11 @@ export async function fetchCINS(): Promise<number> {
       count++;
     }
     
-    console.log(`[CINS] Processed ${count} bad actor IPs`);
+    log.debug(`Processed ${count} bad actor IPs`);
     await storage.updateFeedLastFetched("CINS Army");
     return count;
   } catch (error) {
-    console.error("[CINS] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -664,7 +666,7 @@ const GREENSNOW_URL = "https://blocklist.greensnow.co/greensnow.txt";
 
 export async function fetchGreenSnow(): Promise<number> {
   try {
-    console.log("[GreenSnow] Fetching bruteforce attacker IPs...");
+    log.debug("Fetching bruteforce attacker IPs...");
     
     const response = await secureFetch(GREENSNOW_URL);
     
@@ -688,11 +690,11 @@ export async function fetchGreenSnow(): Promise<number> {
       count++;
     }
     
-    console.log(`[GreenSnow] Processed ${count} attacker IPs`);
+    log.debug(`Processed ${count} attacker IPs`);
     await storage.updateFeedLastFetched("GreenSnow");
     return count;
   } catch (error) {
-    console.error("[GreenSnow] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -704,7 +706,7 @@ const ET_URL = "https://rules.emergingthreats.net/blockrules/compromised-ips.txt
 
 export async function fetchEmergingThreats(): Promise<number> {
   try {
-    console.log("[EmergingThreats] Fetching compromised host IPs...");
+    log.debug("Fetching compromised host IPs...");
     
     const response = await secureFetch(ET_URL);
     
@@ -728,11 +730,11 @@ export async function fetchEmergingThreats(): Promise<number> {
       count++;
     }
     
-    console.log(`[EmergingThreats] Processed ${count} compromised IPs`);
+    log.debug(`Processed ${count} compromised IPs`);
     await storage.updateFeedLastFetched("EmergingThreats");
     return count;
   } catch (error) {
-    console.error("[EmergingThreats] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -744,7 +746,7 @@ const THREATFOX_URL = "https://threatfox-api.abuse.ch/api/v1/";
 
 export async function fetchThreatFox(): Promise<number> {
   try {
-    console.log("[ThreatFox] Fetching malware IOCs...");
+    log.debug("Fetching malware IOCs...");
     
     const response = await secureFetch(THREATFOX_URL, {
       method: "POST",
@@ -788,11 +790,11 @@ export async function fetchThreatFox(): Promise<number> {
       }
     }
     
-    console.log(`[ThreatFox] Processed ${ipCount} IPs, ${urlCount} URLs`);
+    log.debug(`Processed ${ipCount} IPs, ${urlCount} URLs`);
     await storage.updateFeedLastFetched("ThreatFox");
     return ipCount + urlCount;
   } catch (error) {
-    console.error("[ThreatFox] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -804,7 +806,7 @@ const BAMBENEK_URL = "https://osint.bambenekconsulting.com/feeds/c2-dommasterlis
 
 export async function fetchBambenekC2(): Promise<number> {
   try {
-    console.log("[Bambenek] Fetching C2 domain list...");
+    log.debug("Fetching C2 domain list...");
     
     const response = await secureFetch(BAMBENEK_URL);
     
@@ -835,11 +837,11 @@ export async function fetchBambenekC2(): Promise<number> {
       }
     }
     
-    console.log(`[Bambenek] Processed ${count} C2 domains`);
+    log.debug(`Processed ${count} C2 domains`);
     await storage.updateFeedLastFetched("Bambenek C2");
     return count;
   } catch (error) {
-    console.error("[Bambenek] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -851,13 +853,13 @@ const PHISHTANK_URL = "https://data.phishtank.com/data/online-valid.csv";
 
 export async function fetchPhishTank(): Promise<number> {
   try {
-    console.log("[PhishTank] Fetching verified phishing URLs...");
+    log.debug("Fetching verified phishing URLs...");
     
     const response = await secureFetch(PHISHTANK_URL);
     
     if (!response.ok) {
-      console.log(`[PhishTank] Feed unavailable (${response.status}) - PhishTank requires API registration for bulk downloads`);
-      console.log("[PhishTank] Phishing URLs still collected via OpenPhish and OTX feeds");
+      log.debug(`Feed unavailable (${response.status}) - PhishTank requires API registration for bulk downloads`);
+      log.debug("Phishing URLs still collected via OpenPhish and OTX feeds");
       return 0;
     }
     
@@ -883,11 +885,11 @@ export async function fetchPhishTank(): Promise<number> {
       }
     }
     
-    console.log(`[PhishTank] Processed ${count} verified phishing URLs`);
+    log.debug(`Processed ${count} verified phishing URLs`);
     await storage.updateFeedLastFetched("PhishTank");
     return count;
   } catch (error) {
-    console.error("[PhishTank] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -899,7 +901,7 @@ const BOTNET_C2_URL = "https://feodotracker.abuse.ch/downloads/ipblocklist_recom
 
 export async function fetchBotnetC2(): Promise<number> {
   try {
-    console.log("[BotnetC2] Fetching botnet C2 server IPs...");
+    log.debug("Fetching botnet C2 server IPs...");
     
     const response = await secureFetch(BOTNET_C2_URL);
     
@@ -923,11 +925,11 @@ export async function fetchBotnetC2(): Promise<number> {
       count++;
     }
     
-    console.log(`[BotnetC2] Processed ${count} recommended C2 IPs`);
+    log.debug(`Processed ${count} recommended C2 IPs`);
     await storage.updateFeedLastFetched("Feodo Recommended");
     return count;
   } catch (error) {
-    console.error("[BotnetC2] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -939,7 +941,7 @@ const DAN_TOR_URL = "https://www.dan.me.uk/torlist/?exit";
 
 export async function fetchDanTorNodes(): Promise<number> {
   try {
-    console.log("[DanTor] Fetching alternative Tor exit node list...");
+    log.debug("Fetching alternative Tor exit node list...");
     
     const response = await secureFetch(DAN_TOR_URL);
     
@@ -963,11 +965,11 @@ export async function fetchDanTorNodes(): Promise<number> {
       count++;
     }
     
-    console.log(`[DanTor] Processed ${count} Tor exit nodes`);
+    log.debug(`Processed ${count} Tor exit nodes`);
     await storage.updateFeedLastFetched("Dan.me.uk Tor");
     return count;
   } catch (error) {
-    console.error("[DanTor] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -979,7 +981,7 @@ const MALWARE_BAZAAR_URL = "https://mb-api.abuse.ch/api/v1/";
 
 export async function fetchMalwareBazaar(): Promise<number> {
   try {
-    console.log("[MalwareBazaar] Fetching recent malware samples...");
+    log.debug("Fetching recent malware samples...");
     
     const response = await secureFetch(MALWARE_BAZAAR_URL, {
       method: "POST",
@@ -1011,11 +1013,11 @@ export async function fetchMalwareBazaar(): Promise<number> {
       }
     }
     
-    console.log(`[MalwareBazaar] Processed ${count} malware samples`);
+    log.debug(`Processed ${count} malware samples`);
     await storage.updateFeedLastFetched("Malware Bazaar");
     return count;
   } catch (error) {
-    console.error("[MalwareBazaar] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1027,7 +1029,7 @@ const SPAMHAUS_DROP_URL = "https://www.spamhaus.org/drop/drop.txt";
 
 export async function fetchSpamhausDrop(): Promise<number> {
   try {
-    console.log("[Spamhaus] Fetching DROP list (hijacked netblocks)...");
+    log.debug("Fetching DROP list (hijacked netblocks)...");
     
     const response = await secureFetch(SPAMHAUS_DROP_URL);
     
@@ -1054,11 +1056,11 @@ export async function fetchSpamhausDrop(): Promise<number> {
       }
     }
     
-    console.log(`[Spamhaus] Processed ${count} DROP netblocks`);
+    log.debug(`Processed ${count} DROP netblocks`);
     await storage.updateFeedLastFetched("Spamhaus DROP");
     return count;
   } catch (error) {
-    console.error("[Spamhaus] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1070,7 +1072,7 @@ const FIREHOL_URL = "https://raw.githubusercontent.com/ktsaou/blocklist-ipsets/m
 
 export async function fetchFireHOL(): Promise<number> {
   try {
-    console.log("[FireHOL] Fetching Level1 high-confidence malicious IPs...");
+    log.debug("Fetching Level1 high-confidence malicious IPs...");
     
     const response = await secureFetch(FIREHOL_URL);
     
@@ -1097,11 +1099,11 @@ export async function fetchFireHOL(): Promise<number> {
       }
     }
     
-    console.log(`[FireHOL] Processed ${count} high-confidence IPs`);
+    log.debug(`Processed ${count} high-confidence IPs`);
     await storage.updateFeedLastFetched("FireHOL Level1");
     return count;
   } catch (error) {
-    console.error("[FireHOL] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1113,7 +1115,7 @@ const SSLBL_AGGRESSIVE_URL = "https://sslbl.abuse.ch/blacklist/sslipblacklist_ag
 
 export async function fetchSSLBLAggressive(): Promise<number> {
   try {
-    console.log("[SSLBL-Agg] Fetching aggressive SSL blacklist...");
+    log.debug("Fetching aggressive SSL blacklist...");
     
     const response = await secureFetch(SSLBL_AGGRESSIVE_URL);
     
@@ -1137,11 +1139,11 @@ export async function fetchSSLBLAggressive(): Promise<number> {
       count++;
     }
     
-    console.log(`[SSLBL-Agg] Processed ${count} aggressive SSL blacklist IPs`);
+    log.debug(`Processed ${count} aggressive SSL blacklist IPs`);
     await storage.updateFeedLastFetched("SSLBL Aggressive");
     return count;
   } catch (error) {
-    console.error("[SSLBL-Agg] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1153,7 +1155,7 @@ const C2_TRACKER_URL = "https://raw.githubusercontent.com/montysecurity/C2-Track
 
 export async function fetchC2Tracker(): Promise<number> {
   try {
-    console.log("[C2Tracker] Fetching C2 server IPs...");
+    log.debug("Fetching C2 server IPs...");
     
     const response = await secureFetch(C2_TRACKER_URL);
     
@@ -1177,11 +1179,11 @@ export async function fetchC2Tracker(): Promise<number> {
       count++;
     }
     
-    console.log(`[C2Tracker] Processed ${count} C2 server IPs`);
+    log.debug(`Processed ${count} C2 server IPs`);
     await storage.updateFeedLastFetched("C2 Tracker");
     return count;
   } catch (error) {
-    console.error("[C2Tracker] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1195,7 +1197,7 @@ const CLEANTALK_URL = "https://iplists.firehol.org/files/cleantalk_7d.ipset";
 
 export async function fetchCleanTalk(): Promise<number> {
   try {
-    console.log("[CleanTalk] Fetching HTTP spammer IPs...");
+    log.debug("Fetching HTTP spammer IPs...");
     
     const response = await secureFetch(CLEANTALK_URL);
     
@@ -1219,11 +1221,11 @@ export async function fetchCleanTalk(): Promise<number> {
       count++;
     }
     
-    console.log(`[CleanTalk] Processed ${count} HTTP spammer IPs`);
+    log.debug(`Processed ${count} HTTP spammer IPs`);
     await storage.updateFeedLastFetched("CleanTalk");
     return count;
   } catch (error) {
-    console.error("[CleanTalk] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1233,7 +1235,7 @@ const C2INTEL_URL = "https://raw.githubusercontent.com/drb-ra/C2IntelFeeds/maste
 
 export async function fetchC2IntelFeeds(): Promise<number> {
   try {
-    console.log("[C2IntelFeeds] Fetching C2 infrastructure IPs...");
+    log.debug("Fetching C2 infrastructure IPs...");
     
     const response = await secureFetch(C2INTEL_URL);
     
@@ -1262,11 +1264,11 @@ export async function fetchC2IntelFeeds(): Promise<number> {
       }
     }
     
-    console.log(`[C2IntelFeeds] Processed ${count} C2 infrastructure IPs`);
+    log.debug(`Processed ${count} C2 infrastructure IPs`);
     await storage.updateFeedLastFetched("C2IntelFeeds");
     return count;
   } catch (error) {
-    console.error("[C2IntelFeeds] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1276,7 +1278,7 @@ const DATAPLANE_SSH_URL = "https://dataplane.org/sshpwauth.txt";
 
 export async function fetchDataplaneSsh(): Promise<number> {
   try {
-    console.log("[Dataplane] Fetching SSH bruteforce IPs...");
+    log.debug("Fetching SSH bruteforce IPs...");
     
     const response = await secureFetch(DATAPLANE_SSH_URL);
     
@@ -1308,11 +1310,11 @@ export async function fetchDataplaneSsh(): Promise<number> {
       }
     }
     
-    console.log(`[Dataplane] Processed ${count} SSH bruteforce IPs`);
+    log.debug(`Processed ${count} SSH bruteforce IPs`);
     await storage.updateFeedLastFetched("Dataplane SSH");
     return count;
   } catch (error) {
-    console.error("[Dataplane] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1322,7 +1324,7 @@ const BINARYDEFENSE_URL = "https://www.binarydefense.com/banlist.txt";
 
 export async function fetchBinaryDefense(): Promise<number> {
   try {
-    console.log("[BinaryDefense] Fetching threat intel IPs...");
+    log.debug("Fetching threat intel IPs...");
     
     const response = await secureFetch(BINARYDEFENSE_URL);
     
@@ -1346,11 +1348,11 @@ export async function fetchBinaryDefense(): Promise<number> {
       count++;
     }
     
-    console.log(`[BinaryDefense] Processed ${count} threat intel IPs`);
+    log.debug(`Processed ${count} threat intel IPs`);
     await storage.updateFeedLastFetched("BinaryDefense");
     return count;
   } catch (error) {
-    console.error("[BinaryDefense] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1360,7 +1362,7 @@ const TURRIS_GREYLIST_URL = "https://view.sentinel.turris.cz/greylist-data/greyl
 
 export async function fetchTurrisSentinel(): Promise<number> {
   try {
-    console.log("[Turris] Fetching greylist attack IPs...");
+    log.debug("Fetching greylist attack IPs...");
     
     const response = await secureFetch(TURRIS_GREYLIST_URL);
     
@@ -1389,11 +1391,11 @@ export async function fetchTurrisSentinel(): Promise<number> {
       }
     }
     
-    console.log(`[Turris] Processed ${count} greylist attack IPs`);
+    log.debug(`Processed ${count} greylist attack IPs`);
     await storage.updateFeedLastFetched("Turris Sentinel");
     return count;
   } catch (error) {
-    console.error("[Turris] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1410,12 +1412,12 @@ export async function fetchGreyNoiseCommunity(): Promise<number> {
   const apiKey = process.env.GREYNOISE_API_KEY;
   
   if (!apiKey) {
-    console.log("[GreyNoise] No API key configured - skipping (add GREYNOISE_API_KEY for 50 free queries/day)");
+    log.debug("No API key configured - skipping (add GREYNOISE_API_KEY for 50 free queries/day)");
     return 0;
   }
   
   try {
-    console.log("[GreyNoise] Fetching internet scanner intelligence...");
+    log.debug("Fetching internet scanner intelligence...");
     
     // GreyNoise Community API gives context about an IP - we'll query some known bad IPs
     // In production, this would be used to enrich IP lookups on-demand
@@ -1429,15 +1431,15 @@ export async function fetchGreyNoiseCommunity(): Promise<number> {
     });
     
     if (response.ok) {
-      console.log("[GreyNoise] API connection verified - enrichment available for IP lookups");
+      log.debug("API connection verified - enrichment available for IP lookups");
       await storage.updateFeedLastFetched("GreyNoise");
       return 1;
     } else {
-      console.log(`[GreyNoise] API error: ${response.status}`);
+      log.debug(`API error: ${response.status}`);
       return 0;
     }
   } catch (error) {
-    console.error("[GreyNoise] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1450,12 +1452,12 @@ export async function fetchCrowdSec(): Promise<number> {
   const apiKey = process.env.CROWDSEC_API_KEY;
   
   if (!apiKey) {
-    console.log("[CrowdSec] No API key configured - skipping (add CROWDSEC_API_KEY for 50 free queries/day)");
+    log.debug("No API key configured - skipping (add CROWDSEC_API_KEY for 50 free queries/day)");
     return 0;
   }
   
   try {
-    console.log("[CrowdSec] Enriching threat data with community intel (50 free queries/day)...");
+    log.debug("Enriching threat data with community intel (50 free queries/day)...");
     
     // CrowdSec CTI API v2 requires querying individual IPs
     // We'll enrich IPs from other feeds to add CrowdSec reputation data
@@ -1501,10 +1503,10 @@ export async function fetchCrowdSec(): Promise<number> {
           // IP not in CrowdSec database - that's fine, it means it's not known malicious
           continue;
         } else if (response.status === 429) {
-          console.log("[CrowdSec] Rate limit reached (50/day free tier)");
+          log.debug("Rate limit reached (50/day free tier)");
           break;
         } else {
-          console.log(`[CrowdSec] API returned ${response.status} for ${ip}`);
+          log.debug(`API returned ${response.status} for ${ip}`);
         }
       } catch (ipError) {
         // Continue with next IP on individual errors
@@ -1512,12 +1514,12 @@ export async function fetchCrowdSec(): Promise<number> {
       }
     }
     
-    console.log(`[CrowdSec] API connected - enriched ${enrichedCount} IPs with reputation data`);
-    console.log(`[CrowdSec] Use security tools to lookup any IP for real-time threat scoring`);
+    log.debug(`API connected - enriched ${enrichedCount} IPs with reputation data`);
+    log.debug(`Use security tools to lookup any IP for real-time threat scoring`);
     await storage.updateFeedLastFetched("CrowdSec");
     return enrichedCount;
   } catch (error) {
-    console.error("[CrowdSec] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1534,12 +1536,12 @@ export async function fetchPulsedive(): Promise<number> {
   const apiKey = process.env.PULSEDIVE_API_KEY;
   
   if (!apiKey) {
-    console.log("[Pulsedive] No API key configured - skipping (add PULSEDIVE_API_KEY for 100 queries/day FREE)");
+    log.debug("No API key configured - skipping (add PULSEDIVE_API_KEY for 100 queries/day FREE)");
     return 0;
   }
   
   try {
-    console.log("[Pulsedive] Fetching community threat intelligence...");
+    log.debug("Fetching community threat intelligence...");
     
     // Get recent threat indicators from Pulsedive
     const response = await secureFetch(`${PULSEDIVE_API}/info.php?indicator=pulsedive.com&pretty=1&key=${apiKey}`);
@@ -1550,7 +1552,7 @@ export async function fetchPulsedive(): Promise<number> {
     
     // Verify API connectivity
     const testData = await response.json();
-    console.log(`[Pulsedive] API connected - community intel available`);
+    log.debug(`API connected - community intel available`);
     
     // Fetch recent threats feed
     const feedResponse = await secureFetch(`${PULSEDIVE_API}/explore.php?q=type%3Aip+risk%3Ahigh&limit=100&pretty=1&key=${apiKey}`);
@@ -1590,12 +1592,12 @@ export async function fetchPulsedive(): Promise<number> {
       }
     }
     
-    console.log(`[Pulsedive] Processed ${count} high-risk indicators`);
-    console.log(`[Pulsedive] Use security tools for real-time threat lookups`);
+    log.debug(`Processed ${count} high-risk indicators`);
+    log.debug(`Use security tools for real-time threat lookups`);
     await storage.updateFeedLastFetched("Pulsedive");
     return count;
   } catch (error) {
-    console.error("[Pulsedive] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1608,12 +1610,12 @@ export async function fetchShodanIntel(): Promise<number> {
   const apiKey = process.env.SHODAN_API_KEY;
   
   if (!apiKey) {
-    console.log("[Shodan] No API key configured - skipping (add SHODAN_API_KEY for 100 credits/month FREE)");
+    log.debug("No API key configured - skipping (add SHODAN_API_KEY for 100 credits/month FREE)");
     return 0;
   }
   
   try {
-    console.log("[Shodan] Fetching internet scanning intelligence...");
+    log.debug("Fetching internet scanning intelligence...");
     
     // First, verify API connectivity and check credits
     const infoResponse = await secureFetch(`${SHODAN_API}/api-info?key=${apiKey}`);
@@ -1623,7 +1625,7 @@ export async function fetchShodanIntel(): Promise<number> {
     }
     
     const info = await infoResponse.json();
-    console.log(`[Shodan] API connected - ${info.query_credits || 0} query credits remaining`);
+    log.debug(`API connected - ${info.query_credits || 0} query credits remaining`);
     
     // Query known honeypot/scanner IPs to enrich our threat data
     // Use minimal credits by checking a sample of IPs from our database
@@ -1662,7 +1664,7 @@ export async function fetchShodanIntel(): Promise<number> {
           // IP not indexed by Shodan
           continue;
         } else if (hostResponse.status === 401) {
-          console.log("[Shodan] Invalid API key");
+          log.debug("Invalid API key");
           break;
         }
       } catch (ipError) {
@@ -1670,12 +1672,12 @@ export async function fetchShodanIntel(): Promise<number> {
       }
     }
     
-    console.log(`[Shodan] Enriched ${enrichedCount} IPs with host intelligence`);
-    console.log(`[Shodan] Use security tools for real-time IP/host lookups`);
+    log.debug(`Enriched ${enrichedCount} IPs with host intelligence`);
+    log.debug(`Use security tools for real-time IP/host lookups`);
     await storage.updateFeedLastFetched("Shodan");
     return enrichedCount;
   } catch (error) {
-    console.error("[Shodan] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1711,12 +1713,12 @@ export async function fetchAlienVaultOTX(): Promise<number> {
   const apiKey = process.env.OTX_API_KEY;
   
   if (!apiKey) {
-    console.log("[OTX] No API key configured - skipping (add OTX_API_KEY for 10K requests/hour FREE)");
+    log.debug("No API key configured - skipping (add OTX_API_KEY for 10K requests/hour FREE)");
     return 0;
   }
   
   try {
-    console.log("[OTX] Fetching threat intelligence pulses...");
+    log.debug("Fetching threat intelligence pulses...");
     
     // Get subscribed pulses (latest threat intel)
     const response = await secureFetch(`${OTX_API}/pulses/subscribed?limit=50&modified_since=${getOneDayAgo()}`, {
@@ -1731,7 +1733,7 @@ export async function fetchAlienVaultOTX(): Promise<number> {
     
     const data = await response.json();
     const pulses: OTXPulse[] = data.results || [];
-    console.log(`[OTX] Retrieved ${pulses.length} recent threat pulses`);
+    log.debug(`Retrieved ${pulses.length} recent threat pulses`);
     
     let ipCount = 0;
     let urlCount = 0;
@@ -1766,11 +1768,11 @@ export async function fetchAlienVaultOTX(): Promise<number> {
       }
     }
     
-    console.log(`[OTX] Processed ${ipCount} IPs and ${urlCount} URLs from ${pulses.length} pulses`);
+    log.debug(`Processed ${ipCount} IPs and ${urlCount} URLs from ${pulses.length} pulses`);
     await storage.updateFeedLastFetched("AlienVault OTX");
     return ipCount + urlCount;
   } catch (error) {
-    console.error("[OTX] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1791,12 +1793,12 @@ export async function fetchVirusTotalFeed(): Promise<number> {
   const apiKey = process.env.VIRUSTOTAL_API_KEY;
   
   if (!apiKey) {
-    console.log("[VirusTotal] No API key configured - skipping (add VIRUSTOTAL_API_KEY for 500 requests/day FREE)");
+    log.debug("No API key configured - skipping (add VIRUSTOTAL_API_KEY for 500 requests/day FREE)");
     return 0;
   }
   
   try {
-    console.log("[VirusTotal] Fetching threat intelligence...");
+    log.debug("Fetching threat intelligence...");
     
     // Verify API key by checking current user quota (works with free tier)
     const response = await secureFetch(`${VT_API}/users/${apiKey}`, {
@@ -1810,22 +1812,22 @@ export async function fetchVirusTotalFeed(): Promise<number> {
       const quota = userData.data?.attributes?.quotas?.api_requests_daily;
       const used = quota?.used || 0;
       const allowed = quota?.allowed || 500;
-      console.log(`[VirusTotal] API connected - ${used}/${allowed} daily requests used`);
-      console.log("[VirusTotal] Enrichment available for IP/URL/hash lookups via security tools");
+      log.debug(`API connected - ${used}/${allowed} daily requests used`);
+      log.debug("Enrichment available for IP/URL/hash lookups via security tools");
       await storage.updateFeedLastFetched("VirusTotal");
       return 1;
     } else if (response.status === 429) {
-      console.log("[VirusTotal] Rate limit reached - will retry next cycle");
+      log.debug("Rate limit reached - will retry next cycle");
       return 0;
     } else if (response.status === 401) {
-      console.log("[VirusTotal] Invalid API key - please check your key");
+      log.debug("Invalid API key - please check your key");
       return 0;
     } else {
-      console.log(`[VirusTotal] API status: ${response.status}`);
+      log.debug(`API status: ${response.status}`);
       return 0;
     }
   } catch (error) {
-    console.error("[VirusTotal] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1838,12 +1840,12 @@ export async function fetchHybridAnalysis(): Promise<number> {
   const apiKey = process.env.HYBRID_ANALYSIS_API_KEY;
   
   if (!apiKey) {
-    console.log("[HybridAnalysis] No API key configured - skipping (add HYBRID_ANALYSIS_API_KEY - FREE after vetting)");
+    log.debug("No API key configured - skipping (add HYBRID_ANALYSIS_API_KEY - FREE after vetting)");
     return 0;
   }
   
   try {
-    console.log("[HybridAnalysis] Fetching malware analysis feed...");
+    log.debug("Fetching malware analysis feed...");
     
     // Get recent malware detonations
     const response = await secureFetch(`${HYBRID_ANALYSIS_API}/feed/latest`, {
@@ -1855,7 +1857,7 @@ export async function fetchHybridAnalysis(): Promise<number> {
     
     if (!response.ok) {
       if (response.status === 403) {
-        console.log("[HybridAnalysis] API key needs vetting - visit hybrid-analysis.com to complete");
+        log.debug("API key needs vetting - visit hybrid-analysis.com to complete");
       } else {
         throw new Error(`Hybrid Analysis error: ${response.status}`);
       }
@@ -1901,11 +1903,11 @@ export async function fetchHybridAnalysis(): Promise<number> {
       }
     }
     
-    console.log(`[HybridAnalysis] Processed ${count} malware IOCs`);
+    log.debug(`Processed ${count} malware IOCs`);
     await storage.updateFeedLastFetched("Hybrid Analysis");
     return count;
   } catch (error) {
-    console.error("[HybridAnalysis] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -1916,7 +1918,7 @@ const CIRCL_CVE_API = "https://cve.circl.lu/api";
 // Fetch recent CVEs from CIRCL (supplements NVD)
 export async function fetchCIRCLCves(): Promise<number> {
   try {
-    console.log("[CIRCL] Fetching enhanced CVE data...");
+    log.debug("Fetching enhanced CVE data...");
     
     const response = await secureFetch(`${CIRCL_CVE_API}/last/100`);
     
@@ -1953,11 +1955,11 @@ export async function fetchCIRCLCves(): Promise<number> {
       }
     }
     
-    console.log(`[CIRCL] Processed ${count} enhanced CVEs`);
+    log.debug(`Processed ${count} enhanced CVEs`);
     await storage.updateFeedLastFetched("CIRCL CVE");
     return count;
   } catch (error) {
-    console.error("[CIRCL] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -2028,7 +2030,7 @@ interface RansomwareLiveGroup {
 // Fetch recent ransomware victims from ransomware.live
 export async function fetchRansomwareLiveVictims(): Promise<number> {
   try {
-    console.log("[Ransomware.live] Fetching real-time ransomware victim data...");
+    log.debug("Fetching real-time ransomware victim data...");
     
     const response = await secureFetch(`${RANSOMWARE_LIVE_API}/recentvictims`);
     
@@ -2037,7 +2039,7 @@ export async function fetchRansomwareLiveVictims(): Promise<number> {
     }
     
     const victims: RansomwareLiveVictim[] = await response.json();
-    console.log(`[Ransomware.live] Retrieved ${victims.length} recent victims`);
+    log.debug(`Retrieved ${victims.length} recent victims`);
     
     let count = 0;
     
@@ -2080,10 +2082,10 @@ export async function fetchRansomwareLiveVictims(): Promise<number> {
       }
     }
     
-    console.log(`[Ransomware.live] Processed ${count} ransomware victims`);
+    log.debug(`Processed ${count} ransomware victims`);
     return count;
   } catch (error) {
-    console.error("[Ransomware.live] Error fetching victims:", error);
+    log.error("Error fetching victims:", error);
     return 0;
   }
 }
@@ -2091,7 +2093,7 @@ export async function fetchRansomwareLiveVictims(): Promise<number> {
 // Fetch ransomware groups from ransomware.live
 export async function fetchRansomwareLiveGroups(): Promise<number> {
   try {
-    console.log("[Ransomware.live] Fetching ransomware group intelligence...");
+    log.debug("Fetching ransomware group intelligence...");
     
     const response = await secureFetch(`${RANSOMWARE_LIVE_API}/groups`);
     
@@ -2100,7 +2102,7 @@ export async function fetchRansomwareLiveGroups(): Promise<number> {
     }
     
     const groups: RansomwareLiveGroup[] = await response.json();
-    console.log(`[Ransomware.live] Retrieved ${groups.length} ransomware groups`);
+    log.debug(`Retrieved ${groups.length} ransomware groups`);
     
     let count = 0;
     let enrichedCount = 0;
@@ -2163,10 +2165,10 @@ export async function fetchRansomwareLiveGroups(): Promise<number> {
       }
     }
     
-    console.log(`[Ransomware.live] Processed ${count} ransomware groups (${enrichedCount} with enriched profiles)`);
+    log.debug(`Processed ${count} ransomware groups (${enrichedCount} with enriched profiles)`);
     return count;
   } catch (error) {
-    console.error("[Ransomware.live] Error fetching groups:", error);
+    log.error("Error fetching groups:", error);
     return 0;
   }
 }
@@ -2201,7 +2203,7 @@ interface RansomLookGroup {
 // Fetch recent ransomware posts from RansomLook.io
 export async function fetchRansomLookVictims(): Promise<number> {
   try {
-    console.log("[RansomLook] Fetching ransomware intelligence from ransomlook.io...");
+    log.debug("Fetching ransomware intelligence from ransomlook.io...");
     
     // Fetch last 500 recent posts for comprehensive coverage
     const response = await secureFetch(`${RANSOMLOOK_API}/recent/500`);
@@ -2211,7 +2213,7 @@ export async function fetchRansomLookVictims(): Promise<number> {
     }
     
     const posts: RansomLookPost[] = await response.json();
-    console.log(`[RansomLook] Retrieved ${posts.length} recent posts`);
+    log.debug(`Retrieved ${posts.length} recent posts`);
     
     let count = 0;
     let newCount = 0;
@@ -2260,10 +2262,10 @@ export async function fetchRansomLookVictims(): Promise<number> {
       }
     }
     
-    console.log(`[RansomLook] Processed ${count} posts (${newCount} new)`);
+    log.debug(`Processed ${count} posts (${newCount} new)`);
     return count;
   } catch (error) {
-    console.error("[RansomLook] Error fetching data:", error);
+    log.error("Error fetching data:", error);
     return 0;
   }
 }
@@ -2271,7 +2273,7 @@ export async function fetchRansomLookVictims(): Promise<number> {
 // Fetch ransomware groups from RansomLook.io
 export async function fetchRansomLookGroups(): Promise<number> {
   try {
-    console.log("[RansomLook] Fetching ransomware group intel...");
+    log.debug("Fetching ransomware group intel...");
     
     const response = await secureFetch(`${RANSOMLOOK_API}/groups`);
     
@@ -2280,7 +2282,7 @@ export async function fetchRansomLookGroups(): Promise<number> {
     }
     
     const groups: RansomLookGroup[] = await response.json();
-    console.log(`[RansomLook] Retrieved ${groups.length} ransomware groups`);
+    log.debug(`Retrieved ${groups.length} ransomware groups`);
     
     let count = 0;
     
@@ -2303,10 +2305,10 @@ export async function fetchRansomLookGroups(): Promise<number> {
       }
     }
     
-    console.log(`[RansomLook] Processed ${count} ransomware groups`);
+    log.debug(`Processed ${count} ransomware groups`);
     return count;
   } catch (error) {
-    console.error("[RansomLook] Error fetching groups:", error);
+    log.error("Error fetching groups:", error);
     return 0;
   }
 }
@@ -2314,18 +2316,18 @@ export async function fetchRansomLookGroups(): Promise<number> {
 // Fetch breach/leak data from RansomLook.io (bonus: populates breach database!)
 export async function fetchRansomLookBreaches(): Promise<number> {
   try {
-    console.log("[RansomLook] Fetching breach/leak intelligence...");
+    log.debug("Fetching breach/leak intelligence...");
     
     const response = await secureFetch(`${RANSOMLOOK_API}/leaks/leaks`);
     
     if (!response.ok) {
       // This endpoint might not be available on all instances
-      console.log("[RansomLook] Leaks endpoint not available, skipping...");
+      log.debug("Leaks endpoint not available, skipping...");
       return 0;
     }
     
     const leaks = await response.json();
-    console.log(`[RansomLook] Retrieved ${Array.isArray(leaks) ? leaks.length : 0} breach records`);
+    log.debug(`Retrieved ${Array.isArray(leaks) ? leaks.length : 0} breach records`);
     
     // Process breaches if available
     let count = 0;
@@ -2349,10 +2351,10 @@ export async function fetchRansomLookBreaches(): Promise<number> {
       }
     }
     
-    console.log(`[RansomLook] Processed ${count} breach records`);
+    log.debug(`Processed ${count} breach records`);
     return count;
   } catch (error) {
-    console.error("[RansomLook] Error fetching breaches:", error);
+    log.error("Error fetching breaches:", error);
     return 0;
   }
 }
@@ -2373,7 +2375,7 @@ interface RansomwherePayment {
 
 export async function fetchRansomwhere(): Promise<number> {
   try {
-    console.log("[Ransomwhere] Fetching Bitcoin ransomware payment data...");
+    log.debug("Fetching Bitcoin ransomware payment data...");
     
     const response = await secureFetch(`${RANSOMWHERE_API}/export`);
     
@@ -2384,7 +2386,7 @@ export async function fetchRansomwhere(): Promise<number> {
     const data = await response.json();
     const payments: RansomwherePayment[] = data.result || data || [];
     
-    console.log(`[Ransomwhere] Retrieved ${payments.length} ransomware payment records`);
+    log.debug(`Retrieved ${payments.length} ransomware payment records`);
     
     // Update threat actor data with payment info
     const familyPayments = new Map<string, number>();
@@ -2415,11 +2417,11 @@ export async function fetchRansomwhere(): Promise<number> {
       }
     }
     
-    console.log(`[Ransomwhere] Tracked ${count} ransomware families with payment data`);
+    log.debug(`Tracked ${count} ransomware families with payment data`);
     await storage.updateFeedLastFetched("Ransomwhere");
     return count;
   } catch (error) {
-    console.error("[Ransomwhere] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -2432,7 +2434,7 @@ const TALOS_IP_BLOCKLIST = "https://talosintelligence.com/documents/ip-blacklist
 
 export async function fetchTalosBlocklist(): Promise<number> {
   try {
-    console.log("[Talos] Fetching Cisco Talos IP blocklist...");
+    log.debug("Fetching Cisco Talos IP blocklist...");
     
     const response = await secureFetch(TALOS_IP_BLOCKLIST);
     
@@ -2443,7 +2445,7 @@ export async function fetchTalosBlocklist(): Promise<number> {
     const text = await response.text();
     const lines = text.split('\n').filter(line => line.trim() && !line.startsWith('#'));
     
-    console.log(`[Talos] Retrieved ${lines.length} IPs from Cisco threat network`);
+    log.debug(`Retrieved ${lines.length} IPs from Cisco threat network`);
     
     let count = 0;
     for (const ip of lines.slice(0, 500)) {
@@ -2466,11 +2468,11 @@ export async function fetchTalosBlocklist(): Promise<number> {
       }
     }
     
-    console.log(`[Talos] Processed ${count} Cisco Talos blocklist IPs`);
+    log.debug(`Processed ${count} Cisco Talos blocklist IPs`);
     await storage.updateFeedLastFetched("Cisco Talos");
     return count;
   } catch (error) {
-    console.error("[Talos] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -2484,7 +2486,7 @@ const CYBERCURE_URL_URL = "https://api.cybercure.ai/feed/get_url?type=json";
 
 export async function fetchCyberCureIPs(): Promise<number> {
   try {
-    console.log("[CyberCure] Fetching infected/malicious host IPs...");
+    log.debug("Fetching infected/malicious host IPs...");
     
     const response = await secureFetch(CYBERCURE_IP_URL);
     
@@ -2495,7 +2497,7 @@ export async function fetchCyberCureIPs(): Promise<number> {
     const data = await response.json();
     const ips: string[] = data?.data?.ip || data?.ips || data?.ip || [];
     
-    console.log(`[CyberCure] Retrieved ${Array.isArray(ips) ? ips.length : 0} infected host IPs`);
+    log.debug(`Retrieved ${Array.isArray(ips) ? ips.length : 0} infected host IPs`);
     
     let count = 0;
     const ipList = Array.isArray(ips) ? ips : [];
@@ -2517,18 +2519,18 @@ export async function fetchCyberCureIPs(): Promise<number> {
       }
     }
     
-    console.log(`[CyberCure] Processed ${count} infected host IPs`);
+    log.debug(`Processed ${count} infected host IPs`);
     await storage.updateFeedLastFetched("CyberCure");
     return count;
   } catch (error) {
-    console.error("[CyberCure] IP feed error:", error);
+    log.error("IP feed error:", error);
     return 0;
   }
 }
 
 export async function fetchCyberCureURLs(): Promise<number> {
   try {
-    console.log("[CyberCure] Fetching malicious URLs...");
+    log.debug("Fetching malicious URLs...");
     
     const response = await secureFetch(CYBERCURE_URL_URL);
     
@@ -2539,7 +2541,7 @@ export async function fetchCyberCureURLs(): Promise<number> {
     const data = await response.json();
     const urls: string[] = data?.data?.url || data?.urls || data?.url || [];
     
-    console.log(`[CyberCure] Retrieved ${Array.isArray(urls) ? urls.length : 0} malicious URLs`);
+    log.debug(`Retrieved ${Array.isArray(urls) ? urls.length : 0} malicious URLs`);
     
     let count = 0;
     const urlList = Array.isArray(urls) ? urls : [];
@@ -2562,10 +2564,10 @@ export async function fetchCyberCureURLs(): Promise<number> {
       }
     }
     
-    console.log(`[CyberCure] Processed ${count} malicious URLs`);
+    log.debug(`Processed ${count} malicious URLs`);
     return count;
   } catch (error) {
-    console.error("[CyberCure] URL feed error:", error);
+    log.error("URL feed error:", error);
     return 0;
   }
 }
@@ -2578,7 +2580,7 @@ const THREATFOX_EXPORT_URL = "https://threatfox.abuse.ch/export/json/recent/";
 
 export async function fetchThreatFoxRecent(): Promise<number> {
   try {
-    console.log("[ThreatFox] Fetching recent IOCs from abuse.ch...");
+    log.debug("Fetching recent IOCs from abuse.ch...");
     
     const response = await secureFetch(THREATFOX_EXPORT_URL);
     
@@ -2631,11 +2633,11 @@ export async function fetchThreatFoxRecent(): Promise<number> {
       }
     }
     
-    console.log(`[ThreatFox] Processed ${count} IOCs (${ipCount} IPs, ${urlCount} URLs)`);
+    log.debug(`Processed ${count} IOCs (${ipCount} IPs, ${urlCount} URLs)`);
     await storage.updateFeedLastFetched("ThreatFox");
     return count;
   } catch (error) {
-    console.error("[ThreatFox] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -2648,12 +2650,12 @@ const MALWAREBAZAAR_EXPORT_URL = "https://bazaar.abuse.ch/export/csv/recent/";
 
 export async function fetchMalwareBazaarRecent(): Promise<number> {
   try {
-    console.log("[MalwareBazaar] Fetching recent malware sample data...");
+    log.debug("Fetching recent malware sample data...");
     
     const response = await secureFetch(MALWAREBAZAAR_EXPORT_URL);
     
     if (!response.ok) {
-      console.log(`[MalwareBazaar] Export feed unavailable (${response.status}) - using existing data`);
+      log.debug(`Export feed unavailable (${response.status}) - using existing data`);
       return 0;
     }
     
@@ -2691,11 +2693,11 @@ export async function fetchMalwareBazaarRecent(): Promise<number> {
       }
     }
     
-    console.log(`[MalwareBazaar] Processed ${count} recent malware samples`);
+    log.debug(`Processed ${count} recent malware samples`);
     await storage.updateFeedLastFetched("MalwareBazaar");
     return count;
   } catch (error) {
-    console.error("[MalwareBazaar] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -2708,7 +2710,7 @@ const THREATFEEDS_BOTS = "https://threatfeeds.io/feed/bad-bots";
 
 export async function fetchThreatFeedsIO(): Promise<number> {
   try {
-    console.log("[ThreatFeeds.io] Fetching aggregated threat data...");
+    log.debug("Fetching aggregated threat data...");
     
     // Try multiple free feeds from threatfeeds.io
     const feeds = [
@@ -2744,19 +2746,19 @@ export async function fetchThreatFeedsIO(): Promise<number> {
       }
     }
     
-    console.log(`[ThreatFeeds.io] Processed ${totalCount} aggregated threat IPs`);
+    log.debug(`Processed ${totalCount} aggregated threat IPs`);
     await storage.updateFeedLastFetched("ThreatFeeds.io");
     return totalCount;
   } catch (error) {
-    console.error("[ThreatFeeds.io] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
 
 // Combined function to fetch all ransomware data from ALL sources
 export async function fetchRansomwareData(): Promise<number> {
-  console.log("[Ransomware] Starting comprehensive ransomware intelligence fetch...");
-  console.log("[Ransomware] Sources: ransomware.live + ransomlook.io + ransomwhere");
+  log.debug("Starting comprehensive ransomware intelligence fetch...");
+  log.debug("Sources: ransomware.live + ransomlook.io + ransomwhere");
   
   // Fetch Bitcoin payment data first
   await fetchRansomwhere();
@@ -2779,7 +2781,7 @@ export async function fetchRansomwareData(): Promise<number> {
   const totalGroups = groupCount1 + groupCount2;
   const totalVictims = victimCount1 + victimCount2;
   
-  console.log(`[Ransomware] Combined totals: ${totalGroups} groups, ${totalVictims} victims from 2 sources`);
+  log.debug(`Combined totals: ${totalGroups} groups, ${totalVictims} victims from 2 sources`);
   return totalVictims;
 }
 
@@ -2803,7 +2805,7 @@ const CYBERSECURITY_NEWS = [
 
 export async function generateNewsData(): Promise<number> {
   try {
-    console.log("[News] Generating cybersecurity news...");
+    log.debug("Generating cybersecurity news...");
     
     const existingNews = await storage.getNews(50);
     
@@ -2823,10 +2825,10 @@ export async function generateNewsData(): Promise<number> {
       }
     }
     
-    console.log(`[News] News data ready`);
+    log.debug(`News data ready`);
     return CYBERSECURITY_NEWS.length;
   } catch (error) {
-    console.error("[News] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -2903,17 +2905,14 @@ export async function initializeThreatFeeds(): Promise<void> {
     });
   }
   
-  console.log(`[Feeds] Initialized ${feeds.length} threat feed sources`);
+  log.info(`Initialized ${feeds.length} threat feed sources`);
 }
 
 // ============================================
 // MAIN DATA FETCH ORCHESTRATOR
 // ============================================
 export async function fetchAllData(): Promise<void> {
-  console.log("[Scraper] ========================================");
-  console.log("[Scraper] Starting comprehensive threat data fetch...");
-  console.log("[Scraper] 45+ threat intelligence sources");
-  console.log("[Scraper] ========================================");
+  scraperLog.startCycle();
   
   // Initialize feed registry
   await initializeThreatFeeds();
@@ -2921,10 +2920,10 @@ export async function fetchAllData(): Promise<void> {
   // ===========================================
   // CORE VULNERABILITY FEEDS
   // ===========================================
-  await fetchNVDCves();
+  try { scraperLog.recordFeed("NVD", await fetchNVDCves()); } catch(e) { scraperLog.recordError("NVD", e); }
   await delay(2000);
   
-  await fetchCISAKev();
+  try { scraperLog.recordFeed("CISA KEV", await fetchCISAKev()); } catch(e) { scraperLog.recordError("CISA KEV", e); }
   await delay(1000);
   
   // ===========================================
@@ -2935,10 +2934,10 @@ export async function fetchAllData(): Promise<void> {
   // await fetchThreatFox();
   // await fetchMalwareBazaar();
   
-  await fetchOpenPhish();
+  try { scraperLog.recordFeed("OpenPhish", await fetchOpenPhish()); } catch(e) { scraperLog.recordError("OpenPhish", e); }
   await delay(1000);
   
-  await fetchPhishTank();
+  try { scraperLog.recordFeed("PhishTank", await fetchPhishTank()); } catch(e) { scraperLog.recordError("PhishTank", e); }
   await delay(1000);
   
   // Bambenek returns 403 - skipping
@@ -2947,136 +2946,134 @@ export async function fetchAllData(): Promise<void> {
   // ===========================================
   // IP BLOCKLIST FEEDS - PRIMARY
   // ===========================================
-  await fetchIPsum();
+  try { scraperLog.recordFeed("IPsum", await fetchIPsum()); } catch(e) { scraperLog.recordError("IPsum", e); }
   await delay(1000);
   
-  await fetchFeodoTracker();
+  try { scraperLog.recordFeed("Feodo", await fetchFeodoTracker()); } catch(e) { scraperLog.recordError("Feodo", e); }
   await delay(1000);
   
-  await fetchBotnetC2();
+  try { scraperLog.recordFeed("BotnetC2", await fetchBotnetC2()); } catch(e) { scraperLog.recordError("BotnetC2", e); }
   await delay(1000);
   
-  await fetchDShield();
+  try { scraperLog.recordFeed("DShield", await fetchDShield()); } catch(e) { scraperLog.recordError("DShield", e); }
   await delay(1000);
   
-  await fetchTorExitNodes();
+  try { scraperLog.recordFeed("Tor", await fetchTorExitNodes()); } catch(e) { scraperLog.recordError("Tor", e); }
   await delay(1000);
   
   // DanTor returns 403, SSLBlacklist returns 404 - skipping
   // await fetchDanTorNodes();
   // await fetchSSLBlacklist();
   
-  await fetchSSLBLAggressive();
+  try { scraperLog.recordFeed("SSLBL", await fetchSSLBLAggressive()); } catch(e) { scraperLog.recordError("SSLBL", e); }
   await delay(1000);
   
   // ===========================================
   // IP BLOCKLIST FEEDS - EXTENDED
   // ===========================================
-  await fetchBlocklistDe();
+  try { scraperLog.recordFeed("Blocklist.de", await fetchBlocklistDe()); } catch(e) { scraperLog.recordError("Blocklist.de", e); }
   await delay(1000);
   
-  await fetchCINS();
+  try { scraperLog.recordFeed("CINS", await fetchCINS()); } catch(e) { scraperLog.recordError("CINS", e); }
   await delay(1000);
   
-  await fetchGreenSnow();
+  try { scraperLog.recordFeed("GreenSnow", await fetchGreenSnow()); } catch(e) { scraperLog.recordError("GreenSnow", e); }
   await delay(1000);
   
-  await fetchEmergingThreats();
+  try { scraperLog.recordFeed("EmergingThreats", await fetchEmergingThreats()); } catch(e) { scraperLog.recordError("EmergingThreats", e); }
   await delay(1000);
   
-  await fetchSpamhausDrop();
+  try { scraperLog.recordFeed("Spamhaus", await fetchSpamhausDrop()); } catch(e) { scraperLog.recordError("Spamhaus", e); }
   await delay(1000);
   
-  await fetchFireHOL();
+  try { scraperLog.recordFeed("FireHOL", await fetchFireHOL()); } catch(e) { scraperLog.recordError("FireHOL", e); }
   await delay(1000);
   
-  await fetchC2Tracker();
+  try { scraperLog.recordFeed("C2Tracker", await fetchC2Tracker()); } catch(e) { scraperLog.recordError("C2Tracker", e); }
   await delay(1000);
   
   // ===========================================
   // EASY WINS FEEDS - Additional Free IP Blocklists
   // ===========================================
-  await fetchCleanTalk();
+  try { scraperLog.recordFeed("CleanTalk", await fetchCleanTalk()); } catch(e) { scraperLog.recordError("CleanTalk", e); }
   await delay(1000);
   
-  await fetchC2IntelFeeds();
+  try { scraperLog.recordFeed("C2Intel", await fetchC2IntelFeeds()); } catch(e) { scraperLog.recordError("C2Intel", e); }
   await delay(1000);
   
-  await fetchDataplaneSsh();
+  try { scraperLog.recordFeed("Dataplane", await fetchDataplaneSsh()); } catch(e) { scraperLog.recordError("Dataplane", e); }
   await delay(1000);
   
-  await fetchBinaryDefense();
+  try { scraperLog.recordFeed("BinaryDefense", await fetchBinaryDefense()); } catch(e) { scraperLog.recordError("BinaryDefense", e); }
   await delay(1000);
   
-  await fetchTurrisSentinel();
+  try { scraperLog.recordFeed("Turris", await fetchTurrisSentinel()); } catch(e) { scraperLog.recordError("Turris", e); }
   await delay(1000);
   
   // ===========================================
   // NEW THREAT FEEDS (2025-2026 Additions)
   // ===========================================
-  await fetchCyberCureIPs();
+  try { scraperLog.recordFeed("CyberCure IPs", await fetchCyberCureIPs()); } catch(e) { scraperLog.recordError("CyberCure IPs", e); }
   await delay(1000);
   
-  await fetchCyberCureURLs();
+  try { scraperLog.recordFeed("CyberCure URLs", await fetchCyberCureURLs()); } catch(e) { scraperLog.recordError("CyberCure URLs", e); }
   await delay(1000);
   
-  await fetchThreatFoxRecent();
+  try { scraperLog.recordFeed("ThreatFox", await fetchThreatFoxRecent()); } catch(e) { scraperLog.recordError("ThreatFox", e); }
   await delay(1000);
   
-  await fetchMalwareBazaarRecent();
+  try { scraperLog.recordFeed("MalwareBazaar", await fetchMalwareBazaarRecent()); } catch(e) { scraperLog.recordError("MalwareBazaar", e); }
   await delay(1000);
   
   // ===========================================
   // COMMUNITY APIS (Free Tier - Require API Keys)
   // ===========================================
-  await fetchGreyNoiseCommunity();
+  try { scraperLog.recordFeed("GreyNoise", await fetchGreyNoiseCommunity()); } catch(e) { scraperLog.recordError("GreyNoise", e); }
   await delay(1000);
   
-  await fetchCrowdSec();
+  try { scraperLog.recordFeed("CrowdSec", await fetchCrowdSec()); } catch(e) { scraperLog.recordError("CrowdSec", e); }
   await delay(1000);
   
-  await fetchShodanIntel();
+  try { scraperLog.recordFeed("Shodan", await fetchShodanIntel()); } catch(e) { scraperLog.recordError("Shodan", e); }
   await delay(1000);
   
-  await fetchPulsedive();
+  try { scraperLog.recordFeed("Pulsedive", await fetchPulsedive()); } catch(e) { scraperLog.recordError("Pulsedive", e); }
   await delay(1000);
   
   // ===========================================
   // PREMIUM FREE-TIER APIS (All 100% FREE accounts)
   // ===========================================
-  await fetchAlienVaultOTX();
+  try { scraperLog.recordFeed("AlienVault", await fetchAlienVaultOTX()); } catch(e) { scraperLog.recordError("AlienVault", e); }
   await delay(1000);
   
-  await fetchVirusTotalFeed();
+  try { scraperLog.recordFeed("VirusTotal", await fetchVirusTotalFeed()); } catch(e) { scraperLog.recordError("VirusTotal", e); }
   await delay(1000);
   
-  await fetchHybridAnalysis();
+  try { scraperLog.recordFeed("HybridAnalysis", await fetchHybridAnalysis()); } catch(e) { scraperLog.recordError("HybridAnalysis", e); }
   await delay(1000);
   
   // ===========================================
   // ENHANCED CVE DATA (No API key required)
   // ===========================================
-  await fetchCIRCLCves();
+  try { scraperLog.recordFeed("CIRCL", await fetchCIRCLCves()); } catch(e) { scraperLog.recordError("CIRCL", e); }
   await delay(1000);
   
   // ===========================================
   // NEW 2025 THREAT FEEDS (Free Tier APIs)
   // ===========================================
-  await fetchHoneyDB();
+  try { scraperLog.recordFeed("HoneyDB", await fetchHoneyDB()); } catch(e) { scraperLog.recordError("HoneyDB", e); }
   await delay(1000);
   
-  await fetchAbuseIPDB();
+  try { scraperLog.recordFeed("AbuseIPDB", await fetchAbuseIPDB()); } catch(e) { scraperLog.recordError("AbuseIPDB", e); }
   await delay(1000);
   
   // ===========================================
   // RANSOMWARE & NEWS DATA (from ransomware.live)
   // ===========================================
-  await fetchRansomwareData();
-  await generateNewsData();
+  try { scraperLog.recordFeed("Ransomware", await fetchRansomwareData()); } catch(e) { scraperLog.recordError("Ransomware", e); }
+  try { scraperLog.recordFeed("News", await generateNewsData()); } catch(e) { scraperLog.recordError("News", e); }
   
-  console.log("[Scraper] ========================================");
-  console.log("[Scraper] All 45+ threat feeds processed successfully");
-  console.log("[Scraper] ========================================");
+  scraperLog.endCycle();
 }
 
 // ============================================
@@ -3092,12 +3089,12 @@ export async function fetchHoneyDB(): Promise<number> {
   const apiKey = process.env.HONEYDB_API_KEY;
   
   if (!apiId || !apiKey) {
-    console.log("[HoneyDB] No API credentials configured - skipping (add HONEYDB_API_ID and HONEYDB_API_KEY for 1,500 queries/month FREE)");
+    log.debug("No API credentials configured - skipping (add HONEYDB_API_ID and HONEYDB_API_KEY for 1,500 queries/month FREE)");
     return 0;
   }
   
   try {
-    console.log("[HoneyDB] Fetching honeypot threat intelligence...");
+    log.debug("Fetching honeypot threat intelligence...");
     
     // Get bad hosts from the last 24 hours
     const response = await secureFetch(`${HONEYDB_API}/bad-hosts`, {
@@ -3109,9 +3106,9 @@ export async function fetchHoneyDB(): Promise<number> {
     
     if (!response.ok) {
       if (response.status === 401) {
-        console.log("[HoneyDB] Invalid API credentials - please check your keys");
+        log.debug("Invalid API credentials - please check your keys");
       } else if (response.status === 429) {
-        console.log("[HoneyDB] Monthly quota exceeded - will resume next month");
+        log.debug("Monthly quota exceeded - will resume next month");
       } else {
         throw new Error(`HoneyDB error: ${response.status}`);
       }
@@ -3142,11 +3139,11 @@ export async function fetchHoneyDB(): Promise<number> {
       }
     }
     
-    console.log(`[HoneyDB] Processed ${count} honeypot attacker IPs`);
+    log.debug(`Processed ${count} honeypot attacker IPs`);
     await storage.updateFeedLastFetched("HoneyDB");
     return count;
   } catch (error) {
-    console.error("[HoneyDB] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -3163,12 +3160,12 @@ export async function fetchAbuseIPDB(): Promise<number> {
   const apiKey = process.env.ABUSEIPDB_API_KEY;
   
   if (!apiKey) {
-    console.log("[AbuseIPDB] No API key configured - skipping (add ABUSEIPDB_API_KEY for 1,000 queries/day FREE)");
+    log.debug("No API key configured - skipping (add ABUSEIPDB_API_KEY for 1,000 queries/day FREE)");
     return 0;
   }
   
   try {
-    console.log("[AbuseIPDB] Fetching IP reputation blacklist...");
+    log.debug("Fetching IP reputation blacklist...");
     
     // Get the most abusive IPs (confidence score 100)
     const response = await secureFetch(`${ABUSEIPDB_API}/blacklist?limit=1000&confidenceMinimum=90`, {
@@ -3180,9 +3177,9 @@ export async function fetchAbuseIPDB(): Promise<number> {
     
     if (!response.ok) {
       if (response.status === 401) {
-        console.log("[AbuseIPDB] Invalid API key - please check your key");
+        log.debug("Invalid API key - please check your key");
       } else if (response.status === 429) {
-        console.log("[AbuseIPDB] Daily quota exceeded - will resume tomorrow");
+        log.debug("Daily quota exceeded - will resume tomorrow");
       } else {
         throw new Error(`AbuseIPDB error: ${response.status}`);
       }
@@ -3212,11 +3209,11 @@ export async function fetchAbuseIPDB(): Promise<number> {
       }
     }
     
-    console.log(`[AbuseIPDB] Processed ${count} reported abusive IPs`);
+    log.debug(`Processed ${count} reported abusive IPs`);
     await storage.updateFeedLastFetched("AbuseIPDB");
     return count;
   } catch (error) {
-    console.error("[AbuseIPDB] Error:", error);
+    log.error("Error:", error);
     return 0;
   }
 }
@@ -3265,7 +3262,7 @@ export async function checkIPWithAbuseIPDB(ip: string): Promise<{
     
     return null;
   } catch (error) {
-    console.error("[AbuseIPDB] IP check error:", error);
+    log.error("IP check error:", error);
     return null;
   }
 }
@@ -3276,7 +3273,7 @@ export async function checkIPWithAbuseIPDB(ip: string): Promise<{
 let refreshInterval: NodeJS.Timeout | null = null;
 
 export function startDataRefreshScheduler(intervalMinutes = 15): void {
-  console.log(`[Scheduler] Starting threat intel refresh every ${intervalMinutes} minutes (40+ sources)`);
+  log.info(`Starting threat intel refresh every ${intervalMinutes} minutes (40+ sources)`);
   
   const fetchAndInvalidate = async () => {
     try {
@@ -3285,7 +3282,7 @@ export function startDataRefreshScheduler(intervalMinutes = 15): void {
       try {
         const { cache } = await import("./cache");
         cache.invalidateAll();
-        console.log("[Cache] Cleared after data refresh");
+        createLogger("Cache").info("Cleared after data refresh");
       } catch {}
     }
   };
@@ -3303,6 +3300,6 @@ export function stopDataRefreshScheduler(): void {
   if (refreshInterval) {
     clearInterval(refreshInterval);
     refreshInterval = null;
-    console.log("[Scheduler] Data refresh stopped");
+    log.info("Data refresh stopped");
   }
 }
