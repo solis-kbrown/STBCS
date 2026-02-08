@@ -2,6 +2,7 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import cookieParser from "cookie-parser";
 import { storage } from "./storage";
+import { visitorTrackingMiddleware } from "./visitors";
 import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema } from "@shared/schema";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
@@ -160,6 +161,9 @@ ${groupEntries}
 
   // Cookie parser for session tokens
   app.use(cookieParser());
+
+  // Visitor tracking - counts unique visitors privately
+  app.use(visitorTrackingMiddleware());
   
   // Auth middleware - runs on all requests to populate req.user if logged in
   app.use(authMiddleware as any);
@@ -3042,6 +3046,34 @@ ${groupEntries}
       console.error("Webhook processing error:", error);
       // Return 200 to acknowledge receipt even on error (avoid retries)
       res.json({ received: true, error: "Processing failed" });
+    }
+  });
+
+  // ===== ADMIN VISITOR STATS (Private - requires admin key) =====
+  const ADMIN_KEY = process.env.ADMIN_STATS_KEY || "stbcs-admin-2024";
+
+  app.get("/api/admin/visitors", async (req: Request, res: Response) => {
+    try {
+      const key = req.headers["x-admin-key"] || req.query.key;
+      if (key !== ADMIN_KEY) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const stats = await storage.getVisitorStats();
+      const daily = await storage.getDailyVisitorCounts(30);
+      const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+      const newSignups = await storage.getNewSignupsCount(weekAgo);
+      const totalUsers = (await storage.getAllUsers()).length;
+
+      res.json({
+        visitors: stats,
+        dailyCounts: daily,
+        newSignupsLast7Days: newSignups,
+        totalRegisteredUsers: totalUsers,
+      });
+    } catch (error) {
+      console.error("Error fetching visitor stats:", error);
+      res.status(500).json({ error: "Failed to fetch visitor stats" });
     }
   });
 
