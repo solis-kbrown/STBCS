@@ -111,6 +111,7 @@ export interface IStorage {
   // CISA KEV
   getCisaKev(limit?: number, offset?: number): Promise<CisaKev[]>;
   upsertCisaKev(kev: InsertCisaKev): Promise<CisaKev>;
+  batchUpsertCisaKev(kevs: InsertCisaKev[]): Promise<void>;
   getCisaKevCount(): Promise<number>;
   
   // Threat Feeds
@@ -618,6 +619,28 @@ export class DatabaseStorage implements IStorage {
     }
     const [created] = await db.insert(cisaKev).values(kev).returning();
     return created;
+  }
+
+  async batchUpsertCisaKev(kevs: InsertCisaKev[]): Promise<void> {
+    const batchSize = 50;
+    for (let i = 0; i < kevs.length; i += batchSize) {
+      const batch = kevs.slice(i, i + batchSize);
+      await db.insert(cisaKev)
+        .values(batch)
+        .onConflictDoUpdate({
+          target: cisaKev.cveId,
+          set: {
+            vendorProject: sql`excluded.vendor_project`,
+            product: sql`excluded.product`,
+            vulnerabilityName: sql`excluded.vulnerability_name`,
+            shortDescription: sql`excluded.short_description`,
+            requiredAction: sql`excluded.required_action`,
+            dueDate: sql`excluded.due_date`,
+            knownRansomware: sql`excluded.known_ransomware`,
+            notes: sql`excluded.notes`,
+          },
+        });
+    }
   }
 
   async getCisaKevCount(): Promise<number> {

@@ -222,32 +222,25 @@ export async function fetchCISAKev(): Promise<number> {
     }
     
     const data: CISAKevResponse = await response.json();
-    let count = 0;
     
-    // Get the latest 300 entries
-    const recentVulns = data.vulnerabilities.slice(-300);
+    const allKevData: InsertCisaKev[] = data.vulnerabilities.map(vuln => ({
+      cveId: vuln.cveID,
+      vendorProject: vuln.vendorProject,
+      product: vuln.product,
+      vulnerabilityName: vuln.vulnerabilityName,
+      dateAdded: new Date(vuln.dateAdded),
+      shortDescription: vuln.shortDescription,
+      requiredAction: vuln.requiredAction,
+      dueDate: new Date(vuln.dueDate),
+      knownRansomware: vuln.knownRansomwareCampaignUse === "Known",
+      notes: vuln.notes || null,
+    }));
+
+    await storage.batchUpsertCisaKev(allKevData);
     
-    for (const vuln of recentVulns) {
-      const kevData: InsertCisaKev = {
-        cveId: vuln.cveID,
-        vendorProject: vuln.vendorProject,
-        product: vuln.product,
-        vulnerabilityName: vuln.vulnerabilityName,
-        dateAdded: new Date(vuln.dateAdded),
-        shortDescription: vuln.shortDescription,
-        requiredAction: vuln.requiredAction,
-        dueDate: new Date(vuln.dueDate),
-        knownRansomware: vuln.knownRansomwareCampaignUse === "Known",
-        notes: vuln.notes || null,
-      };
-      
-      await storage.upsertCisaKev(kevData);
-      count++;
-    }
-    
-    log.debug(`Processed ${count} known exploited vulnerabilities`);
+    log.debug(`Processed ${allKevData.length} known exploited vulnerabilities`);
     await storage.updateFeedLastFetched("CISA KEV");
-    return count;
+    return allKevData.length;
   } catch (error) {
     log.error("Error:", error);
     return 0;
