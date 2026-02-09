@@ -660,7 +660,8 @@ export class DatabaseStorage implements IStorage {
     maliciousUrls: number;
     cisaKevCount: number;
   }> {
-    const groups = await this.getActiveGroups();
+    const activeGroupsResult = await db.select({ count: sql<number>`count(distinct ${ransomwareIncidents.groupName})` })
+      .from(ransomwareIncidents);
     
     const criticalCvesResult = await db.select({ count: sql<number>`count(*)` })
       .from(cves)
@@ -676,7 +677,7 @@ export class DatabaseStorage implements IStorage {
     const kevCount = await this.getCisaKevCount();
     
     return {
-      activeGroups: groups.length,
+      activeGroups: Number(activeGroupsResult[0]?.count || 0),
       criticalCves: Number(criticalCvesResult[0]?.count || 0),
       activeExploits: Number(activeExploitsResult[0]?.count || 0),
       totalIncidents,
