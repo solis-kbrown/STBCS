@@ -108,6 +108,12 @@ export interface DashboardStats {
   cisaKevCount: number;
 }
 
+export interface ThreatTrends {
+  cvesByDay: { date: string; count: number; critical: number }[];
+  ransomwareByDay: { date: string; count: number }[];
+  topThreats: { type: string; count: number }[];
+}
+
 export interface MaliciousIp {
   id: string;
   ipAddress: string;
@@ -192,6 +198,15 @@ export function useStats() {
     queryFn: () => fetchApi<DashboardStats>("/api/stats"),
     staleTime: 120000,
     refetchInterval: 300000,
+  });
+}
+
+export function useTrends(days = 30) {
+  return useQuery<ThreatTrends>({
+    queryKey: ["/api/trends", days],
+    queryFn: () => fetchApi<ThreatTrends>(`/api/trends?days=${days}`),
+    staleTime: 300000,
+    refetchInterval: 900000,
   });
 }
 

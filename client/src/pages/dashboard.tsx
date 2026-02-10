@@ -1,6 +1,6 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
-import { useStats, useCves, useRansomware, useRefreshData } from "@/lib/api";
+import { useStats, useCves, useRansomware, useRefreshData, useTrends } from "@/lib/api";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,26 +8,40 @@ import { Button } from "@/components/ui/button";
 import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
-
-const chartData = [
-  { name: 'Mon', attacks: 140, patched: 90 },
-  { name: 'Tue', attacks: 205, patched: 120 },
-  { name: 'Wed', attacks: 180, patched: 150 },
-  { name: 'Thu', attacks: 260, patched: 110 },
-  { name: 'Fri', attacks: 290, patched: 180 },
-  { name: 'Sat', attacks: 150, patched: 190 },
-  { name: 'Sun', attacks: 170, patched: 200 },
-];
+import { useMemo } from "react";
+import { format, parseISO } from "date-fns";
 
 export default function Dashboard() {
   useDocumentTitle("Threat Intelligence Dashboard | STB Cybersecurity", "Real-time cybersecurity threat intelligence dashboard tracking ransomware groups, critical CVEs, malicious IPs, phishing URLs, and CISA KEV data from 45+ feeds. Updated every 15 minutes.");
   const { data: stats, isLoading: statsLoading } = useStats();
   const { data: cvesData, isLoading: cvesLoading } = useCves(5);
   const { data: ransomwareData, isLoading: ransomwareLoading } = useRansomware(5);
+  const { data: trends, isLoading: trendsLoading } = useTrends(14);
   const refreshMutation = useRefreshData();
 
   const cves = cvesData?.data || [];
   const ransomware = ransomwareData?.data || [];
+
+  const chartData = useMemo(() => {
+    if (!trends) return [];
+    const dateMap = new Map<string, { name: string; cves: number; ransomware: number }>();
+    trends.cvesByDay.forEach(d => {
+      const label = format(parseISO(d.date), "MMM d");
+      dateMap.set(d.date, { name: label, cves: d.count, ransomware: 0 });
+    });
+    trends.ransomwareByDay.forEach(d => {
+      const existing = dateMap.get(d.date);
+      if (existing) {
+        existing.ransomware = d.count;
+      } else {
+        const label = format(parseISO(d.date), "MMM d");
+        dateMap.set(d.date, { name: label, cves: 0, ransomware: d.count });
+      }
+    });
+    return Array.from(dateMap.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, v]) => v);
+  }, [trends]);
 
   return (
     <Layout>
@@ -120,17 +134,26 @@ export default function Dashboard() {
           <Card className="col-span-2 border-white/5 bg-card/50">
             <CardHeader>
               <CardTitle className="font-display">Threat Velocity</CardTitle>
-              <CardDescription>Attack frequency vs Patching rate (Last 7 Days)</CardDescription>
+              <CardDescription>New CVEs vs Ransomware Incidents (Last 14 Days)</CardDescription>
             </CardHeader>
             <CardContent className="h-[300px]">
+              {trendsLoading ? (
+                <div className="flex items-center justify-center h-full">
+                  <Skeleton className="w-full h-full rounded-lg" />
+                </div>
+              ) : chartData.length === 0 ? (
+                <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
+                  No trend data available yet
+                </div>
+              ) : (
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={chartData}>
                   <defs>
-                    <linearGradient id="colorAttacks" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="colorCves" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
                       <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
                     </linearGradient>
-                    <linearGradient id="colorPatched" x1="0" y1="0" x2="0" y2="1">
+                    <linearGradient id="colorRansomware" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor="hsl(var(--secondary))" stopOpacity={0.3}/>
                       <stop offset="95%" stopColor="hsl(var(--secondary))" stopOpacity={0}/>
                     </linearGradient>
@@ -143,22 +166,25 @@ export default function Dashboard() {
                   />
                   <Area 
                     type="monotone" 
-                    dataKey="attacks" 
+                    dataKey="cves" 
+                    name="New CVEs"
                     stroke="hsl(var(--primary))" 
                     strokeWidth={2}
                     fillOpacity={1} 
-                    fill="url(#colorAttacks)" 
+                    fill="url(#colorCves)" 
                   />
                   <Area 
                     type="monotone" 
-                    dataKey="patched" 
+                    dataKey="ransomware" 
+                    name="Ransomware Incidents"
                     stroke="hsl(var(--secondary))" 
                     strokeWidth={2}
                     fillOpacity={1} 
-                    fill="url(#colorPatched)" 
+                    fill="url(#colorRansomware)" 
                   />
                 </AreaChart>
               </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
 
