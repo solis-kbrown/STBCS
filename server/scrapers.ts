@@ -3,6 +3,7 @@ import type { InsertCve, InsertRansomware, InsertNews, InsertMaliciousIp, Insert
 import { db } from "./db";
 import { watchlistItems } from "@shared/schema";
 import { createLogger, scraperLog } from "./logger";
+import Parser from "rss-parser";
 const log = createLogger("Scraper");
 
 // Notification trigger for Pro users when new threats match watchlists
@@ -2911,49 +2912,128 @@ export async function fetchRansomwareData(): Promise<number> {
 }
 
 // ============================================
-// NEWS DATA
+// CYBERSECURITY NEWS - Real RSS Feed Scraper
+// Sources: BleepingComputer, The Hacker News, Krebs on Security,
+// CISA Alerts, SANS ISC, Dark Reading, SecurityWeek, Naked Security,
+// The Record, Graham Cluley, Infosecurity Magazine
 // ============================================
-const CYBERSECURITY_NEWS = [
-  { title: "FBI Disrupts Major Ransomware Network Infrastructure", summary: "International law enforcement operation seizes servers and decryption keys from prolific ransomware group.", source: "CISA Alert", category: "Ransomware", url: "https://www.cisa.gov/news-events" },
-  { title: "Critical Zero-Day Vulnerability Discovered in Popular VPN Software", summary: "Security researchers identify actively exploited vulnerability affecting millions of enterprise users.", source: "Zero Day Initiative", category: "Zero-Day", url: "https://www.zerodayinitiative.com" },
-  { title: "New SEC Cybersecurity Disclosure Rules Now in Effect", summary: "Public companies must report material cybersecurity incidents within 4 business days.", source: "CyberPolicy Watch", category: "Policy", url: "https://www.sec.gov" },
-  { title: "Healthcare Sector Sees 300% Increase in Ransomware Attacks", summary: "Analysis reveals coordinated campaign targeting hospital networks across North America.", source: "ThreatPost", category: "Ransomware", url: "https://threatpost.com" },
-  { title: "Supply Chain Attack Compromises Popular npm Package", summary: "Malicious code injected into widely-used JavaScript library downloaded millions of times.", source: "Snyk Security", category: "Breach", url: "https://snyk.io" },
-  { title: "AI-Powered Phishing Attacks Bypass Traditional Email Filters", summary: "Researchers demonstrate how large language models can craft highly convincing phishing emails.", source: "Dark Reading", category: "Zero-Day", url: "https://www.darkreading.com" },
-  { title: "NIST Releases Updated Cybersecurity Framework 2.0", summary: "Major update includes enhanced supply chain risk management and governance guidance.", source: "NIST", category: "Policy", url: "https://www.nist.gov" },
-  { title: "Major Cloud Provider Suffers Data Breach Affecting Millions", summary: "Unauthorized access to customer data discovered during routine security audit.", source: "SecurityWeek", category: "Breach", url: "https://www.securityweek.com" },
-  { title: "New Ransomware Strain Targets Industrial Control Systems", summary: "Critical infrastructure at risk as threat actors develop ICS-specific malware.", source: "ICS-CERT", category: "Ransomware", url: "https://www.cisa.gov/ics" },
-  { title: "Browser Extension Vulnerabilities Expose Millions to Attack", summary: "Popular browser extensions found to have critical security flaws allowing data theft.", source: "BleepingComputer", category: "Zero-Day", url: "https://www.bleepingcomputer.com" },
-  { title: "State-Sponsored APT Group Targets Defense Contractors", summary: "Nation-state actors conduct sophisticated espionage campaign against aerospace industry.", source: "Mandiant", category: "APT", url: "https://www.mandiant.com" },
-  { title: "Cryptocurrency Exchange Loses $100M in Hack", summary: "Hot wallet compromise leads to massive theft of customer funds.", source: "CoinDesk", category: "Breach", url: "https://www.coindesk.com" },
+
+const rssParser = new Parser({
+  timeout: 15000,
+  headers: { "User-Agent": "STBCybersecurity/1.0 ThreatIntelligence" },
+  maxRedirects: 3,
+});
+
+interface RSSFeedConfig {
+  name: string;
+  url: string;
+  category: string;
+}
+
+const CYBERSECURITY_RSS_FEEDS: RSSFeedConfig[] = [
+  { name: "BleepingComputer", url: "https://www.bleepingcomputer.com/feed/", category: "Cybersecurity" },
+  { name: "The Hacker News", url: "https://feeds.feedburner.com/TheHackersNews", category: "Cybersecurity" },
+  { name: "Krebs on Security", url: "https://krebsonsecurity.com/feed/", category: "Cybersecurity" },
+  { name: "CISA Alerts", url: "https://www.cisa.gov/cybersecurity-advisories/all.xml", category: "Advisory" },
+  { name: "SANS ISC", url: "https://isc.sans.edu/rssfeed.xml", category: "Incident Response" },
+  { name: "Dark Reading", url: "https://www.darkreading.com/rss.xml", category: "Cybersecurity" },
+  { name: "SecurityWeek", url: "https://www.securityweek.com/feed/", category: "Cybersecurity" },
+  { name: "Naked Security", url: "https://nakedsecurity.sophos.com/feed/", category: "Cybersecurity" },
+  { name: "The Record", url: "https://therecord.media/feed", category: "Cybersecurity" },
+  { name: "Graham Cluley", url: "https://grahamcluley.com/feed/", category: "Cybersecurity" },
+  { name: "Infosecurity Magazine", url: "https://www.infosecurity-magazine.com/rss/news/", category: "Cybersecurity" },
 ];
 
-export async function generateNewsData(): Promise<number> {
+function categorizeArticle(title: string, summary: string): string {
+  const text = `${title} ${summary}`.toLowerCase();
+  if (text.includes("ransomware") || text.includes("ransom")) return "Ransomware";
+  if (text.includes("zero-day") || text.includes("zero day") || text.includes("0-day")) return "Zero-Day";
+  if (text.includes("breach") || text.includes("leak") || text.includes("exposed")) return "Breach";
+  if (text.includes("vulnerability") || text.includes("cve-") || text.includes("patch")) return "Vulnerability";
+  if (text.includes("malware") || text.includes("trojan") || text.includes("botnet")) return "Malware";
+  if (text.includes("phishing") || text.includes("social engineering")) return "Phishing";
+  if (text.includes("apt") || text.includes("nation-state") || text.includes("espionage")) return "APT";
+  if (text.includes("policy") || text.includes("regulation") || text.includes("compliance") || text.includes("nist") || text.includes("gdpr")) return "Policy";
+  if (text.includes("incident") || text.includes("attack") || text.includes("exploit")) return "Incident";
+  return "Cybersecurity";
+}
+
+function stripHtml(html: string): string {
+  return html
+    .replace(/<[^>]*>/g, "")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function fetchRSSFeed(feed: RSSFeedConfig): Promise<number> {
   try {
-    log.debug("Generating cybersecurity news...");
-    
-    const existingNews = await storage.getNews(50);
-    
-    if (existingNews.length < 10) {
-      for (let i = 0; i < CYBERSECURITY_NEWS.length; i++) {
-        const article = CYBERSECURITY_NEWS[i];
-        
-        await storage.createNews({
-          title: article.title,
-          summary: article.summary,
-          source: article.source,
-          sourceUrl: article.url,
-          category: article.category,
-          tags: article.category.toLowerCase(),
-          publishedAt: new Date(Date.now() - i * 4 * 60 * 60 * 1000),
+    const parsed = await rssParser.parseURL(feed.url);
+    let newCount = 0;
+
+    const items = (parsed.items || []).slice(0, 15);
+
+    for (const item of items) {
+      if (!item.title || !item.link) continue;
+
+      const title = stripHtml(item.title).slice(0, 500);
+      const rawSummary = item.contentSnippet || item.content || item.summary || "";
+      const summary = stripHtml(rawSummary).slice(0, 1000);
+      const category = categorizeArticle(title, summary);
+      const publishedAt = item.pubDate ? new Date(item.pubDate) : new Date();
+
+      if (isNaN(publishedAt.getTime())) continue;
+
+      try {
+        const result = await storage.upsertNews({
+          title,
+          summary: summary || null,
+          source: feed.name,
+          sourceUrl: item.link,
+          category,
+          tags: category.toLowerCase(),
+          publishedAt,
         });
+        if (result.isNew) newCount++;
+      } catch {
+        // skip individual article errors
       }
     }
-    
-    log.debug(`News data ready`);
-    return CYBERSECURITY_NEWS.length;
+
+    return newCount;
   } catch (error) {
-    log.error("Error:", error);
+    log.debug(`RSS feed ${feed.name} fetch failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    return 0;
+  }
+}
+
+export async function fetchCybersecurityNews(): Promise<number> {
+  try {
+    log.debug("Fetching cybersecurity news from RSS feeds...");
+    let totalNew = 0;
+    const feedResults: string[] = [];
+
+    for (const feed of CYBERSECURITY_RSS_FEEDS) {
+      const count = await fetchRSSFeed(feed);
+      totalNew += count;
+      if (count > 0) feedResults.push(`${feed.name}:${count}`);
+      await delay(500);
+    }
+
+    if (totalNew > 0) {
+      log.info(`Cybersecurity news: ${totalNew} new articles from ${feedResults.length} feeds [${feedResults.join(", ")}]`);
+    } else {
+      log.debug("Cybersecurity news: no new articles (all up to date)");
+    }
+
+    return totalNew;
+  } catch (error) {
+    log.warn(`News fetch failed: ${error instanceof Error ? error.message : "Unknown error"}`);
     return 0;
   }
 }
@@ -3194,10 +3274,10 @@ export async function fetchAllData(): Promise<void> {
   await delay(1000);
   
   // ===========================================
-  // RANSOMWARE & NEWS DATA (from ransomware.live)
+  // RANSOMWARE & NEWS DATA
   // ===========================================
   try { scraperLog.recordFeed("Ransomware", await fetchRansomwareData()); } catch(e) { scraperLog.recordError("Ransomware", e); }
-  try { scraperLog.recordFeed("News", await generateNewsData()); } catch(e) { scraperLog.recordError("News", e); }
+  try { scraperLog.recordFeed("News", await fetchCybersecurityNews()); } catch(e) { scraperLog.recordError("News", e); }
   
   scraperLog.endCycle();
 }

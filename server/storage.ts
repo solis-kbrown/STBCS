@@ -101,6 +101,7 @@ export interface IStorage {
   getNews(limit?: number, offset?: number, category?: string): Promise<NewsArticle[]>;
   getNewsById(id: string): Promise<NewsArticle | undefined>;
   createNews(article: InsertNews): Promise<NewsArticle>;
+  upsertNews(article: InsertNews): Promise<{ article: NewsArticle; isNew: boolean }>;
   getNewsCount(): Promise<number>;
   
   // Malicious IPs
@@ -553,6 +554,27 @@ export class DatabaseStorage implements IStorage {
   async createNews(article: InsertNews): Promise<NewsArticle> {
     const [created] = await db.insert(newsArticles).values(article).returning();
     return created;
+  }
+
+  async upsertNews(article: InsertNews): Promise<{ article: NewsArticle; isNew: boolean }> {
+    if (article.sourceUrl) {
+      const [existing] = await db.select().from(newsArticles)
+        .where(eq(newsArticles.sourceUrl, article.sourceUrl))
+        .limit(1);
+      if (existing) {
+        return { article: existing, isNew: false };
+      }
+    }
+    if (article.title) {
+      const [existing] = await db.select().from(newsArticles)
+        .where(eq(newsArticles.title, article.title))
+        .limit(1);
+      if (existing) {
+        return { article: existing, isNew: false };
+      }
+    }
+    const [created] = await db.insert(newsArticles).values(article).returning();
+    return { article: created, isNew: true };
   }
 
   async getNewsCount(): Promise<number> {
