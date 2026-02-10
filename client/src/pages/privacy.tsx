@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Shield } from "lucide-react";
 
 export default function Privacy() {
-  useDocumentTitle("Privacy Policy | STB Cybersecurity");
+  useDocumentTitle("Privacy Policy | STB Cybersecurity", "Privacy policy for STB Cybersecurity. Learn how we collect, use, and protect your data across our threat intelligence platform and security services.");
 
   return (
     <Layout>

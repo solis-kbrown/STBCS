@@ -129,34 +129,186 @@ export async function registerRoutes(
     try {
       const today = new Date().toISOString().split("T")[0];
       const actors = await storage.getThreatActors(500);
+      const uniqueNames = new Set<string>();
       const groupEntries = (actors || [])
-        .filter((a: any) => a.name)
-        .map((a: any) => `  <url>\n    <loc>https://www.stbcybersecurity.com/group/${encodeURIComponent(a.name)}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>weekly</changefreq>\n    <priority>0.7</priority>\n  </url>`)
+        .filter((a: any) => {
+          if (!a.name || uniqueNames.has(a.name.toLowerCase())) return false;
+          uniqueNames.add(a.name.toLowerCase());
+          return true;
+        })
+        .map((a: any) => `  <url>
+    <loc>https://www.stbcybersecurity.com/group/${encodeURIComponent(a.name)}</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>`)
         .join("\n");
 
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://www.stbcybersecurity.com/</loc><lastmod>${today}</lastmod><changefreq>hourly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://www.stbcybersecurity.com/search</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.9</priority></url>
-  <url><loc>https://www.stbcybersecurity.com/tools</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://www.stbcybersecurity.com/ransomware</loc><lastmod>${today}</lastmod><changefreq>hourly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://www.stbcybersecurity.com/exploits</loc><lastmod>${today}</lastmod><changefreq>hourly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://www.stbcybersecurity.com/threat-feeds</loc><lastmod>${today}</lastmod><changefreq>hourly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.stbcybersecurity.com/news</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.stbcybersecurity.com/alerts</loc><lastmod>${today}</lastmod><changefreq>daily</changefreq><priority>0.7</priority></url>
-  <url><loc>https://www.stbcybersecurity.com/support</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://www.stbcybersecurity.com/privacy</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://www.stbcybersecurity.com/terms</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.5</priority></url>
-  <url><loc>https://www.stbcybersecurity.com/api-docs</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://www.stbcybersecurity.com/logos</loc><lastmod>${today}</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
+        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+
+  <url>
+    <loc>https://www.stbcybersecurity.com/</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <url>
+    <loc>https://www.stbcybersecurity.com/ransomware</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.stbcybersecurity.com/exploits</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.stbcybersecurity.com/tools</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.stbcybersecurity.com/search</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://www.stbcybersecurity.com/threat-feeds</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.stbcybersecurity.com/news</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.stbcybersecurity.com/support</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://www.stbcybersecurity.com/alerts</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://www.stbcybersecurity.com/api-docs</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://www.stbcybersecurity.com/privacy</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <url>
+    <loc>https://www.stbcybersecurity.com/terms</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <url>
+    <loc>https://www.stbcybersecurity.com/logos</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
 ${groupEntries}
 </urlset>`;
-      res.setHeader("Content-Type", "application/xml");
+      res.setHeader("Content-Type", "application/xml; charset=utf-8");
       res.setHeader("Cache-Control", "public, max-age=3600");
+      res.setHeader("X-Robots-Tag", "noindex");
       res.send(xml);
     } catch {
       res.status(500).send("Error generating sitemap");
     }
+  });
+
+  app.get("/robots.txt", (_req: Request, res: Response) => {
+    const txt = `# STB Cybersecurity - robots.txt
+# https://www.stbcybersecurity.com
+
+User-agent: *
+Allow: /
+Allow: /tools
+Allow: /ransomware
+Allow: /exploits
+Allow: /threat-feeds
+Allow: /news
+Allow: /search
+Allow: /support
+Allow: /privacy
+Allow: /terms
+Allow: /api-docs
+Allow: /alerts
+Allow: /logos
+Allow: /group/
+
+Disallow: /api/
+Disallow: /admin/
+Disallow: /messages
+Disallow: /style-preview
+
+Crawl-delay: 1
+
+Sitemap: https://www.stbcybersecurity.com/sitemap.xml
+
+User-agent: Googlebot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+
+User-agent: Bingbot
+Allow: /
+Disallow: /api/
+Disallow: /admin/
+`;
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.send(txt);
+  });
+
+  app.get("/.well-known/security.txt", (_req: Request, res: Response) => {
+    const txt = `Contact: mailto:security@stbcybersecurity.com
+Contact: mailto:info@stbcybersecurity.com
+Contact: tel:+1-855-782-1987
+Expires: 2027-02-10T00:00:00.000Z
+Preferred-Languages: en
+Canonical: https://www.stbcybersecurity.com/.well-known/security.txt
+Policy: https://www.stbcybersecurity.com/privacy
+Hiring: https://www.stbcybersecurity.com/support
+`;
+    res.setHeader("Content-Type", "text/plain; charset=utf-8");
+    res.setHeader("Cache-Control", "public, max-age=86400");
+    res.send(txt);
   });
 
   // Cookie parser for session tokens

@@ -297,7 +297,7 @@ function NewConversation({ onStart }: { onStart: (phone: string) => void }) {
 }
 
 export default function Messages() {
-  useDocumentTitle("Messages | STB Cybersecurity");
+  useDocumentTitle("Messages | STB Cybersecurity", "Secure two-way SMS messaging with STB Cybersecurity for Business subscribers. Direct communication for incident response and threat alerts.");
   const { user, isAuthenticated, isBusiness } = useAuth();
   const [selectedPhone, setSelectedPhone] = useState<string | null>(null);
   const [showNewConversation, setShowNewConversation] = useState(false);

@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { useDocumentTitle } from "@/lib/use-document-title";
 
 const logos = [
   { id: 1, name: "Shield Circuit", style: "Minimalist shield with digital circuit patterns", file: "logo-01-shield-circuit.png" },
@@ -24,6 +25,7 @@ const logos = [
 ];
 
 export default function LogoGallery() {
+  useDocumentTitle("Brand Assets & Logo Gallery | STB Cybersecurity", "Official STB Cybersecurity brand assets, logo designs, and visual identity gallery for media and partners.");
   return (
     <div className="min-h-screen bg-slate-950 p-8">
       <div className="max-w-7xl mx-auto">

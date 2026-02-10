@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { FileText } from "lucide-react";
 
 export default function Terms() {
-  useDocumentTitle("Terms of Service | STB Cybersecurity");
+  useDocumentTitle("Terms of Service | STB Cybersecurity", "Terms of Service for STB Cybersecurity threat intelligence platform, security tools, and cybersecurity consulting services.");
 
   return (
     <Layout>
