@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Heart, Shield, Users, Zap, Check, Coffee, Rocket, Building2, ExternalLink, Loader2, CreditCard, Lock, Star, Quote } from "lucide-react";
+import { Heart, Shield, Users, Zap, Check, Coffee, Rocket, Building2, ExternalLink, Loader2, CreditCard, Lock } from "lucide-react";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -463,100 +463,20 @@ export default function SupportPage() {
         <Card className="border-white/5 bg-card/50">
           <CardHeader>
             <CardTitle className="text-xl text-white flex items-center gap-2">
-              <Quote className="h-5 w-5 text-orange-400" />
-              What Our Clients Say
-            </CardTitle>
-            <CardDescription>Reviews from cybersecurity professionals and business clients</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                <div className="flex items-center gap-1 mb-2">
-                  {[1,2,3,4,5].map(i => <Star key={i} className={`h-4 w-4 ${i <= 5 ? 'text-orange-400 fill-orange-400' : 'text-zinc-600'}`} />)}
-                </div>
-                <p className="text-zinc-300 text-sm mb-3">
-                  "STBCS handled our ransomware incident with incredible professionalism. Their team worked through the night to get us back online. The threat intel platform they provide is now part of our daily security operations."
-                </p>
-                <p className="text-zinc-500 text-xs">— Marcus T., IT Director, Manufacturing</p>
-              </div>
-
-              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                <div className="flex items-center gap-1 mb-2">
-                  {[1,2,3,4,5].map(i => <Star key={i} className={`h-4 w-4 ${i <= 4 ? 'text-orange-400 fill-orange-400' : 'text-zinc-600'}`} />)}
-                </div>
-                <p className="text-zinc-300 text-sm mb-3">
-                  "The free tools alone are worth bookmarking. We use the IP lookup and threat database daily. Upgraded to Pro for the advanced scanner and watchlist alerts. Solid platform, responsive team."
-                </p>
-                <p className="text-zinc-500 text-xs">— Sarah K., Security Analyst</p>
-              </div>
-
-              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                <div className="flex items-center gap-1 mb-2">
-                  {[1,2,3,4,5].map(i => <Star key={i} className={`h-4 w-4 ${i <= 5 ? 'text-orange-400 fill-orange-400' : 'text-zinc-600'}`} />)}
-                </div>
-                <p className="text-zinc-300 text-sm mb-3">
-                  "After a breach, STBCS came in and handled everything from containment to recovery. They explained technical concepts in ways our leadership could understand. Highly recommend for any SMB without a dedicated security team."
-                </p>
-                <p className="text-zinc-500 text-xs">— David R., COO, Healthcare Services</p>
-              </div>
-
-              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                <div className="flex items-center gap-1 mb-2">
-                  {[1,2,3,4,5].map(i => <Star key={i} className={`h-4 w-4 ${i <= 4 ? 'text-orange-400 fill-orange-400' : 'text-zinc-600'}`} />)}
-                </div>
-                <p className="text-zinc-300 text-sm mb-3">
-                  "Been following STBCS since they launched. The ransomware tracking and CVE alerts keep me informed on threats affecting our sector. Good value for the Pro tier pricing."
-                </p>
-                <p className="text-zinc-500 text-xs">— Jennifer L., CISO, Financial Services</p>
-              </div>
-
-              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                <div className="flex items-center gap-1 mb-2">
-                  {[1,2,3,4,5].map(i => <Star key={i} className={`h-4 w-4 ${i <= 4 ? 'text-orange-400 fill-orange-400' : 'text-zinc-600'}`} />)}
-                </div>
-                <p className="text-zinc-300 text-sm mb-3">
-                  "Our MSP uses STBCS for threat intelligence across multiple client environments. The API access and export features save us hours of manual work each week."
-                </p>
-                <p className="text-zinc-500 text-xs">— Chris M., MSP Owner</p>
-              </div>
-
-              <div className="p-4 rounded-lg bg-white/5 border border-white/10">
-                <div className="flex items-center gap-1 mb-2">
-                  {[1,2,3,4,5].map(i => <Star key={i} className={`h-4 w-4 ${i <= 5 ? 'text-orange-400 fill-orange-400' : 'text-zinc-600'}`} />)}
-                </div>
-                <p className="text-zinc-300 text-sm mb-3">
-                  "Called the emergency hotline at 2AM during an active incident. Someone picked up immediately and walked us through containment. That kind of response is rare."
-                </p>
-                <p className="text-zinc-500 text-xs">— Robert H., Network Administrator</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-white/5 bg-card/50">
-          <CardHeader>
-            <CardTitle className="text-xl text-white flex items-center gap-2">
               <Heart className="h-5 w-5 text-red-400" />
               Our Supporters
             </CardTitle>
             <CardDescription>Thank you to everyone who helps keep STBCS running</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-wrap gap-2">
-              {[
-                "Alex Mercer", "Jordan Hayes", "Morgan Chen", "Taylor Brooks", "Casey Reed",
-                "Drew Patterson", "Jamie Ortiz", "Riley Nguyen", "Avery Thompson", "Quinn Davis",
-                "Cameron Walsh", "Blake Sullivan", "Hayden Foster", "Sydney Kim", "Parker James",
-                "Logan Mitchell", "Reese Anderson", "Dakota Cruz", "Finley Moore", "Emerson Lee"
-              ].map(name => (
-                <Badge key={name} variant="outline" className="bg-white/5 border-white/10 text-zinc-400">
-                  {name}
-                </Badge>
-              ))}
+            <div className="text-center py-6 space-y-3">
+              <p className="text-zinc-300 text-sm">
+                Be one of the first to support STB Cybersecurity and get your name featured here.
+              </p>
+              <p className="text-xs text-zinc-500">
+                Become a Supporter for $4.99/month and help us keep free threat intelligence accessible to everyone.
+              </p>
             </div>
-            <p className="text-xs text-zinc-500 mt-4 text-center">
-              Want your name listed? Become a Supporter for $4.99/month.
-            </p>
           </CardContent>
         </Card>
 
