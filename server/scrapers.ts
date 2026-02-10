@@ -112,6 +112,7 @@ async function secureFetch(url: string, options: RequestInit = {}): Promise<Resp
 const NVD_API_URL = "https://services.nvd.nist.gov/rest/json/cves/2.0";
 
 interface NVDResponse {
+  totalResults?: number;
   vulnerabilities: Array<{
     cve: {
       id: string;
@@ -127,65 +128,100 @@ interface NVDResponse {
   }>;
 }
 
+async function fetchNVDPage(params: URLSearchParams, startIndex: number): Promise<NVDResponse | null> {
+  const pageParams = new URLSearchParams(params);
+  pageParams.set("startIndex", String(startIndex));
+  const response = await secureFetch(`${NVD_API_URL}?${pageParams}`);
+  if (!response.ok) {
+    log.debug(`NVD API returned ${response.status} for startIndex=${startIndex}`);
+    return null;
+  }
+  return response.json() as Promise<NVDResponse>;
+}
+
+async function processNVDVulnerabilities(vulnerabilities: NVDResponse["vulnerabilities"]): Promise<number> {
+  let count = 0;
+  for (const vuln of vulnerabilities) {
+    const cve = vuln.cve;
+    const description = cve.descriptions.find(d => d.lang === "en")?.value || "";
+
+    const cvssMetric = cve.metrics?.cvssMetricV31?.[0] || cve.metrics?.cvssMetricV30?.[0];
+    const score = cvssMetric?.cvssData.baseScore || 0;
+    const severity = cvssMetric?.cvssData.baseSeverity || "UNKNOWN";
+
+    let platform = "Various";
+    if (cve.configurations?.[0]?.nodes?.[0]?.cpeMatch?.[0]?.criteria) {
+      const cpe = cve.configurations[0].nodes[0].cpeMatch[0].criteria;
+      const parts = cpe.split(":");
+      if (parts.length >= 5) {
+        platform = `${parts[3]} ${parts[4]}`.replace(/_/g, " ");
+      }
+    }
+
+    const cveData: InsertCve = {
+      id: cve.id,
+      cveId: cve.id,
+      description,
+      severity,
+      score,
+      platform,
+      publishedDate: new Date(cve.published),
+      lastModified: new Date(cve.lastModified),
+      exploitAvailable: score >= 7.0,
+      status: score >= 9.0 ? "Active" : score >= 7.0 ? "PoC Available" : "Patched",
+    };
+
+    await storage.upsertCve(cveData);
+    count++;
+  }
+  return count;
+}
+
 export async function fetchNVDCves(): Promise<number> {
   try {
     log.debug("Fetching CVEs from National Vulnerability Database...");
-    
+
     const now = new Date();
-    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    
-    const params = new URLSearchParams({
-      pubStartDate: oneWeekAgo.toISOString(),
+    const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+    let totalCount = 0;
+
+    const pubParams = new URLSearchParams({
+      pubStartDate: threeDaysAgo.toISOString(),
       pubEndDate: now.toISOString(),
-      resultsPerPage: "100",
+      resultsPerPage: "200",
     });
-    
-    const response = await secureFetch(`${NVD_API_URL}?${params}`);
-    
-    if (!response.ok) {
-      throw new Error(`NVD API error: ${response.status}`);
-    }
-    
-    const data: NVDResponse = await response.json();
-    let count = 0;
-    
-    for (const vuln of data.vulnerabilities) {
-      const cve = vuln.cve;
-      const description = cve.descriptions.find(d => d.lang === "en")?.value || "";
-      
-      const cvssMetric = cve.metrics?.cvssMetricV31?.[0] || cve.metrics?.cvssMetricV30?.[0];
-      const score = cvssMetric?.cvssData.baseScore || 0;
-      const severity = cvssMetric?.cvssData.baseSeverity || "UNKNOWN";
-      
-      let platform = "Various";
-      if (cve.configurations?.[0]?.nodes?.[0]?.cpeMatch?.[0]?.criteria) {
-        const cpe = cve.configurations[0].nodes[0].cpeMatch[0].criteria;
-        const parts = cpe.split(":");
-        if (parts.length >= 5) {
-          platform = `${parts[3]} ${parts[4]}`.replace(/_/g, " ");
-        }
+
+    const pubData = await fetchNVDPage(pubParams, 0);
+    if (pubData) {
+      totalCount += await processNVDVulnerabilities(pubData.vulnerabilities);
+      const totalResults = pubData.totalResults || 0;
+      if (totalResults > 200) {
+        await delay(6500);
+        const page2 = await fetchNVDPage(pubParams, 200);
+        if (page2) totalCount += await processNVDVulnerabilities(page2.vulnerabilities);
       }
-      
-      const cveData: InsertCve = {
-        id: cve.id,
-        cveId: cve.id,
-        description,
-        severity,
-        score,
-        platform,
-        publishedDate: new Date(cve.published),
-        lastModified: new Date(cve.lastModified),
-        exploitAvailable: score >= 7.0,
-        status: score >= 9.0 ? "Active" : score >= 7.0 ? "PoC Available" : "Patched",
-      };
-      
-      await storage.upsertCve(cveData);
-      count++;
     }
-    
-    log.debug(`Processed ${count} CVEs`);
+
+    await delay(6500);
+
+    const modParams = new URLSearchParams({
+      lastModStartDate: threeDaysAgo.toISOString(),
+      lastModEndDate: now.toISOString(),
+      resultsPerPage: "200",
+    });
+
+    const modData = await fetchNVDPage(modParams, 0);
+    if (modData) {
+      totalCount += await processNVDVulnerabilities(modData.vulnerabilities);
+    }
+
+    if (totalCount > 0) {
+      log.info(`NVD: ${totalCount} CVEs processed (new + modified)`);
+    } else {
+      log.debug("NVD: no new CVEs in this cycle");
+    }
     await storage.updateFeedLastFetched("NVD");
-    return count;
+    return totalCount;
   } catch (error) {
     log.error("Error:", error);
     return 0;
