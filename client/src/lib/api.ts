@@ -287,11 +287,18 @@ export interface RansomwareAnalytics {
   topSectors: { name: string; count: number }[];
   topCountries: { name: string; count: number }[];
   monthlyTrend: { month: string; count: number }[];
+  dailyTrend: { date: string; count: number }[];
   totalGroups: number;
   totalVictims: number;
   totalCountries: number;
   totalSectors: number;
   activeGroupsLast30d: number;
+  newToday: number;
+  newThisWeek: number;
+  newThisMonth: number;
+  avgDailyAttacks: number;
+  topSourceApis: { name: string; count: number }[];
+  recentGroups: { name: string; victims: number; firstSeen: string | null }[];
 }
 
 export function useGroupProfile(groupName: string | undefined) {

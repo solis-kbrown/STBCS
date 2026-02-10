@@ -165,52 +165,115 @@ export default function Ransomware() {
 
         {showAnalytics && analytics && (
           <div className="space-y-4" data-testid="section-analytics">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
               <Card className="border-white/5 bg-card/40">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Target className="h-4 w-4 text-red-400" />
-                    <span className="text-xs text-zinc-400">Total Incidents</span>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Target className="h-3.5 w-3.5 text-red-400" />
+                    <span className="text-[10px] text-zinc-400">Total Victims</span>
                   </div>
-                  <p className="text-2xl font-bold text-white" data-testid="text-total-incidents">{(analytics.totalVictims || 0).toLocaleString()}</p>
+                  <p className="text-xl font-bold text-white" data-testid="text-total-incidents">{(analytics.totalVictims || 0).toLocaleString()}</p>
                 </CardContent>
               </Card>
               <Card className="border-white/5 bg-card/40">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Users className="h-4 w-4 text-orange-400" />
-                    <span className="text-xs text-zinc-400">Active Groups</span>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Users className="h-3.5 w-3.5 text-orange-400" />
+                    <span className="text-[10px] text-zinc-400">Groups Tracked</span>
                   </div>
-                  <p className="text-2xl font-bold text-white" data-testid="text-active-groups">{analytics.totalGroups || 0}</p>
+                  <p className="text-xl font-bold text-white" data-testid="text-active-groups">{analytics.totalGroups || 0}</p>
                 </CardContent>
               </Card>
               <Card className="border-white/5 bg-card/40">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <MapPin className="h-4 w-4 text-yellow-400" />
-                    <span className="text-xs text-zinc-400">Countries Hit</span>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <TrendingUp className="h-3.5 w-3.5 text-green-400" />
+                    <span className="text-[10px] text-zinc-400">Active (30d)</span>
                   </div>
-                  <p className="text-2xl font-bold text-white" data-testid="text-countries-hit">{analytics.totalCountries || analytics.topCountries?.length || 0}</p>
+                  <p className="text-xl font-bold text-white" data-testid="text-last-30-days">{analytics.activeGroupsLast30d || 0}</p>
+                  <p className="text-[9px] text-zinc-500">groups posting</p>
+                </CardContent>
+              </Card>
+              <Card className="border-red-500/20 bg-red-950/20">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Target className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+                    <span className="text-[10px] text-red-300">New Today</span>
+                  </div>
+                  <p className="text-xl font-bold text-red-400" data-testid="text-new-today">{analytics.newToday || 0}</p>
+                  <p className="text-[9px] text-red-300/50">victims posted</p>
+                </CardContent>
+              </Card>
+              <Card className="border-orange-500/20 bg-orange-950/20">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <BarChart3 className="h-3.5 w-3.5 text-orange-400" />
+                    <span className="text-[10px] text-orange-300">This Week</span>
+                  </div>
+                  <p className="text-xl font-bold text-orange-400" data-testid="text-new-week">{analytics.newThisWeek || 0}</p>
+                  <p className="text-[9px] text-orange-300/50">victims</p>
                 </CardContent>
               </Card>
               <Card className="border-white/5 bg-card/40">
-                <CardContent className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <TrendingUp className="h-4 w-4 text-green-400" />
-                    <span className="text-xs text-zinc-400">Active (30d)</span>
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <MapPin className="h-3.5 w-3.5 text-yellow-400" />
+                    <span className="text-[10px] text-zinc-400">Countries Hit</span>
                   </div>
-                  <p className="text-2xl font-bold text-white" data-testid="text-last-30-days">{analytics.activeGroupsLast30d || 0}</p>
-                  <p className="text-[10px] text-zinc-500 mt-0.5">groups w/ recent activity</p>
+                  <p className="text-xl font-bold text-white" data-testid="text-countries-hit">{analytics.totalCountries || analytics.topCountries?.length || 0}</p>
+                </CardContent>
+              </Card>
+              <Card className="border-white/5 bg-card/40">
+                <CardContent className="p-3">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <BarChart3 className="h-3.5 w-3.5 text-cyan-400" />
+                    <span className="text-[10px] text-zinc-400">Daily Avg</span>
+                  </div>
+                  <p className="text-xl font-bold text-white" data-testid="text-daily-avg">{analytics.avgDailyAttacks || 0}</p>
+                  <p className="text-[9px] text-zinc-500">attacks/day</p>
                 </CardContent>
               </Card>
             </div>
+
+            {analytics.dailyTrend && analytics.dailyTrend.length > 0 && (
+              <Card className="border-white/5 bg-card/40">
+                <CardContent className="p-4">
+                  <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-green-400" />
+                    Daily Attack Activity (Last 30 Days)
+                  </h3>
+                  <div className="flex items-end gap-[2px] h-32">
+                    {analytics.dailyTrend.map((d: { date: string; count: number }, i: number) => {
+                      const maxCount = Math.max(...analytics.dailyTrend.map((x: { count: number }) => x.count));
+                      const heightPct = maxCount > 0 ? (d.count / maxCount) * 100 : 0;
+                      const isToday = d.date === new Date().toISOString().slice(0, 10);
+                      return (
+                        <div key={d.date} className="flex-1 flex flex-col items-center gap-0.5" data-testid={`bar-daily-${i}`}>
+                          <span className="text-[8px] text-zinc-500 hidden md:block">{d.count > 0 ? d.count : ''}</span>
+                          <div 
+                            className={`w-full rounded-t transition-colors ${isToday ? 'bg-red-500 hover:bg-red-400' : 'bg-orange-500/60 hover:bg-orange-500'}`}
+                            style={{ height: `${Math.max(2, heightPct)}%` }}
+                            title={`${d.date}: ${d.count} victims posted`}
+                          />
+                          <span className="text-[7px] text-zinc-600 hidden lg:block">{d.date.slice(8, 10)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-[9px] text-zinc-600">{analytics.dailyTrend[0]?.date}</span>
+                    <span className="text-[9px] text-zinc-600">{analytics.dailyTrend[analytics.dailyTrend.length - 1]?.date}</span>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card className="border-white/5 bg-card/40">
                 <CardContent className="p-4">
                   <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
                     <Users className="h-4 w-4 text-orange-400" />
-                    Top 10 Active Groups
+                    Top 10 Most Active Groups
                   </h3>
                   <div className="space-y-2">
                     {(analytics.topGroups || []).slice(0, 10).map((g: { name: string; victims: number }, i: number) => (
@@ -266,46 +329,78 @@ export default function Ransomware() {
               </Card>
             </div>
 
-            {analytics.monthlyTrend && analytics.monthlyTrend.length > 0 && (
-              <Card className="border-white/5 bg-card/40">
-                <CardContent className="p-4">
-                  <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-400" />
-                    Attack Trend (Monthly)
-                  </h3>
-                  <div className="flex items-end gap-1 h-32">
-                    {analytics.monthlyTrend.slice(-12).map((m: { month: string; count: number }, i: number) => {
-                      const recentData = analytics.monthlyTrend.slice(-12);
-                      const maxCount = Math.max(...recentData.map((x: { count: number }) => x.count));
-                      const heightPct = maxCount > 0 ? (m.count / maxCount) * 100 : 0;
-                      return (
-                        <div key={m.month} className="flex-1 flex flex-col items-center gap-1" data-testid={`bar-month-${i}`}>
-                          <span className="text-[9px] text-zinc-500">{m.count}</span>
-                          <div 
-                            className="w-full bg-orange-500/60 rounded-t hover:bg-orange-500 transition-colors" 
-                            style={{ height: `${Math.max(2, heightPct)}%` }}
-                            title={`${m.month}: ${m.count} incidents`}
-                          />
-                          <span className="text-[8px] text-zinc-600 -rotate-45 origin-center">{m.month.slice(5, 7)}</span>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {analytics.topSectors && analytics.topSectors.length > 0 && (
+                <Card className="border-white/5 bg-card/40">
+                  <CardContent className="p-4">
+                    <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                      <Building2 className="h-4 w-4 text-blue-400" />
+                      Top Targeted Sectors
+                    </h3>
+                    <div className="space-y-2">
+                      {analytics.topSectors.slice(0, 10).map((s: { name: string; count: number }, i: number) => (
+                        <div key={s.name} className="flex items-center justify-between px-2 py-1" data-testid={`row-sector-${i}`}>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-zinc-500 w-5">{i + 1}.</span>
+                            <span className="text-sm text-white">{s.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-blue-500 rounded-full" 
+                                style={{ width: `${Math.min(100, (s.count / (analytics.topSectors?.[0]?.count || 1)) * 100)}%` }}
+                              />
+                            </div>
+                            <span className="text-xs text-zinc-400 w-8 text-right">{s.count}</span>
+                          </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
-            {analytics.topSectors && analytics.topSectors.length > 0 && (
+              {analytics.monthlyTrend && analytics.monthlyTrend.length > 0 && (
+                <Card className="border-white/5 bg-card/40">
+                  <CardContent className="p-4">
+                    <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-green-400" />
+                      Monthly Attack Trend
+                    </h3>
+                    <div className="flex items-end gap-1 h-32">
+                      {analytics.monthlyTrend.slice(-12).map((m: { month: string; count: number }, i: number) => {
+                        const recentData = analytics.monthlyTrend.slice(-12);
+                        const maxCount = Math.max(...recentData.map((x: { count: number }) => x.count));
+                        const heightPct = maxCount > 0 ? (m.count / maxCount) * 100 : 0;
+                        return (
+                          <div key={m.month} className="flex-1 flex flex-col items-center gap-1" data-testid={`bar-month-${i}`}>
+                            <span className="text-[9px] text-zinc-500">{m.count}</span>
+                            <div 
+                              className="w-full bg-orange-500/60 rounded-t hover:bg-orange-500 transition-colors" 
+                              style={{ height: `${Math.max(2, heightPct)}%` }}
+                              title={`${m.month}: ${m.count} incidents`}
+                            />
+                            <span className="text-[8px] text-zinc-600 -rotate-45 origin-center">{m.month.slice(5, 7)}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+
+            {analytics.topSourceApis && analytics.topSourceApis.length > 0 && (
               <Card className="border-white/5 bg-card/40">
                 <CardContent className="p-4">
                   <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                    <Building2 className="h-4 w-4 text-blue-400" />
-                    Top Targeted Sectors
+                    <Globe className="h-4 w-4 text-cyan-400" />
+                    Intelligence Sources
                   </h3>
                   <div className="flex flex-wrap gap-2">
-                    {analytics.topSectors.slice(0, 15).map((s: { name: string; count: number }, i: number) => (
-                      <Badge key={s.name} variant="outline" className="border-white/10 text-zinc-300 text-xs" data-testid={`badge-sector-${i}`}>
-                        {s.name} <span className="ml-1 text-orange-400">({s.count})</span>
+                    {analytics.topSourceApis.map((s: { name: string; count: number }, i: number) => (
+                      <Badge key={s.name} variant="outline" className="border-white/10 text-zinc-300 text-xs" data-testid={`badge-source-${i}`}>
+                        {s.name} <span className="ml-1 text-cyan-400">({s.count.toLocaleString()})</span>
                       </Badge>
                     ))}
                   </div>

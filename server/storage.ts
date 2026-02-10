@@ -40,11 +40,18 @@ export interface GroupAnalytics {
   topSectors: { name: string; count: number }[];
   topCountries: { name: string; count: number }[];
   monthlyTrend: { month: string; count: number }[];
+  dailyTrend: { date: string; count: number }[];
   totalGroups: number;
   totalVictims: number;
   totalCountries: number;
   totalSectors: number;
   activeGroupsLast30d: number;
+  newToday: number;
+  newThisWeek: number;
+  newThisMonth: number;
+  avgDailyAttacks: number;
+  topSourceApis: { name: string; count: number }[];
+  recentGroups: { name: string; victims: number; firstSeen: string | null }[];
 }
 
 export interface IStorage {
@@ -451,26 +458,58 @@ export class DatabaseStorage implements IStorage {
     const allIncidents = await db.select().from(ransomwareIncidents)
       .orderBy(desc(ransomwareIncidents.discoveredAt));
 
-    const groupCounts: Record<string, { victims: number; lastActive: string | null }> = {};
+    const groupCounts: Record<string, { victims: number; lastActive: string | null; firstSeen: string | null }> = {};
     const sectorCounts: Record<string, number> = {};
     const countryCounts: Record<string, number> = {};
     const monthlyCounts: Record<string, number> = {};
-    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const dailyCounts: Record<string, number> = {};
+    const sourceCounts: Record<string, number> = {};
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const ninetyDaysAgo = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
     const activeGroups = new Set<string>();
+    let newToday = 0;
+    let newThisWeek = 0;
+    let newThisMonth = 0;
 
     for (const inc of allIncidents) {
       const gn = inc.groupName;
-      if (!groupCounts[gn]) groupCounts[gn] = { victims: 0, lastActive: null };
+      if (!groupCounts[gn]) groupCounts[gn] = { victims: 0, lastActive: null, firstSeen: null };
       groupCounts[gn].victims++;
       if (!groupCounts[gn].lastActive && inc.discoveredAt) groupCounts[gn].lastActive = inc.discoveredAt.toISOString();
+      if (inc.discoveredAt) groupCounts[gn].firstSeen = inc.discoveredAt.toISOString();
       if (inc.sector) sectorCounts[inc.sector] = (sectorCounts[inc.sector] || 0) + 1;
       if (inc.country) countryCounts[inc.country] = (countryCounts[inc.country] || 0) + 1;
+      if (inc.sourceApi) sourceCounts[inc.sourceApi] = (sourceCounts[inc.sourceApi] || 0) + 1;
       if (inc.discoveredAt) {
         const month = inc.discoveredAt.toISOString().slice(0, 7);
         monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
-        if (inc.discoveredAt >= thirtyDaysAgo) activeGroups.add(gn);
+        if (inc.discoveredAt >= ninetyDaysAgo) {
+          const day = inc.discoveredAt.toISOString().slice(0, 10);
+          dailyCounts[day] = (dailyCounts[day] || 0) + 1;
+        }
+        if (inc.discoveredAt >= thirtyDaysAgo) {
+          activeGroups.add(gn);
+          newThisMonth++;
+        }
+        if (inc.discoveredAt >= sevenDaysAgo) newThisWeek++;
+        if (inc.discoveredAt.toISOString().slice(0, 10) === todayStr) newToday++;
       }
     }
+
+    const dailyTrendArr = Object.entries(dailyCounts)
+      .map(([date, count]) => ({ date, count }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+    const daysWithData = dailyTrendArr.length || 1;
+    const totalInPeriod = dailyTrendArr.reduce((s, d) => s + d.count, 0);
+
+    const recentGroups = Object.entries(groupCounts)
+      .filter(([, d]) => d.firstSeen && new Date(d.firstSeen) >= ninetyDaysAgo)
+      .map(([name, d]) => ({ name, victims: d.victims, firstSeen: d.firstSeen }))
+      .sort((a, b) => (b.firstSeen || "").localeCompare(a.firstSeen || ""))
+      .slice(0, 10);
 
     return {
       topGroups: Object.entries(groupCounts)
@@ -480,11 +519,18 @@ export class DatabaseStorage implements IStorage {
       topSectors: Object.entries(sectorCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 20),
       topCountries: Object.entries(countryCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count).slice(0, 20),
       monthlyTrend: Object.entries(monthlyCounts).map(([month, count]) => ({ month, count })).sort((a, b) => a.month.localeCompare(b.month)),
+      dailyTrend: dailyTrendArr.slice(-30),
       totalGroups: Object.keys(groupCounts).length,
       totalVictims: allIncidents.length,
       totalCountries: Object.keys(countryCounts).length,
       totalSectors: Object.keys(sectorCounts).length,
       activeGroupsLast30d: activeGroups.size,
+      newToday,
+      newThisWeek,
+      newThisMonth,
+      avgDailyAttacks: Math.round(totalInPeriod / daysWithData),
+      topSourceApis: Object.entries(sourceCounts).map(([name, count]) => ({ name, count })).sort((a, b) => b.count - a.count),
+      recentGroups,
     };
   }
 

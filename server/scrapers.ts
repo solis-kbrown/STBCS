@@ -2748,10 +2748,135 @@ export async function fetchThreatFeedsIO(): Promise<number> {
   }
 }
 
+// ============================================
+// RANSOMWATCH (joshhighet) - GitHub Raw Data
+// 16,000+ historical ransomware victim posts from dark web monitoring
+// No auth required, data hosted on GitHub
+// ============================================
+const RANSOMWATCH_POSTS_URL = "https://raw.githubusercontent.com/joshhighet/ransomwatch/main/posts.json";
+const RANSOMWATCH_GROUPS_URL = "https://raw.githubusercontent.com/joshhighet/ransomwatch/main/groups.json";
+
+interface RansomWatchPost {
+  post_title: string;
+  group_name: string;
+  discovered: string;
+}
+
+interface RansomWatchGroup {
+  name: string;
+  captcha: boolean;
+  parser: boolean;
+  javascript_render: boolean;
+  meta: string | null;
+  locations: Array<{
+    fqdn: string;
+    slug: string;
+    available: boolean;
+    updated: string | null;
+  }>;
+}
+
+export async function fetchRansomWatchVictims(): Promise<number> {
+  try {
+    log.debug("Fetching ransomware victim data from RansomWatch...");
+
+    const response = await secureFetch(RANSOMWATCH_POSTS_URL, {
+      headers: { "Accept": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error(`RansomWatch posts fetch error: ${response.status}`);
+    }
+
+    const posts: RansomWatchPost[] = await response.json();
+    log.debug(`Retrieved ${posts.length} total RansomWatch posts`);
+
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+    const recentPosts = posts.filter(p => {
+      try {
+        return new Date(p.discovered) >= thirtyDaysAgo;
+      } catch { return false; }
+    });
+
+    log.debug(`Processing ${recentPosts.length} recent posts (last 30 days)`);
+    let count = 0;
+
+    for (const post of recentPosts) {
+      if (!post.post_title || !post.group_name) continue;
+
+      const incident: InsertRansomware = {
+        victim: post.post_title.trim(),
+        groupName: post.group_name.toLowerCase().trim(),
+        discoveredAt: new Date(post.discovered),
+        description: `Victim posted by ${post.group_name} ransomware group`,
+        status: "claimed",
+        sourceApi: "ransomwatch",
+      };
+
+      try {
+        await storage.upsertRansomwareIncidentWithFlag(incident);
+        count++;
+      } catch {}
+    }
+
+    log.debug(`Processed ${count} RansomWatch victim posts`);
+    return count;
+  } catch (error) {
+    log.warn(`RansomWatch victims fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return 0;
+  }
+}
+
+export async function fetchRansomWatchGroups(): Promise<number> {
+  try {
+    log.debug("Fetching ransomware group data from RansomWatch...");
+
+    const response = await secureFetch(RANSOMWATCH_GROUPS_URL, {
+      headers: { "Accept": "application/json" },
+    });
+
+    if (!response.ok) {
+      throw new Error(`RansomWatch groups fetch error: ${response.status}`);
+    }
+
+    const groups: RansomWatchGroup[] = await response.json();
+    log.debug(`Retrieved ${groups.length} RansomWatch groups`);
+
+    let count = 0;
+    for (const group of groups) {
+      if (!group.name) continue;
+
+      const activeSites = group.locations?.filter(l => l.available)?.length || 0;
+      const totalSites = group.locations?.length || 0;
+      const onionUrls = group.locations?.map(l => l.fqdn).filter(Boolean).join(" | ") || "";
+
+      const description = group.meta || `Ransomware group tracked by RansomWatch`;
+      const infrastructure = onionUrls ? `Dark web sites: ${onionUrls} (${activeSites}/${totalSites} active)` : "";
+
+      try {
+        await storage.upsertThreatActor({
+          name: group.name.toLowerCase().trim(),
+          description,
+          type: "Ransomware Operator",
+          active: activeSites > 0,
+          infrastructure: infrastructure || undefined,
+        });
+        count++;
+      } catch {}
+    }
+
+    log.debug(`Processed ${count} RansomWatch groups`);
+    return count;
+  } catch (error) {
+    log.warn(`RansomWatch groups fetch failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    return 0;
+  }
+}
+
 // Combined function to fetch all ransomware data from ALL sources
 export async function fetchRansomwareData(): Promise<number> {
   log.debug("Starting comprehensive ransomware intelligence fetch...");
-  log.debug("Sources: ransomware.live + ransomlook.io + ransomwhere");
+  log.debug("Sources: ransomware.live + ransomlook.io + ransomwatch + ransomwhere");
   
   // Fetch Bitcoin payment data first
   await fetchRansomwhere();
@@ -2759,22 +2884,29 @@ export async function fetchRansomwareData(): Promise<number> {
   
   // Fetch from ransomware.live first
   const groupCount1 = await fetchRansomwareLiveGroups();
-  await delay(500); // Brief delay between APIs
+  await delay(500);
   const victimCount1 = await fetchRansomwareLiveVictims();
   
-  await delay(1000); // Rate limiting between sources
+  await delay(1000);
   
   // Then fetch from RansomLook.io for additional coverage
   const groupCount2 = await fetchRansomLookGroups();
   await delay(500);
   const victimCount2 = await fetchRansomLookVictims();
   await delay(500);
-  await fetchRansomLookBreaches(); // Bonus: populate breach database
+  await fetchRansomLookBreaches();
   
-  const totalGroups = groupCount1 + groupCount2;
-  const totalVictims = victimCount1 + victimCount2;
+  await delay(1000);
   
-  log.debug(`Combined totals: ${totalGroups} groups, ${totalVictims} victims from 2 sources`);
+  // RansomWatch (joshhighet) - GitHub-hosted dark web monitoring data
+  const groupCount3 = await fetchRansomWatchGroups();
+  await delay(500);
+  const victimCount3 = await fetchRansomWatchVictims();
+  
+  const totalGroups = groupCount1 + groupCount2 + groupCount3;
+  const totalVictims = victimCount1 + victimCount2 + victimCount3;
+  
+  log.debug(`Combined totals: ${totalGroups} groups, ${totalVictims} victims from 3 sources`);
   return totalVictims;
 }
 
@@ -2882,6 +3014,7 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "Pulsedive", url: "https://pulsedive.com", feedType: "ioc", updateFrequency: "15min", requiresProTier: true, description: "FREE tier available - community intel" },
     { name: "HoneyDB", url: "https://honeydb.io", feedType: "ip", updateFrequency: "15min", requiresProTier: true, description: "FREE API key - honeypot activity" },
     { name: "Ransomwhere", url: "https://ransomwhe.re", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "Bitcoin ransomware payments tracker" },
+    { name: "RansomWatch", url: "https://github.com/joshhighet/ransomwatch", feedType: "ransomware", updateFrequency: "15min", requiresProTier: false, description: "Dark web ransomware leak site monitoring with 16K+ victim posts" },
     { name: "Cisco Talos", url: "https://talosintelligence.com", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Enterprise IP blocklist from Cisco" },
     { name: "ThreatFeeds.io", url: "https://threatfeeds.io", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Aggregated threat intelligence" },
   ];
