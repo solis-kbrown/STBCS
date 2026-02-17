@@ -2362,7 +2362,9 @@ Hiring: https://www.stbcybersecurity.com/support
         }
       }
       
-      res.json({ products: Array.from(productsMap.values()) });
+      const validNames = ['STBCS Supporter', 'STBCS Pro', 'STBCS Business'];
+      const filtered = Array.from(productsMap.values()).filter((p: any) => validNames.includes(p.name));
+      res.json({ products: filtered });
     } catch (error) {
       console.error("Products error:", error);
       res.status(500).json({ error: "Failed to fetch products" });
