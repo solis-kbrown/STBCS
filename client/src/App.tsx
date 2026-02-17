@@ -23,6 +23,7 @@ const Support = lazy(() => import("@/pages/support"));
 const StylePreview = lazy(() => import("@/pages/style-preview"));
 const Privacy = lazy(() => import("@/pages/privacy"));
 const Terms = lazy(() => import("@/pages/terms"));
+const SmsTerms = lazy(() => import("@/pages/sms-terms"));
 const ApiDocs = lazy(() => import("@/pages/api-docs"));
 const GroupProfile = lazy(() => import("@/pages/group-profile"));
 const NotFound = lazy(() => import("@/pages/not-found"));
@@ -58,6 +59,7 @@ function Router() {
         <Route path="/style-preview" component={StylePreview}/>
         <Route path="/privacy" component={Privacy}/>
         <Route path="/terms" component={Terms}/>
+        <Route path="/sms-terms" component={SmsTerms}/>
         <Route path="/api-docs" component={ApiDocs}/>
         <Route component={NotFound} />
       </Switch>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 import { useAuth } from "@/lib/auth";
@@ -90,6 +90,8 @@ export default function Alerts() {
   const [activeTab, setActiveTab] = useState("notifications");
   const [newWatchItem, setNewWatchItem] = useState({ type: "company", value: "" });
   const [breachSearch, setBreachSearch] = useState("");
+  const [smsConsentDialog, setSmsConsentDialog] = useState<{ itemId: string } | null>(null);
+  const [smsConsentChecked, setSmsConsentChecked] = useState(false);
   
   const userId = user?.id?.toString() || "";
   
@@ -132,9 +134,22 @@ export default function Alerts() {
     updateWatchlistItem.mutate({ itemId, updates: { emailOnMatch: !currentValue } });
   };
 
-  const handleToggleSmsAlerts = (itemId: string, currentValue: boolean) => {
-    updateWatchlistItem.mutate({ itemId, updates: { smsOnMatch: !currentValue } });
-  };
+  const handleToggleSmsAlerts = useCallback((itemId: string, currentValue: boolean) => {
+    if (currentValue) {
+      updateWatchlistItem.mutate({ itemId, updates: { smsOnMatch: false } });
+    } else {
+      setSmsConsentDialog({ itemId });
+      setSmsConsentChecked(false);
+    }
+  }, [updateWatchlistItem]);
+
+  const handleConfirmSmsConsent = useCallback(() => {
+    if (smsConsentDialog && smsConsentChecked) {
+      updateWatchlistItem.mutate({ itemId: smsConsentDialog.itemId, updates: { smsOnMatch: true } });
+      setSmsConsentDialog(null);
+      setSmsConsentChecked(false);
+    }
+  }, [smsConsentDialog, smsConsentChecked, updateWatchlistItem]);
 
   const handleMarkRead = (notificationId: string) => {
     if (!userId) return;
@@ -579,6 +594,63 @@ export default function Alerts() {
           </TabsContent>
         </Tabs>
       </div>
+      {smsConsentDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" data-testid="dialog-sms-consent">
+          <Card className="max-w-md w-full mx-4 border-zinc-700 bg-zinc-900">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-white">
+                <MessageSquare className="h-5 w-5 text-purple-400" />
+                SMS Alerts Consent
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-zinc-400">
+                By enabling SMS alerts, you consent to receive recurring automated text messages from STB Cybersecurity at the phone number on your account via our toll-free number (855) STB-1987.
+              </p>
+              <div className="text-xs text-zinc-500 space-y-1">
+                <p>Message frequency varies based on threat activity. Message and data rates may apply.</p>
+                <p>Reply STOP to cancel at any time. Reply HELP for assistance.</p>
+                <p>Consent is not a condition of any purchase.</p>
+              </div>
+              <div className="flex items-start gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  id="sms-consent-checkbox"
+                  checked={smsConsentChecked}
+                  onChange={(e) => setSmsConsentChecked(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-zinc-600 bg-zinc-800 accent-orange-500"
+                  data-testid="checkbox-sms-consent"
+                />
+                <label htmlFor="sms-consent-checkbox" className="text-xs text-zinc-400 leading-relaxed">
+                  I agree to the{" "}
+                  <a href="/sms-terms" target="_blank" className="text-primary hover:underline">SMS Terms &amp; Conditions</a>
+                  {" "}and{" "}
+                  <a href="/privacy" target="_blank" className="text-primary hover:underline">Privacy Policy</a>
+                  . I consent to receive automated SMS threat alerts at my phone number. I understand that message and data rates may apply and that I can opt out at any time by replying STOP.
+                </label>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button
+                  variant="outline"
+                  className="flex-1 border-zinc-700"
+                  onClick={() => { setSmsConsentDialog(null); setSmsConsentChecked(false); }}
+                  data-testid="button-sms-consent-cancel"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  className="flex-1 bg-purple-600 hover:bg-purple-700"
+                  disabled={!smsConsentChecked}
+                  onClick={handleConfirmSmsConsent}
+                  data-testid="button-sms-consent-confirm"
+                >
+                  Enable SMS Alerts
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
       <Footer />
     </Layout>
   );

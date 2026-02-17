@@ -119,17 +119,35 @@ export default function Terms() {
               You agree to indemnify, defend, and hold harmless STBCS and its officers, directors, employees, and agents from any claims, damages, losses, liabilities, and expenses (including reasonable attorneys' fees) arising from: (a) your use of our services; (b) your violation of these Terms; (c) your violation of any third-party rights; or (d) your use of security tools against systems you are not authorized to test.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">11. Emergency Services</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">11. SMS/Text Messaging</h2>
+            <p className="text-muted-foreground mb-4">
+              STBCS offers SMS text messaging services through our toll-free number <a href="tel:+18557821987" className="text-primary hover:underline">(855) STB-1987</a>. By opting in to receive SMS messages, you agree to the following:
+            </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
+              <li>You expressly consent to receive recurring automated text messages from STBCS at the phone number you provide, including threat alerts, incident response communications, and service notifications</li>
+              <li>Your consent to receive SMS messages is not a condition of purchasing any goods or services</li>
+              <li>Message and data rates may apply as determined by your wireless carrier</li>
+              <li>Message frequency varies based on your alert configuration and threat activity</li>
+              <li>You may opt out at any time by replying <strong className="text-orange-400">STOP</strong> to any message, disabling SMS in your account settings, or contacting us</li>
+              <li>For help, reply <strong className="text-orange-400">HELP</strong> to any message or contact <a href="mailto:support@stbcybersecurity.com" className="text-primary hover:underline">support@stbcybersecurity.com</a></li>
+              <li>Carriers are not liable for delayed or undelivered messages</li>
+              <li>We do not sell, rent, or share your phone number or SMS opt-in data with third parties for marketing purposes</li>
+            </ul>
+            <p className="text-muted-foreground mb-4">
+              Our SMS program complies with the Telephone Consumer Protection Act (TCPA), CTIA Messaging Principles, and applicable FCC regulations. For complete SMS program details, see our <a href="/sms-terms" className="text-primary hover:underline">SMS Terms &amp; Conditions</a>.
+            </p>
+
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">12. Emergency Services</h2>
             <p className="text-muted-foreground mb-4">
               Our emergency hotline <a href="tel:+18557821987" className="text-primary hover:underline">(855) STB-1987</a> is available 24/7 for incident response inquiries. Response times and service levels depend on your subscription tier and incident severity. Emergency response services are subject to separate engagement agreements and are not guaranteed by these Terms alone.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">12. Governing Law and Jurisdiction</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">13. Governing Law and Jurisdiction</h2>
             <p className="text-muted-foreground mb-4">
               These Terms shall be governed by and construed in accordance with the laws of the United States and the State in which STBCS is organized, without regard to conflict of law principles. Any dispute arising from or relating to these Terms or our services shall be subject to the exclusive jurisdiction of the federal and state courts located in the State in which STBCS maintains its principal place of business.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">13. Dispute Resolution</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">14. Dispute Resolution</h2>
             <p className="text-muted-foreground mb-4">
               Before initiating formal legal proceedings, you agree to first contact us at <a href="mailto:legal@stbcybersecurity.com" className="text-primary hover:underline">legal@stbcybersecurity.com</a> to attempt to resolve the dispute informally within 30 days. If informal resolution is unsuccessful, either party may pursue resolution through binding arbitration administered by the American Arbitration Association (AAA) under its Commercial Arbitration Rules, or through the courts as described in Section 12.
             </p>
@@ -137,37 +155,37 @@ export default function Terms() {
               <strong className="text-white">Class Action Waiver:</strong> You agree that any dispute resolution proceedings will be conducted on an individual basis and not as a class, consolidated, or representative action.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">14. Data Processing</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">15. Data Processing</h2>
             <p className="text-muted-foreground mb-4">
               By using our services, you acknowledge that we process data as described in our <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>. For business and enterprise subscribers using our services to process data on behalf of their organizations, additional data processing terms may apply. Contact <a href="mailto:legal@stbcybersecurity.com" className="text-primary hover:underline">legal@stbcybersecurity.com</a> for a Data Processing Agreement (DPA) if required.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">15. Export Compliance</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">16. Export Compliance</h2>
             <p className="text-muted-foreground mb-4">
               You agree to comply with all applicable United States export control laws and regulations, including the Export Administration Regulations (EAR) and sanctions administered by the Office of Foreign Assets Control (OFAC). You represent that you are not located in, under the control of, or a national or resident of any country subject to United States sanctions.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">16. Termination</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">17. Termination</h2>
             <p className="text-muted-foreground mb-4">
               We may suspend or terminate your access to our services at any time, with or without cause, upon notice to you. Upon termination: (a) your right to use our services ceases immediately; (b) we may delete your account data after 30 days; and (c) all provisions of these Terms that by their nature should survive termination shall survive, including intellectual property, limitation of liability, indemnification, and dispute resolution.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">17. Severability</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">18. Severability</h2>
             <p className="text-muted-foreground mb-4">
               If any provision of these Terms is held to be invalid, illegal, or unenforceable, the remaining provisions shall continue in full force and effect. The invalid provision shall be modified to the minimum extent necessary to make it valid and enforceable.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">18. Entire Agreement</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">19. Entire Agreement</h2>
             <p className="text-muted-foreground mb-4">
-              These Terms, together with our Privacy Policy, constitute the entire agreement between you and STBCS regarding your use of our services and supersede all prior agreements and understandings, whether written or oral.
+              These Terms, together with our <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a> and <a href="/sms-terms" className="text-primary hover:underline">SMS Terms &amp; Conditions</a>, constitute the entire agreement between you and STBCS regarding your use of our services and supersede all prior agreements and understandings, whether written or oral.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">19. Modifications</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">20. Modifications</h2>
             <p className="text-muted-foreground mb-4">
               We reserve the right to modify these Terms at any time. Material changes will be communicated via email and/or a prominent notice on our Site at least 30 days before taking effect. Your continued use of our services after the effective date constitutes acceptance of the modified Terms. If you do not agree with the changes, you must stop using our services and cancel your subscription.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">20. Contact</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">21. Contact</h2>
             <p className="text-muted-foreground mb-4">
               For questions about these Terms of Service, please contact us:
             </p>

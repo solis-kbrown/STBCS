@@ -28,10 +28,12 @@ export default function Privacy() {
             <h3 className="text-lg font-semibold text-white mt-4 mb-2">1.1 Information You Provide</h3>
             <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
               <li><strong className="text-white">Account Information:</strong> Username, email address, and hashed password when you create an account</li>
+              <li><strong className="text-white">Phone Number:</strong> If you opt in to SMS alerts or two-way messaging (Business tier), we collect your mobile phone number</li>
               <li><strong className="text-white">Payment Information:</strong> Processed securely through Stripe, Inc. We never store credit card numbers, CVVs, or full card details on our servers</li>
-              <li><strong className="text-white">Communications:</strong> Information you provide when contacting us via email, phone, or support channels</li>
+              <li><strong className="text-white">Communications:</strong> Information you provide when contacting us via email, phone, SMS, or support channels</li>
               <li><strong className="text-white">Newsletter Subscriptions:</strong> Email address and content preferences</li>
               <li><strong className="text-white">Watchlist Data:</strong> Threat indicators (IPs, domains, CVEs) you choose to monitor</li>
+              <li><strong className="text-white">SMS Consent Records:</strong> Records of your opt-in and opt-out choices for SMS messaging</li>
             </ul>
 
             <h3 className="text-lg font-semibold text-white mt-4 mb-2">1.2 Information Collected Automatically</h3>
@@ -162,17 +164,34 @@ export default function Privacy() {
               We comply with the CAN-SPAM Act. All marketing and newsletter emails include clear identification of the sender, our physical address, and a one-click unsubscribe mechanism. You may opt out of non-essential emails at any time. Transactional emails (account confirmations, security alerts, incident response) may still be sent as necessary for service operation.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">12. Data Breach Notification</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">12. SMS/Text Messaging</h2>
+            <p className="text-muted-foreground mb-4">
+              If you opt in to SMS services, the following applies to your phone number and messaging data:
+            </p>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
+              <li><strong className="text-white">Phone Number Use:</strong> Your phone number is used solely to deliver threat alerts, incident response communications, and service notifications via SMS through our toll-free number (855) STB-1987</li>
+              <li><strong className="text-white">No Sharing:</strong> We do not sell, rent, lease, or share your phone number or SMS opt-in data with third parties for their marketing purposes. Phone numbers are shared only with our telecommunications service provider for the sole purpose of delivering messages</li>
+              <li><strong className="text-white">Message Logs:</strong> SMS message content and metadata are retained for service operation, compliance, and quality assurance purposes</li>
+              <li><strong className="text-white">Opt-Out Data:</strong> If you opt out, we retain your phone number solely to honor your opt-out request and prevent future messages</li>
+              <li><strong className="text-white">Data Retention:</strong> SMS message logs are retained for up to 2 years. Phone numbers are removed from active messaging lists within 24 hours of an opt-out request</li>
+              <li><strong className="text-white">TCPA Compliance:</strong> We obtain express written consent before sending automated SMS messages and comply with the Telephone Consumer Protection Act (TCPA) and all applicable FCC regulations</li>
+            </ul>
+            <p className="text-muted-foreground mb-4">
+              For complete SMS program details, including opt-out instructions and message frequency, see our <a href="/sms-terms" className="text-primary hover:underline">SMS Terms &amp; Conditions</a>.
+            </p>
+
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">13. Data Breach Notification</h2>
+
             <p className="text-muted-foreground mb-4">
               In the event of a data breach that compromises your personal information, we will notify affected users within 72 hours of discovery, in accordance with applicable state breach notification laws (including California Civil Code §1798.82 and equivalent statutes). Notification will include a description of the incident, the types of information involved, steps we are taking, and recommendations for protecting yourself.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">13. International Data</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">14. International Data</h2>
             <p className="text-muted-foreground mb-4">
               Our services are operated in the United States. If you access our Site from outside the United States, your information may be transferred to and processed in the United States, where data protection laws may differ from those in your jurisdiction. By using our services, you consent to such transfer.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">14. Third-Party Services</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">15. Third-Party Services</h2>
             <p className="text-muted-foreground mb-4">Our platform integrates with the following third-party services, each governed by their own privacy policies:</p>
             <ul className="list-disc list-inside text-muted-foreground space-y-2 mb-4">
               <li><strong className="text-white">Stripe, Inc.:</strong> Payment processing — <a href="https://stripe.com/privacy" className="text-primary hover:underline" target="_blank" rel="noopener noreferrer">stripe.com/privacy</a></li>
@@ -183,12 +202,12 @@ export default function Privacy() {
               We also aggregate publicly available threat intelligence data from government and security research sources (NVD, CISA, etc.) which does not involve personal information.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">15. Changes to This Privacy Policy</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">16. Changes to This Privacy Policy</h2>
             <p className="text-muted-foreground mb-4">
               We may update this Privacy Policy from time to time. Material changes will be communicated via email to registered users and/or a prominent notice on our Site at least 30 days before the changes take effect. Your continued use of our services after the effective date constitutes acceptance of the revised policy.
             </p>
 
-            <h2 className="text-xl font-bold text-white mt-8 mb-3">16. Contact Us</h2>
+            <h2 className="text-xl font-bold text-white mt-8 mb-3">17. Contact Us</h2>
             <p className="text-muted-foreground mb-4">
               If you have questions about this Privacy Policy or wish to exercise your privacy rights, please contact us:
             </p>

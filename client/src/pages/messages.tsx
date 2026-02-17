@@ -236,6 +236,9 @@ function MessageThread({
             <Send className="h-4 w-4" />
           </Button>
         </div>
+        <p className="text-[10px] text-zinc-600 mt-1.5">
+          SMS via (855) STB-1987. Msg &amp; data rates may apply. <a href="/sms-terms" className="text-orange-400/60 hover:underline">SMS Terms</a>
+        </p>
       </div>
     </div>
   );
@@ -244,10 +247,11 @@ function MessageThread({
 function NewConversation({ onStart }: { onStart: (phone: string) => void }) {
   const [phone, setPhone] = useState("");
   const [message, setMessage] = useState("");
+  const [smsConsent, setSmsConsent] = useState(false);
   const sendSms = useSendSms();
 
   const handleSend = () => {
-    if (!phone.trim() || !message.trim()) return;
+    if (!phone.trim() || !message.trim() || !smsConsent) return;
     sendSms.mutate(
       { to: phone.trim(), content: message.trim() },
       {
@@ -282,9 +286,26 @@ function NewConversation({ onStart }: { onStart: (phone: string) => void }) {
             data-testid="input-new-message"
           />
         </div>
+        <div className="flex items-start gap-2 p-2 bg-zinc-800/30 rounded-lg">
+          <input
+            type="checkbox"
+            id="sms-messaging-consent"
+            checked={smsConsent}
+            onChange={(e) => setSmsConsent(e.target.checked)}
+            className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-800 accent-orange-500"
+            data-testid="checkbox-sms-messaging-consent"
+          />
+          <label htmlFor="sms-messaging-consent" className="text-[11px] text-zinc-500 leading-relaxed">
+            I agree to the{" "}
+            <a href="/sms-terms" target="_blank" className="text-orange-400/70 hover:underline">SMS Terms &amp; Conditions</a>
+            {" "}and{" "}
+            <a href="/privacy" target="_blank" className="text-orange-400/70 hover:underline">Privacy Policy</a>
+            . I consent to two-way SMS communication via (855) STB-1987. Message and data rates may apply. Reply STOP to opt out. Reply HELP for help.
+          </label>
+        </div>
         <Button
           onClick={handleSend}
-          disabled={!phone.trim() || !message.trim() || sendSms.isPending}
+          disabled={!phone.trim() || !message.trim() || !smsConsent || sendSms.isPending}
           className="w-full bg-orange-500 hover:bg-orange-600"
           data-testid="button-start-conversation"
         >

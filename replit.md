@@ -88,3 +88,11 @@ Preferred communication style: Simple, everyday language.
 
 ### Payment Gateway
 - Stripe (for subscriptions and donations, uses Stripe-hosted checkout pages and webhooks).
+
+### Security & US Compliance
+- **Security Headers**: CSP, HSTS (preload), X-Frame-Options DENY, X-Content-Type-Options, Referrer-Policy, Permissions-Policy. X-Powered-By disabled.
+- **Cookies**: All cookies httpOnly, secure, sameSite=lax. Session tokens never in API JSON responses.
+- **Rate Limiting**: Auth: 10/15min. General API: 100/min. Tools: 10/min (free), 60/min (pro).
+- **Consent Flows**: Signup (Terms+Privacy+age 18+), Subscriptions (Terms+Privacy+recurring billing), Donations (Terms+Privacy+non-refundable), Newsletter (Privacy consent checkbox), SMS alerts (TCPA consent with SMS Terms+Privacy), Two-way SMS messaging (consent checkbox before first message).
+- **Legal Pages**: Privacy Policy (CCPA/CPRA, COPPA, CAN-SPAM, SMS/TCPA, data breach 72hr, Do Not Track). Terms of Service (DMCA, SMS/TCPA, governing law, AAA arbitration, export compliance). SMS Terms & Conditions (TCPA, CTIA, STOP/HELP, carrier disclaimers, data rates, message frequency).
+- **SMS Compliance**: Dedicated /sms-terms page. TCPA express written consent required via checkbox before enabling SMS alerts or sending SMS. STOP/HELP keywords documented. Carrier liability disclaimers. "Consent not required to purchase" disclosure.
