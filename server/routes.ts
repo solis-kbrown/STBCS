@@ -49,6 +49,15 @@ const strictLimiter = rateLimit({
   validate: { xForwardedForHeader: false }, // Trust proxy setup handled in Express config
 });
 
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10, // 10 auth attempts per 15 minutes per IP
+  message: { error: "Too many authentication attempts. Please try again in 15 minutes." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
+});
+
 const freeToolsLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 10, // Free users: 10 tool requests per minute
@@ -117,14 +126,6 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
 
-  app.use((_req: Request, res: Response, next: Function) => {
-    res.setHeader("X-Content-Type-Options", "nosniff");
-    res.setHeader("X-Frame-Options", "SAMEORIGIN");
-    res.setHeader("X-XSS-Protection", "1; mode=block");
-    res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
-    res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
-    next();
-  });
 
   app.get("/sitemap.xml", async (_req: Request, res: Response) => {
     try {
@@ -327,7 +328,7 @@ Hiring: https://www.stbcybersecurity.com/support
   // ===== AUTH ROUTES =====
   
   // Sign up
-  app.post("/api/auth/signup", strictLimiter, async (req: Request, res: Response) => {
+  app.post("/api/auth/signup", authLimiter, async (req: Request, res: Response) => {
     try {
       const data = signupSchema.parse(req.body);
       
@@ -361,12 +362,12 @@ Hiring: https://www.stbcybersecurity.com/support
         expiresAt: getSessionExpiry(),
       });
       
-      // Set cookie
       res.cookie("session_token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         sameSite: "lax",
         maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        path: "/",
       });
       
       res.json({
@@ -376,7 +377,6 @@ Hiring: https://www.stbcybersecurity.com/support
           email: user.email,
           tier: user.tier || "free",
         },
-        token,
       });
     } catch (error) {
       if (error instanceof z.ZodError) {
@@ -389,7 +389,7 @@ Hiring: https://www.stbcybersecurity.com/support
   });
 
   // Login
-  app.post("/api/auth/login", strictLimiter, async (req: Request, res: Response) => {
+  app.post("/api/auth/login", authLimiter, async (req: Request, res: Response) => {
     try {
       const data = loginSchema.parse(req.body);
       
@@ -419,12 +419,12 @@ Hiring: https://www.stbcybersecurity.com/support
         expiresAt: getSessionExpiry(),
       });
       
-      // Set cookie
       res.cookie("session_token", token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
+        secure: true,
         sameSite: "lax",
         maxAge: 30 * 24 * 60 * 60 * 1000,
+        path: "/",
       });
       
       res.json({
@@ -434,7 +434,6 @@ Hiring: https://www.stbcybersecurity.com/support
           email: user.email,
           tier: user.tier || "free",
         },
-        token,
       });
     } catch (error) {
       if (error instanceof z.ZodError) {

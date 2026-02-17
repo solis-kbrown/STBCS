@@ -22,7 +22,8 @@ export function visitorTrackingMiddleware() {
             maxAge: 365 * 24 * 60 * 60 * 1000,
             httpOnly: true,
             sameSite: "lax",
-            secure: process.env.NODE_ENV === "production",
+            secure: true,
+            path: "/",
           });
         }
         await storage.trackVisitor(visitorHash);

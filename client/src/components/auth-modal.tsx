@@ -27,6 +27,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
 
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [signupForm, setSignupForm] = useState({ username: "", email: "", password: "", confirmPassword: "" });
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +48,11 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!agreedToTerms) {
+      toast({ title: "Please agree to the Terms of Service and Privacy Policy", variant: "destructive" });
+      return;
+    }
+
     if (signupForm.password !== signupForm.confirmPassword) {
       toast({ title: "Passwords don't match", variant: "destructive" });
       return;
@@ -64,6 +70,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
       toast({ title: "Account created!", description: "Welcome to STBCS." });
       onOpenChange(false);
       setSignupForm({ username: "", email: "", password: "", confirmPassword: "" });
+      setAgreedToTerms(false);
     } catch (error: any) {
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
     } finally {
@@ -200,10 +207,33 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                   />
                 </div>
               </div>
+
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="agree-terms"
+                  checked={agreedToTerms}
+                  onChange={(e) => setAgreedToTerms(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-orange-500 focus:ring-orange-500 accent-orange-500"
+                  data-testid="checkbox-agree-terms"
+                />
+                <label htmlFor="agree-terms" className="text-xs text-zinc-400 leading-relaxed">
+                  I agree to the{" "}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:underline">
+                    Terms of Service
+                  </a>{" "}
+                  and{" "}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:underline">
+                    Privacy Policy
+                  </a>
+                  . I confirm I am at least 18 years of age.
+                </label>
+              </div>
+
               <Button
                 type="submit"
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white"
-                disabled={isLoading}
+                disabled={isLoading || !agreedToTerms}
                 data-testid="button-signup-submit"
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Account"}

@@ -6,10 +6,11 @@ export default function Footer() {
   const [newsletterEmail, setNewsletterEmail] = useState("");
   const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [newsletterMessage, setNewsletterMessage] = useState("");
+  const [newsletterConsent, setNewsletterConsent] = useState(false);
 
   const handleNewsletterSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newsletterEmail || newsletterStatus === "loading") return;
+    if (!newsletterEmail || newsletterStatus === "loading" || !newsletterConsent) return;
     
     setNewsletterStatus("loading");
     try {
@@ -23,6 +24,7 @@ export default function Footer() {
       setNewsletterStatus("success");
       setNewsletterMessage("Subscribed! Check your inbox.");
       setNewsletterEmail("");
+      setNewsletterConsent(false);
       setTimeout(() => setNewsletterStatus("idle"), 5000);
     } catch (err: any) {
       setNewsletterStatus("error");
@@ -111,34 +113,51 @@ export default function Footer() {
               <h4 className="font-bold text-white text-sm mb-1">Threat Intelligence Newsletter</h4>
               <p className="text-xs text-muted-foreground">Get weekly security digests, CVE alerts, and ransomware updates delivered to your inbox.</p>
             </div>
-            <form onSubmit={handleNewsletterSubscribe} className="flex items-center gap-2 w-full md:w-auto">
-              <div className="relative flex-1 md:w-64">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={newsletterEmail}
-                  onChange={(e) => setNewsletterEmail(e.target.value)}
-                  required
-                  className="w-full pl-9 pr-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30"
-                  data-testid="input-newsletter-email"
-                />
+            <form onSubmit={handleNewsletterSubscribe} className="w-full md:w-auto space-y-2">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1 md:w-64">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="email"
+                    placeholder="Enter your email"
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    required
+                    className="w-full pl-9 pr-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30"
+                    data-testid="input-newsletter-email"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={newsletterStatus === "loading" || !newsletterEmail || !newsletterConsent}
+                  className="px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                  data-testid="button-newsletter-subscribe"
+                >
+                  {newsletterStatus === "loading" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : newsletterStatus === "success" ? (
+                    <CheckCircle className="h-4 w-4" />
+                  ) : (
+                    <Send className="h-4 w-4" />
+                  )}
+                  {newsletterStatus === "success" ? "Done" : "Subscribe"}
+                </button>
               </div>
-              <button
-                type="submit"
-                disabled={newsletterStatus === "loading" || !newsletterEmail}
-                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
-                data-testid="button-newsletter-subscribe"
-              >
-                {newsletterStatus === "loading" ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : newsletterStatus === "success" ? (
-                  <CheckCircle className="h-4 w-4" />
-                ) : (
-                  <Send className="h-4 w-4" />
-                )}
-                {newsletterStatus === "success" ? "Done" : "Subscribe"}
-              </button>
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="newsletter-consent"
+                  checked={newsletterConsent}
+                  onChange={(e) => setNewsletterConsent(e.target.checked)}
+                  className="mt-0.5 h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-800 accent-orange-500"
+                  data-testid="checkbox-newsletter-consent"
+                />
+                <label htmlFor="newsletter-consent" className="text-[10px] text-zinc-500 leading-snug">
+                  I agree to the{" "}
+                  <a href="/privacy" className="text-orange-400/70 hover:underline">Privacy Policy</a>
+                  {" "}and consent to receive security digests and threat alerts via email. Unsubscribe anytime.
+                </label>
+              </div>
             </form>
           </div>
           {newsletterStatus !== "idle" && (

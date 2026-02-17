@@ -94,6 +94,8 @@ export default function SupportPage() {
   const [customAmount, setCustomAmount] = useState("");
   const [donorEmail, setDonorEmail] = useState("");
   const [donorName, setDonorName] = useState("");
+  const [donationAgreed, setDonationAgreed] = useState(false);
+  const [subscriptionAgreed, setSubscriptionAgreed] = useState(false);
 
   const donateMutation = useMutation({
     mutationFn: async (data: { amount: number; customerEmail?: string; donorName?: string }) => {
@@ -147,6 +149,10 @@ export default function SupportPage() {
   });
 
   const handleDonate = () => {
+    if (!donationAgreed) {
+      toast({ title: "Please agree to the Terms of Service and Privacy Policy to proceed", variant: "destructive" });
+      return;
+    }
     const amount = customAmount ? Math.round(parseFloat(customAmount) * 100) : selectedAmount;
     if (amount < 100 || amount > 100000) return;
     
@@ -158,6 +164,11 @@ export default function SupportPage() {
   };
 
   const handleSubscribe = (tierName: string) => {
+    if (!subscriptionAgreed) {
+      toast({ title: "Please agree to the Terms of Service, Privacy Policy, and recurring billing to proceed", variant: "destructive" });
+      return;
+    }
+
     const products = productsData?.products || [];
     const product = products.find((p: any) => p.name?.includes(tierName));
     
@@ -352,10 +363,28 @@ export default function SupportPage() {
                 </div>
               </div>
 
+              <div className="flex items-start gap-2">
+                <input
+                  type="checkbox"
+                  id="donation-agree"
+                  checked={donationAgreed}
+                  onChange={(e) => setDonationAgreed(e.target.checked)}
+                  className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-orange-500 accent-orange-500"
+                  data-testid="checkbox-donation-agree"
+                />
+                <label htmlFor="donation-agree" className="text-xs text-zinc-400 leading-relaxed">
+                  I agree to the{" "}
+                  <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:underline">Terms of Service</a>
+                  {" "}and{" "}
+                  <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:underline">Privacy Policy</a>
+                  . I understand this is a one-time, non-refundable donation processed securely by Stripe.
+                </label>
+              </div>
+
               <Button 
                 className="w-full font-bold text-lg py-6 bg-orange-500 hover:bg-orange-600 text-white" 
                 onClick={handleDonate}
-                disabled={donateMutation.isPending}
+                disabled={donateMutation.isPending || !donationAgreed}
                 data-testid="button-donate"
               >
                 {donateMutation.isPending ? (
@@ -424,7 +453,7 @@ export default function SupportPage() {
                     className={`w-full font-bold ${tier.popular ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border-zinc-700 text-zinc-300 hover:bg-zinc-800'}`}
                     variant={tier.popular ? "default" : "outline"}
                     onClick={() => handleSubscribe(tier.name)}
-                    disabled={checkoutMutation.isPending}
+                    disabled={checkoutMutation.isPending || !subscriptionAgreed}
                     data-testid={`button-subscribe-${tier.name.toLowerCase()}`}
                   >
                     {checkoutMutation.isPending ? (
@@ -437,6 +466,26 @@ export default function SupportPage() {
                 </CardContent>
               </Card>
             ))}
+          </div>
+
+          <div className="max-w-2xl mx-auto">
+            <div className="flex items-start gap-2 mb-4">
+              <input
+                type="checkbox"
+                id="subscription-agree"
+                checked={subscriptionAgreed}
+                onChange={(e) => setSubscriptionAgreed(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-orange-500 accent-orange-500"
+                data-testid="checkbox-subscription-agree"
+              />
+              <label htmlFor="subscription-agree" className="text-xs text-zinc-400 leading-relaxed">
+                I agree to the{" "}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:underline">Terms of Service</a>
+                {" "}and{" "}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:underline">Privacy Policy</a>
+                . I authorize recurring billing at the selected plan rate until I cancel. I understand I can cancel anytime through my account settings.
+              </label>
+            </div>
           </div>
 
           <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
