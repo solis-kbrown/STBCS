@@ -1,8 +1,36 @@
-import { Mail, Globe, Shield, Phone, MessageSquare } from "lucide-react";
+import { useState } from "react";
+import { Mail, Globe, Shield, Phone, MessageSquare, Send, Loader2, CheckCircle } from "lucide-react";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  
+  const [newsletterEmail, setNewsletterEmail] = useState("");
+  const [newsletterStatus, setNewsletterStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [newsletterMessage, setNewsletterMessage] = useState("");
+
+  const handleNewsletterSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail || newsletterStatus === "loading") return;
+    
+    setNewsletterStatus("loading");
+    try {
+      const res = await fetch("/api/newsletter/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newsletterEmail }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to subscribe");
+      setNewsletterStatus("success");
+      setNewsletterMessage("Subscribed! Check your inbox.");
+      setNewsletterEmail("");
+      setTimeout(() => setNewsletterStatus("idle"), 5000);
+    } catch (err: any) {
+      setNewsletterStatus("error");
+      setNewsletterMessage(err.message || "Something went wrong");
+      setTimeout(() => setNewsletterStatus("idle"), 4000);
+    }
+  };
+
   return (
     <footer className="border-t border-white/5 bg-card/30 mt-8">
       <div className="max-w-7xl mx-auto px-6 py-8">
@@ -77,7 +105,50 @@ export default function Footer() {
           </div>
         </div>
         
-        <div className="border-t border-white/5 mt-8 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+        <div className="border-t border-white/5 mt-8 pt-6 pb-4">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex-1">
+              <h4 className="font-bold text-white text-sm mb-1">Threat Intelligence Newsletter</h4>
+              <p className="text-xs text-muted-foreground">Get weekly security digests, CVE alerts, and ransomware updates delivered to your inbox.</p>
+            </div>
+            <form onSubmit={handleNewsletterSubscribe} className="flex items-center gap-2 w-full md:w-auto">
+              <div className="relative flex-1 md:w-64">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={newsletterEmail}
+                  onChange={(e) => setNewsletterEmail(e.target.value)}
+                  required
+                  className="w-full pl-9 pr-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30"
+                  data-testid="input-newsletter-email"
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={newsletterStatus === "loading" || !newsletterEmail}
+                className="px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors flex items-center gap-2"
+                data-testid="button-newsletter-subscribe"
+              >
+                {newsletterStatus === "loading" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : newsletterStatus === "success" ? (
+                  <CheckCircle className="h-4 w-4" />
+                ) : (
+                  <Send className="h-4 w-4" />
+                )}
+                {newsletterStatus === "success" ? "Done" : "Subscribe"}
+              </button>
+            </form>
+          </div>
+          {newsletterStatus !== "idle" && (
+            <p className={`text-xs mt-2 text-center md:text-right ${newsletterStatus === "success" ? "text-green-400" : "text-red-400"}`}>
+              {newsletterMessage}
+            </p>
+          )}
+        </div>
+
+        <div className="border-t border-white/5 mt-4 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-muted-foreground">
             &copy; {currentYear} STB Cybersecurity. All rights reserved.
           </p>
