@@ -17,6 +17,7 @@ import crypto from "crypto";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 import { getQuoService, isQuoConfigured } from "./quoService";
+import { reportCriticalError } from "./maintenance";
 import { 
   hashPassword, 
   verifyPassword, 
@@ -2367,6 +2368,7 @@ Hiring: https://www.stbcybersecurity.com/support
       res.json({ products: filtered });
     } catch (error) {
       console.error("Products error:", error);
+      reportCriticalError(error instanceof Error ? error : new Error(String(error)), "Stripe Products");
       res.status(500).json({ error: "Failed to fetch products" });
     }
   });
@@ -2413,6 +2415,7 @@ Hiring: https://www.stbcybersecurity.com/support
       res.json({ url: session.url });
     } catch (error) {
       console.error("Checkout error:", error);
+      reportCriticalError(error instanceof Error ? error : new Error(String(error)), "Stripe Checkout");
       res.status(500).json({ error: "Failed to create checkout session" });
     }
   });
@@ -2445,6 +2448,7 @@ Hiring: https://www.stbcybersecurity.com/support
       res.json({ url: session.url });
     } catch (error) {
       console.error("Donation error:", error);
+      reportCriticalError(error instanceof Error ? error : new Error(String(error)), "Stripe Donation");
       res.status(500).json({ error: "Failed to create donation session" });
     }
   });

@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 
@@ -82,6 +83,7 @@ const membershipTiers = [
 
 export default function SupportPage() {
   useDocumentTitle("Support & Membership | STB Cybersecurity", "Subscribe to STBCS Supporter, Pro, or Business plans for advanced threat intelligence, real-time alerts, watchlists, and priority incident response. Donate to support free cybersecurity tools for the community.");
+  const { toast } = useToast();
   const [location] = useLocation();
   const searchParams = new URLSearchParams(location.split('?')[1] || '');
   const success = searchParams.get('success') === 'true';
@@ -100,11 +102,17 @@ export default function SupportPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create donation session");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create donation session");
+      }
       return res.json();
     },
     onSuccess: (data) => {
       if (data.url) window.location.href = data.url;
+    },
+    onError: (error: Error) => {
+      toast({ title: "Donation Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -115,11 +123,17 @@ export default function SupportPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create checkout session");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create checkout session");
+      }
       return res.json();
     },
     onSuccess: (data) => {
       if (data.url) window.location.href = data.url;
+    },
+    onError: (error: Error) => {
+      toast({ title: "Checkout Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -147,19 +161,26 @@ export default function SupportPage() {
     const products = productsData?.products || [];
     const product = products.find((p: any) => p.name?.includes(tierName));
     
-    // Find monthly price (prefer monthly over yearly)
+    if (!product) {
+      toast({ title: "Error", description: "Membership plan not found. Please refresh and try again.", variant: "destructive" });
+      return;
+    }
+
     const monthlyPrice = product?.prices?.find((p: any) => 
       p.recurring?.interval === 'month'
     );
     const price = monthlyPrice || product?.prices?.[0];
     
-    if (price?.id) {
-      checkoutMutation.mutate({
-        priceId: price.id,
-        customerEmail: donorEmail || undefined,
-        mode: 'subscription',
-      });
+    if (!price?.id) {
+      toast({ title: "Error", description: "Price not available. Please refresh and try again.", variant: "destructive" });
+      return;
     }
+
+    checkoutMutation.mutate({
+      priceId: price.id,
+      customerEmail: donorEmail || undefined,
+      mode: 'subscription',
+    });
   };
 
   return (
