@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useLocation } from "wouter";
 import { Heart, Shield, Users, Zap, Check, Coffee, Rocket, Building2, ExternalLink, Loader2, CreditCard, Lock } from "lucide-react";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -84,8 +83,7 @@ const membershipTiers = [
 export default function SupportPage() {
   useDocumentTitle("Support & Membership | STB Cybersecurity", "Subscribe to STBCS Supporter, Pro, or Business plans for advanced threat intelligence, real-time alerts, watchlists, and priority incident response. Donate to support free cybersecurity tools for the community.");
   const { toast } = useToast();
-  const [location] = useLocation();
-  const searchParams = new URLSearchParams(location.split('?')[1] || '');
+  const searchParams = new URLSearchParams(window.location.search);
   const success = searchParams.get('success') === 'true';
   const donated = searchParams.get('donated') === 'true';
   const canceled = searchParams.get('canceled') === 'true';

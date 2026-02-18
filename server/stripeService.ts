@@ -91,7 +91,7 @@ export class StripeService {
 
   async getProduct(productId: string) {
     const result = await db.execute(
-      sql`SELECT * FROM stripe.products WHERE id = ${productId}`
+      sql`SELECT * FROM stripe.products WHERE id = ${productId} AND livemode = true`
     );
     return result.rows[0] || null;
   }
@@ -112,6 +112,7 @@ export class StripeService {
           p.description as product_description,
           p.active as product_active,
           p.metadata as product_metadata,
+          p.livemode as product_livemode,
           pr.id as price_id,
           pr.unit_amount,
           pr.currency,
@@ -120,7 +121,7 @@ export class StripeService {
           pr.metadata as price_metadata
         FROM stripe.products p
         LEFT JOIN stripe.prices pr ON pr.product = p.id AND pr.active = true
-        WHERE p.active = ${active}
+        WHERE p.active = ${active} AND p.livemode = true
         ORDER BY p.id, pr.unit_amount
       `
     );
@@ -129,7 +130,7 @@ export class StripeService {
 
   async getPrice(priceId: string) {
     const result = await db.execute(
-      sql`SELECT * FROM stripe.prices WHERE id = ${priceId}`
+      sql`SELECT * FROM stripe.prices WHERE id = ${priceId} AND livemode = true`
     );
     return result.rows[0] || null;
   }

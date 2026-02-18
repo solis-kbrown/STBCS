@@ -21,13 +21,14 @@ export class WebhookHandlers {
     const sync = await getStripeSync();
     await sync.processWebhook(payload, signature);
 
-    const stripe = await getUncachableStripeClient();
-    const event = stripe.webhooks.constructEvent(
-      payload,
-      signature,
-      process.env.STRIPE_WEBHOOK_SECRET || ''
-    );
+    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.warn('[Stripe] STRIPE_WEBHOOK_SECRET not set — skipping custom event handling for security');
+      return;
+    }
 
+    const stripe = await getUncachableStripeClient();
+    const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
     await WebhookHandlers.handleEvent(event);
   }
 

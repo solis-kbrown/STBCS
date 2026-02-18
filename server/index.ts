@@ -24,6 +24,11 @@ async function initStripe() {
     return;
   }
 
+  if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_PUBLISHABLE_KEY) {
+    console.error('STRIPE_SECRET_KEY and STRIPE_PUBLISHABLE_KEY are required. Skipping Stripe initialization.');
+    return;
+  }
+
   try {
     console.log('Initializing Stripe schema...');
     await runMigrations({ databaseUrl, schema: 'stripe' } as any);
