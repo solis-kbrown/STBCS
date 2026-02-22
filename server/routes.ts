@@ -296,12 +296,6 @@ export async function registerRoutes(
     <priority>0.8</priority>
   </url>
 
-  <url>
-    <loc>https://stbcybersecurity.com/threat-actors</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.8</priority>
-  </url>
 
   <url>
     <loc>https://stbcybersecurity.com/ransomware-payments</loc>
@@ -392,7 +386,6 @@ Allow: /ioc-search
 Allow: /risk-score
 Allow: /ics-advisories
 Allow: /breaches
-Allow: /threat-actors
 Allow: /ransomware-payments
 Allow: /about
 Allow: /logos

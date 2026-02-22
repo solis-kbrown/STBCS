@@ -93,8 +93,9 @@ const PAGE_META: Record<string, PageMeta> = {
     description: 'Search the breach database for compromised credentials and data exposures. Check if your email or domain has been involved in known data breaches.',
   },
   '/threat-actors': {
-    title: 'Threat Actor Profiles | STB Cybersecurity',
-    description: 'Comprehensive threat actor database with MITRE ATT&CK mappings, TTPs, targeting patterns, and historical attack data for ransomware groups and APTs.',
+    title: 'Ransomware Groups Directory | STB Cybersecurity',
+    description: 'Browse all tracked ransomware groups with victim counts, activity status, TTPs, MITRE ATT&CK mapping, and threat intelligence. Click any group for detailed dossier.',
+    canonical: 'https://stbcybersecurity.com/groups',
   },
   '/ransomware-payments': {
     title: 'Ransomware Payment Tracker | STB Cybersecurity',
@@ -185,7 +186,7 @@ export function getPageMeta(path: string): PageMeta {
 
 export function injectMetaTags(html: string, path: string): string {
   const meta = getPageMeta(path);
-  const canonical = `${DOMAIN}${path.split('?')[0].split('#')[0].replace(/\/$/, '') || '/'}`;
+  const canonical = meta.canonical || `${DOMAIN}${path.split('?')[0].split('#')[0].replace(/\/$/, '') || '/'}`;
 
   html = html.replace(
     /<title>[^<]*<\/title>/,

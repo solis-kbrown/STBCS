@@ -57,7 +57,7 @@ interface GroupDirectoryEntry {
   latestIncident: string | null;
 }
 
-type SortOption = "victims" | "name" | "recent" | "oldest";
+type SortOption = "victims" | "name" | "recent" | "oldest" | "ransom";
 
 function formatDate(date: string | null | undefined): string {
   if (!date) return "Unknown";
@@ -82,6 +82,8 @@ export default function GroupsDirectory() {
   const [sortBy, setSortBy] = useState<SortOption>("victims");
   const [statusFilter, setStatusFilter] = useState("all");
   const [raasFilter, setRaasFilter] = useState("all");
+  const [originFilter, setOriginFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(24);
@@ -100,15 +102,24 @@ export default function GroupsDirectory() {
 
   const rawGroups = groups || [];
 
+  const origins = useMemo(
+    () => Array.from(new Set(rawGroups.map(g => g.origin).filter(Boolean))).sort() as string[],
+    [rawGroups]
+  );
+
   const activeFilterCount = [
     statusFilter !== "all",
     raasFilter !== "all",
+    originFilter !== "all",
+    typeFilter !== "all",
     sortBy !== "victims",
   ].filter(Boolean).length;
 
   const clearAllFilters = () => {
     setStatusFilter("all");
     setRaasFilter("all");
+    setOriginFilter("all");
+    setTypeFilter("all");
     setSortBy("victims");
     setSearch("");
     setCurrentPage(1);
@@ -145,18 +156,29 @@ export default function GroupsDirectory() {
     if (raasFilter === "raas") result = result.filter(g => g.ransomwareAsService);
     if (raasFilter === "non-raas") result = result.filter(g => !g.ransomwareAsService);
 
+    if (originFilter !== "all") result = result.filter(g => g.origin === originFilter);
+
+    if (typeFilter !== "all") {
+      result = result.filter(g => g.type?.toLowerCase().includes(typeFilter.toLowerCase()));
+    }
+
     result.sort((a, b) => {
       switch (sortBy) {
         case "victims": return b.victims - a.victims;
         case "name": return a.name.localeCompare(b.name);
         case "recent": return new Date(b.lastActive || b.latestIncident || 0).getTime() - new Date(a.lastActive || a.latestIncident || 0).getTime();
         case "oldest": return new Date(a.firstSeen || a.earliestIncident || "9999").getTime() - new Date(b.firstSeen || b.earliestIncident || "9999").getTime();
+        case "ransom": {
+          const aVal = parseFloat((a.totalRansomCollected || "0").replace(/[^0-9.]/g, "")) || 0;
+          const bVal = parseFloat((b.totalRansomCollected || "0").replace(/[^0-9.]/g, "")) || 0;
+          return bVal - aVal;
+        }
         default: return 0;
       }
     });
 
     return result;
-  }, [rawGroups, search, sortBy, statusFilter, raasFilter]);
+  }, [rawGroups, search, sortBy, statusFilter, raasFilter, originFilter, typeFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
@@ -203,9 +225,13 @@ export default function GroupsDirectory() {
               </p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-groups" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'json' })} disabled={exportMutation.isPending}>
+              <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-groups-csv" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'csv' })} disabled={exportMutation.isPending}>
                 {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-                Export
+                CSV
+              </Button>
+              <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-groups-json" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'json' })} disabled={exportMutation.isPending}>
+                <Download className="h-4 w-4 mr-2" />
+                JSON
               </Button>
             </div>
           </div>
@@ -260,6 +286,7 @@ export default function GroupsDirectory() {
                     <SelectItem value="name">Name (A-Z)</SelectItem>
                     <SelectItem value="recent">Most Recent</SelectItem>
                     <SelectItem value="oldest">First Seen</SelectItem>
+                    <SelectItem value="ransom">Most Ransom</SelectItem>
                   </SelectContent>
                 </Select>
                 <Button
@@ -298,9 +325,34 @@ export default function GroupsDirectory() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="all">All Groups</SelectItem>
                     <SelectItem value="raas">RaaS Only</SelectItem>
                     <SelectItem value="non-raas">Non-RaaS</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-type-filter">
+                    <Shield className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    <SelectItem value="operator">Operators</SelectItem>
+                    <SelectItem value="nation-state">Nation-State</SelectItem>
+                    <SelectItem value="criminal">Criminal</SelectItem>
+                    <SelectItem value="hacktivist">Hacktivist</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select value={originFilter} onValueChange={(v) => { setOriginFilter(v); setCurrentPage(1); }}>
+                  <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-origin-filter">
+                    <Globe className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Origins</SelectItem>
+                    {origins.map(o => (
+                      <SelectItem key={o} value={o}>{o}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
                 {activeFilterCount > 0 && (
