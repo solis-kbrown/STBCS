@@ -165,9 +165,7 @@ export interface IStorage {
   updateWatchlistItem(id: string, userId: string, updates: Partial<InsertWatchlistItem>): Promise<WatchlistItem>;
   deleteWatchlistItem(id: string, userId: string): Promise<void>;
   getWatchlistsByType(userId: string, itemType: string): Promise<WatchlistItem[]>;
-  getAllActiveWatchlistItems(): Promise<WatchlistItem[]>;
-  logMonitorAlert(log: { watchlistItemId: string; matchedDataType: string; matchedDataId: string; deliveryChannel: string; deliveryStatus?: string }): Promise<void>;
-  hasAlertBeenSent(watchlistItemId: string, matchedDataType: string, matchedDataId: string): Promise<boolean>;
+  getAllActiveWatchlistItems(): Promise<(WatchlistItem & { user?: User })[]>;
   
   // Breach Incidents
   getBreachIncidents(limit?: number, offset?: number, search?: string): Promise<BreachIncident[]>;
@@ -232,8 +230,7 @@ export interface IStorage {
 
   // Monitor Alert Log
   hasAlertBeenSent(watchlistItemId: string, matchedDataType: string, matchedDataId: string): Promise<boolean>;
-  logMonitorAlert(watchlistItemId: string, matchedDataType: string, matchedDataId: string, deliveryChannel: string): Promise<void>;
-  getAllActiveWatchlistItems(): Promise<(WatchlistItem & { user?: User })[]>;
+  logMonitorAlert(log: { watchlistItemId: string; matchedDataType: string; matchedDataId: string; deliveryChannel: string; deliveryStatus?: string }): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1142,34 +1139,6 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(watchlistItems.createdAt));
   }
 
-  async getAllActiveWatchlistItems(): Promise<WatchlistItem[]> {
-    return db.select().from(watchlistItems)
-      .where(eq(watchlistItems.alertOnMatch, true))
-      .orderBy(watchlistItems.userId);
-  }
-
-  async logMonitorAlert(log: { watchlistItemId: string; matchedDataType: string; matchedDataId: string; deliveryChannel: string; deliveryStatus?: string }): Promise<void> {
-    await db.insert(monitorAlertLog).values({
-      watchlistItemId: log.watchlistItemId,
-      matchedDataType: log.matchedDataType,
-      matchedDataId: log.matchedDataId,
-      deliveryChannel: log.deliveryChannel,
-      deliveryStatus: log.deliveryStatus || "sent",
-    });
-  }
-
-  async hasAlertBeenSent(watchlistItemId: string, matchedDataType: string, matchedDataId: string): Promise<boolean> {
-    const [existing] = await db.select({ id: monitorAlertLog.id })
-      .from(monitorAlertLog)
-      .where(and(
-        eq(monitorAlertLog.watchlistItemId, watchlistItemId),
-        eq(monitorAlertLog.matchedDataType, matchedDataType),
-        eq(monitorAlertLog.matchedDataId, matchedDataId),
-      ))
-      .limit(1);
-    return !!existing;
-  }
-
   // Breach Incidents
   async getBreachIncidents(limit = 50, offset = 0, search?: string): Promise<BreachIncident[]> {
     if (search) {
@@ -1709,12 +1678,13 @@ export class DatabaseStorage implements IStorage {
     return !!existing;
   }
 
-  async logMonitorAlert(watchlistItemId: string, matchedDataType: string, matchedDataId: string, deliveryChannel: string): Promise<void> {
+  async logMonitorAlert(log: { watchlistItemId: string; matchedDataType: string; matchedDataId: string; deliveryChannel: string; deliveryStatus?: string }): Promise<void> {
     await db.insert(monitorAlertLog).values({
-      watchlistItemId,
-      matchedDataType,
-      matchedDataId,
-      deliveryChannel,
+      watchlistItemId: log.watchlistItemId,
+      matchedDataType: log.matchedDataType,
+      matchedDataId: log.matchedDataId,
+      deliveryChannel: log.deliveryChannel,
+      deliveryStatus: log.deliveryStatus || "sent",
     });
   }
 

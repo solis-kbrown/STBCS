@@ -3379,7 +3379,7 @@ Hiring: https://stbcybersecurity.com/support
 
   app.delete("/api/account/api-keys/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
-      await storage.revokeApiKey(req.params.id, req.user!.id);
+      await storage.revokeApiKey(asString(req.params.id), req.user!.id);
       res.json({ success: true, message: "API key revoked" });
     } catch (error) {
       console.error("API key revoke error:", error);
