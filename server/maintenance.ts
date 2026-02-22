@@ -255,6 +255,22 @@ async function checkGrandOpeningSale(): Promise<void> {
   }
 }
 
+async function captureDailyStats(): Promise<void> {
+  const now = Date.now();
+  const DAY_MS = 24 * 60 * 60 * 1000;
+  const lastCapture = await getLastRun("daily_stats_capture");
+
+  if (now - lastCapture > DAY_MS - 60 * 60 * 1000) {
+    try {
+      await storage.captureDailyThreatStats();
+      await setLastRun("daily_stats_capture");
+      log.info("Daily threat stats snapshot captured");
+    } catch (error) {
+      log.error("Daily stats capture failed:", error);
+    }
+  }
+}
+
 async function sendDailyHealthCheck(): Promise<void> {
   const now = Date.now();
   const DAY_MS = 24 * 60 * 60 * 1000;
@@ -356,6 +372,7 @@ export async function startMaintenanceScheduler(): Promise<void> {
     try {
       await runCleanupTasks();
       await checkGrandOpeningSale();
+      await captureDailyStats();
       await sendDailyHealthCheck();
       await sendWeeklyAdminReport();
     } catch (error) {

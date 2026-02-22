@@ -989,3 +989,39 @@ export const insertDarkWebMonitorSchema = createInsertSchema(darkWebMonitors).om
 export type InsertDarkWebMonitor = z.infer<typeof insertDarkWebMonitorSchema>;
 export type DarkWebMonitor = typeof darkWebMonitors.$inferSelect;
 export type DarkWebFinding = typeof darkWebFindings.$inferSelect;
+
+export const dailyThreatStats = pgTable("daily_threat_stats", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  date: text("date").notNull(),
+  totalCves: integer("total_cves").default(0),
+  newCvesToday: integer("new_cves_today").default(0),
+  criticalCves: integer("critical_cves").default(0),
+  totalRansomwareIncidents: integer("total_ransomware_incidents").default(0),
+  newRansomwareToday: integer("new_ransomware_today").default(0),
+  activeRansomwareGroups: integer("active_ransomware_groups").default(0),
+  totalRansomwareGroups: integer("total_ransomware_groups").default(0),
+  totalMaliciousIps: integer("total_malicious_ips").default(0),
+  newMaliciousIpsToday: integer("new_malicious_ips_today").default(0),
+  totalMaliciousUrls: integer("total_malicious_urls").default(0),
+  newMaliciousUrlsToday: integer("new_malicious_urls_today").default(0),
+  totalThreatActors: integer("total_threat_actors").default(0),
+  totalBreaches: integer("total_breaches").default(0),
+  totalCisaKev: integer("total_cisa_kev").default(0),
+  totalIcsAdvisories: integer("total_ics_advisories").default(0),
+  totalThreatFeeds: integer("total_threat_feeds").default(0),
+  activeFeedSources: integer("active_feed_sources").default(0),
+  topGroupName: text("top_group_name"),
+  topGroupVictims: integer("top_group_victims").default(0),
+  topSector: text("top_sector"),
+  topCountry: text("top_country"),
+  registeredUsers: integer("registered_users").default(0),
+  proSubscribers: integer("pro_subscribers").default(0),
+  businessSubscribers: integer("business_subscribers").default(0),
+  apiKeysActive: integer("api_keys_active").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("dts_date_idx").on(table.date),
+]);
+
+export type DailyThreatStats = typeof dailyThreatStats.$inferSelect;
+export type InsertDailyThreatStats = typeof dailyThreatStats.$inferInsert;

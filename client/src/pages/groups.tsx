@@ -1,6 +1,6 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
-import AnimatedSection, { AnimatedList } from "@/components/animated-section";
+import AnimatedSection from "@/components/animated-section";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,10 +16,10 @@ import { ACTOR_MITRE_MAPPING } from "@shared/mitre-attack";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
 import {
-  Search, Shield, Globe, Users, Target, Skull, AlertTriangle, Eye, EyeOff,
+  Search, Globe, Users, Target, Skull, Eye, EyeOff,
   ChevronRight, ArrowUpDown, RotateCcw, Download, Loader2, MapPin,
-  Building2, Calendar, TrendingUp, Lock, Zap, Database, Filter,
-  Crosshair, Activity, DollarSign
+  Calendar, TrendingUp, Lock, Filter, Shield,
+  Crosshair, Activity, DollarSign, FileWarning, Link2, Server, Scale
 } from "lucide-react";
 
 interface GroupDirectoryEntry {
@@ -31,6 +31,7 @@ interface GroupDirectoryEntry {
   firstSeen: string | null;
   lastActive: string | null;
   description: string | null;
+  aliases: string | null;
   ransomwareAsService: boolean;
   doubleExtortion: boolean;
   dataExfiltration: boolean;
@@ -40,6 +41,20 @@ interface GroupDirectoryEntry {
   targetCountries: string | null;
   statusMessage: string | null;
   encryptionMethod: string | null;
+  knownCves: string | null;
+  malwareFamilies: string | null;
+  attackVectors: string | null;
+  affiliations: string | null;
+  infrastructure: string | null;
+  governmentAdvisories: string | null;
+  lawEnforcementActions: string | null;
+  sectorCount: number;
+  countryCount: number;
+  ransomDemands: number;
+  paidCount: number;
+  uniqueSites: number;
+  earliestIncident: string | null;
+  latestIncident: string | null;
 }
 
 type SortOption = "victims" | "name" | "recent" | "oldest";
@@ -111,15 +126,21 @@ export default function GroupsDirectory() {
       const q = search.toLowerCase();
       result = result.filter(g =>
         g.name.toLowerCase().includes(q) ||
+        g.aliases?.toLowerCase().includes(q) ||
         g.description?.toLowerCase().includes(q) ||
         g.targetSectors?.toLowerCase().includes(q) ||
-        g.targetCountries?.toLowerCase().includes(q)
+        g.targetCountries?.toLowerCase().includes(q) ||
+        g.attackVectors?.toLowerCase().includes(q) ||
+        g.malwareFamilies?.toLowerCase().includes(q) ||
+        g.affiliations?.toLowerCase().includes(q) ||
+        g.origin?.toLowerCase().includes(q) ||
+        g.type?.toLowerCase().includes(q)
       );
     }
 
     if (statusFilter === "active") result = result.filter(g => g.active);
     if (statusFilter === "inactive") result = result.filter(g => !g.active);
-    if (statusFilter === "seized") result = result.filter(g => g.statusMessage?.toLowerCase().includes("seized"));
+    if (statusFilter === "seized") result = result.filter(g => g.statusMessage?.toLowerCase().includes("seized") || g.lawEnforcementActions);
 
     if (raasFilter === "raas") result = result.filter(g => g.ransomwareAsService);
     if (raasFilter === "non-raas") result = result.filter(g => !g.ransomwareAsService);
@@ -128,8 +149,8 @@ export default function GroupsDirectory() {
       switch (sortBy) {
         case "victims": return b.victims - a.victims;
         case "name": return a.name.localeCompare(b.name);
-        case "recent": return new Date(b.lastActive || 0).getTime() - new Date(a.lastActive || 0).getTime();
-        case "oldest": return new Date(a.firstSeen || "9999").getTime() - new Date(b.firstSeen || "9999").getTime();
+        case "recent": return new Date(b.lastActive || b.latestIncident || 0).getTime() - new Date(a.lastActive || a.latestIncident || 0).getTime();
+        case "oldest": return new Date(a.firstSeen || a.earliestIncident || "9999").getTime() - new Date(b.firstSeen || b.earliestIncident || "9999").getTime();
         default: return 0;
       }
     });
@@ -147,7 +168,10 @@ export default function GroupsDirectory() {
     const raas = rawGroups.filter(g => g.ransomwareAsService).length;
     const totalVictims = rawGroups.reduce((sum, g) => sum + g.victims, 0);
     const hasMitre = rawGroups.filter(g => ACTOR_MITRE_MAPPING[g.name.toLowerCase()]).length;
-    return { total, active, raas, totalVictims, hasMitre };
+    const withInfra = rawGroups.filter(g => g.infrastructure).length;
+    const withAdvisories = rawGroups.filter(g => g.governmentAdvisories).length;
+    const doubleExt = rawGroups.filter(g => g.doubleExtortion).length;
+    return { total, active, raas, totalVictims, hasMitre, withInfra, withAdvisories, doubleExt };
   }, [rawGroups]);
 
   useEffect(() => {
@@ -175,7 +199,7 @@ export default function GroupsDirectory() {
             <div>
               <h1 className="text-3xl font-display font-bold text-white mb-2">Ransomware Groups Directory</h1>
               <p className="text-muted-foreground">
-                Browse all tracked ransomware groups. Click any group for a full intelligence dossier with MITRE ATT&CK mapping, victim data, and TTPs.
+                Browse {stats.total > 0 ? stats.total.toLocaleString() : ''} tracked ransomware groups. Click any group for a full intelligence dossier with MITRE ATT&CK mapping, victim data, and TTPs.
               </p>
             </div>
             <div className="flex gap-2">
@@ -187,22 +211,25 @@ export default function GroupsDirectory() {
           </div>
         </AnimatedSection>
 
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
           {[
-            { icon: Users, label: "Groups Tracked", value: stats.total, color: "orange" },
-            { icon: Target, label: "Total Victims", value: stats.totalVictims.toLocaleString(), color: "red" },
-            { icon: Activity, label: "Active Groups", value: stats.active, color: "green" },
-            { icon: Skull, label: "RaaS Operations", value: stats.raas, color: "purple" },
-            { icon: Crosshair, label: "MITRE Mapped", value: stats.hasMitre, color: "cyan" },
+            { icon: Users, label: "Groups", value: stats.total, color: "text-orange-400", bg: "bg-orange-500/10" },
+            { icon: Target, label: "Victims", value: stats.totalVictims.toLocaleString(), color: "text-red-400", bg: "bg-red-500/10" },
+            { icon: Activity, label: "Active", value: stats.active, color: "text-green-400", bg: "bg-green-500/10" },
+            { icon: Skull, label: "RaaS", value: stats.raas, color: "text-purple-400", bg: "bg-purple-500/10" },
+            { icon: Crosshair, label: "MITRE", value: stats.hasMitre, color: "text-cyan-400", bg: "bg-cyan-500/10" },
+            { icon: Shield, label: "Double Ext.", value: stats.doubleExt, color: "text-yellow-400", bg: "bg-yellow-500/10" },
+            { icon: Server, label: "Infra Intel", value: stats.withInfra, color: "text-blue-400", bg: "bg-blue-500/10" },
+            { icon: FileWarning, label: "Advisories", value: stats.withAdvisories, color: "text-rose-400", bg: "bg-rose-500/10" },
           ].map((s, i) => (
             <Card key={i} className="border-white/5 bg-card/50">
-              <CardContent className="p-3 flex items-center gap-2">
-                <div className={`p-1.5 rounded-lg bg-${s.color}-500/10`}>
-                  <s.icon className={`h-4 w-4 text-${s.color}-400`} />
+              <CardContent className="p-2.5 flex items-center gap-2">
+                <div className={`p-1.5 rounded-lg ${s.bg}`}>
+                  <s.icon className={`h-3.5 w-3.5 ${s.color}`} />
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground">{s.label}</p>
-                  {isLoading ? <Skeleton className="h-5 w-10 mt-0.5" /> : <p className="text-lg font-bold text-white" data-testid={`stat-${s.label.toLowerCase().replace(/\s/g, '-')}`}>{s.value}</p>}
+                  <p className="text-[9px] text-muted-foreground leading-tight">{s.label}</p>
+                  {isLoading ? <Skeleton className="h-4 w-8 mt-0.5" /> : <p className={`text-sm font-bold ${s.color}`} data-testid={`stat-${s.label.toLowerCase().replace(/[\s.]/g, '-')}`}>{s.value}</p>}
                 </div>
               </CardContent>
             </Card>
@@ -215,7 +242,7 @@ export default function GroupsDirectory() {
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search groups, sectors, countries..."
+                  placeholder="Search groups, aliases, sectors, countries, malware, affiliations..."
                   className="pl-10 bg-background/50 border-white/10 h-10"
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
@@ -262,7 +289,7 @@ export default function GroupsDirectory() {
                     <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="inactive">Inactive</SelectItem>
-                    <SelectItem value="seized">Seized</SelectItem>
+                    <SelectItem value="seized">Seized / LE Action</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select value={raasFilter} onValueChange={(v) => { setRaasFilter(v); setCurrentPage(1); }}>
@@ -321,88 +348,128 @@ export default function GroupsDirectory() {
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {paginated.map((group, idx) => {
               const sectors = parseField(group.targetSectors).slice(0, 3);
+              const countries = parseField(group.targetCountries).slice(0, 2);
+              const aliasesList = parseField(group.aliases).slice(0, 3);
               const hasMitre = !!ACTOR_MITRE_MAPPING[group.name.toLowerCase()];
               const isSeized = group.statusMessage?.toLowerCase().includes("seized");
+              const hasLawEnforcement = !!group.lawEnforcementActions;
+              const vectors = parseField(group.attackVectors).slice(0, 2);
+              const hasAdvisory = !!group.governmentAdvisories;
 
               return (
                 <Card
                   key={group.name}
-                  className={`border-white/5 bg-card/50 hover:border-orange-500/20 transition-all cursor-pointer card-interactive group ${isSeized ? 'border-red-500/20' : ''}`}
-                  style={{ animation: `fadeInLeft 0.3s ease-out ${Math.min(idx * 50, 400)}ms both` }}
+                  className={`border-white/5 bg-card/50 hover:border-orange-500/20 transition-all cursor-pointer card-interactive group ${isSeized || hasLawEnforcement ? 'border-red-500/20' : ''}`}
+                  style={{ animation: `fadeInLeft 0.3s ease-out ${Math.min(idx * 40, 400)}ms both` }}
                   onClick={() => setLocation(`/group/${toSlug(group.name)}`)}
                   data-testid={`card-group-${toSlug(group.name)}`}
                 >
-                  <CardContent className="p-5">
-                    <div className="flex items-start justify-between gap-2 mb-3">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between gap-2 mb-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="text-lg font-bold text-white group-hover:text-orange-400 transition-colors truncate" data-testid={`text-group-name-${toSlug(group.name)}`}>
+                          <h3 className="text-base font-bold text-white group-hover:text-orange-400 transition-colors truncate" data-testid={`text-group-name-${toSlug(group.name)}`}>
                             {group.name}
                           </h3>
-                          {isSeized ? (
-                            <Badge className="bg-red-700 text-white text-[10px]"><Lock className="h-3 w-3 mr-1" />Seized</Badge>
+                          {isSeized || hasLawEnforcement ? (
+                            <Badge className="bg-red-700 text-white text-[10px] shrink-0"><Lock className="h-2.5 w-2.5 mr-0.5" />{isSeized ? 'Seized' : 'LE Action'}</Badge>
                           ) : group.active ? (
-                            <Badge className="bg-green-700/50 text-green-300 text-[10px] border border-green-500/30"><Eye className="h-3 w-3 mr-1" />Active</Badge>
+                            <Badge className="bg-green-700/50 text-green-300 text-[10px] border border-green-500/30 shrink-0"><Eye className="h-2.5 w-2.5 mr-0.5" />Active</Badge>
                           ) : (
-                            <Badge className="bg-zinc-700/50 text-zinc-400 text-[10px] border border-zinc-500/30"><EyeOff className="h-3 w-3 mr-1" />Inactive</Badge>
+                            <Badge className="bg-zinc-700/50 text-zinc-400 text-[10px] border border-zinc-500/30 shrink-0"><EyeOff className="h-2.5 w-2.5 mr-0.5" />Inactive</Badge>
                           )}
                         </div>
+                        {aliasesList.length > 0 && (
+                          <p className="text-[10px] text-zinc-500 mt-0.5 truncate">aka {aliasesList.join(", ")}</p>
+                        )}
                       </div>
-                      <ChevronRight className="h-5 w-5 text-zinc-600 group-hover:text-orange-400 transition-colors shrink-0 mt-1" />
+                      <ChevronRight className="h-5 w-5 text-zinc-600 group-hover:text-orange-400 transition-colors shrink-0 mt-0.5" />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-2 mb-3">
-                      <div className="bg-white/5 rounded-lg p-2 text-center">
-                        <p className="text-lg font-bold text-red-400" data-testid={`text-victims-${toSlug(group.name)}`}>{group.victims.toLocaleString()}</p>
-                        <p className="text-[10px] text-zinc-500">Victims</p>
+                    <div className="grid grid-cols-3 gap-1.5 mb-2.5">
+                      <div className="bg-white/5 rounded-md p-1.5 text-center">
+                        <p className="text-sm font-bold text-red-400" data-testid={`text-victims-${toSlug(group.name)}`}>{group.victims.toLocaleString()}</p>
+                        <p className="text-[9px] text-zinc-500">Victims</p>
                       </div>
-                      <div className="bg-white/5 rounded-lg p-2 text-center">
-                        <p className="text-sm font-bold text-white">{formatDate(group.firstSeen)}</p>
-                        <p className="text-[10px] text-zinc-500">First Seen</p>
+                      <div className="bg-white/5 rounded-md p-1.5 text-center">
+                        <p className="text-xs font-bold text-white">{formatDate(group.firstSeen || group.earliestIncident)}</p>
+                        <p className="text-[9px] text-zinc-500">First Seen</p>
+                      </div>
+                      <div className="bg-white/5 rounded-md p-1.5 text-center">
+                        <p className="text-xs font-bold text-zinc-300">{group.type?.replace("Ransomware ", "").slice(0, 10) || "Unknown"}</p>
+                        <p className="text-[9px] text-zinc-500">Type</p>
                       </div>
                     </div>
 
                     {group.description && (
-                      <p className="text-xs text-zinc-400 line-clamp-2 mb-3">{group.description}</p>
+                      <p className="text-[11px] text-zinc-400 line-clamp-2 mb-2">{group.description}</p>
                     )}
 
-                    <div className="flex flex-wrap gap-1.5 mb-3">
+                    <div className="flex flex-wrap gap-1 mb-2">
                       {group.ransomwareAsService && (
-                        <Badge variant="outline" className="text-[10px] border-purple-500/30 text-purple-400 bg-purple-500/5">RaaS</Badge>
+                        <Badge variant="outline" className="text-[9px] py-0 h-[18px] border-purple-500/30 text-purple-400 bg-purple-500/5">RaaS</Badge>
                       )}
                       {group.doubleExtortion && (
-                        <Badge variant="outline" className="text-[10px] border-red-500/30 text-red-400 bg-red-500/5">Double Extortion</Badge>
+                        <Badge variant="outline" className="text-[9px] py-0 h-[18px] border-red-500/30 text-red-400 bg-red-500/5">Double Extortion</Badge>
                       )}
                       {group.dataExfiltration && (
-                        <Badge variant="outline" className="text-[10px] border-yellow-500/30 text-yellow-400 bg-yellow-500/5">Data Exfil</Badge>
+                        <Badge variant="outline" className="text-[9px] py-0 h-[18px] border-yellow-500/30 text-yellow-400 bg-yellow-500/5">Data Exfil</Badge>
                       )}
                       {hasMitre && (
-                        <Badge variant="outline" className="text-[10px] border-cyan-500/30 text-cyan-400 bg-cyan-500/5">MITRE ATT&CK</Badge>
+                        <Badge variant="outline" className="text-[9px] py-0 h-[18px] border-cyan-500/30 text-cyan-400 bg-cyan-500/5">MITRE ATT&CK</Badge>
+                      )}
+                      {hasAdvisory && (
+                        <Badge variant="outline" className="text-[9px] py-0 h-[18px] border-rose-500/30 text-rose-400 bg-rose-500/5">Gov Advisory</Badge>
                       )}
                       {group.encryptionMethod && (
-                        <Badge variant="outline" className="text-[10px] border-zinc-500/30 text-zinc-400 bg-zinc-500/5"><Lock className="h-2.5 w-2.5 mr-1" />{group.encryptionMethod.split(",")[0].trim().slice(0, 20)}</Badge>
+                        <Badge variant="outline" className="text-[9px] py-0 h-[18px] border-zinc-500/30 text-zinc-400 bg-zinc-500/5"><Lock className="h-2.5 w-2.5 mr-0.5" />{group.encryptionMethod.split(",")[0].trim().slice(0, 18)}</Badge>
+                      )}
+                      {group.infrastructure && (
+                        <Badge variant="outline" className="text-[9px] py-0 h-[18px] border-blue-500/30 text-blue-400 bg-blue-500/5"><Server className="h-2.5 w-2.5 mr-0.5" />Infra</Badge>
                       )}
                     </div>
 
-                    {sectors.length > 0 && (
+                    {vectors.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {vectors.map((v, i) => (
+                          <span key={i} className="text-[9px] text-orange-400/80 bg-orange-500/5 border border-orange-500/10 rounded px-1.5 py-0.5">{v.slice(0, 25)}</span>
+                        ))}
+                        {parseField(group.attackVectors).length > 2 && (
+                          <span className="text-[9px] text-orange-400">+{parseField(group.attackVectors).length - 2}</span>
+                        )}
+                      </div>
+                    )}
+
+                    {(sectors.length > 0 || countries.length > 0) && (
                       <div className="flex flex-wrap gap-1 mb-2">
                         {sectors.map((s, i) => (
-                          <span key={i} className="text-[10px] text-zinc-500 bg-white/5 rounded px-1.5 py-0.5">{s}</span>
+                          <span key={`s${i}`} className="text-[9px] text-zinc-400 bg-white/5 rounded px-1.5 py-0.5">{s}</span>
                         ))}
                         {parseField(group.targetSectors).length > 3 && (
-                          <span className="text-[10px] text-orange-400">+{parseField(group.targetSectors).length - 3}</span>
+                          <span className="text-[9px] text-zinc-500">+{parseField(group.targetSectors).length - 3} sectors</span>
+                        )}
+                        {countries.map((c, i) => (
+                          <span key={`c${i}`} className="text-[9px] text-zinc-400 bg-white/5 rounded px-1.5 py-0.5 flex items-center gap-0.5"><Globe className="h-2 w-2" />{c}</span>
+                        ))}
+                        {parseField(group.targetCountries).length > 2 && (
+                          <span className="text-[9px] text-zinc-500">+{parseField(group.targetCountries).length - 2} countries</span>
                         )}
                       </div>
                     )}
 
                     <div className="flex items-center justify-between pt-2 border-t border-white/5">
                       <div className="flex items-center gap-2 text-[10px] text-zinc-500">
-                        {group.origin && <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{group.origin}</span>}
-                        {group.lastActive && <span className="flex items-center gap-1"><TrendingUp className="h-3 w-3" />Last: {formatDate(group.lastActive)}</span>}
+                        {group.origin && group.origin !== "Unknown" && <span className="flex items-center gap-0.5"><MapPin className="h-2.5 w-2.5" />{group.origin}</span>}
+                        {(group.lastActive || group.latestIncident) && <span className="flex items-center gap-0.5"><TrendingUp className="h-2.5 w-2.5" />Last: {formatDate(group.lastActive || group.latestIncident)}</span>}
                       </div>
-                      {group.totalRansomCollected && (
-                        <span className="text-[10px] text-green-400 flex items-center gap-1"><DollarSign className="h-3 w-3" />{group.totalRansomCollected}</span>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {group.totalRansomCollected && (
+                          <span className="text-[10px] text-green-400 flex items-center gap-0.5"><DollarSign className="h-2.5 w-2.5" />{group.totalRansomCollected}</span>
+                        )}
+                        {group.affiliations && (
+                          <span className="text-[10px] text-zinc-500 flex items-center gap-0.5"><Link2 className="h-2.5 w-2.5" />Linked</span>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

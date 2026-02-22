@@ -26,12 +26,14 @@ import {
   type MonitorAlertLog,
   type UptimeMonitor, type InsertUptimeMonitor, type UptimeCheck, type UptimeIncident,
   type DarkWebMonitor, type InsertDarkWebMonitor, type DarkWebFinding,
+  type DailyThreatStats,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
   userNotifications, watchlistItems, breachIncidents, cisaIcsAdvisories, newsletterSubscriptions,
   smsMessages, exploitSubmissions, liveChatSessions, contentViews, siteVisitors, dailyVisitorCounts,
   apiKeys, apiKeyUsage, addOns, userAddOns, monitorAlertLog,
-  uptimeMonitors, uptimeChecks, uptimeIncidents, darkWebMonitors, darkWebFindings
+  uptimeMonitors, uptimeChecks, uptimeIncidents, darkWebMonitors, darkWebFindings,
+  dailyThreatStats
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte } from "drizzle-orm";
@@ -99,6 +101,7 @@ export interface IStorage {
   searchRansomware(query: string, limit?: number): Promise<RansomwareIncident[]>;
   getRansomwareCount(): Promise<number>;
   getActiveGroups(): Promise<{ name: string; count: number }[]>;
+  getGroupsDirectoryData(): Promise<any[]>;
   
   // Threat Actors
   getThreatActors(limit?: number): Promise<ThreatActor[]>;
@@ -275,6 +278,11 @@ export interface IStorage {
   markDarkWebFindingRead(id: string, userId: string): Promise<void>;
   getDarkWebFindingCount(userId: string): Promise<number>;
   hasDarkWebFindingBeenRecorded(monitorId: string, source: string, title: string): Promise<boolean>;
+
+  // Daily Threat Stats (historical snapshots)
+  captureDailyThreatStats(): Promise<DailyThreatStats>;
+  getDailyThreatStats(days?: number): Promise<DailyThreatStats[]>;
+  getDailyThreatStatsByRange(startDate: string, endDate: string): Promise<DailyThreatStats[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -482,6 +490,128 @@ export class DatabaseStorage implements IStorage {
     .limit(500);
     
     return result.map(r => ({ name: r.name, count: Number(r.count) }));
+  }
+
+  async getGroupsDirectoryData(): Promise<any[]> {
+    const incidentAgg = await db.execute(sql`
+      SELECT 
+        LOWER(group_name) as group_key,
+        MIN(group_name) as display_name,
+        COUNT(*) as victim_count,
+        COUNT(DISTINCT sector) FILTER (WHERE sector IS NOT NULL) as sector_count,
+        COUNT(DISTINCT country) FILTER (WHERE country IS NOT NULL) as country_count,
+        string_agg(DISTINCT sector, ' | ' ORDER BY sector) FILTER (WHERE sector IS NOT NULL) as incident_sectors,
+        string_agg(DISTINCT country, ' | ' ORDER BY country) FILTER (WHERE country IS NOT NULL) as incident_countries,
+        string_agg(DISTINCT attack_vector, ' | ' ORDER BY attack_vector) FILTER (WHERE attack_vector IS NOT NULL) as incident_vectors,
+        MIN(discovered_at) as earliest_incident,
+        MAX(discovered_at) as latest_incident,
+        COUNT(ransom_amount) FILTER (WHERE ransom_amount IS NOT NULL) as ransom_demands,
+        COUNT(CASE WHEN payment_status = 'paid' THEN 1 END) as paid_count,
+        COUNT(DISTINCT website) FILTER (WHERE website IS NOT NULL) as unique_sites
+      FROM ransomware_incidents
+      GROUP BY LOWER(group_name)
+      ORDER BY COUNT(*) DESC
+    `);
+
+    const actors = await this.getThreatActors(600);
+    const actorMap = new Map<string, typeof actors[0]>();
+    for (const a of actors) {
+      const key = a.name.toLowerCase();
+      const existing = actorMap.get(key);
+      if (!existing || (a.description && (!existing.description || a.description.length > existing.description.length))) {
+        actorMap.set(key, a);
+      }
+    }
+
+    const seenKeys = new Set<string>();
+    const directory: any[] = [];
+
+    for (const row of incidentAgg.rows as any[]) {
+      const groupKey = row.group_key as string;
+      if (seenKeys.has(groupKey)) continue;
+      seenKeys.add(groupKey);
+
+      const actor = actorMap.get(groupKey);
+      const displayName = actor?.name || row.display_name;
+
+      directory.push({
+        name: displayName,
+        victims: Number(row.victim_count),
+        active: actor?.active ?? true,
+        type: actor?.type || null,
+        origin: actor?.origin || null,
+        firstSeen: actor?.firstSeen || row.earliest_incident || null,
+        lastActive: actor?.lastActive || row.latest_incident || null,
+        description: actor?.description?.slice(0, 300) || null,
+        aliases: actor?.aliases || null,
+        ransomwareAsService: actor?.ransomwareAsService || false,
+        doubleExtortion: actor?.doubleExtortion || false,
+        dataExfiltration: actor?.dataExfiltration || false,
+        totalRansomCollected: actor?.totalRansomCollected || null,
+        averageRansom: actor?.averageRansom || null,
+        targetSectors: actor?.targetSectors || row.incident_sectors || null,
+        targetCountries: actor?.targetCountries || row.incident_countries || null,
+        statusMessage: actor?.statusMessage || null,
+        encryptionMethod: actor?.encryptionMethod || null,
+        knownCves: actor?.knownCves || null,
+        malwareFamilies: actor?.malwareFamilies || null,
+        attackVectors: actor?.attackVectors || row.incident_vectors || null,
+        affiliations: actor?.affiliations || null,
+        infrastructure: actor?.infrastructure || null,
+        governmentAdvisories: actor?.governmentAdvisories || null,
+        lawEnforcementActions: actor?.lawEnforcementActions || null,
+        sectorCount: Number(row.sector_count) || 0,
+        countryCount: Number(row.country_count) || 0,
+        ransomDemands: Number(row.ransom_demands) || 0,
+        paidCount: Number(row.paid_count) || 0,
+        uniqueSites: Number(row.unique_sites) || 0,
+        earliestIncident: row.earliest_incident || null,
+        latestIncident: row.latest_incident || null,
+      });
+    }
+
+    for (const [key, actor] of Array.from(actorMap.entries())) {
+      if (!seenKeys.has(key)) {
+        seenKeys.add(key);
+        directory.push({
+          name: actor.name,
+          victims: Number(actor.totalVictims) || 0,
+          active: actor.active ?? true,
+          type: actor.type || null,
+          origin: actor.origin || null,
+          firstSeen: actor.firstSeen || null,
+          lastActive: actor.lastActive || null,
+          description: actor.description?.slice(0, 300) || null,
+          aliases: actor.aliases || null,
+          ransomwareAsService: actor.ransomwareAsService || false,
+          doubleExtortion: actor.doubleExtortion || false,
+          dataExfiltration: actor.dataExfiltration || false,
+          totalRansomCollected: actor.totalRansomCollected || null,
+          averageRansom: actor.averageRansom || null,
+          targetSectors: actor.targetSectors || null,
+          targetCountries: actor.targetCountries || null,
+          statusMessage: actor.statusMessage || null,
+          encryptionMethod: actor.encryptionMethod || null,
+          knownCves: actor.knownCves || null,
+          malwareFamilies: actor.malwareFamilies || null,
+          attackVectors: actor.attackVectors || null,
+          affiliations: actor.affiliations || null,
+          infrastructure: actor.infrastructure || null,
+          governmentAdvisories: actor.governmentAdvisories || null,
+          lawEnforcementActions: actor.lawEnforcementActions || null,
+          sectorCount: 0,
+          countryCount: 0,
+          ransomDemands: 0,
+          paidCount: 0,
+          uniqueSites: 0,
+          earliestIncident: null,
+          latestIncident: null,
+        });
+      }
+    }
+
+    directory.sort((a, b) => b.victims - a.victims);
+    return directory;
   }
 
   // Threat Actors
@@ -1964,6 +2094,99 @@ export class DatabaseStorage implements IStorage {
       ))
       .limit(1);
     return !!existing;
+  }
+
+  async captureDailyThreatStats(): Promise<DailyThreatStats> {
+    const today = new Date().toISOString().split("T")[0];
+    const todayStart = new Date(today + "T00:00:00Z");
+
+    const [existing] = await db.select().from(dailyThreatStats).where(eq(dailyThreatStats.date, today)).limit(1);
+    if (existing) return existing;
+
+    const [cveTotal] = await db.select({ count: sql<number>`count(*)::int` }).from(cves);
+    const [cveNew] = await db.select({ count: sql<number>`count(*)::int` }).from(cves).where(gte(cves.createdAt, todayStart));
+    const [cveCritical] = await db.select({ count: sql<number>`count(*)::int` }).from(cves).where(gte(cves.score, 9.0));
+
+    const [ransomTotal] = await db.select({ count: sql<number>`count(*)::int` }).from(ransomwareIncidents);
+    const [ransomNew] = await db.select({ count: sql<number>`count(*)::int` }).from(ransomwareIncidents).where(gte(ransomwareIncidents.createdAt, todayStart));
+    const groupCounts = await db.select({ name: ransomwareIncidents.groupName, count: sql<number>`count(*)::int` })
+      .from(ransomwareIncidents).groupBy(ransomwareIncidents.groupName).orderBy(desc(sql`count(*)`));
+    const uniqueGroups = new Set(groupCounts.map(g => g.name.toLowerCase()));
+
+    const [actorTotal] = await db.select({ count: sql<number>`count(*)::int` }).from(threatActors);
+    const [actorActive] = await db.select({ count: sql<number>`count(*)::int` }).from(threatActors).where(eq(threatActors.active, true));
+
+    const [ipTotal] = await db.select({ count: sql<number>`count(*)::int` }).from(maliciousIps);
+    const [ipNew] = await db.select({ count: sql<number>`count(*)::int` }).from(maliciousIps).where(gte(maliciousIps.createdAt, todayStart));
+    const [urlTotal] = await db.select({ count: sql<number>`count(*)::int` }).from(maliciousUrls);
+    const [urlNew] = await db.select({ count: sql<number>`count(*)::int` }).from(maliciousUrls).where(gte(maliciousUrls.createdAt, todayStart));
+
+    const [breachTotal] = await db.select({ count: sql<number>`count(*)::int` }).from(breachIncidents);
+    const [kevTotal] = await db.select({ count: sql<number>`count(*)::int` }).from(cisaKev);
+    const [icsTotal] = await db.select({ count: sql<number>`count(*)::int` }).from(cisaIcsAdvisories);
+    const [feedTotal] = await db.select({ count: sql<number>`count(*)::int` }).from(threatFeeds);
+    const [feedActive] = await db.select({ count: sql<number>`count(*)::int` }).from(threatFeeds).where(eq(threatFeeds.isActive, true));
+
+    const [userTotal] = await db.select({ count: sql<number>`count(*)::int` }).from(users);
+    const [proSubs] = await db.select({ count: sql<number>`count(*)::int` }).from(subscriptions).where(and(eq(subscriptions.status, "active"), eq(subscriptions.plan, "pro")));
+    const [bizSubs] = await db.select({ count: sql<number>`count(*)::int` }).from(subscriptions).where(and(eq(subscriptions.status, "active"), eq(subscriptions.plan, "business")));
+    const [keysActive] = await db.select({ count: sql<number>`count(*)::int` }).from(apiKeys).where(eq(apiKeys.status, "active"));
+
+    const topGroup = groupCounts[0];
+
+    const sectorCounts = await db.select({ sector: ransomwareIncidents.sector, count: sql<number>`count(*)::int` })
+      .from(ransomwareIncidents).where(sql`${ransomwareIncidents.sector} IS NOT NULL`)
+      .groupBy(ransomwareIncidents.sector).orderBy(desc(sql`count(*)`)).limit(1);
+    const countryCounts = await db.select({ country: ransomwareIncidents.country, count: sql<number>`count(*)::int` })
+      .from(ransomwareIncidents).where(sql`${ransomwareIncidents.country} IS NOT NULL`)
+      .groupBy(ransomwareIncidents.country).orderBy(desc(sql`count(*)`)).limit(1);
+
+    const [inserted] = await db.insert(dailyThreatStats).values({
+      date: today,
+      totalCves: cveTotal.count,
+      newCvesToday: cveNew.count,
+      criticalCves: cveCritical.count,
+      totalRansomwareIncidents: ransomTotal.count,
+      newRansomwareToday: ransomNew.count,
+      activeRansomwareGroups: actorActive.count,
+      totalRansomwareGroups: uniqueGroups.size,
+      totalMaliciousIps: ipTotal.count,
+      newMaliciousIpsToday: ipNew.count,
+      totalMaliciousUrls: urlTotal.count,
+      newMaliciousUrlsToday: urlNew.count,
+      totalThreatActors: actorTotal.count,
+      totalBreaches: breachTotal.count,
+      totalCisaKev: kevTotal.count,
+      totalIcsAdvisories: icsTotal.count,
+      totalThreatFeeds: feedTotal.count,
+      activeFeedSources: feedActive.count,
+      topGroupName: topGroup?.name || null,
+      topGroupVictims: topGroup ? topGroup.count : 0,
+      topSector: sectorCounts[0]?.sector || null,
+      topCountry: countryCounts[0]?.country || null,
+      registeredUsers: userTotal.count,
+      proSubscribers: proSubs.count,
+      businessSubscribers: bizSubs.count,
+      apiKeysActive: keysActive.count,
+    }).returning();
+
+    return inserted;
+  }
+
+  async getDailyThreatStats(days = 90): Promise<DailyThreatStats[]> {
+    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    return db.select().from(dailyThreatStats)
+      .where(gte(dailyThreatStats.date, cutoff))
+      .orderBy(desc(dailyThreatStats.date));
+  }
+
+  async getDailyThreatStatsByRange(startDate: string, endDate: string): Promise<DailyThreatStats[]> {
+    return db.select().from(dailyThreatStats)
+      .where(and(
+        gte(dailyThreatStats.date, startDate),
+        sql`${dailyThreatStats.date} <= ${endDate}`
+      ))
+      .orderBy(dailyThreatStats.date);
   }
 }
 

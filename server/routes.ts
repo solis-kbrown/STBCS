@@ -867,33 +867,7 @@ Hiring: https://stbcybersecurity.com/support
     try {
       const key = "ransomware:groups:directory";
       if (cachedJson(res, key, TTL.RANSOMWARE_GROUPS)) return;
-      const groups = await storage.getActiveGroups();
-      const actors = await storage.getThreatActors(500);
-      const actorMap = new Map(actors.map(a => [a.name.toLowerCase(), a]));
-
-      const directory = groups.map(g => {
-        const actor = actorMap.get(g.name.toLowerCase());
-        return {
-          name: g.name,
-          victims: g.count,
-          active: actor?.active ?? true,
-          type: actor?.type || null,
-          origin: actor?.origin || null,
-          firstSeen: actor?.firstSeen || null,
-          lastActive: actor?.lastActive || null,
-          description: actor?.description?.slice(0, 200) || null,
-          ransomwareAsService: actor?.ransomwareAsService || false,
-          doubleExtortion: actor?.doubleExtortion || false,
-          dataExfiltration: actor?.dataExfiltration || false,
-          totalRansomCollected: actor?.totalRansomCollected || null,
-          averageRansom: actor?.averageRansom || null,
-          targetSectors: actor?.targetSectors || null,
-          targetCountries: actor?.targetCountries || null,
-          statusMessage: actor?.statusMessage || null,
-          encryptionMethod: actor?.encryptionMethod || null,
-        };
-      });
-
+      const directory = await storage.getGroupsDirectoryData();
       cacheAndSend(res, key, directory, TTL.RANSOMWARE_GROUPS);
     } catch (error) {
       console.error("Error fetching groups directory:", error);
