@@ -39,6 +39,7 @@ const ICSAdvisories = lazy(() => import("@/pages/ics-advisories"));
 const IOCSearch = lazy(() => import("@/pages/ioc-search"));
 const RiskScore = lazy(() => import("@/pages/risk-score"));
 const MonitorsPage = lazy(() => import("@/pages/monitors"));
+const GroupsDirectory = lazy(() => import("@/pages/groups"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -87,6 +88,7 @@ function Router() {
         <Route path="/ioc-search" component={IOCSearch}/>
         <Route path="/risk-score" component={RiskScore}/>
         <Route path="/monitors" component={MonitorsPage}/>
+        <Route path="/groups" component={GroupsDirectory}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

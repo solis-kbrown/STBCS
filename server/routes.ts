@@ -220,6 +220,13 @@ export async function registerRoutes(
   </url>
 
   <url>
+    <loc>https://stbcybersecurity.com/groups</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
     <loc>https://stbcybersecurity.com/exploits</loc>
     <lastmod>${today}</lastmod>
     <changefreq>hourly</changefreq>
@@ -853,6 +860,44 @@ Hiring: https://stbcybersecurity.com/support
     } catch (error) {
       console.error("Error fetching groups:", error);
       res.status(500).json({ error: "Failed to fetch active groups" });
+    }
+  });
+
+  app.get("/api/ransomware/groups/directory", async (req: Request, res: Response) => {
+    try {
+      const key = "ransomware:groups:directory";
+      if (cachedJson(res, key, TTL.RANSOMWARE_GROUPS)) return;
+      const groups = await storage.getActiveGroups();
+      const actors = await storage.getThreatActors(500);
+      const actorMap = new Map(actors.map(a => [a.name.toLowerCase(), a]));
+
+      const directory = groups.map(g => {
+        const actor = actorMap.get(g.name.toLowerCase());
+        return {
+          name: g.name,
+          victims: g.count,
+          active: actor?.active ?? true,
+          type: actor?.type || null,
+          origin: actor?.origin || null,
+          firstSeen: actor?.firstSeen || null,
+          lastActive: actor?.lastActive || null,
+          description: actor?.description?.slice(0, 200) || null,
+          ransomwareAsService: actor?.ransomwareAsService || false,
+          doubleExtortion: actor?.doubleExtortion || false,
+          dataExfiltration: actor?.dataExfiltration || false,
+          totalRansomCollected: actor?.totalRansomCollected || null,
+          averageRansom: actor?.averageRansom || null,
+          targetSectors: actor?.targetSectors || null,
+          targetCountries: actor?.targetCountries || null,
+          statusMessage: actor?.statusMessage || null,
+          encryptionMethod: actor?.encryptionMethod || null,
+        };
+      });
+
+      cacheAndSend(res, key, directory, TTL.RANSOMWARE_GROUPS);
+    } catch (error) {
+      console.error("Error fetching groups directory:", error);
+      res.status(500).json({ error: "Failed to fetch groups directory" });
     }
   });
 

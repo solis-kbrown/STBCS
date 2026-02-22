@@ -23,7 +23,8 @@ import {
   Skull,
   Factory,
   ShieldCheck,
-  MonitorCheck
+  MonitorCheck,
+  Users
 } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -65,6 +66,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/alerts", labelKey: "nav.alerts", icon: Activity, isPro: true },
     { href: "/messages", labelKey: "nav.messages", icon: MessageSquare, isBusiness: true },
     { href: "/ransomware", labelKey: "nav.ransomware", icon: ShieldOff },
+    { href: "/groups", labelKey: "nav.groups", icon: Users },
     { href: "/exploits", labelKey: "nav.exploits", icon: Bug },
     { href: "/breaches", labelKey: "nav.breaches", icon: Database },
     { href: "/threat-actors", labelKey: "nav.threatActors", icon: Skull },

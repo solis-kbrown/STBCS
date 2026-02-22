@@ -16,6 +16,10 @@ const PAGE_META: Record<string, PageMeta> = {
     title: 'Ransomware Tracker | STB Cybersecurity',
     description: 'Monitor active ransomware groups, victim postings, and attack analytics in real-time. Track LockBit, BlackCat, Cl0p with profiles, TTPs, and targeting data.',
   },
+  '/groups': {
+    title: 'Ransomware Groups Directory | STB Cybersecurity',
+    description: 'Browse all tracked ransomware groups with victim counts, activity status, TTPs, MITRE ATT&CK mapping, and detailed threat intelligence dossiers.',
+  },
   '/exploits': {
     title: 'Exploits & CVE Database | STB Cybersecurity',
     description: 'Search and track CVEs, zero-days, and exploits from NVD, CISA KEV, and 45+ feeds. CVSS scoring, EPSS predictions, and real-time exploit alerts.',
@@ -243,6 +247,7 @@ function getH1Text(path: string, meta: PageMeta): string {
   const titleMap: Record<string, string> = {
     '/': 'Real-Time Threat Intelligence & Incident Response',
     '/ransomware': 'Ransomware Tracker',
+    '/groups': 'Ransomware Groups Directory',
     '/exploits': 'Exploits & CVE Database',
     '/tools': 'Free Security Tools',
     '/search': 'Global Threat Search',

@@ -479,7 +479,7 @@ export class DatabaseStorage implements IStorage {
     .from(ransomwareIncidents)
     .groupBy(ransomwareIncidents.groupName)
     .orderBy(desc(sql`count(*)`))
-    .limit(20);
+    .limit(500);
     
     return result.map(r => ({ name: r.name, count: Number(r.count) }));
   }
