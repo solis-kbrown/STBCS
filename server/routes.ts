@@ -1,4 +1,4 @@
-import type { Express, Request, Response } from "express";
+import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import cookieParser from "cookie-parser";
 import { storage } from "./storage";
@@ -87,6 +87,26 @@ const proToolsLimiter = rateLimit({
   legacyHeaders: false,
   validate: { xForwardedForHeader: false },
 });
+
+const businessToolsLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 120, // Business users: 120 tool requests per minute
+  message: { error: "Rate limit exceeded. Please wait before trying again." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
+});
+
+function tieredToolsLimiter(req: Request, res: Response, next: NextFunction) {
+  const authReq = req as AuthenticatedRequest;
+  const tier = authReq.user?.tier;
+  if (tier && ["business", "enterprise"].includes(tier)) {
+    return businessToolsLimiter(req, res, next);
+  } else if (tier && ["pro", "supporter"].includes(tier)) {
+    return proToolsLimiter(req, res, next);
+  }
+  return freeToolsLimiter(req, res, next);
+}
 
 // Validation schemas
 const paginationSchema = z.object({
@@ -963,41 +983,6 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
-  // Export data (Pro feature)
-  app.get("/api/export/:type", strictLimiter, async (req: Request, res: Response) => {
-    try {
-      const { type } = req.params;
-      const limit = 5000; // Max export limit
-      
-      let data: any[] = [];
-      switch (type) {
-        case 'cves':
-          data = await storage.getCves(limit, 0);
-          break;
-        case 'ips':
-          data = await storage.getMaliciousIps(limit, 0);
-          break;
-        case 'urls':
-          data = await storage.getMaliciousUrls(limit, 0);
-          break;
-        case 'kev':
-          data = await storage.getCisaKev(limit, 0);
-          break;
-        case 'ransomware':
-          data = await storage.getRansomwareIncidents(limit, 0);
-          break;
-        default:
-          return res.status(400).json({ error: "Invalid export type" });
-      }
-      
-      res.setHeader('Content-Type', 'application/json');
-      res.setHeader('Content-Disposition', `attachment; filename="${type}_export_${Date.now()}.json"`);
-      res.json({ type, exportedAt: new Date().toISOString(), count: data.length, data });
-    } catch (error) {
-      console.error("Error exporting data:", error);
-      res.status(500).json({ error: "Failed to export data" });
-    }
-  });
 
   // Manual data refresh trigger (for admin use)
   app.post("/api/refresh", async (req: Request, res: Response) => {
@@ -1016,7 +1001,7 @@ Hiring: https://stbcybersecurity.com/support
   // ============ SECURITY TOOLS ENDPOINTS ============
 
   // IP Lookup Tool
-  app.get("/api/tools/ip-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.get("/api/tools/ip-lookup", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         ip: z.string().min(7).max(45),
@@ -1046,7 +1031,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // Domain Lookup Tool
-  app.get("/api/tools/domain-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.get("/api/tools/domain-lookup", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         domain: z.string().min(3).max(253),
@@ -1073,7 +1058,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // Port Scanner Tool
-  app.get("/api/tools/port-scan", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.get("/api/tools/port-scan", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         target: z.string().min(3).max(253),
@@ -1132,7 +1117,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // DNS Lookup Tool
-  app.get("/api/tools/dns-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.get("/api/tools/dns-lookup", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         domain: z.string().min(3).max(253),
@@ -1166,7 +1151,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // Check if IP is in our threat database
-  app.get("/api/tools/threat-check", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.get("/api/tools/threat-check", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         ip: z.string().min(7).max(45),
@@ -1472,7 +1457,7 @@ Hiring: https://stbcybersecurity.com/support
   // ==========================================
 
   // Shodan InternetDB lookup (free, no API key needed)
-  app.get("/api/tools/shodan-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.get("/api/tools/shodan-lookup", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         ip: z.string().min(7).max(45),
@@ -1524,7 +1509,7 @@ Hiring: https://stbcybersecurity.com/support
   // ==========================================
 
   // MX Record Lookup
-  app.post("/api/tools/mx-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/mx-lookup", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         domain: z.string().min(3).max(255),
@@ -1545,7 +1530,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // SPF Record Lookup
-  app.post("/api/tools/spf-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/spf-lookup", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         domain: z.string().min(3).max(255),
@@ -1566,7 +1551,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // DKIM Record Lookup
-  app.post("/api/tools/dkim-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/dkim-lookup", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         domain: z.string().min(3).max(255),
@@ -1588,7 +1573,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // DMARC Record Lookup
-  app.post("/api/tools/dmarc-lookup", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/dmarc-lookup", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         domain: z.string().min(3).max(255),
@@ -1609,7 +1594,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // Comprehensive Email Security Check
-  app.post("/api/tools/email-security", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/email-security", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         domain: z.string().min(3).max(255),
@@ -1634,7 +1619,7 @@ Hiring: https://stbcybersecurity.com/support
   // ==========================================
 
   // ThreatFox IOC Lookup (No API key required)
-  app.post("/api/tools/threatfox", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/threatfox", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         ioc: z.string().min(1).max(500),
@@ -1656,7 +1641,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // Malware Bazaar Hash Lookup (No API key required)
-  app.post("/api/tools/malware-bazaar", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/malware-bazaar", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         hash: z.string().min(32).max(64).regex(/^[a-fA-F0-9]+$/),
@@ -1677,7 +1662,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // SSL Labs Grade Check (No API key required)
-  app.post("/api/tools/ssl-labs", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/ssl-labs", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         host: z.string().min(3).max(255),
@@ -1698,7 +1683,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // URLScan.io Domain Search (Free tier)
-  app.post("/api/tools/urlscan", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/urlscan", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         query: z.string().min(3).max(255),
@@ -1719,7 +1704,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // PhishTank URL Check (Free with limitations)
-  app.post("/api/tools/phishtank", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/phishtank", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         url: z.string().min(10).max(2000).url(),
@@ -1740,7 +1725,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // Enhanced IP Geolocation (No API key required)
-  app.get("/api/tools/ip-geo", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.get("/api/tools/ip-geo", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         ip: z.string().min(7).max(45),
@@ -1765,7 +1750,7 @@ Hiring: https://stbcybersecurity.com/support
   // ==========================================
 
   // Password Strength Checker
-  app.post("/api/tools/password-strength", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/password-strength", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         password: z.string().min(1).max(128),
@@ -1786,7 +1771,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // Subnet/CIDR Calculator
-  app.get("/api/tools/subnet-calc", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.get("/api/tools/subnet-calc", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         cidr: z.string().min(7).max(18),
@@ -1812,7 +1797,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // Base64 Encode/Decode
-  app.post("/api/tools/base64", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/base64", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         input: z.string().max(100000),
@@ -1837,7 +1822,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // URL Encode/Decode
-  app.post("/api/tools/url-encode", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/url-encode", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         input: z.string().max(100000),
@@ -1862,7 +1847,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // Email Header Analyzer
-  app.post("/api/tools/email-headers", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.post("/api/tools/email-headers", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         headers: z.string().min(10).max(500000),
@@ -1883,7 +1868,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // SSL Certificate Checker
-  app.get("/api/tools/ssl-check", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.get("/api/tools/ssl-check", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         domain: z.string().min(3).max(253),
@@ -1909,7 +1894,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // Hash Analyzer
-  app.get("/api/tools/hash-analyze", freeToolsLimiter, async (req: Request, res: Response) => {
+  app.get("/api/tools/hash-analyze", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
       const schema = z.object({
         hash: z.string().min(16).max(256),
@@ -3078,7 +3063,9 @@ Hiring: https://stbcybersecurity.com/support
     try {
       const { type } = req.params;
       const format = (req.query.format as string) || "json";
-      const limit = Math.min(parseInt(req.query.limit as string) || 1000, 5000);
+      const isBusinessTier = ["business", "enterprise"].includes(req.user!.tier);
+      const maxLimit = isBusinessTier ? 10000 : 5000;
+      const limit = Math.min(parseInt(req.query.limit as string) || maxLimit, maxLimit);
       
       let data: any[];
       let filename: string;
