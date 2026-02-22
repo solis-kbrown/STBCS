@@ -80,8 +80,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <Link href="/">
           <div className="flex flex-col items-center cursor-pointer">
             <div className="relative">
-              <img src="/logo-new.png" alt="STB Cybersecurity Logo" className="h-24 w-auto shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/40 transition-shadow duration-300" />
+              <img src="/logo-new.png" alt="STB Cybersecurity Logo" className="h-20 w-auto shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/40 transition-shadow duration-300" />
             </div>
+            <span className="text-[11px] font-display font-bold tracking-[0.25em] uppercase text-zinc-400 mt-1">Cybersecurity</span>
           </div>
         </Link>
       </div>
