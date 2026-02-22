@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, Globe, Shield, Phone, MessageSquare, Send, Loader2, CheckCircle } from "lucide-react";
+import { Mail, Globe, Shield, Phone, MessageSquare, Send, Loader2, CheckCircle, Lock, ShieldCheck, CreditCard } from "lucide-react";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -167,15 +167,35 @@ export default function Footer() {
           )}
         </div>
 
-        <div className="border-t border-white/5 mt-4 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-xs text-muted-foreground">
-            &copy; {currentYear} STB Cybersecurity. All rights reserved.
-          </p>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
-            <a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a>
-            <a href="/sms-terms" className="hover:text-primary transition-colors">SMS Terms</a>
-            <a href="/api-docs" className="hover:text-primary transition-colors">API Documentation</a>
+        <div className="border-t border-white/5 mt-4 pt-6 space-y-4">
+          <div className="flex flex-wrap justify-center gap-6 text-[11px] text-zinc-500">
+            <span className="flex items-center gap-1.5">
+              <Lock className="h-3.5 w-3.5 text-green-500" />
+              <span>SSL/TLS Encrypted</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <CreditCard className="h-3.5 w-3.5 text-green-500" />
+              <span>Payments by Stripe</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <ShieldCheck className="h-3.5 w-3.5 text-green-500" />
+              <span>HTTPS Enforced</span>
+            </span>
+            <span className="flex items-center gap-1.5">
+              <Shield className="h-3.5 w-3.5 text-green-500" />
+              <span>Data Protected</span>
+            </span>
+          </div>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <p className="text-xs text-muted-foreground">
+              &copy; {currentYear} STB Cybersecurity. All rights reserved.
+            </p>
+            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
+              <a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a>
+              <a href="/sms-terms" className="hover:text-primary transition-colors">SMS Terms</a>
+              <a href="/api-docs" className="hover:text-primary transition-colors">API Documentation</a>
+            </div>
           </div>
         </div>
       </div>

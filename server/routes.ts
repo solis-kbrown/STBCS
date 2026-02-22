@@ -2400,7 +2400,8 @@ Hiring: https://www.stbcybersecurity.com/support
         return res.status(400).json({ error: "Invalid product" });
       }
       
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const customDomain = process.env.CUSTOM_DOMAIN;
+      const baseUrl = customDomain ? `https://${customDomain}` : `${req.protocol}://${req.get('host')}`;
       
       const session = await stripeService.createCheckoutSession({
         priceId,
@@ -2434,7 +2435,8 @@ Hiring: https://www.stbcybersecurity.com/support
       }
       
       const { amount, customerEmail, donorName } = parsed.data;
-      const baseUrl = `${req.protocol}://${req.get('host')}`;
+      const customDomain = process.env.CUSTOM_DOMAIN;
+      const baseUrl = customDomain ? `https://${customDomain}` : `${req.protocol}://${req.get('host')}`;
       
       const session = await stripeService.createDonationCheckout({
         amount,
