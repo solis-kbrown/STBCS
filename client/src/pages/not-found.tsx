@@ -20,13 +20,13 @@ export default function NotFound() {
           </div>
 
           <p className="text-sm text-zinc-500 mb-6">
-            The page you're looking for doesn't exist or has been moved.
+            This page doesn't exist or has been moved. Head back to the dashboard for live threat data.
           </p>
           
           <Link href="/">
             <Button className="bg-orange-500 hover:bg-orange-600 text-white" data-testid="button-go-home">
               <Home className="h-4 w-4 mr-2" />
-              Back to Dashboard
+              Back to Threat Dashboard
             </Button>
           </Link>
         </CardContent>

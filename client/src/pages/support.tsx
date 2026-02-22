@@ -28,13 +28,13 @@ const membershipTiers = [
     price: "$4.99",
     interval: "month",
     discount: "50% OFF",
-    description: "Support our mission and the cybersecurity community",
+    description: "Back our mission and keep free security tools available for everyone",
     icon: Coffee,
     features: [
-      "Access to supporter-only updates",
-      "Name listed on supporters page",
-      "Early access to new features",
-      "Supporting free security tools",
+      "Supporter-only platform updates",
+      "Your name on our supporters wall",
+      "Early access to new tools and features",
+      "Help keep free security tools running",
     ],
     color: "from-zinc-800/50 to-zinc-900/50",
     borderColor: "border-zinc-700",
@@ -45,16 +45,16 @@ const membershipTiers = [
     price: "$14.99",
     interval: "month",
     discount: "50% OFF",
-    description: "Full access to all STBCS Pro features",
+    description: "Everything you need to monitor threats targeting your business",
     icon: Rocket,
     popular: true,
     features: [
-      "Unlimited API access",
-      "Real-time threat alerts",
-      "Custom watchlists & notifications",
-      "Advanced search filters",
-      "Export capabilities",
-      "Priority email support",
+      "Unlimited threat intelligence API calls",
+      "Real-time email and SMS alerts when threats match your watchlist",
+      "Custom watchlists for companies, CVEs, and threat actors",
+      "Advanced search with severity, date, and vendor filters",
+      "Export threat data to CSV for your reports",
+      "Priority email support from our security team",
     ],
     color: "from-orange-500/20 to-orange-600/10",
     borderColor: "border-orange-500/50",
@@ -65,16 +65,16 @@ const membershipTiers = [
     price: "$49.99",
     interval: "month",
     discount: "50% OFF",
-    description: "Enterprise-grade threat intelligence",
+    description: "Threat intelligence built for security teams and managed service providers",
     icon: Building2,
     features: [
-      "Everything in Pro",
-      "Dedicated account manager",
-      "Custom API integrations",
-      "Team collaboration features",
-      "SLA guarantees",
-      "Custom data feeds",
-      "On-call support",
+      "Everything in Pro, plus:",
+      "A dedicated account manager who knows your environment",
+      "Custom API integrations tailored to your stack",
+      "Team accounts with shared watchlists and alerts",
+      "SLA-backed uptime and response time guarantees",
+      "Custom threat feeds filtered to your industry",
+      "On-call support for active incidents",
     ],
     color: "from-zinc-800/50 to-zinc-900/50",
     borderColor: "border-zinc-700",
@@ -82,7 +82,7 @@ const membershipTiers = [
 ];
 
 export default function SupportPage() {
-  useDocumentTitle("Support & Membership | STB Cybersecurity", "Subscribe to STBCS Supporter, Pro, or Business plans for advanced threat intelligence, real-time alerts, watchlists, and priority incident response.");
+  useDocumentTitle("Plans & Pricing | STB Cybersecurity", "Get real-time threat alerts, custom watchlists, and priority incident response. Plans start at $4.99/mo. 50% off during our grand opening.");
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
@@ -165,11 +165,9 @@ export default function SupportPage() {
               <Heart className="h-8 w-8 text-orange-400 fill-orange-400/30" aria-hidden="true" />
             </div>
           </div>
-          <h1 className="text-4xl font-display font-bold tracking-tight text-white">Support STBCS</h1>
+          <h1 className="text-4xl font-display font-bold tracking-tight text-white">Stay Ahead of the Threats That Target Your Business</h1>
           <p className="text-xl text-zinc-400 max-w-3xl mx-auto leading-relaxed">
-            STB Cybersecurity is dedicated to making threat intelligence accessible to everyone. 
-            Your support helps us maintain free security tools, develop new services, 
-            and strengthen the global cybersecurity community.
+            Real-time alerts when ransomware groups hit your industry. Custom watchlists for the CVEs and threat actors that matter to you. Pick a plan and start monitoring in minutes.
           </p>
         </div>
 
@@ -177,27 +175,27 @@ export default function SupportPage() {
           <Card className="bg-zinc-900/50 border-zinc-800">
             <CardContent className="pt-6 text-center space-y-2">
               <Shield className="h-10 w-10 mx-auto text-orange-400" aria-hidden="true" />
-              <h3 className="font-bold text-white">Free Security Tools</h3>
+              <h3 className="font-bold text-white">Free Tools, No Strings</h3>
               <p className="text-sm text-zinc-400">
-                Your support keeps our security tools free for researchers, students, and small businesses worldwide.
+                IP lookups, port scans, threat checks, and more. Free for researchers, students, and small businesses.
               </p>
             </CardContent>
           </Card>
           <Card className="bg-zinc-900/50 border-zinc-800">
             <CardContent className="pt-6 text-center space-y-2">
               <Users className="h-10 w-10 mx-auto text-blue-400" aria-hidden="true" />
-              <h3 className="font-bold text-white">Community Building</h3>
+              <h3 className="font-bold text-white">Built by Practitioners</h3>
               <p className="text-sm text-zinc-400">
-                We're building a network of security professionals sharing knowledge to protect everyone.
+                Our team handles real incident response and ransomware recovery cases. This platform is built from the front lines.
               </p>
             </CardContent>
           </Card>
           <Card className="bg-zinc-900/50 border-zinc-800">
             <CardContent className="pt-6 text-center space-y-2">
               <Zap className="h-10 w-10 mx-auto text-yellow-400" aria-hidden="true" />
-              <h3 className="font-bold text-white">New Development</h3>
+              <h3 className="font-bold text-white">Your Money, Put to Work</h3>
               <p className="text-sm text-zinc-400">
-                Funding goes directly toward developing new threat intelligence features and integrations.
+                Every dollar funds API calls, data feeds, hosting, and new features. No investors, no ads, no data selling.
               </p>
             </CardContent>
           </Card>
@@ -331,10 +329,9 @@ export default function SupportPage() {
 
         <TabsContent value="membership" className="space-y-6">
           <div className="text-center max-w-2xl mx-auto mb-8">
-            <h2 className="text-2xl font-bold mb-2 text-white">Choose Your Membership</h2>
+            <h2 className="text-2xl font-bold mb-2 text-white">Pick the Plan That Fits Your Threat Profile</h2>
             <p className="text-zinc-400">
-              Become a member to support our work and unlock powerful security features.
-              Cancel anytime - all recurring payments are managed securely through Stripe.
+              From community supporter to full enterprise coverage. Cancel anytime, no long-term contracts.
             </p>
           </div>
 
@@ -383,7 +380,7 @@ export default function SupportPage() {
                     data-testid={`button-subscribe-${tier.name.toLowerCase()}`}
                   >
                     <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />
-                    Subscribe
+                    Start {tier.name} Plan
                   </Button>
                 </CardContent>
               </Card>
@@ -419,14 +416,12 @@ export default function SupportPage() {
 
         <Card className="bg-gradient-to-r from-orange-500/5 to-zinc-900/50 border-orange-500/20">
           <CardContent className="py-8 text-center space-y-4">
-            <h3 className="text-2xl font-bold text-white">A Message From the Founder</h3>
+            <h3 className="text-2xl font-bold text-white">Why We Built This</h3>
             <blockquote className="text-zinc-400 max-w-3xl mx-auto italic leading-relaxed">
-              "At STBCS, we don't just track and monitor cybersecurity threats - we live it on the front lines every single day.
-              Our team of professional Cybersecurity Consultants, Recovery Engineers, and Threat Hunters handle real 
-              Incident Response cases and Ransomware Recovery for small to medium-sized businesses.
-              We've seen firsthand the devastation that cyberattacks cause, which is why we built this platform - 
-              to help organizations stay ahead of threats before they become disasters.
-              Your support helps us continue serving the community that needs it most."
+              "We respond to ransomware attacks, recover encrypted systems, and hunt threats inside compromised networks. That's our day job.
+              We built STBCS because the businesses we help needed a way to see threats coming before they hit.
+              Most SMBs can't afford a dedicated threat intel team. This platform changes that.
+              Your support keeps the tools free, the data flowing, and the lights on."
             </blockquote>
             <p className="font-bold text-orange-400">- The STBCS Team</p>
           </CardContent>
@@ -435,12 +430,10 @@ export default function SupportPage() {
         <Card className="border-orange-500/20 bg-zinc-900/50">
           <CardContent className="py-6">
             <div className="max-w-3xl mx-auto text-center space-y-4">
-              <h3 className="text-lg font-bold text-white">100% Community Funded</h3>
+              <h3 className="text-lg font-bold text-white">100% Community Funded. Zero Ads. Zero Data Selling.</h3>
               <p className="text-zinc-400 text-sm leading-relaxed">
-                STBCS is funded entirely by our community. Donations, memberships, and business partnerships cover everything - 
-                the website, applications, development, research, hosting, and the APIs that power our threat intelligence feeds. 
-                Every lookup, every scan, and every query costs real money. Your support keeps the lights on and allows us 
-                to continue providing a service like no other.
+                Every IP lookup, every threat scan, every API call costs real money to run. There are no investors, no ad revenue, and no data harvesting.
+                Memberships, donations, and partnerships fund the hosting, the 45+ data feeds, the development, and the research. That's it.
               </p>
               <div className="flex flex-wrap justify-center gap-4 text-xs text-zinc-500 pt-2">
                 <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" aria-hidden="true" /> Hosting & Infrastructure</span>
@@ -463,10 +456,10 @@ export default function SupportPage() {
           <CardContent>
             <div className="text-center py-6 space-y-3">
               <p className="text-zinc-300 text-sm">
-                Be one of the first to support STB Cybersecurity and get your name featured here.
+                Be one of the first names on the wall. Early supporters get permanent recognition.
               </p>
               <p className="text-xs text-zinc-500">
-                Become a Supporter for $4.99/month and help us keep free threat intelligence accessible to everyone.
+                Start a Supporter plan at $4.99/month and your name appears here.
               </p>
             </div>
           </CardContent>
@@ -475,12 +468,12 @@ export default function SupportPage() {
         <Card className="border-white/5 bg-card/50">
           <CardHeader>
             <CardTitle className="text-lg text-white">Business Partnerships</CardTitle>
-            <CardDescription>Interested in advertising or partnership opportunities?</CardDescription>
+            <CardDescription>Put your brand in front of security professionals and decision-makers</CardDescription>
           </CardHeader>
           <CardContent className="text-sm text-zinc-400">
             <p className="mb-3">
-              We offer limited partnership spots for cybersecurity vendors, training providers, and security-focused businesses. 
-              Contact us to discuss sponsorship and advertising options.
+              Limited sponsorship spots for cybersecurity vendors, training providers, and security-focused businesses.
+              Our audience includes IT managers, security analysts, and business owners actively researching threats.
             </p>
             <a href="mailto:partnerships@stbcybersecurity.com" className="text-orange-400 hover:underline">
               partnerships@stbcybersecurity.com

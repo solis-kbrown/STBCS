@@ -138,7 +138,7 @@ export default function ThreatFeeds() {
           <div>
             <h1 className="text-3xl font-display font-bold text-white mb-2">Threat Intelligence Feeds</h1>
             <p className="text-muted-foreground">
-              Real-time data from 45+ threat intelligence sources including government feeds, abuse trackers, and security research.
+              Malicious IPs, phishing URLs, and CISA Known Exploited Vulnerabilities pulled from 45+ sources every 15 minutes.
             </p>
           </div>
           <Badge className="bg-green-600/20 text-green-400 border-green-500/50 px-4 py-2" data-testid="badge-live-status">
@@ -155,7 +155,7 @@ export default function ThreatFeeds() {
               Active Data Sources
             </CardTitle>
             <CardDescription>
-              All feeds are automatically refreshed every 30 minutes. Pro tier unlocks additional real-time feeds.
+              Every feed refreshes automatically. Pro members get higher rate limits and export access.
             </CardDescription>
           </CardHeader>
           <CardContent>

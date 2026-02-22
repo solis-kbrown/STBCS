@@ -170,13 +170,13 @@ export default function Alerts() {
               <div className="mx-auto w-16 h-16 rounded-full bg-orange-500/10 flex items-center justify-center mb-6">
                 <Lock className="h-8 w-8 text-orange-400" />
               </div>
-              <h2 className="text-2xl font-bold text-white mb-3">Pro Feature</h2>
+              <h2 className="text-2xl font-bold text-white mb-3">Get Alerted Before It's Too Late</h2>
               <p className="text-zinc-400 mb-6">
-                The Alerts Center provides real-time threat notifications, watchlist management, and breach intelligence. Sign in to access these features.
+                Track specific companies, CVEs, threat actors, and keywords. Get email or SMS alerts the moment a match appears in our threat feeds.
               </p>
               <div className="space-y-3">
                 <p className="text-sm text-zinc-500">
-                  Already have an account? Click "Sign In" in the header to continue.
+                  Already have an account? Sign in above to access your alerts.
                 </p>
                 <Link href="/support">
                   <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white">
@@ -205,7 +205,7 @@ export default function Alerts() {
               <h1 className="text-3xl font-display font-bold text-white">Pro Alerts Center</h1>
               <Badge className="bg-orange-500 text-white font-bold">PRO</Badge>
             </div>
-            <p className="text-zinc-400">Real-time threat alerts, watchlists, and breach intelligence for Pro users.</p>
+            <p className="text-zinc-400">Your watchlist monitors 45+ feeds and alerts you the moment something matches.</p>
           </div>
           {unreadCount > 0 && (
             <Button 

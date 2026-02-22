@@ -86,7 +86,7 @@ export default function News() {
       <div className="space-y-8 animate-in fade-in duration-500">
         <div className="max-w-2xl">
           <h1 className="text-3xl font-display font-bold text-white mb-2">Intel & News</h1>
-          <p className="text-muted-foreground">Curated cybersecurity news, policy updates, and threat intelligence reports.</p>
+          <p className="text-muted-foreground">Breaking security news, threat reports, and policy updates from trusted sources. Updated continuously.</p>
         </div>
 
         <Card className="border-white/5 bg-card/50">

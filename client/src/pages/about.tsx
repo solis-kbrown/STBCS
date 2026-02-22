@@ -8,27 +8,27 @@ const services = [
   {
     icon: Shield,
     title: "Incident Response",
-    description: "Rapid response to active cyber threats. Our team deploys immediately to contain, investigate, and remediate security incidents for your business.",
+    description: "Active breach? Our team deploys immediately to contain the attack, investigate root cause, and get your systems back to a known-good state.",
   },
   {
     icon: Target,
     title: "Ransomware Recovery",
-    description: "Expert ransomware negotiation, decryption, and recovery services. We help businesses get back online quickly and securely after an attack.",
+    description: "We negotiate with threat actors, attempt decryption, and restore your operations. Our goal: get you back online as fast as possible.",
   },
   {
     icon: Search,
     title: "Threat Hunting",
-    description: "Proactive threat hunting to identify and neutralize hidden threats in your environment before they cause damage.",
+    description: "Attackers already inside your network? We find them. Proactive hunts identify compromised accounts, backdoors, and lateral movement before the damage spreads.",
   },
   {
     icon: MessageSquare,
     title: "Security Consulting",
-    description: "Comprehensive security assessments, policy development, and strategic guidance to strengthen your organization's security posture.",
+    description: "Gap assessments, policy development, and hands-on guidance. We help you build defenses that match your risk profile and budget.",
   },
 ];
 
 export default function AboutPage() {
-  useDocumentTitle("About Us | STBCS", "About STB Cybersecurity - Professional cybersecurity services including incident response, ransomware recovery, threat hunting, and security consulting for small to medium-sized businesses.");
+  useDocumentTitle("About Us | STB Cybersecurity", "Incident response, ransomware recovery, and threat hunting for small to medium-sized businesses. Real practitioners. Real cases. Real results.");
 
   return (
     <Layout>
@@ -40,12 +40,12 @@ export default function AboutPage() {
             </div>
           </div>
           <h1 className="text-4xl font-display font-bold tracking-tight text-white" data-testid="text-about-title">
-            About STB Cybersecurity
+            We Fight Cyberattacks for a Living
           </h1>
           <p className="text-xl text-zinc-400 max-w-3xl mx-auto leading-relaxed" data-testid="text-about-description">
-            STB Cybersecurity (STBCS) provides professional cybersecurity services for small to medium-sized businesses.
-            We specialize in incident response, ransomware recovery, threat hunting, and security consulting —
-            helping organizations stay ahead of threats and recover quickly when attacks occur.
+            STB Cybersecurity is a team of incident responders, recovery engineers, and threat hunters.
+            We work with small to medium-sized businesses who need real security help, not a sales pitch.
+            When ransomware locks your files or an attacker gets inside your network, we're the team you call.
           </p>
         </div>
 
@@ -53,10 +53,10 @@ export default function AboutPage() {
           <CardContent className="py-8 text-center space-y-4">
             <h2 className="text-2xl font-bold text-white" data-testid="text-about-mission-title">Our Mission</h2>
             <p className="text-zinc-400 max-w-3xl mx-auto leading-relaxed" data-testid="text-about-mission">
-              Making enterprise-grade threat intelligence accessible to businesses of all sizes. We believe every organization
-              deserves access to the same caliber of cybersecurity expertise and tools that protect the world's largest enterprises.
-              Our platform combines real-time threat data, professional consulting, and community-driven intelligence to
-              deliver comprehensive protection for the businesses that need it most.
+              Fortune 500 companies have dedicated threat intelligence teams. Most small businesses don't.
+              We built STBCS to close that gap. Our platform pulls data from 45+ live threat feeds and pairs it with
+              hands-on consulting from people who handle real incidents every day.
+              The goal is simple: give every business the tools and expertise to see threats coming and respond fast.
             </p>
           </CardContent>
         </Card>
@@ -83,10 +83,10 @@ export default function AboutPage() {
         <Card className="border-orange-500/20 bg-zinc-900/50">
           <CardContent className="py-8">
             <div className="max-w-3xl mx-auto text-center space-y-6">
-              <h2 className="text-2xl font-bold text-white" data-testid="text-about-contact-title">Get In Touch</h2>
+              <h2 className="text-2xl font-bold text-white" data-testid="text-about-contact-title">Under Attack? Call Now.</h2>
               <p className="text-zinc-400 text-sm leading-relaxed">
-                Whether you're facing an active security incident or looking to strengthen your defenses,
-                our team is ready to help. Reach out anytime — we're available 24/7 for emergencies.
+                Active incident or just want to talk about your security posture? We're available 24/7 for emergencies
+                and during business hours for everything else.
               </p>
               <div className="flex flex-wrap justify-center gap-6">
                 <a

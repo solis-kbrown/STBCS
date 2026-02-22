@@ -1760,7 +1760,7 @@ export default function ToolsPage() {
           <div>
             <h1 className="text-3xl font-display font-bold text-white">Security Tools</h1>
             <p className="text-muted-foreground mt-1">
-              Professional cybersecurity utilities for threat intelligence and network reconnaissance.
+              Look up IPs, scan ports, check SSL certificates, analyze email headers, and more. No account needed for basic tools.
             </p>
           </div>
           <div className="flex items-center gap-3">
@@ -1779,9 +1779,9 @@ export default function ToolsPage() {
               <div className="flex items-center gap-3">
                 <Crown className="h-6 w-6 text-amber-400" />
                 <div>
-                  <h3 className="font-bold text-white">Upgrade to Pro for Unlimited Access</h3>
+                  <h3 className="font-bold text-white">Need More Scans? Go Pro.</h3>
                   <p className="text-sm text-muted-foreground">
-                    Get unlimited tool usage, advanced port scanning, priority support, and more.
+                    6x the rate limit, advanced Nmap scanning, data export, and priority support.
                   </p>
                 </div>
               </div>

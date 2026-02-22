@@ -132,7 +132,7 @@ export default function Ransomware() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-3xl font-display font-bold text-white mb-2">Ransomware Tracker</h1>
-            <p className="text-muted-foreground">Monitor active ransomware groups, victim postings, and negotiation statuses.</p>
+            <p className="text-muted-foreground">Live tracking of ransomware group activity, new victim postings, and attack trends across industries and countries.</p>
           </div>
           <div className="flex gap-2 w-full md:w-auto">
             <Button 

@@ -12,7 +12,7 @@ import { useMemo } from "react";
 import { format, parseISO } from "date-fns";
 
 export default function Dashboard() {
-  useDocumentTitle("STBCS | Threat Intelligence & Incident Response", "STBCS delivers 24/7 incident response, ransomware recovery, and real-time threat intelligence from 45+ feeds. Trusted cybersecurity partner for SMBs.");
+  useDocumentTitle("STB Cybersecurity | Real-Time Threat Intelligence for SMBs", "Track ransomware, CVEs, and malicious IPs across 45+ live feeds. Get 24/7 incident response, ransomware recovery, and threat hunting for your business.");
   const { data: stats, isLoading: statsLoading } = useStats();
   const { data: cvesData, isLoading: cvesLoading } = useCves(5);
   const { data: ransomwareData, isLoading: ransomwareLoading } = useRansomware(5);
@@ -60,14 +60,14 @@ export default function Dashboard() {
               LIVE THREAT LEVEL: ELEVATED
             </Badge>
             <h1 className="text-4xl font-display font-bold text-white mb-2 tracking-wide">
-              FRONTLINE THREAT <span className="text-primary">INTELLIGENCE</span>
+              KNOW THE THREAT <span className="text-primary">BEFORE IT HITS</span>
             </h1>
             <p className="text-muted-foreground text-lg mb-6">
-              Real-time threat monitoring backed by expert consulting. We help small to medium-sized businesses build proactive defenses and respond decisively when incidents occur.
+              45+ live threat feeds. Ransomware tracking. CVE monitoring. When your business faces an attack, our incident response team is one call away.
             </p>
             <div className="flex gap-4">
               <Button className="bg-primary hover:bg-primary/90 text-white font-bold" data-testid="button-view-incidents" asChild>
-                <a href="/ransomware">VIEW LATEST INCIDENTS</a>
+                <a href="/ransomware">SEE ACTIVE THREATS</a>
               </Button>
               <Button 
                 variant="outline" 
@@ -130,7 +130,7 @@ export default function Dashboard() {
           <Card className="col-span-2 border-white/5 bg-card/50">
             <CardHeader>
               <CardTitle className="font-display">Threat Velocity</CardTitle>
-              <CardDescription>New CVEs vs Ransomware Incidents (Last 14 Days)</CardDescription>
+              <CardDescription>How fast new vulnerabilities and ransomware attacks are emerging</CardDescription>
             </CardHeader>
             <CardContent className="h-[300px]">
               {trendsLoading ? (
@@ -187,7 +187,7 @@ export default function Dashboard() {
           <Card className="col-span-1 border-white/5 bg-card/50">
             <CardHeader>
               <CardTitle className="font-display">Top Active Exploits</CardTitle>
-              <CardDescription>Most critical vulnerabilities actively targeted.</CardDescription>
+              <CardDescription>Vulnerabilities attackers are targeting right now</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {cvesLoading ? (
@@ -222,7 +222,7 @@ export default function Dashboard() {
                   </div>
                 ))
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-4">No CVEs loaded yet. Click refresh to fetch data.</p>
+                <p className="text-sm text-muted-foreground text-center py-4">Vulnerability data loading. Hit Refresh to pull the latest.</p>
               )}
               <Button variant="ghost" className="w-full text-xs text-muted-foreground hover:text-primary" asChild>
                 <a href="/exploits">VIEW ALL EXPLOITS</a>
@@ -236,7 +236,7 @@ export default function Dashboard() {
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
               <CardTitle className="font-display">Recent Ransomware Incidents</CardTitle>
-              <CardDescription>Live feed from dark web monitoring and victim sites.</CardDescription>
+              <CardDescription>Live feed tracking new victims claimed by ransomware groups</CardDescription>
             </div>
             <Button variant="outline" className="border-white/10 hover:bg-white/5 text-xs" data-testid="button-export-csv" asChild>
               <a href="/support"><ExternalLink className="h-3 w-3 mr-2" aria-hidden="true" />EXPORT CSV (PRO)</a>
@@ -288,7 +288,7 @@ export default function Dashboard() {
                   </tbody>
                 </table>
               ) : (
-                <p className="text-sm text-muted-foreground text-center py-8">No ransomware incidents loaded. Click refresh to fetch data.</p>
+                <p className="text-sm text-muted-foreground text-center py-8">Incident data loading. Hit Refresh to pull the latest.</p>
               )}
             </div>
           </CardContent>
