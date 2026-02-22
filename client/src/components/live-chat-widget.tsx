@@ -226,9 +226,7 @@ export default function LiveChatWidget() {
           <div className="bg-gradient-to-r from-zinc-900 via-zinc-900 to-zinc-800 px-4 py-3 flex items-center justify-between border-b border-zinc-700/50">
             <div className="flex items-center gap-3">
               <div className="relative">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
-                  <Shield className="h-4.5 w-4.5 text-white" />
-                </div>
+                <img src="/brand/icon-shield.png" alt="STBCS" className="w-9 h-9 rounded-xl shadow-lg shadow-orange-500/20" />
                 <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-emerald-500 rounded-full border-2 border-zinc-900" />
               </div>
               <div>

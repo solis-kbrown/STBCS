@@ -85,6 +85,7 @@ export default function CheckoutPage() {
     return (
       <Layout>
         <div className="max-w-2xl mx-auto py-16 text-center space-y-4">
+          <img src="/brand/icon-shield.png" alt="STBCS" className="h-14 w-14 mx-auto drop-shadow-[0_0_10px_rgba(0,200,255,0.3)] opacity-70" />
           <p className="text-zinc-400">Invalid checkout request. Please go back and try again.</p>
           <Button onClick={() => navigate("/support")} variant="outline" data-testid="button-back-support">
             <ArrowLeft className="h-4 w-4 mr-2" /> Back to Membership
@@ -99,6 +100,7 @@ export default function CheckoutPage() {
     return (
       <Layout>
         <div className="max-w-2xl mx-auto py-16 text-center space-y-4">
+          <img src="/brand/icon-shield.png" alt="STBCS" className="h-14 w-14 mx-auto drop-shadow-[0_0_10px_rgba(0,200,255,0.3)] opacity-70" />
           <p className="text-zinc-400">Invalid donation amount. Please go back and try again.</p>
           <Button onClick={() => navigate("/support")} variant="outline" data-testid="button-back-support">
             <ArrowLeft className="h-4 w-4 mr-2" /> Back to Support

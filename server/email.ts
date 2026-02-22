@@ -123,7 +123,7 @@ export function generateAlertEmail(params: {
                       </td>
                       <td style="vertical-align: middle;">
                         <h1 style="margin: 0; color: #fff; font-size: 22px; font-weight: bold;">
-                          <span style="color: #06b6d4;">STB</span> Cybersecurity
+                          <span style="color: #f97316;">STB</span> Cybersecurity
                         </h1>
                         <p style="margin: 3px 0 0; color: #888; font-size: 11px; letter-spacing: 1px;">STOP THE BLEED &bull; THREAT INTELLIGENCE</p>
                       </td>
@@ -217,7 +217,7 @@ export function generateWeeklyDigestEmail(params: {
                 </td>
                 <td style="vertical-align: middle;">
                   <h1 style="margin: 0; color: #fff; font-size: 22px; font-weight: bold;">
-                    <span style="color: #06b6d4;">STB</span> Cybersecurity
+                    <span style="color: #f97316;">STB</span> Cybersecurity
                   </h1>
                   <p style="margin: 3px 0 0; color: #888; font-size: 11px; letter-spacing: 1px;">STOP THE BLEED &bull; WEEKLY SECURITY DIGEST</p>
                   <p style="margin: 10px 0 0; color: #666; font-size: 13px;">${params.weekStart} - ${params.weekEnd}</p>

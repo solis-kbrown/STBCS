@@ -102,14 +102,21 @@ export async function sendAdminNotification(params: {
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #1a1a1a; border-radius: 8px; border: 1px solid #333;">
           <tr>
-            <td style="padding: 30px 40px; border-bottom: 1px solid #333;">
+            <td style="padding: 30px 40px; border-bottom: 1px solid #333; background: linear-gradient(135deg, #1a1a1a 0%, #0f172a 100%);">
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td>
-                    <h1 style="margin: 0; color: #fff; font-size: 24px; font-weight: bold;">
-                      <span style="color: #f97316;">STBCS</span> Admin Alert
-                    </h1>
-                    <p style="margin: 5px 0 0; color: #888; font-size: 12px;">System Notification</p>
+                  <td style="vertical-align: middle;">
+                    <table cellpadding="0" cellspacing="0"><tr>
+                      <td style="vertical-align: middle; padding-right: 12px;">
+                        <img src="https://stbcybersecurity.com/brand/icon-shield.png" alt="STBCS" width="40" height="40" style="display: block; border: 0;" />
+                      </td>
+                      <td style="vertical-align: middle;">
+                        <h1 style="margin: 0; color: #fff; font-size: 22px; font-weight: bold;">
+                          <span style="color: #f97316;">STBCS</span> Admin Alert
+                        </h1>
+                        <p style="margin: 3px 0 0; color: #888; font-size: 11px; letter-spacing: 1px;">SYSTEM NOTIFICATION</p>
+                      </td>
+                    </tr></table>
                   </td>
                   <td align="right">
                     <span style="background-color: ${typeColors[params.type]}; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold;">
