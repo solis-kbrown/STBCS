@@ -1,7 +1,8 @@
 import { storage } from "./storage";
 import type { InsertCve, InsertRansomware, InsertNews, InsertMaliciousIp, InsertMaliciousUrl, InsertCisaKev, InsertNotification } from "@shared/schema";
 import { db } from "./db";
-import { watchlistItems } from "@shared/schema";
+import { eq } from "drizzle-orm";
+import { watchlistItems, cves } from "@shared/schema";
 import { createLogger, scraperLog } from "./logger";
 import Parser from "rss-parser";
 const log = createLogger("Scraper");
@@ -3310,6 +3311,12 @@ export async function fetchAllData(): Promise<void> {
   await delay(1000);
   
   // ===========================================
+  // EPSS ENRICHMENT (FIRST.org - No API key)
+  // ===========================================
+  try { scraperLog.recordFeed("EPSS", await fetchEPSSScores()); } catch(e) { scraperLog.recordError("EPSS", e); }
+  await delay(1000);
+  
+  // ===========================================
   // RANSOMWARE & NEWS DATA
   // ===========================================
   try { scraperLog.recordFeed("Ransomware", await fetchRansomwareData()); } catch(e) { scraperLog.recordError("Ransomware", e); }
@@ -3536,6 +3543,71 @@ export function startDataRefreshScheduler(intervalMinutes = 15): void {
   refreshInterval = setInterval(() => {
     fetchAndInvalidate().catch(console.error);
   }, intervalMinutes * 60 * 1000);
+}
+
+// ============================================
+// EPSS ENRICHMENT (FIRST.org API - No API key required)
+// Enriches CVEs with Exploit Prediction Scoring System data
+// Shows probability of exploitation in the next 30 days
+// ============================================
+export async function fetchEPSSScores(): Promise<number> {
+  try {
+    const allCves = await storage.getCves(500);
+    const cvesNeedingEpss = allCves.filter(c => !c.epssScore || c.epssScore === 0);
+    
+    if (cvesNeedingEpss.length === 0) {
+      log.debug("All CVEs already have EPSS scores");
+      return 0;
+    }
+    
+    const batchSize = 100;
+    let enriched = 0;
+    
+    for (let i = 0; i < cvesNeedingEpss.length; i += batchSize) {
+      const batch = cvesNeedingEpss.slice(i, i + batchSize);
+      const cveIds = batch.map(c => c.cveId).join(',');
+      
+      try {
+        const response = await fetch(`https://api.first.org/data/v1/epss?cve=${cveIds}`, {
+          headers: { 'Accept': 'application/json' },
+          signal: AbortSignal.timeout(15000),
+        });
+        
+        if (!response.ok) {
+          log.debug(`EPSS API returned ${response.status} for batch ${i / batchSize + 1}`);
+          continue;
+        }
+        
+        const data = await response.json() as { data?: Array<{ cve: string; epss: string; percentile: string }> };
+        
+        if (data.data && Array.isArray(data.data)) {
+          for (const entry of data.data) {
+            const epssScore = parseFloat(entry.epss);
+            const epssPercentile = parseFloat(entry.percentile);
+            
+            if (!isNaN(epssScore) && !isNaN(epssPercentile)) {
+              try {
+                await db.update(cves)
+                  .set({ epssScore, epssPercentile })
+                  .where(eq(cves.cveId, entry.cve));
+                enriched++;
+              } catch {}
+            }
+          }
+        }
+        
+        await delay(1000);
+      } catch (batchErr) {
+        log.debug(`EPSS batch ${i / batchSize + 1} error: ${batchErr}`);
+      }
+    }
+    
+    log.info(`EPSS enrichment: ${enriched} CVEs updated with exploit prediction scores`);
+    return enriched;
+  } catch (error) {
+    log.error("EPSS enrichment failed:", error);
+    return 0;
+  }
 }
 
 export function stopDataRefreshScheduler(): void {

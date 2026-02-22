@@ -31,6 +31,9 @@ const AccountPage = lazy(() => import("@/pages/account"));
 const CheckoutPage = lazy(() => import("@/pages/checkout"));
 const CheckoutReturnPage = lazy(() => import("@/pages/checkout-return"));
 const AboutPage = lazy(() => import("@/pages/about"));
+const Breaches = lazy(() => import("@/pages/breaches"));
+const ThreatActors = lazy(() => import("@/pages/threat-actors"));
+const RansomwarePayments = lazy(() => import("@/pages/ransomware-payments"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -70,6 +73,8 @@ function Router() {
         <Route path="/checkout" component={CheckoutPage}/>
         <Route path="/checkout/return" component={CheckoutReturnPage}/>
         <Route path="/about" component={AboutPage}/>
+        <Route path="/breaches" component={Breaches}/>
+        <Route path="/threat-actors" component={ThreatActors}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

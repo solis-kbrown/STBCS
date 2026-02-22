@@ -2015,8 +2015,133 @@ Hiring: https://stbcybersecurity.com/support
       }
       
       const { analyzeHash } = await import("./tools.js");
-      const result = analyzeHash(parsed.data.hash);
-      res.json(result);
+      const basicResult = analyzeHash(parsed.data.hash);
+      
+      const hash = parsed.data.hash.trim().toLowerCase();
+      const sources: any[] = [];
+      let malwareVerdict = "Unknown";
+      let malwareFamily = null as string | null;
+      let detectionRate = null as string | null;
+      let tags: string[] = [];
+      
+      const vtKey = process.env.VIRUSTOTAL_API_KEY;
+      if (vtKey) {
+        try {
+          const vtRes = await fetch(`https://www.virustotal.com/api/v3/files/${hash}`, {
+            headers: { 'x-apikey': vtKey },
+            signal: AbortSignal.timeout(10000),
+          });
+          if (vtRes.ok) {
+            const vtData = await vtRes.json() as any;
+            const attrs = vtData.data?.attributes;
+            if (attrs) {
+              const stats = attrs.last_analysis_stats || {};
+              const malicious = stats.malicious || 0;
+              const total = (stats.malicious || 0) + (stats.undetected || 0) + (stats.harmless || 0);
+              detectionRate = `${malicious}/${total}`;
+              if (malicious > 0) malwareVerdict = "Malicious";
+              if (attrs.popular_threat_classification?.suggested_threat_label) {
+                malwareFamily = attrs.popular_threat_classification.suggested_threat_label;
+              }
+              if (attrs.tags) tags.push(...attrs.tags.slice(0, 10));
+              sources.push({
+                name: "VirusTotal",
+                status: malicious > 0 ? "malicious" : "clean",
+                detections: detectionRate,
+                malwareFamily: malwareFamily,
+                firstSeen: attrs.first_submission_date ? new Date(attrs.first_submission_date * 1000).toISOString() : null,
+                fileType: attrs.type_description || null,
+                fileSize: attrs.size || null,
+                fileName: attrs.meaningful_name || null,
+              });
+            }
+          } else {
+            sources.push({ name: "VirusTotal", status: "not_found" });
+          }
+        } catch { sources.push({ name: "VirusTotal", status: "error" }); }
+      }
+      
+      try {
+        const mbRes = await fetch("https://mb-api.abuse.ch/api/v1/", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `query=get_info&hash=${hash}`,
+          signal: AbortSignal.timeout(10000),
+        });
+        if (mbRes.ok) {
+          const mbData = await mbRes.json() as any;
+          if (mbData.query_status === "ok" && mbData.data && mbData.data.length > 0) {
+            const sample = mbData.data[0];
+            if (malwareVerdict !== "Malicious") malwareVerdict = "Malicious";
+            if (!malwareFamily && sample.signature) malwareFamily = sample.signature;
+            if (sample.tags) tags.push(...sample.tags);
+            sources.push({
+              name: "MalwareBazaar",
+              status: "malicious",
+              malwareFamily: sample.signature || null,
+              fileType: sample.file_type || null,
+              fileSize: sample.file_size || null,
+              fileName: sample.file_name || null,
+              firstSeen: sample.first_seen || null,
+              tags: sample.tags || [],
+              deliveryMethod: sample.delivery_method || null,
+            });
+          } else {
+            sources.push({ name: "MalwareBazaar", status: "not_found" });
+          }
+        }
+      } catch { sources.push({ name: "MalwareBazaar", status: "error" }); }
+      
+      const haKey = process.env.HYBRID_ANALYSIS_API_KEY;
+      if (haKey) {
+        try {
+          const haRes = await fetch("https://www.hybrid-analysis.com/api/v2/search/hash", {
+            method: "POST",
+            headers: {
+              "api-key": haKey,
+              "Content-Type": "application/x-www-form-urlencoded",
+              "User-Agent": "STBCS/1.0",
+            },
+            body: `hash=${hash}`,
+            signal: AbortSignal.timeout(10000),
+          });
+          if (haRes.ok) {
+            const haData = await haRes.json() as any;
+            if (Array.isArray(haData) && haData.length > 0) {
+              const sample = haData[0];
+              const threatScore = sample.threat_score || 0;
+              if (threatScore > 50 && malwareVerdict !== "Malicious") malwareVerdict = "Suspicious";
+              if (threatScore > 70 && malwareVerdict !== "Malicious") malwareVerdict = "Malicious";
+              sources.push({
+                name: "Hybrid Analysis",
+                status: threatScore > 70 ? "malicious" : threatScore > 50 ? "suspicious" : "clean",
+                threatScore,
+                verdict: sample.verdict || null,
+                malwareFamily: sample.vx_family || null,
+                environment: sample.environment_description || null,
+              });
+            } else {
+              sources.push({ name: "Hybrid Analysis", status: "not_found" });
+            }
+          }
+        } catch { sources.push({ name: "Hybrid Analysis", status: "error" }); }
+      }
+      
+      if (sources.length === 0 || sources.every(s => s.status === "not_found")) {
+        malwareVerdict = "Not Found";
+      } else if (sources.every(s => s.status === "clean" || s.status === "not_found")) {
+        malwareVerdict = "Clean";
+      }
+      
+      res.json({
+        ...basicResult,
+        malwareVerdict,
+        malwareFamily,
+        detectionRate,
+        tags: [...new Set(tags)].slice(0, 15),
+        sources,
+        checkedAt: new Date().toISOString(),
+      });
     } catch (error) {
       console.error("Hash analysis error:", error);
       res.status(500).json({ error: "Failed to analyze hash" });

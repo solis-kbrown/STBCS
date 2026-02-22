@@ -18,7 +18,9 @@ import {
   MessageSquare,
   Bell,
   Crown,
-  CreditCard
+  CreditCard,
+  Database,
+  Skull
 } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -60,6 +62,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/messages", labelKey: "nav.messages", icon: MessageSquare, isBusiness: true },
     { href: "/ransomware", labelKey: "nav.ransomware", icon: ShieldOff },
     { href: "/exploits", labelKey: "nav.exploits", icon: Bug },
+    { href: "/breaches", labelKey: "nav.breaches", icon: Database },
+    { href: "/threat-actors", labelKey: "nav.threatActors", icon: Skull },
     { href: "/threat-feeds", labelKey: "nav.threatFeeds", icon: Satellite },
     { href: "/news", labelKey: "nav.news", icon: TrendingUp },
     { href: "/support", labelKey: "nav.support", icon: Heart },
