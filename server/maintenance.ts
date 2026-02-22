@@ -359,6 +359,13 @@ export async function startMaintenanceScheduler(): Promise<void> {
 
   setTimeout(async () => {
     try {
+      const STARTUP_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour cooldown
+      const lastStartup = await getConfig("last_startup_notification");
+      const now = Date.now();
+      if (lastStartup && (now - parseInt(lastStartup, 10)) < STARTUP_COOLDOWN_MS) {
+        log.info("Startup notification skipped (cooldown active, last sent " + Math.round((now - parseInt(lastStartup, 10)) / 60000) + " min ago)");
+        return;
+      }
       const currentEndDate = await getOrInitializeSaleDate();
       await sendAdminNotification({
         type: "info",
@@ -366,6 +373,7 @@ export async function startMaintenanceScheduler(): Promise<void> {
         message: "The STB Cybersecurity platform has been started successfully.",
         details: `Startup Time: ${new Date().toISOString()}\nGrand Opening Sale Active Until: ${currentEndDate.toISOString()}\nAdmin Email: ${ADMIN_EMAIL}\n\nAll systems are operational.`
       });
+      await setConfig("last_startup_notification", String(now));
     } catch (error) {
       log.error("Failed to send startup notification:", error);
     }
