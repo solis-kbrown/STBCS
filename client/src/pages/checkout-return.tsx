@@ -28,7 +28,7 @@ export default function CheckoutReturnPage() {
     return (
       <Layout>
         <div className="max-w-2xl mx-auto py-16 text-center space-y-4">
-          <img src="/brand/icon-shield.png" alt="STBCS" className="h-14 w-14 mx-auto drop-shadow-[0_0_10px_rgba(0,200,255,0.3)] opacity-70" />
+          <img src="/brand/icon-shield.png" alt="STBCS" className="h-14 w-14 mx-auto drop-shadow-[0_0_10px_rgba(239,68,68,0.3)] opacity-70" />
           <p className="text-zinc-400">No session found. Please return to the support page.</p>
           <Button onClick={() => navigate("/support")} data-testid="button-back-support">
             Back to Support
@@ -44,7 +44,7 @@ export default function CheckoutReturnPage() {
       <Layout>
         <div className="flex items-center justify-center min-h-[60vh]">
           <div className="text-center space-y-4">
-            <img src="/brand/icon-shield.png" alt="STBCS" className="h-14 w-14 mx-auto animate-pulse drop-shadow-[0_0_12px_rgba(0,200,255,0.4)]" />
+            <img src="/brand/icon-shield.png" alt="STBCS" className="h-14 w-14 mx-auto animate-pulse drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]" />
             <Loader2 className="h-6 w-6 animate-spin text-orange-500 mx-auto" />
             <p className="text-zinc-400">Confirming your payment...</p>
           </div>
@@ -64,7 +64,7 @@ export default function CheckoutReturnPage() {
         <div className="max-w-2xl mx-auto py-12 space-y-6 animate-in fade-in duration-500">
           <Card className={isDonation ? "bg-pink-500/10 border-pink-500/30" : "bg-green-500/10 border-green-500/30"} data-testid="card-payment-success">
             <CardContent className="pt-6 text-center space-y-4">
-              <img src="/brand/icon-shield.png" alt="STBCS" className="h-16 w-16 mx-auto drop-shadow-[0_0_12px_rgba(0,200,255,0.4)]" data-testid="img-success-logo" />
+              <img src="/brand/icon-shield.png" alt="STBCS" className="h-16 w-16 mx-auto drop-shadow-[0_0_12px_rgba(239,68,68,0.4)]" data-testid="img-success-logo" />
               {isDonation ? (
                 <Heart className="h-8 w-8 text-pink-400 mx-auto" />
               ) : (
@@ -138,7 +138,7 @@ export default function CheckoutReturnPage() {
         <div className="max-w-2xl mx-auto py-12 space-y-6 animate-in fade-in duration-500">
           <Card className="bg-yellow-500/10 border-yellow-500/30" data-testid="card-payment-incomplete">
             <CardContent className="pt-6 text-center space-y-4">
-              <img src="/brand/icon-shield.png" alt="STBCS" className="h-14 w-14 mx-auto drop-shadow-[0_0_10px_rgba(0,200,255,0.3)] opacity-70" />
+              <img src="/brand/icon-shield.png" alt="STBCS" className="h-14 w-14 mx-auto drop-shadow-[0_0_10px_rgba(239,68,68,0.3)] opacity-70" />
               <XCircle className="h-8 w-8 text-yellow-400 mx-auto" />
               <h2 className="text-xl font-bold text-white">Payment Incomplete</h2>
               <p className="text-zinc-400">
@@ -165,7 +165,7 @@ export default function CheckoutReturnPage() {
       <div className="max-w-2xl mx-auto py-12 space-y-6">
         <Card className="bg-red-500/10 border-red-500/30" data-testid="card-payment-error">
           <CardContent className="pt-6 text-center space-y-4">
-            <img src="/brand/icon-shield.png" alt="STBCS" className="h-14 w-14 mx-auto drop-shadow-[0_0_10px_rgba(0,200,255,0.3)] opacity-70" />
+            <img src="/brand/icon-shield.png" alt="STBCS" className="h-14 w-14 mx-auto drop-shadow-[0_0_10px_rgba(239,68,68,0.3)] opacity-70" />
             <XCircle className="h-8 w-8 text-red-400 mx-auto" />
             <h2 className="text-xl font-bold text-white">Something Went Wrong</h2>
             <p className="text-zinc-400">

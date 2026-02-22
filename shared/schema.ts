@@ -701,3 +701,15 @@ export const insertLiveChatSessionSchema = createInsertSchema(liveChatSessions).
 
 export type InsertLiveChatSession = z.infer<typeof insertLiveChatSessionSchema>;
 export type LiveChatSession = typeof liveChatSessions.$inferSelect;
+
+export const logoVotes = pgTable("logo_votes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  logoVariant: text("logo_variant").notNull(),
+  voterHash: text("voter_hash").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("logo_votes_variant_idx").on(table.logoVariant),
+  index("logo_votes_voter_idx").on(table.voterHash),
+]);
+
+export type LogoVote = typeof logoVotes.$inferSelect;

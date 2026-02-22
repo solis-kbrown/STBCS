@@ -39,7 +39,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-3">
-              <img src="/brand/icon-shield.png" alt="STBCS" className="h-10 w-10 drop-shadow-[0_0_6px_rgba(0,200,255,0.3)]" />
+              <img src="/brand/icon-shield.png" alt="STBCS" className="h-10 w-10 drop-shadow-[0_0_6px_rgba(239,68,68,0.3)]" />
               <span className="font-display font-bold text-lg text-primary">STB Cybersecurity</span>
             </div>
             <p className="text-sm text-muted-foreground mb-4 max-w-md">

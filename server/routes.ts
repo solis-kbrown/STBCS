@@ -3,7 +3,9 @@ import { createServer, type Server } from "http";
 import cookieParser from "cookie-parser";
 import { storage } from "./storage";
 import { visitorTrackingMiddleware } from "./visitors";
-import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema, toSlug } from "@shared/schema";
+import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema, toSlug, contentViews, logoVotes } from "@shared/schema";
+import { db } from "./db";
+import { eq, and, sql as dsql } from "drizzle-orm";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { cache, cachedJson, cacheAndSend, TTL } from "./cache";
@@ -3930,6 +3932,95 @@ Hiring: https://stbcybersecurity.com/support
     } catch (error) {
       console.error("Error fetching visitor stats:", error);
       res.status(500).json({ error: "Failed to fetch visitor stats" });
+    }
+  });
+
+  // === Logo Gallery: Page Views & Votes ===
+  app.post("/api/logos/view", generalLimiter, async (_req: Request, res: Response) => {
+    try {
+      const result = await db.select().from(contentViews).where(eq(contentViews.contentType, "logo_gallery")).limit(1);
+      if (result.length > 0) {
+        await db.update(contentViews)
+          .set({ viewCount: dsql`COALESCE(${contentViews.viewCount}, 0) + 1`, lastViewedAt: new Date() })
+          .where(eq(contentViews.contentType, "logo_gallery"));
+      } else {
+        await db.insert(contentViews).values({ contentType: "logo_gallery", contentId: "page", viewCount: 1 });
+      }
+      const updated = await db.select().from(contentViews).where(eq(contentViews.contentType, "logo_gallery")).limit(1);
+      res.json({ views: updated[0]?.viewCount ?? 1 });
+    } catch (error) {
+      console.error("Error recording logo page view:", error);
+      res.status(500).json({ error: "Failed to record view" });
+    }
+  });
+
+  app.get("/api/logos/views", generalLimiter, async (_req: Request, res: Response) => {
+    try {
+      const result = await db.select().from(contentViews).where(eq(contentViews.contentType, "logo_gallery")).limit(1);
+      res.json({ views: result[0]?.viewCount ?? 0 });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get views" });
+    }
+  });
+
+  app.get("/api/logos/votes", generalLimiter, async (_req: Request, res: Response) => {
+    try {
+      const results = await db.select({
+        logoVariant: logoVotes.logoVariant,
+        count: dsql<number>`count(*)::int`,
+      }).from(logoVotes).groupBy(logoVotes.logoVariant);
+      const voteCounts: Record<string, number> = {};
+      for (const r of results) {
+        voteCounts[r.logoVariant] = r.count;
+      }
+      res.json({ votes: voteCounts });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get votes" });
+    }
+  });
+
+  app.post("/api/logos/vote", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const { variant } = req.body;
+      if (!variant || typeof variant !== "string") {
+        return res.status(400).json({ error: "Missing variant" });
+      }
+      const ip = (req.headers["x-forwarded-for"] as string || req.ip || "unknown").split(",")[0].trim();
+      const voterHash = crypto.createHash("sha256").update(ip + "_logo_vote").digest("hex").slice(0, 16);
+      
+      const existing = await db.select().from(logoVotes).where(
+        and(eq(logoVotes.voterHash, voterHash), eq(logoVotes.logoVariant, variant))
+      ).limit(1);
+      
+      if (existing.length > 0) {
+        return res.status(409).json({ error: "Already voted for this variant", alreadyVoted: true });
+      }
+
+      await db.insert(logoVotes).values({ logoVariant: variant, voterHash });
+      
+      const results = await db.select({
+        logoVariant: logoVotes.logoVariant,
+        count: dsql<number>`count(*)::int`,
+      }).from(logoVotes).groupBy(logoVotes.logoVariant);
+      const voteCounts: Record<string, number> = {};
+      for (const r of results) {
+        voteCounts[r.logoVariant] = r.count;
+      }
+      res.json({ votes: voteCounts, voted: variant });
+    } catch (error) {
+      console.error("Error recording vote:", error);
+      res.status(500).json({ error: "Failed to record vote" });
+    }
+  });
+
+  app.get("/api/logos/my-votes", generalLimiter, async (req: Request, res: Response) => {
+    try {
+      const ip = (req.headers["x-forwarded-for"] as string || req.ip || "unknown").split(",")[0].trim();
+      const voterHash = crypto.createHash("sha256").update(ip + "_logo_vote").digest("hex").slice(0, 16);
+      const myVotes = await db.select({ logoVariant: logoVotes.logoVariant }).from(logoVotes).where(eq(logoVotes.voterHash, voterHash));
+      res.json({ votedFor: myVotes.map(v => v.logoVariant) });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to get votes" });
     }
   });
 
