@@ -30,6 +30,9 @@ export interface AuthenticatedRequest extends Request {
     username: string;
     email: string | null;
     tier: string;
+    stripeCustomerId?: string | null;
+    stripeSubscriptionId?: string | null;
+    createdAt?: Date | null;
   };
   session?: {
     id: string;
@@ -76,6 +79,9 @@ export async function authMiddleware(
       username: user.username,
       email: user.email,
       tier: user.tier || "free",
+      stripeCustomerId: user.stripeCustomerId,
+      stripeSubscriptionId: user.stripeSubscriptionId,
+      createdAt: user.createdAt,
     };
     req.session = {
       id: session.id,

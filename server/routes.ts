@@ -2401,7 +2401,7 @@ Hiring: https://www.stbcybersecurity.com/support
       }
       
       const customDomain = process.env.CUSTOM_DOMAIN;
-      const baseUrl = customDomain ? `https://${customDomain}` : `${req.protocol}://${req.get('host')}`;
+      const baseUrl = customDomain ? `https://${customDomain}` : `https://${req.get('host')}`;
       
       const session = await stripeService.createCheckoutSession({
         priceId,
@@ -2436,7 +2436,7 @@ Hiring: https://www.stbcybersecurity.com/support
       
       const { amount, customerEmail, donorName } = parsed.data;
       const customDomain = process.env.CUSTOM_DOMAIN;
-      const baseUrl = customDomain ? `https://${customDomain}` : `${req.protocol}://${req.get('host')}`;
+      const baseUrl = customDomain ? `https://${customDomain}` : `https://${req.get('host')}`;
       
       const session = await stripeService.createDonationCheckout({
         amount,
@@ -2451,6 +2451,69 @@ Hiring: https://www.stbcybersecurity.com/support
       console.error("Donation error:", error);
       reportCriticalError(error instanceof Error ? error : new Error(String(error)), "Stripe Donation");
       res.status(500).json({ error: "Failed to create donation session" });
+    }
+  });
+
+  // Create Stripe Customer Portal session for managing subscriptions
+  app.post("/api/stripe/portal", async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      if (!req.user.stripeCustomerId) {
+        return res.status(400).json({ error: "No active subscription found" });
+      }
+      
+      const customDomain = process.env.CUSTOM_DOMAIN;
+      if (!customDomain) {
+        console.error("CUSTOM_DOMAIN not set - required for Stripe portal redirects");
+      }
+      const baseUrl = customDomain ? `https://${customDomain}` : `https://${req.get('host')}`;
+      
+      const session = await stripeService.createCustomerPortalSession(
+        req.user.stripeCustomerId,
+        `${baseUrl}/account`
+      );
+      
+      res.json({ url: session.url });
+    } catch (error) {
+      console.error("Portal error:", error);
+      res.status(500).json({ error: "Failed to create portal session" });
+    }
+  });
+
+  // Get account details with subscription info
+  app.get("/api/account", async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: "Not authenticated" });
+      }
+      
+      let subscription = null;
+      if (req.user.stripeSubscriptionId) {
+        subscription = await stripeService.getSubscription(req.user.stripeSubscriptionId);
+      }
+      
+      res.json({
+        user: {
+          id: req.user.id,
+          username: req.user.username,
+          email: req.user.email,
+          tier: req.user.tier || "free",
+          createdAt: req.user.createdAt,
+          hasStripeCustomer: !!req.user.stripeCustomerId,
+        },
+        subscription: subscription ? {
+          status: subscription.status,
+          currentPeriodEnd: subscription.current_period_end,
+          currentPeriodStart: subscription.current_period_start,
+          cancelAtPeriodEnd: subscription.cancel_at_period_end,
+        } : null,
+      });
+    } catch (error) {
+      console.error("Account error:", error);
+      res.status(500).json({ error: "Failed to fetch account details" });
     }
   });
 

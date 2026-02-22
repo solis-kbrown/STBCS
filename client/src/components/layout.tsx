@@ -17,7 +17,8 @@ import {
   Phone,
   MessageSquare,
   Bell,
-  Crown
+  Crown,
+  CreditCard
 } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -237,19 +238,33 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   <DropdownMenuContent align="end" className="w-56 bg-zinc-900 border-zinc-800">
                     <DropdownMenuLabel className="text-zinc-300">My Account</DropdownMenuLabel>
                     <DropdownMenuSeparator className="bg-zinc-800" />
-                    <DropdownMenuItem className="cursor-pointer text-zinc-400 hover:text-white">
-                      <User className="mr-2 h-4 w-4" />
-                      <span>Profile</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer text-zinc-400 hover:text-white">
-                      <Bell className="mr-2 h-4 w-4" />
-                      <span>Alert Preferences</span>
-                    </DropdownMenuItem>
-                    {!isPro && (
+                    <Link href="/account">
+                      <DropdownMenuItem className="cursor-pointer text-zinc-400 hover:text-white" data-testid="dropdown-my-account">
+                        <User className="mr-2 h-4 w-4" />
+                        <span>My Account</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    <Link href="/alerts">
+                      <DropdownMenuItem className="cursor-pointer text-zinc-400 hover:text-white" data-testid="dropdown-alert-preferences">
+                        <Bell className="mr-2 h-4 w-4" />
+                        <span>Alert Preferences</span>
+                      </DropdownMenuItem>
+                    </Link>
+                    {isPro ? (
+                      <>
+                        <DropdownMenuSeparator className="bg-zinc-800" />
+                        <Link href="/account">
+                          <DropdownMenuItem className="cursor-pointer text-zinc-400 hover:text-white" data-testid="dropdown-manage-subscription">
+                            <CreditCard className="mr-2 h-4 w-4" />
+                            <span>Manage Subscription</span>
+                          </DropdownMenuItem>
+                        </Link>
+                      </>
+                    ) : (
                       <>
                         <DropdownMenuSeparator className="bg-zinc-800" />
                         <Link href="/support">
-                          <DropdownMenuItem className="cursor-pointer text-orange-400 hover:text-orange-300">
+                          <DropdownMenuItem className="cursor-pointer text-orange-400 hover:text-orange-300" data-testid="dropdown-upgrade-pro">
                             <Crown className="mr-2 h-4 w-4" />
                             <span>Upgrade to Pro</span>
                           </DropdownMenuItem>

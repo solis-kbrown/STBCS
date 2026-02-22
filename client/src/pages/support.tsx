@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Heart, Shield, Users, Zap, Check, Coffee, Rocket, Building2, ExternalLink, Loader2, CreditCard, Lock } from "lucide-react";
+import { Heart, Shield, Users, Zap, Check, Coffee, Rocket, Building2, ExternalLink, Loader2, CreditCard, Lock, ArrowRight, PartyPopper, CheckCircle2 } from "lucide-react";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -196,18 +196,60 @@ export default function SupportPage() {
     <Layout>
       <div className="space-y-8 animate-in fade-in duration-500">
         {(success || donated) && (
-          <Card className="bg-green-500/10 border-green-500/30">
-            <CardContent className="pt-6">
-              <div className="flex items-center gap-3 text-green-400">
-                <Check className="h-6 w-6" />
-                <div>
-                  <p className="font-bold text-lg">Thank you for your support!</p>
-                  <p className="text-sm text-green-400/80">
+          <Card className="bg-green-500/10 border-green-500/30" data-testid="card-payment-success">
+            <CardContent className="py-8">
+              <div className="text-center space-y-4 max-w-lg mx-auto">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 mb-2">
+                  <CheckCircle2 className="h-8 w-8 text-green-400" />
+                </div>
+                <h2 className="text-2xl font-bold text-white">
+                  {donated ? "Thank You for Your Donation!" : "Welcome to STBCS!"}
+                </h2>
+                <p className="text-green-400/80">
+                  {donated 
+                    ? "Your generous donation has been received. You're directly helping strengthen the cybersecurity community and keep our tools free for everyone."
+                    : "Your subscription is now active. You've unlocked full access to STBCS features including advanced tools, watchlists, and real-time alerts."
+                  }
+                </p>
+                <div className="pt-2 space-y-2">
+                  <p className="text-xs text-zinc-500">
                     {donated 
-                      ? "Your donation has been received. You're helping strengthen the cybersecurity community!"
-                      : "Your subscription is now active. Welcome to the STBCS family!"
+                      ? "A receipt has been sent to your email by Stripe."
+                      : "What's next? Set up your watchlist, configure alerts, and explore your new tools."
                     }
                   </p>
+                  {!donated && (
+                    <div className="flex flex-wrap justify-center gap-3 pt-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-green-500/30 text-green-400 hover:bg-green-500/10"
+                        onClick={() => window.location.href = "/account"}
+                        data-testid="button-go-account"
+                      >
+                        <ArrowRight className="h-3 w-3 mr-1.5" />
+                        View Account
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-green-500/30 text-green-400 hover:bg-green-500/10"
+                        onClick={() => window.location.href = "/alerts"}
+                        data-testid="button-go-alerts"
+                      >
+                        Set Up Alerts
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="border-green-500/30 text-green-400 hover:bg-green-500/10"
+                        onClick={() => window.location.href = "/tools"}
+                        data-testid="button-go-tools"
+                      >
+                        Explore Tools
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -215,11 +257,18 @@ export default function SupportPage() {
         )}
 
         {canceled && (
-          <Card className="bg-yellow-500/10 border-yellow-500/30">
-            <CardContent className="pt-6">
-              <p className="text-yellow-400">
-                Payment was canceled. Feel free to try again whenever you're ready.
-              </p>
+          <Card className="bg-yellow-500/10 border-yellow-500/30" data-testid="card-payment-canceled">
+            <CardContent className="py-6">
+              <div className="flex items-center gap-3 text-yellow-400">
+                <Shield className="h-6 w-6 shrink-0" />
+                <div>
+                  <p className="font-bold">Payment was canceled</p>
+                  <p className="text-sm text-yellow-400/80">
+                    No charges were made. Feel free to try again whenever you're ready, or{" "}
+                    <a href="mailto:support@stbcybersecurity.com" className="underline hover:text-yellow-300">contact us</a> if you have questions.
+                  </p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         )}
