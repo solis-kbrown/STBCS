@@ -127,13 +127,14 @@ export function getPageMeta(path: string): PageMeta {
   }
 
   if (cleanPath.startsWith('/group/')) {
-    const groupName = decodeURIComponent(cleanPath.replace('/group/', ''));
-    const title = truncateGroupTitle(groupName);
-    const descPrefix = `Threat profile for ${groupName} ransomware group: `;
+    const slug = decodeURIComponent(cleanPath.replace('/group/', ''));
+    const displayName = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    const title = truncateGroupTitle(displayName);
+    const descPrefix = `Threat profile for ${displayName} ransomware group: `;
     const descBody = 'TTPs, targeted sectors, victim countries, attack timeline, and MITRE ATT&CK mapping.';
     let description = descPrefix + descBody;
     if (description.length > 160) {
-      description = `Threat profile for ${groupName}: TTPs, targeted sectors, attack timeline, and MITRE ATT&CK mapping.`;
+      description = `Threat profile for ${displayName}: TTPs, targeted sectors, attack timeline, and MITRE ATT&CK mapping.`;
     }
     if (description.length > 160) {
       const maxLen = 160 - 4;
@@ -226,8 +227,9 @@ function getH1Text(path: string, meta: PageMeta): string {
   const cleanPath = path.split('?')[0].split('#')[0].replace(/\/$/, '') || '/';
   if (titleMap[cleanPath]) return titleMap[cleanPath];
   if (cleanPath.startsWith('/group/')) {
-    const name = decodeURIComponent(cleanPath.replace('/group/', ''));
-    return `${name} Ransomware Group Profile`;
+    const slug = decodeURIComponent(cleanPath.replace('/group/', ''));
+    const displayName = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    return `${displayName} Ransomware Group Profile`;
   }
   return meta.title.split('|')[0].trim();
 }

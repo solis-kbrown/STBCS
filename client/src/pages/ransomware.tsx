@@ -1,6 +1,7 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 import { useRansomware, useRansomwareGroups, useRansomwareSearch, useExportData, useTrackView, useRansomwareAnalytics } from "@/lib/api";
+import { toSlug } from "@shared/schema";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -278,7 +279,7 @@ export default function Ransomware() {
                   <div className="space-y-2">
                     {(analytics.topGroups || []).slice(0, 10).map((g: { name: string; victims: number }, i: number) => (
                       <div key={g.name} className="flex items-center justify-between group cursor-pointer hover:bg-white/5 rounded px-2 py-1 transition-colors"
-                        onClick={() => setLocation(`/group/${encodeURIComponent(g.name)}`)}
+                        onClick={() => setLocation(`/group/${toSlug(g.name)}`)}
                         data-testid={`row-top-group-${i}`}
                       >
                         <div className="flex items-center gap-2">
@@ -634,7 +635,7 @@ export default function Ransomware() {
                         <Badge 
                           variant="outline" 
                           className="bg-primary/10 text-primary border-primary/20 cursor-pointer hover:bg-primary/20 transition-colors"
-                          onClick={(e) => { e.stopPropagation(); setLocation(`/group/${encodeURIComponent(incident.groupName)}`); }}
+                          onClick={(e) => { e.stopPropagation(); setLocation(`/group/${toSlug(incident.groupName)}`); }}
                           data-testid={`badge-group-${incident.id}`}
                         >
                           {incident.groupName}

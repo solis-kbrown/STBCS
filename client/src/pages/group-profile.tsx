@@ -38,16 +38,17 @@ function StatusBadge({ status, active }: { status: string | null; active: boolea
 
 export default function GroupProfile() {
   const params = useParams<{ name: string }>();
-  const groupName = decodeURIComponent(params.name || "");
+  const groupSlug = decodeURIComponent(params.name || "");
   const [, setLocation] = useLocation();
   
-  useDocumentTitle(`${groupName} Ransomware Group Profile | STB Cybersecurity`, `Detailed threat intelligence profile for ${groupName} ransomware group including TTPs, targeted sectors, victim countries, attack timeline, and MITRE ATT&CK mapping.`);
-  
-  const { data: profile, isLoading } = useGroupProfile(groupName || undefined);
+  const { data: profile, isLoading } = useGroupProfile(groupSlug || undefined);
   
   const actor = profile?.actor;
   const incidents = profile?.incidents || [];
   const stats = profile?.stats;
+  const groupName = actor?.name || incidents[0]?.groupName || groupSlug;
+
+  useDocumentTitle(`${groupName} Ransomware Group Profile | STB Cybersecurity`, `Detailed threat intelligence profile for ${groupName} ransomware group including TTPs, targeted sectors, victim countries, attack timeline, and MITRE ATT&CK mapping.`);
 
   const ttps = useMemo(() => {
     if (!actor?.ttps) return [];

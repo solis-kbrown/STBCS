@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import cookieParser from "cookie-parser";
 import { storage } from "./storage";
 import { visitorTrackingMiddleware } from "./visitors";
-import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema } from "@shared/schema";
+import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema, toSlug } from "@shared/schema";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { cache, cachedJson, cacheAndSend, TTL } from "./cache";
@@ -29,6 +29,18 @@ import {
   requireBusiness,
   type AuthenticatedRequest 
 } from "./auth";
+
+async function resolveGroupSlug(slug: string): Promise<string | null> {
+  const actors = await storage.getThreatActors();
+  for (const actor of actors) {
+    if (toSlug(actor.name) === slug) return actor.name;
+  }
+  const groups = await storage.getActiveGroups();
+  for (const group of groups) {
+    if (toSlug(group.name) === slug) return group.name;
+  }
+  return null;
+}
 
 // Rate limiters for security
 const generalLimiter = rateLimit({
@@ -143,7 +155,7 @@ export async function registerRoutes(
           return true;
         })
         .map((a: any) => `  <url>
-    <loc>https://stbcybersecurity.com/group/${encodeURIComponent(a.name)}</loc>
+    <loc>https://stbcybersecurity.com/group/${toSlug(a.name)}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -740,10 +752,17 @@ Hiring: https://stbcybersecurity.com/support
 
   app.get("/api/threat-actors/:name", async (req: Request, res: Response) => {
     try {
-      const name = decodeURIComponent(asString(req.params.name));
-      const key = `actor:profile:${name}`;
+      const rawParam = decodeURIComponent(asString(req.params.name));
+      const key = `actor:profile:${rawParam}`;
       if (cachedJson(res, key, TTL.THREAT_ACTORS)) return;
-      const profile = await storage.getGroupProfile(name);
+
+      let profile = await storage.getGroupProfile(rawParam);
+      if (!profile.actor && profile.incidents.length === 0) {
+        const resolved = await resolveGroupSlug(rawParam);
+        if (resolved && resolved !== rawParam) {
+          profile = await storage.getGroupProfile(resolved);
+        }
+      }
       if (!profile.actor && profile.incidents.length === 0) {
         return res.status(404).json({ error: "Group not found" });
       }
