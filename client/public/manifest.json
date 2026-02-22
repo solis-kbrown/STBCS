@@ -1,33 +1,63 @@
 {
-  "name": "STB Cybersecurity",
+  "name": "STB Cybersecurity Labs",
   "short_name": "STBCS",
   "description": "Real-time threat intelligence, ransomware tracking, and 24/7 incident response services for SMBs worldwide.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0a0a0a",
-  "theme_color": "#f97316",
+  "background_color": "#0f172a",
+  "theme_color": "#06b6d4",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en-US",
   "categories": ["security", "business", "utilities"],
   "icons": [
     {
-      "src": "/favicon.png",
+      "src": "/brand/favicons/favicon-32.png",
       "sizes": "32x32",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "/icon-192.png",
+      "src": "/brand/favicons/favicon-48.png",
+      "sizes": "48x48",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/favicons/favicon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/favicons/favicon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/favicons/favicon-256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/brand/app-icons/android-icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/logo.png",
-      "sizes": "512x512",
+      "src": "/brand/app-icons/android-icon-384.png",
+      "sizes": "384x384",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/brand/app-icons/android-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ],
   "screenshots": [],
@@ -37,21 +67,21 @@
       "short_name": "Search",
       "description": "Search across all threat intelligence data",
       "url": "/search",
-      "icons": [{ "src": "/favicon.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/brand/favicons/favicon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Ransomware Tracker",
       "short_name": "Ransomware",
       "description": "Monitor ransomware incidents and threat groups",
       "url": "/ransomware",
-      "icons": [{ "src": "/favicon.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/brand/favicons/favicon-96.png", "sizes": "96x96" }]
     },
     {
       "name": "Security Tools",
       "short_name": "Tools",
       "description": "Access professional security analysis tools",
       "url": "/tools",
-      "icons": [{ "src": "/favicon.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/brand/favicons/favicon-96.png", "sizes": "96x96" }]
     }
   ]
 }
