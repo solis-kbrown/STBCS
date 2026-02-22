@@ -20,10 +20,15 @@ import {
   type LiveChatSession, type InsertLiveChatSession,
   type ContentView,
   type DailyVisitorCount,
+  type ApiKey, type InsertApiKey, type ApiKeyUsage,
+  type AddOn, type InsertAddOn,
+  type UserAddOn, type InsertUserAddOn,
+  type MonitorAlertLog,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
   userNotifications, watchlistItems, breachIncidents, cisaIcsAdvisories, newsletterSubscriptions,
-  smsMessages, exploitSubmissions, liveChatSessions, contentViews, siteVisitors, dailyVisitorCounts
+  smsMessages, exploitSubmissions, liveChatSessions, contentViews, siteVisitors, dailyVisitorCounts,
+  apiKeys, apiKeyUsage, addOns, userAddOns, monitorAlertLog
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte } from "drizzle-orm";
@@ -160,6 +165,9 @@ export interface IStorage {
   updateWatchlistItem(id: string, userId: string, updates: Partial<InsertWatchlistItem>): Promise<WatchlistItem>;
   deleteWatchlistItem(id: string, userId: string): Promise<void>;
   getWatchlistsByType(userId: string, itemType: string): Promise<WatchlistItem[]>;
+  getAllActiveWatchlistItems(): Promise<WatchlistItem[]>;
+  logMonitorAlert(log: { watchlistItemId: string; matchedDataType: string; matchedDataId: string; deliveryChannel: string; deliveryStatus?: string }): Promise<void>;
+  hasAlertBeenSent(watchlistItemId: string, matchedDataType: string, matchedDataId: string): Promise<boolean>;
   
   // Breach Incidents
   getBreachIncidents(limit?: number, offset?: number, search?: string): Promise<BreachIncident[]>;
@@ -205,6 +213,27 @@ export interface IStorage {
   getVisitorStats(): Promise<{ totalUnique: number; today: number; thisWeek: number; thisMonth: number }>;
   getDailyVisitorCounts(days: number): Promise<DailyVisitorCount[]>;
   getNewSignupsCount(since: Date): Promise<number>;
+
+  // API Keys
+  createApiKey(data: InsertApiKey): Promise<ApiKey>;
+  getApiKeysByUser(userId: string): Promise<ApiKey[]>;
+  getApiKeyByPrefix(prefix: string): Promise<ApiKey | undefined>;
+  revokeApiKey(id: string, userId: string): Promise<void>;
+  updateApiKeyLastUsed(id: string): Promise<void>;
+  getApiKeyUsageToday(apiKeyId: string): Promise<ApiKeyUsage | undefined>;
+  incrementApiKeyUsage(apiKeyId: string, isLiveLookup?: boolean): Promise<void>;
+  getApiKeyUsageHistory(apiKeyId: string, days?: number): Promise<ApiKeyUsage[]>;
+
+  // Add-Ons
+  getAddOns(activeOnly?: boolean): Promise<AddOn[]>;
+  getAddOnBySlug(slug: string): Promise<AddOn | undefined>;
+  getUserAddOns(userId: string): Promise<(UserAddOn & { addOn?: AddOn })[]>;
+  createUserAddOn(data: InsertUserAddOn): Promise<UserAddOn>;
+
+  // Monitor Alert Log
+  hasAlertBeenSent(watchlistItemId: string, matchedDataType: string, matchedDataId: string): Promise<boolean>;
+  logMonitorAlert(watchlistItemId: string, matchedDataType: string, matchedDataId: string, deliveryChannel: string): Promise<void>;
+  getAllActiveWatchlistItems(): Promise<(WatchlistItem & { user?: User })[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1113,6 +1142,34 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(watchlistItems.createdAt));
   }
 
+  async getAllActiveWatchlistItems(): Promise<WatchlistItem[]> {
+    return db.select().from(watchlistItems)
+      .where(eq(watchlistItems.alertOnMatch, true))
+      .orderBy(watchlistItems.userId);
+  }
+
+  async logMonitorAlert(log: { watchlistItemId: string; matchedDataType: string; matchedDataId: string; deliveryChannel: string; deliveryStatus?: string }): Promise<void> {
+    await db.insert(monitorAlertLog).values({
+      watchlistItemId: log.watchlistItemId,
+      matchedDataType: log.matchedDataType,
+      matchedDataId: log.matchedDataId,
+      deliveryChannel: log.deliveryChannel,
+      deliveryStatus: log.deliveryStatus || "sent",
+    });
+  }
+
+  async hasAlertBeenSent(watchlistItemId: string, matchedDataType: string, matchedDataId: string): Promise<boolean> {
+    const [existing] = await db.select({ id: monitorAlertLog.id })
+      .from(monitorAlertLog)
+      .where(and(
+        eq(monitorAlertLog.watchlistItemId, watchlistItemId),
+        eq(monitorAlertLog.matchedDataType, matchedDataType),
+        eq(monitorAlertLog.matchedDataId, matchedDataId),
+      ))
+      .limit(1);
+    return !!existing;
+  }
+
   // Breach Incidents
   async getBreachIncidents(limit = 50, offset = 0, search?: string): Promise<BreachIncident[]> {
     if (search) {
@@ -1545,6 +1602,130 @@ export class DatabaseStorage implements IStorage {
     const [result] = await db.select({ count: sql<number>`count(*)` })
       .from(users).where(gte(users.createdAt, since));
     return Number(result?.count || 0);
+  }
+
+  // ===== API Keys =====
+  async createApiKey(data: InsertApiKey): Promise<ApiKey> {
+    const [key] = await db.insert(apiKeys).values(data).returning();
+    return key;
+  }
+
+  async getApiKeysByUser(userId: string): Promise<ApiKey[]> {
+    return db.select().from(apiKeys)
+      .where(eq(apiKeys.userId, userId))
+      .orderBy(desc(apiKeys.createdAt));
+  }
+
+  async getApiKeyByPrefix(prefix: string): Promise<ApiKey | undefined> {
+    const [key] = await db.select().from(apiKeys)
+      .where(and(eq(apiKeys.prefix, prefix), eq(apiKeys.status, "active")));
+    return key;
+  }
+
+  async revokeApiKey(id: string, userId: string): Promise<void> {
+    await db.update(apiKeys)
+      .set({ status: "revoked", revokedAt: new Date() })
+      .where(and(eq(apiKeys.id, id), eq(apiKeys.userId, userId)));
+  }
+
+  async updateApiKeyLastUsed(id: string): Promise<void> {
+    await db.update(apiKeys)
+      .set({ lastUsedAt: new Date() })
+      .where(eq(apiKeys.id, id));
+  }
+
+  async getApiKeyUsageToday(apiKeyId: string): Promise<ApiKeyUsage | undefined> {
+    const today = new Date().toISOString().split("T")[0];
+    const [usage] = await db.select().from(apiKeyUsage)
+      .where(and(eq(apiKeyUsage.apiKeyId, apiKeyId), eq(apiKeyUsage.date, today)));
+    return usage;
+  }
+
+  async incrementApiKeyUsage(apiKeyId: string, isLiveLookup = false): Promise<void> {
+    const today = new Date().toISOString().split("T")[0];
+    const existing = await this.getApiKeyUsageToday(apiKeyId);
+    if (existing) {
+      await db.update(apiKeyUsage)
+        .set({
+          requestCount: (existing.requestCount || 0) + 1,
+          liveLookupCount: isLiveLookup ? (existing.liveLookupCount || 0) + 1 : existing.liveLookupCount,
+          lastRequestAt: new Date(),
+        })
+        .where(eq(apiKeyUsage.id, existing.id));
+    } else {
+      await db.insert(apiKeyUsage).values({
+        apiKeyId,
+        date: today,
+        requestCount: 1,
+        liveLookupCount: isLiveLookup ? 1 : 0,
+        lastRequestAt: new Date(),
+      });
+    }
+  }
+
+  async getApiKeyUsageHistory(apiKeyId: string, days = 30): Promise<ApiKeyUsage[]> {
+    const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString().split("T")[0];
+    return db.select().from(apiKeyUsage)
+      .where(and(eq(apiKeyUsage.apiKeyId, apiKeyId), gte(apiKeyUsage.date, cutoff)))
+      .orderBy(desc(apiKeyUsage.date));
+  }
+
+  // ===== Add-Ons =====
+  async getAddOns(activeOnly = true): Promise<AddOn[]> {
+    if (activeOnly) {
+      return db.select().from(addOns).where(eq(addOns.isActive, true));
+    }
+    return db.select().from(addOns);
+  }
+
+  async getAddOnBySlug(slug: string): Promise<AddOn | undefined> {
+    const [addon] = await db.select().from(addOns).where(eq(addOns.slug, slug));
+    return addon;
+  }
+
+  async getUserAddOns(userId: string): Promise<(UserAddOn & { addOn?: AddOn })[]> {
+    const items = await db.select().from(userAddOns)
+      .where(and(eq(userAddOns.userId, userId), eq(userAddOns.status, "active")));
+    const enriched = await Promise.all(items.map(async (item) => {
+      const [addon] = await db.select().from(addOns).where(eq(addOns.id, item.addOnId));
+      return { ...item, addOn: addon };
+    }));
+    return enriched;
+  }
+
+  async createUserAddOn(data: InsertUserAddOn): Promise<UserAddOn> {
+    const [item] = await db.insert(userAddOns).values(data).returning();
+    return item;
+  }
+
+  // ===== Monitor Alert Log =====
+  async hasAlertBeenSent(watchlistItemId: string, matchedDataType: string, matchedDataId: string): Promise<boolean> {
+    const [existing] = await db.select({ id: monitorAlertLog.id }).from(monitorAlertLog)
+      .where(and(
+        eq(monitorAlertLog.watchlistItemId, watchlistItemId),
+        eq(monitorAlertLog.matchedDataType, matchedDataType),
+        eq(monitorAlertLog.matchedDataId, matchedDataId),
+      ));
+    return !!existing;
+  }
+
+  async logMonitorAlert(watchlistItemId: string, matchedDataType: string, matchedDataId: string, deliveryChannel: string): Promise<void> {
+    await db.insert(monitorAlertLog).values({
+      watchlistItemId,
+      matchedDataType,
+      matchedDataId,
+      deliveryChannel,
+    });
+  }
+
+  async getAllActiveWatchlistItems(): Promise<(WatchlistItem & { user?: User })[]> {
+    const items = await db.select().from(watchlistItems)
+      .where(eq(watchlistItems.alertOnMatch, true));
+    const enriched = await Promise.all(items.map(async (item) => {
+      const [user] = await db.select().from(users).where(eq(users.id, item.userId));
+      return { ...item, user };
+    }));
+    return enriched;
   }
 }
 

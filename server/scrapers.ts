@@ -3658,6 +3658,12 @@ export function startDataRefreshScheduler(intervalMinutes = 15): void {
         cache.invalidateAll();
         createLogger("Cache").info("Cleared after data refresh");
       } catch {}
+      try {
+        const { runMonitorEngine } = await import("./monitorEngine");
+        await runMonitorEngine();
+      } catch (e) {
+        log.debug("Monitor engine run skipped or failed");
+      }
     }
   };
   

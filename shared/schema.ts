@@ -736,3 +736,114 @@ export const insertContactMessageSchema = createInsertSchema(contactMessages).om
 
 export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
 export type ContactMessage = typeof contactMessages.$inferSelect;
+
+// ===== API Key System for Pro/Business Users =====
+export const apiKeys = pgTable("api_keys", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  name: text("name").notNull(),
+  keyHash: text("key_hash").notNull(),
+  prefix: text("prefix").notNull(),
+  tier: text("tier").notNull().default("pro"),
+  status: text("status").notNull().default("active"),
+  rateLimitPerMin: real("rate_limit_per_min").default(60),
+  dailyQuota: real("daily_quota").default(1000),
+  liveLookupDailyLimit: real("live_lookup_daily_limit").default(50),
+  lastUsedAt: timestamp("last_used_at"),
+  revokedAt: timestamp("revoked_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("api_keys_user_idx").on(table.userId),
+  index("api_keys_prefix_idx").on(table.prefix),
+  index("api_keys_status_idx").on(table.status),
+]);
+
+export const apiKeyUsage = pgTable("api_key_usage", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  apiKeyId: varchar("api_key_id").notNull(),
+  date: text("date").notNull(),
+  requestCount: real("request_count").default(0),
+  liveLookupCount: real("live_lookup_count").default(0),
+  lastRequestAt: timestamp("last_request_at"),
+}, (table) => [
+  index("api_usage_key_idx").on(table.apiKeyId),
+  index("api_usage_date_idx").on(table.date),
+]);
+
+export const insertApiKeySchema = createInsertSchema(apiKeys).omit({
+  id: true,
+  lastUsedAt: true,
+  revokedAt: true,
+  createdAt: true,
+});
+
+export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type ApiKeyUsage = typeof apiKeyUsage.$inferSelect;
+
+// ===== Add-On System =====
+export const addOns = pgTable("add_ons", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  slug: text("slug").notNull().unique(),
+  description: text("description"),
+  type: text("type").notNull().default("one_time"),
+  stripeProductId: text("stripe_product_id"),
+  stripePriceId: text("stripe_price_id"),
+  price: real("price"),
+  entitlementType: text("entitlement_type"),
+  entitlementValue: text("entitlement_value"),
+  requiredTier: text("required_tier"),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("addons_slug_idx").on(table.slug),
+  index("addons_active_idx").on(table.isActive),
+]);
+
+export const userAddOns = pgTable("user_add_ons", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  addOnId: varchar("add_on_id").notNull(),
+  status: text("status").notNull().default("active"),
+  quantity: real("quantity").default(1),
+  stripePaymentId: text("stripe_payment_id"),
+  validFrom: timestamp("valid_from").defaultNow(),
+  validUntil: timestamp("valid_until"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("user_addons_user_idx").on(table.userId),
+  index("user_addons_addon_idx").on(table.addOnId),
+  index("user_addons_status_idx").on(table.status),
+]);
+
+export const insertAddOnSchema = createInsertSchema(addOns).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUserAddOnSchema = createInsertSchema(userAddOns).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertAddOn = z.infer<typeof insertAddOnSchema>;
+export type AddOn = typeof addOns.$inferSelect;
+export type InsertUserAddOn = z.infer<typeof insertUserAddOnSchema>;
+export type UserAddOn = typeof userAddOns.$inferSelect;
+
+// ===== Monitor Alert Log (deduplication) =====
+export const monitorAlertLog = pgTable("monitor_alert_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  watchlistItemId: varchar("watchlist_item_id").notNull(),
+  matchedDataType: text("matched_data_type").notNull(),
+  matchedDataId: text("matched_data_id").notNull(),
+  deliveryChannel: text("delivery_channel").notNull(),
+  deliveryStatus: text("delivery_status").default("sent"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("monitor_alert_watchlist_idx").on(table.watchlistItemId),
+  index("monitor_alert_match_idx").on(table.matchedDataType, table.matchedDataId),
+]);
+
+export type MonitorAlertLog = typeof monitorAlertLog.$inferSelect;

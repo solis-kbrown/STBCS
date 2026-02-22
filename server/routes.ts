@@ -21,6 +21,8 @@ import { getStripePublishableKey } from "./stripeClient";
 import { getQuoService, isQuoConfigured } from "./quoService";
 import { reportCriticalError, sendAdminNotification } from "./maintenance";
 import { sendAccountLockoutEmail } from "./email";
+import apiV1Router from "./apiV1Routes";
+import { generateApiKey, getTierLimits, hashApiKey } from "./apiKeyAuth";
 import { 
   hashPassword, 
   verifyPassword, 
@@ -443,6 +445,9 @@ Hiring: https://stbcybersecurity.com/support
 
   // Apply rate limiting to all API routes
   app.use("/api", generalLimiter);
+
+  // Mount Public API v1 (API key authenticated, separate from session auth)
+  app.use("/api", apiV1Router);
 
   // ===== AUTH ROUTES =====
   
@@ -3288,6 +3293,97 @@ Hiring: https://stbcybersecurity.com/support
     } catch (error) {
       console.error("Quo webhook error:", error);
       res.status(500).json({ error: "Webhook processing failed" });
+    }
+  });
+
+  // ===== API KEY MANAGEMENT (Pro/Business) =====
+
+  app.get("/api/account/api-keys", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user!.tier || req.user!.tier === "free") {
+        res.status(403).json({ error: "API keys require a Pro or Business subscription" });
+        return;
+      }
+      const keys = await storage.getApiKeysByUser(req.user!.id);
+      const keysWithUsage = await Promise.all(keys.map(async (key) => {
+        const usage = await storage.getApiKeyUsageToday(key.id);
+        const history = await storage.getApiKeyUsageHistory(key.id, 7);
+        return {
+          id: key.id,
+          name: key.name,
+          prefix: key.prefix,
+          tier: key.tier,
+          status: key.status,
+          rateLimitPerMin: key.rateLimitPerMin,
+          dailyQuota: key.dailyQuota,
+          liveLookupDailyLimit: key.liveLookupDailyLimit,
+          lastUsedAt: key.lastUsedAt,
+          createdAt: key.createdAt,
+          revokedAt: key.revokedAt,
+          todayUsage: { requests: usage?.requestCount || 0, liveLookups: usage?.liveLookupCount || 0 },
+          weeklyUsage: history,
+        };
+      }));
+      const limits = getTierLimits(req.user!.tier);
+      res.json({ keys: keysWithUsage, tierLimits: limits });
+    } catch (error) {
+      console.error("API keys fetch error:", error);
+      res.status(500).json({ error: "Failed to fetch API keys" });
+    }
+  });
+
+  app.post("/api/account/api-keys", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tier = req.user!.tier || "free";
+      if (tier === "free") {
+        res.status(403).json({ error: "API keys require a Pro or Business subscription" });
+        return;
+      }
+      const limits = getTierLimits(tier);
+      const existingKeys = await storage.getApiKeysByUser(req.user!.id);
+      const activeKeys = existingKeys.filter(k => k.status === "active");
+      if (activeKeys.length >= limits.maxKeys) {
+        res.status(400).json({ error: `Maximum ${limits.maxKeys} active API key(s) for your tier. Revoke an existing key first.` });
+        return;
+      }
+      const nameSchema = z.object({ name: z.string().min(1).max(50) });
+      const { name } = nameSchema.parse(req.body);
+      const { rawKey, prefix, keyHash } = generateApiKey(tier);
+      const apiKey = await storage.createApiKey({
+        userId: req.user!.id,
+        name,
+        keyHash,
+        prefix,
+        tier,
+        status: "active",
+        rateLimitPerMin: limits.rateLimitPerMin,
+        dailyQuota: limits.dailyQuota,
+        liveLookupDailyLimit: limits.liveLookupDaily,
+      });
+      res.json({
+        key: rawKey,
+        id: apiKey.id,
+        name: apiKey.name,
+        prefix: apiKey.prefix,
+        message: "Save this key now. You won't be able to see it again.",
+      });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: "Please provide a name for your API key" });
+        return;
+      }
+      console.error("API key creation error:", error);
+      res.status(500).json({ error: "Failed to create API key" });
+    }
+  });
+
+  app.delete("/api/account/api-keys/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      await storage.revokeApiKey(req.params.id, req.user!.id);
+      res.json({ success: true, message: "API key revoked" });
+    } catch (error) {
+      console.error("API key revoke error:", error);
+      res.status(500).json({ error: "Failed to revoke API key" });
     }
   });
 

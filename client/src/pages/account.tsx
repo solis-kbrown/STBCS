@@ -1,4 +1,4 @@
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import Layout from "@/components/layout";
@@ -6,10 +6,12 @@ import Footer from "@/components/footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { User, Crown, CreditCard, Calendar, Shield, ExternalLink, Loader2, ArrowRight, Bell, Mail } from "lucide-react";
+import { User, Crown, CreditCard, Calendar, Shield, ExternalLink, Loader2, ArrowRight, Bell, Mail, Key, Copy, Trash2, Eye, EyeOff, Plus } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation } from "wouter";
+import { useState } from "react";
 
 const tierColors: Record<string, string> = {
   free: "bg-zinc-700 text-zinc-300",
@@ -92,10 +94,70 @@ export default function AccountPage() {
     );
   }
 
+  const queryClient = useQueryClient();
+  const [newKeyName, setNewKeyName] = useState("");
+  const [revealedKey, setRevealedKey] = useState<string | null>(null);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+
   const account = accountData?.user;
   const subscription = accountData?.subscription;
   const tier = account?.tier || user?.tier || "free";
   const isPaid = tier !== "free";
+  const hasPaidApi = tier === "pro" || tier === "business";
+
+  const { data: apiKeysData, isLoading: keysLoading } = useQuery({
+    queryKey: ["api-keys"],
+    queryFn: async () => {
+      const res = await fetch("/api/account/api-keys", { credentials: "include" });
+      if (!res.ok) return null;
+      return res.json();
+    },
+    enabled: isAuthenticated && hasPaidApi,
+  });
+
+  const createKeyMutation = useMutation({
+    mutationFn: async (name: string) => {
+      const res = await fetch("/api/account/api-keys", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create API key");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => {
+      setRevealedKey(data.key);
+      setNewKeyName("");
+      setShowCreateForm(false);
+      queryClient.invalidateQueries({ queryKey: ["api-keys"] });
+      toast({ title: "API Key Created", description: "Copy your key now — you won't be able to see it again." });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
+  const revokeKeyMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/account/api-keys/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Failed to revoke key");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["api-keys"] });
+      toast({ title: "API Key Revoked", description: "The key has been deactivated." });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
 
   return (
     <Layout>
@@ -232,6 +294,130 @@ export default function AccountPage() {
             )}
           </CardContent>
         </Card>
+
+        {hasPaidApi && (
+          <Card className="border-zinc-800 bg-zinc-900/50">
+            <CardHeader>
+              <CardTitle className="text-lg text-white flex items-center gap-2">
+                <Key className="h-5 w-5 text-orange-400" />
+                API Keys
+              </CardTitle>
+              <CardDescription>
+                Access the STBCS Threat Intelligence API programmatically. {tier === "pro" ? "1 key allowed." : "Up to 5 keys."}
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {revealedKey && (
+                <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-4 space-y-2" data-testid="container-new-key">
+                  <p className="text-sm font-medium text-green-400">Your new API key (copy it now):</p>
+                  <div className="flex items-center gap-2">
+                    <code className="flex-1 bg-zinc-800 px-3 py-2 rounded text-sm text-green-300 font-mono break-all" data-testid="text-new-api-key">{revealedKey}</code>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-green-500/30 text-green-400 hover:bg-green-500/10"
+                      onClick={() => { navigator.clipboard.writeText(revealedKey); toast({ title: "Copied!" }); }}
+                      data-testid="button-copy-key"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-zinc-500">This key will not be shown again. Store it securely.</p>
+                  <Button size="sm" variant="ghost" className="text-zinc-400" onClick={() => setRevealedKey(null)} data-testid="button-dismiss-key">
+                    Dismiss
+                  </Button>
+                </div>
+              )}
+
+              {keysLoading ? (
+                <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-orange-400" /></div>
+              ) : apiKeysData?.keys?.length > 0 ? (
+                <div className="space-y-3">
+                  {apiKeysData.keys.map((key: any) => (
+                    <div key={key.id} className={`flex items-center justify-between p-3 rounded-lg border ${key.status === "active" ? "border-zinc-700 bg-zinc-800/50" : "border-zinc-800 bg-zinc-900/30 opacity-60"}`} data-testid={`api-key-${key.id}`}>
+                      <div className="space-y-1 flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-white font-medium text-sm">{key.name}</span>
+                          <Badge className={key.status === "active" ? "bg-green-500/20 text-green-400 text-[10px]" : "bg-red-500/20 text-red-400 text-[10px]"}>
+                            {key.status}
+                          </Badge>
+                          <Badge className="bg-zinc-700 text-zinc-300 text-[10px]">{key.tier}</Badge>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs text-zinc-500">
+                          <code className="font-mono">{key.prefix}...****</code>
+                          <span>Today: {key.todayUsage?.requests || 0}/{key.dailyQuota} requests</span>
+                          {key.lastUsedAt && <span>Last used: {format(new Date(key.lastUsedAt), "MMM d, HH:mm")}</span>}
+                        </div>
+                      </div>
+                      {key.status === "active" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-red-400 hover:bg-red-500/10 ml-2"
+                          onClick={() => { if (confirm("Revoke this API key? This cannot be undone.")) revokeKeyMutation.mutate(key.id); }}
+                          disabled={revokeKeyMutation.isPending}
+                          data-testid={`button-revoke-key-${key.id}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-zinc-500 text-center py-2">No API keys yet. Create one to get started.</p>
+              )}
+
+              {showCreateForm ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    placeholder="Key name (e.g., 'Production Server')"
+                    value={newKeyName}
+                    onChange={(e) => setNewKeyName(e.target.value)}
+                    className="bg-zinc-800 border-zinc-700 text-white"
+                    data-testid="input-key-name"
+                  />
+                  <Button
+                    size="sm"
+                    className="bg-orange-500 hover:bg-orange-600 text-white whitespace-nowrap"
+                    onClick={() => newKeyName.trim() && createKeyMutation.mutate(newKeyName.trim())}
+                    disabled={createKeyMutation.isPending || !newKeyName.trim()}
+                    data-testid="button-create-key-submit"
+                  >
+                    {createKeyMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create"}
+                  </Button>
+                  <Button size="sm" variant="ghost" className="text-zinc-400" onClick={() => { setShowCreateForm(false); setNewKeyName(""); }} data-testid="button-cancel-create">
+                    Cancel
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 w-full"
+                  onClick={() => setShowCreateForm(true)}
+                  data-testid="button-create-api-key"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create New API Key
+                </Button>
+              )}
+
+              <div className="flex items-center justify-between pt-2 border-t border-zinc-800">
+                <span className="text-xs text-zinc-500">
+                  {apiKeysData?.tierLimits ? `${apiKeysData.keys?.filter((k: any) => k.status === "active").length || 0}/${apiKeysData.tierLimits.maxKeys} active keys` : ""}
+                </span>
+                <Button
+                  variant="link"
+                  className="text-orange-400 text-xs p-0 h-auto"
+                  onClick={() => setLocation("/api-docs")}
+                  data-testid="button-view-api-docs"
+                >
+                  View API Documentation <ArrowRight className="h-3 w-3 ml-1" />
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="border-zinc-800 bg-zinc-900/50">
           <CardHeader>
