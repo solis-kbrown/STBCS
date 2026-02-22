@@ -154,7 +154,10 @@ const limitOnlySchema = z.object({
 const signupSchema = z.object({
   username: z.string().min(3).max(50).regex(/^[a-zA-Z0-9_]+$/, "Username can only contain letters, numbers, and underscores"),
   email: z.string().email(),
-  password: z.string().min(8).max(100),
+  password: z.string().min(12, "Password must be at least 12 characters").max(128)
+    .refine(p => /[a-z]/.test(p), "Password must include a lowercase letter")
+    .refine(p => /[A-Z]/.test(p), "Password must include an uppercase letter")
+    .refine(p => /[0-9]/.test(p), "Password must include a number"),
 });
 
 const loginSchema = z.object({
@@ -2574,11 +2577,13 @@ Hiring: https://stbcybersecurity.com/support
 
   // Internal API key for server-side SMS operations (use for internal automation only)
   const verifyInternalApiKey = (req: Request, res: Response, next: Function) => {
+    const expectedKey = process.env.INTERNAL_API_KEY;
+    if (!expectedKey) {
+      return res.status(503).json({ error: "Internal API not configured" });
+    }
     const internalKey = req.headers['x-internal-api-key'];
-    const expectedKey = process.env.INTERNAL_API_KEY || process.env.QUO_API_KEY;
-    
-    if (!internalKey || internalKey !== expectedKey) {
-      return res.status(401).json({ error: "Unauthorized - internal API key required" });
+    if (!internalKey || typeof internalKey !== 'string' || internalKey !== expectedKey) {
+      return res.status(401).json({ error: "Unauthorized" });
     }
     next();
   };
@@ -3470,13 +3475,16 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
-  // ===== ADMIN VISITOR STATS (Private - requires admin key) =====
-  const ADMIN_KEY = process.env.ADMIN_STATS_KEY || "stbcs-admin-2024";
+  // ===== ADMIN VISITOR STATS (Private - requires admin key via header only) =====
+  const ADMIN_KEY = process.env.ADMIN_STATS_KEY;
 
-  app.get("/api/admin/visitors", async (req: Request, res: Response) => {
+  app.get("/api/admin/visitors", strictLimiter, async (req: Request, res: Response) => {
     try {
-      const key = req.headers["x-admin-key"] || req.query.key;
-      if (key !== ADMIN_KEY) {
+      if (!ADMIN_KEY) {
+        return res.status(503).json({ error: "Admin endpoint not configured" });
+      }
+      const key = req.headers["x-admin-key"];
+      if (!key || typeof key !== 'string' || key.length < 16 || key !== ADMIN_KEY) {
         return res.status(401).json({ error: "Unauthorized" });
       }
 
