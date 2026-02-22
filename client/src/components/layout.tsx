@@ -201,7 +201,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               </Button>
               <Link href="/" className="flex items-center gap-2 md:hidden">
                 <img src="/brand/icon-shield.png" alt="STBCS Logo" className="h-8 w-8 drop-shadow-[0_0_4px_rgba(0,200,255,0.3)]" />
-                <span className="font-display font-bold text-sm tracking-wider text-cyan-400">STBCS</span>
+                <span className="font-display font-bold text-sm tracking-wider text-orange-400">STBCS</span>
               </Link>
               <div className="relative hidden sm:block w-96">
                 <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
