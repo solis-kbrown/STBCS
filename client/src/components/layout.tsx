@@ -79,10 +79,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="p-5 group">
         <Link href="/">
           <div className="flex flex-col items-center cursor-pointer">
-            <div className="relative">
-              <img src="/logo-new.png" alt="STB Cybersecurity Logo" className="h-20 w-auto shadow-lg shadow-orange-500/20 group-hover:shadow-orange-500/40 transition-shadow duration-300" />
-            </div>
-            <span className="text-[11px] font-display font-bold tracking-[0.25em] uppercase text-zinc-400 mt-1">Cybersecurity</span>
+            <img src="/logo-new.png" alt="STB Cybersecurity Logo" className="h-28 w-auto group-hover:drop-shadow-[0_0_12px_rgba(0,200,255,0.3)] transition-all duration-300" />
           </div>
         </Link>
       </div>
@@ -203,8 +200,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <Menu className="h-5 w-5" />
               </Button>
               <Link href="/" className="flex items-center gap-2 md:hidden">
-                <img src="/logo-new.png" alt="STBCS Logo" className="h-8 w-8" />
-                <span className="font-display font-bold text-sm tracking-wider text-orange-400">STBCS</span>
+                <img src="/favicon.png" alt="STBCS Logo" className="h-8 w-8" />
+                <span className="font-display font-bold text-sm tracking-wider text-cyan-400">STBCS</span>
               </Link>
               <div className="relative hidden sm:block w-96">
                 <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
