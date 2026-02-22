@@ -10,6 +10,7 @@ import {
   FileText, Bug, HelpCircle, Zap
 } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
+import AnimatedSection from "@/components/animated-section";
 
 const categories = [
   { value: "general", label: "General Inquiry", icon: HelpCircle },
@@ -64,12 +65,12 @@ export default function ContactPage() {
 
   return (
     <Layout>
-      <div className="space-y-8 animate-in fade-in duration-500" data-testid="contact-page">
-        <div className="text-center space-y-4">
+      <div className="space-y-8 page-transition" data-testid="contact-page">
+        <AnimatedSection animation="fade-down" className="text-center space-y-4">
           <img
             src="/brand/logo-main.png"
             alt="STB Cybersecurity"
-            className="h-24 w-auto mx-auto drop-shadow-[0_0_14px_rgba(239,68,68,0.3)]"
+            className="h-24 w-auto mx-auto drop-shadow-[0_0_14px_rgba(239,68,68,0.3)] icon-float"
             data-testid="img-contact-logo"
           />
           <h1 className="text-4xl font-display font-bold tracking-tight text-white" data-testid="text-contact-title">
@@ -79,9 +80,10 @@ export default function ContactPage() {
             Whether you're dealing with an active breach or want to strengthen your defenses,
             our team is ready to help. Choose how you'd like to reach us.
           </p>
-        </div>
+        </AnimatedSection>
 
-        <Card className="border-red-500/30 bg-gradient-to-r from-red-500/10 to-zinc-900/50" data-testid="card-emergency">
+        <AnimatedSection animation="scale">
+          <Card className="border-red-500/30 bg-gradient-to-r from-red-500/10 to-zinc-900/50 glow-pulse" data-testid="card-emergency">
           <CardContent className="py-6">
             <div className="flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -104,10 +106,11 @@ export default function ContactPage() {
             </div>
           </CardContent>
         </Card>
+        </AnimatedSection>
 
         <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="bg-zinc-900/50 border-zinc-800" data-testid="card-contact-form">
+          <AnimatedSection animation="fade-left" className="lg:col-span-2 space-y-6">
+            <Card className="bg-zinc-900/50 border-zinc-800 card-interactive" data-testid="card-contact-form">
               <CardContent className="pt-6">
                 <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                   <Send className="h-5 w-5 text-orange-400" />
@@ -256,10 +259,10 @@ export default function ContactPage() {
                 )}
               </CardContent>
             </Card>
-          </div>
+          </AnimatedSection>
 
-          <div className="space-y-4">
-            <Card className="bg-zinc-900/50 border-zinc-800" data-testid="card-contact-info">
+          <AnimatedSection animation="fade-right" className="space-y-4">
+            <Card className="bg-zinc-900/50 border-zinc-800 card-interactive" data-testid="card-contact-info">
               <CardContent className="pt-6 space-y-5">
                 <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Building2 className="h-5 w-5 text-orange-400" />
@@ -376,7 +379,7 @@ export default function ContactPage() {
                 </div>
               </CardContent>
             </Card>
-          </div>
+          </AnimatedSection>
         </div>
 
         <Footer />

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Heart, Shield, Users, Zap, Check, Coffee, Rocket, Building2, ExternalLink, CreditCard, Lock, ArrowRight } from "lucide-react";
+import AnimatedSection, { AnimatedList } from "@/components/animated-section";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -147,54 +148,64 @@ export default function SupportPage() {
 
   return (
     <Layout>
-      <div className="space-y-8 animate-in fade-in duration-500">
+      <div className="space-y-8 page-transition">
 
-        <div className="bg-gradient-to-r from-green-500/20 via-green-600/30 to-green-500/20 border border-green-500/50 rounded-xl p-4 mb-6 text-center">
-          <div className="flex items-center justify-center gap-3 flex-wrap">
-            <Badge className="bg-green-500 text-white text-sm px-3 py-1 animate-pulse">
-              GRAND OPENING SALE
-            </Badge>
-            <span className="text-white font-bold text-lg">50% OFF All Memberships!</span>
-            <span className="text-green-300 text-sm">Limited time offer</span>
+        <AnimatedSection animation="fade-down">
+          <div className="bg-gradient-to-r from-green-500/20 via-green-600/30 to-green-500/20 border border-green-500/50 rounded-xl p-4 mb-6 text-center">
+            <div className="flex items-center justify-center gap-3 flex-wrap">
+              <Badge className="bg-green-500 text-white text-sm px-3 py-1 animate-pulse">
+                GRAND OPENING SALE
+              </Badge>
+              <span className="text-white font-bold text-lg">50% OFF All Memberships!</span>
+              <span className="text-green-300 text-sm">Limited time offer</span>
+            </div>
           </div>
-        </div>
+        </AnimatedSection>
 
-        <div className="text-center space-y-4">
-          <img src="/brand/logo-main.png" alt="STB Cybersecurity" className="h-28 w-auto mx-auto drop-shadow-[0_0_14px_rgba(239,68,68,0.3)]" data-testid="img-support-logo" />
-          <h1 className="text-4xl font-display font-bold tracking-tight text-white">Stay Ahead of the Threats That Target Your Business</h1>
-          <p className="text-xl text-zinc-400 max-w-3xl mx-auto leading-relaxed">
-            Real-time alerts when ransomware groups hit your industry. Custom watchlists for the CVEs and threat actors that matter to you. Pick a plan and start monitoring in minutes.
-          </p>
-        </div>
+        <AnimatedSection animation="fade-down">
+          <div className="text-center space-y-4">
+            <img src="/brand/logo-main.png" alt="STB Cybersecurity" className="h-28 w-auto mx-auto drop-shadow-[0_0_14px_rgba(239,68,68,0.3)]" data-testid="img-support-logo" />
+            <h1 className="text-4xl font-display font-bold tracking-tight text-white">Stay Ahead of the Threats That Target Your Business</h1>
+            <p className="text-xl text-zinc-400 max-w-3xl mx-auto leading-relaxed">
+              Real-time alerts when ransomware groups hit your industry. Custom watchlists for the CVEs and threat actors that matter to you. Pick a plan and start monitoring in minutes.
+            </p>
+          </div>
+        </AnimatedSection>
 
         <div className="grid md:grid-cols-3 gap-6 py-6">
-          <Card className="bg-zinc-900/50 border-zinc-800">
-            <CardContent className="pt-6 text-center space-y-2">
-              <Shield className="h-10 w-10 mx-auto text-orange-400" aria-hidden="true" />
-              <h3 className="font-bold text-white">Free Tools, No Strings</h3>
-              <p className="text-sm text-zinc-400">
-                IP lookups, port scans, threat checks, and more. Free for researchers, students, and small businesses.
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="bg-zinc-900/50 border-zinc-800">
-            <CardContent className="pt-6 text-center space-y-2">
-              <Users className="h-10 w-10 mx-auto text-blue-400" aria-hidden="true" />
-              <h3 className="font-bold text-white">Built by Practitioners</h3>
-              <p className="text-sm text-zinc-400">
-                Our team handles real incident response and ransomware recovery cases. This platform is built from the front lines.
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="bg-zinc-900/50 border-zinc-800">
-            <CardContent className="pt-6 text-center space-y-2">
-              <Zap className="h-10 w-10 mx-auto text-yellow-400" aria-hidden="true" />
-              <h3 className="font-bold text-white">Your Money, Put to Work</h3>
-              <p className="text-sm text-zinc-400">
-                Every dollar funds API calls, data feeds, hosting, and new features. No investors, no ads, no data selling.
-              </p>
-            </CardContent>
-          </Card>
+          <AnimatedSection animation="fade-up" stagger={1}>
+            <Card className="bg-zinc-900/50 border-zinc-800 card-interactive">
+              <CardContent className="pt-6 text-center space-y-2">
+                <Shield className="h-10 w-10 mx-auto text-orange-400 icon-hover" aria-hidden="true" />
+                <h3 className="font-bold text-white">Free Tools, No Strings</h3>
+                <p className="text-sm text-zinc-400">
+                  IP lookups, port scans, threat checks, and more. Free for researchers, students, and small businesses.
+                </p>
+              </CardContent>
+            </Card>
+          </AnimatedSection>
+          <AnimatedSection animation="fade-up" stagger={2}>
+            <Card className="bg-zinc-900/50 border-zinc-800 card-interactive">
+              <CardContent className="pt-6 text-center space-y-2">
+                <Users className="h-10 w-10 mx-auto text-blue-400 icon-hover" aria-hidden="true" />
+                <h3 className="font-bold text-white">Built by Practitioners</h3>
+                <p className="text-sm text-zinc-400">
+                  Our team handles real incident response and ransomware recovery cases. This platform is built from the front lines.
+                </p>
+              </CardContent>
+            </Card>
+          </AnimatedSection>
+          <AnimatedSection animation="fade-up" stagger={3}>
+            <Card className="bg-zinc-900/50 border-zinc-800 card-interactive">
+              <CardContent className="pt-6 text-center space-y-2">
+                <Zap className="h-10 w-10 mx-auto text-yellow-400 icon-hover" aria-hidden="true" />
+                <h3 className="font-bold text-white">Your Money, Put to Work</h3>
+                <p className="text-sm text-zinc-400">
+                  Every dollar funds API calls, data feeds, hosting, and new features. No investors, no ads, no data selling.
+                </p>
+              </CardContent>
+            </Card>
+          </AnimatedSection>
         </div>
 
         <Tabs defaultValue="membership" className="space-y-6">
@@ -332,10 +343,10 @@ export default function SupportPage() {
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {membershipTiers.map((tier) => (
+            {membershipTiers.map((tier, index) => (
+              <AnimatedSection key={tier.name} animation="fade-up" stagger={(index + 1) as 1 | 2 | 3}>
               <Card 
-                key={tier.name} 
-                className={`relative bg-gradient-to-b ${tier.color} ${tier.borderColor} ${tier.popular ? 'ring-2 ring-orange-500' : ''}`}
+                className={`relative bg-gradient-to-b ${tier.color} ${tier.borderColor} ${tier.popular ? 'ring-2 ring-orange-500 glow-pulse' : ''} card-interactive`}
               >
                 {tier.popular && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white">
@@ -348,7 +359,7 @@ export default function SupportPage() {
                   </Badge>
                 )}
                 <CardHeader className="text-center pb-2">
-                  <tier.icon className={`h-12 w-12 mx-auto mb-2 ${tier.popular ? 'text-orange-400' : 'text-zinc-400'}`} />
+                  <tier.icon className={`h-12 w-12 mx-auto mb-2 icon-hover ${tier.popular ? 'text-orange-400' : 'text-zinc-400'}`} />
                   <CardTitle className="text-xl text-white">{tier.name}</CardTitle>
                   <div className="mt-2">
                     {tier.originalPrice && (
@@ -380,6 +391,7 @@ export default function SupportPage() {
                   </Button>
                 </CardContent>
               </Card>
+              </AnimatedSection>
             ))}
           </div>
 

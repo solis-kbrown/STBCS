@@ -1,5 +1,6 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import AnimatedSection, { AnimatedList } from "@/components/animated-section";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -199,14 +200,15 @@ export default function ThreatActors() {
 
   return (
     <Layout>
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-white mb-2">Threat Actor Profiles</h1>
-            <p className="text-muted-foreground">
-              Browse nation-state groups, criminal organizations, and hacktivists. Analyze TTPs, malware families, and ransomware operations.
-            </p>
-          </div>
+      <div className="space-y-6 page-transition">
+        <AnimatedSection animation="fade-down">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-display font-bold text-white mb-2">Threat Actor Profiles</h1>
+              <p className="text-muted-foreground">
+                Browse nation-state groups, criminal organizations, and hacktivists. Analyze TTPs, malware families, and ransomware operations.
+              </p>
+            </div>
           <div className="flex gap-2">
             <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-actors-csv" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'csv' })} disabled={exportMutation.isPending}>
               {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
@@ -217,14 +219,15 @@ export default function ThreatActors() {
               JSON
             </Button>
           </div>
-        </div>
+          </div>
+        </AnimatedSection>
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Card className="border-white/5 bg-card/50">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="p-2 rounded-lg bg-orange-500/10">
-                <Users className="h-5 w-5 text-orange-400" />
+                <Users className="h-5 w-5 text-orange-400 icon-hover" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Total Actors</p>
@@ -239,7 +242,7 @@ export default function ThreatActors() {
           <Card className="border-white/5 bg-card/50">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="p-2 rounded-lg bg-green-500/10">
-                <Activity className="h-5 w-5 text-green-400" />
+                <Activity className="h-5 w-5 text-green-400 icon-hover" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Active Actors</p>
@@ -254,7 +257,7 @@ export default function ThreatActors() {
           <Card className="border-white/5 bg-card/50">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="p-2 rounded-lg bg-red-500/10">
-                <Shield className="h-5 w-5 text-red-400" />
+                <Shield className="h-5 w-5 text-red-400 icon-hover" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">Nation-State</p>
@@ -269,7 +272,7 @@ export default function ThreatActors() {
           <Card className="border-white/5 bg-card/50">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="p-2 rounded-lg bg-purple-500/10">
-                <Skull className="h-5 w-5 text-purple-400" />
+                <Skull className="h-5 w-5 text-purple-400 icon-hover" />
               </div>
               <div>
                 <p className="text-xs text-muted-foreground">RaaS Groups</p>
@@ -456,7 +459,7 @@ export default function ThreatActors() {
         {/* Actor Cards Grid */}
         {!isLoading && !isError && paginatedActors.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-            {paginatedActors.map((actor) => {
+            {paginatedActors.map((actor, idx) => {
               const isExpanded = expandedId === actor.id;
               const aliases = parseJsonField(actor.aliases);
               const sectors = parseJsonField(actor.targetSectors);
@@ -473,7 +476,8 @@ export default function ThreatActors() {
               return (
                 <Card
                   key={actor.id}
-                  className={`border-white/5 bg-card/50 hover:border-orange-500/20 transition-colors cursor-pointer ${isExpanded ? "md:col-span-2 xl:col-span-3 border-orange-500/30" : ""}`}
+                  className={`border-white/5 bg-card/50 hover:border-orange-500/20 transition-colors cursor-pointer card-interactive ${isExpanded ? "md:col-span-2 xl:col-span-3 border-orange-500/30" : ""}`}
+                  style={{ animation: `fadeInLeft 0.4s ease-out ${idx * 80}ms both` }}
                   onClick={() => setExpandedId(isExpanded ? null : actor.id)}
                   data-testid={`card-actor-${actor.id}`}
                 >

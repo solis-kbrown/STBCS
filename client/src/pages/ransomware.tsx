@@ -1,5 +1,6 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import AnimatedSection, { AnimatedList } from "@/components/animated-section";
 import { useRansomware, useRansomwareGroups, useRansomwareSearch, useExportData, useTrackView, useRansomwareAnalytics } from "@/lib/api";
 import { toSlug } from "@shared/schema";
 import { useDocumentTitle } from "@/lib/use-document-title";
@@ -128,12 +129,13 @@ export default function Ransomware() {
 
   return (
     <Layout>
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-white mb-2">Ransomware Tracker</h1>
-            <p className="text-muted-foreground">Live tracking of ransomware group activity, new victim postings, and attack trends across industries and countries.</p>
-          </div>
+      <div className="space-y-6 page-transition">
+        <AnimatedSection animation="fade-down">
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-display font-bold text-white mb-2">Ransomware Tracker</h1>
+              <p className="text-muted-foreground">Live tracking of ransomware group activity, new victim postings, and attack trends across industries and countries.</p>
+            </div>
           <div className="flex gap-2 w-full md:w-auto">
             <Button 
               variant="outline" 
@@ -164,7 +166,8 @@ export default function Ransomware() {
               </a>
             </Button>
           </div>
-        </div>
+          </div>
+        </AnimatedSection>
 
         {showAnalytics && analytics && (
           <div className="space-y-4" data-testid="section-analytics">
@@ -627,10 +630,11 @@ export default function Ransomware() {
               </Card>
             ))
           ) : paginatedIncidents.length > 0 ? (
-            paginatedIncidents.map((incident) => (
+            paginatedIncidents.map((incident, idx) => (
               <Card 
                 key={incident.id} 
                 className="border-white/5 bg-card/40 hover:bg-card/60 transition-colors group cursor-pointer" 
+                style={{ animation: `fadeInLeft 0.4s ease-out ${idx * 80}ms both` }}
                 data-testid={`card-incident-${incident.id}`}
                 onClick={() => trackView.mutate({ contentType: 'ransomware', contentId: incident.id })}
               >

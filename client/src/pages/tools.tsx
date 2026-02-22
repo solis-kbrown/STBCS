@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import AnimatedSection, { AnimatedList } from "@/components/animated-section";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -78,12 +79,12 @@ function ToolCard({
   children: React.ReactNode;
 }) {
   return (
-    <Card className="border-white/5 bg-card/50">
+    <Card className="border-white/5 bg-card/50 card-interactive">
       <CardHeader className="pb-4">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-3">
             <div className="p-2 rounded-lg bg-primary/10">
-              <Icon className="h-5 w-5 text-primary" />
+              <Icon className="h-5 w-5 text-primary icon-hover" />
             </div>
             <div>
               <CardTitle className="text-lg font-bold text-white">{title}</CardTitle>
@@ -1755,14 +1756,15 @@ export default function ToolsPage() {
   useDocumentTitle("Free Security Tools | STB Cybersecurity", "Free cybersecurity tools: IP/Domain WHOIS, Port Scanner, SSL Checker, Password Checker, Hash Analyzer, Email Header Analyzer, and more. No account needed.");
   return (
     <Layout>
-      <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-white">Security Tools</h1>
-            <p className="text-muted-foreground mt-1">
-              Look up IPs, scan ports, check SSL certificates, analyze email headers, and more. No account needed for basic tools.
-            </p>
-          </div>
+      <div className="space-y-6 page-transition">
+        <AnimatedSection animation="fade-down">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-3xl font-display font-bold text-white">Security Tools</h1>
+              <p className="text-muted-foreground mt-1">
+                Look up IPs, scan ports, check SSL certificates, analyze email headers, and more. No account needed for basic tools.
+              </p>
+            </div>
           <div className="flex items-center gap-3">
             <Badge className="bg-green-600 text-white px-3 py-1">
               <Wifi className="h-3 w-3 mr-1" /> Free: 10 requests/min
@@ -1771,7 +1773,8 @@ export default function ToolsPage() {
               <Crown className="h-3 w-3 mr-1" /> Pro: 60 requests/min
             </Badge>
           </div>
-        </div>
+          </div>
+        </AnimatedSection>
 
         <Card className="border-primary/20 bg-gradient-to-r from-primary/5 to-transparent">
           <CardContent className="py-4">

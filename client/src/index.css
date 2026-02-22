@@ -141,28 +141,228 @@
 }
 
 
-/* Modern Animations */
+/* ======================== */
+/*   ANIMATION SYSTEM       */
+/* ======================== */
+
+/* --- Keyframes --- */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }
 }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInDown {
+  from { opacity: 0; transform: translateY(-16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInLeft {
+  from { opacity: 0; transform: translateX(-20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes fadeInRight {
+  from { opacity: 0; transform: translateX(20px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 8px 0 hsl(var(--primary) / 0.15); }
+  50% { box-shadow: 0 0 20px 4px hsl(var(--primary) / 0.25); }
+}
+@keyframes iconFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+@keyframes scanLine {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100vh); }
+}
+@keyframes borderGlow {
+  0%, 100% { border-color: hsl(var(--primary) / 0.1); }
+  50% { border-color: hsl(var(--primary) / 0.3); }
+}
 
+/* --- Base Animation Classes --- */
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
 }
+.anim-fade-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.anim-fade-up.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+.anim-fade-down {
+  opacity: 0;
+  transform: translateY(-16px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.anim-fade-down.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+.anim-fade-left {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.anim-fade-left.in-view {
+  opacity: 1;
+  transform: translateX(0);
+}
+.anim-fade-right {
+  opacity: 0;
+  transform: translateX(20px);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.anim-fade-right.in-view {
+  opacity: 1;
+  transform: translateX(0);
+}
+.anim-scale {
+  opacity: 0;
+  transform: scale(0.92);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.anim-scale.in-view {
+  opacity: 1;
+  transform: scale(1);
+}
 
-/* Enhanced card hover effects */
+/* --- Stagger Delays --- */
+.stagger-1 { transition-delay: 0ms; }
+.stagger-2 { transition-delay: 60ms; }
+.stagger-3 { transition-delay: 120ms; }
+.stagger-4 { transition-delay: 180ms; }
+.stagger-5 { transition-delay: 240ms; }
+.stagger-6 { transition-delay: 300ms; }
+.stagger-7 { transition-delay: 360ms; }
+.stagger-8 { transition-delay: 420ms; }
+
+/* CSS-only animation stagger (no JS) */
+.animate-fade-in.stagger-1 { animation-delay: 0ms; }
+.animate-fade-in.stagger-2 { animation-delay: 60ms; }
+.animate-fade-in.stagger-3 { animation-delay: 120ms; }
+.animate-fade-in.stagger-4 { animation-delay: 180ms; }
+.animate-fade-in.stagger-5 { animation-delay: 240ms; }
+
+/* --- Card Hover Effects --- */
 .card-hover {
   @apply transition-all duration-300 ease-out;
 }
 .card-hover:hover {
-  @apply -translate-y-1 shadow-lg;
+  @apply -translate-y-1;
   box-shadow: 0 10px 40px -10px hsl(var(--primary) / 0.2);
 }
 
+/* Enhanced interactive card with glow */
+.card-interactive {
+  @apply transition-all duration-300 ease-out;
+  border: 1px solid transparent;
+}
+.card-interactive:hover {
+  @apply -translate-y-1;
+  border-color: hsl(var(--primary) / 0.2);
+  box-shadow: 0 8px 32px -8px hsl(var(--primary) / 0.15), inset 0 1px 0 hsl(var(--primary) / 0.05);
+}
 
-/* Smooth page transitions */
+/* --- Icon Hover Effects --- */
+.icon-hover {
+  @apply transition-all duration-300 ease-out;
+}
+.icon-hover:hover {
+  @apply scale-110;
+  filter: drop-shadow(0 0 6px hsl(var(--primary) / 0.4));
+}
+.icon-float {
+  animation: iconFloat 3s ease-in-out infinite;
+}
+
+/* --- Glow Effects --- */
+.glow-pulse {
+  animation: glowPulse 3s ease-in-out infinite;
+}
+.border-glow {
+  animation: borderGlow 4s ease-in-out infinite;
+}
+
+/* --- Table Row Animations --- */
+.row-animate {
+  opacity: 0;
+  transform: translateX(-8px);
+  transition: opacity 0.3s ease-out, transform 0.3s ease-out;
+}
+.row-animate.in-view {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* --- List Item Cascade --- */
+.list-cascade > * {
+  opacity: 0;
+  transform: translateY(12px);
+  transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+}
+.list-cascade.in-view > *:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0ms; }
+.list-cascade.in-view > *:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 50ms; }
+.list-cascade.in-view > *:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+.list-cascade.in-view > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 150ms; }
+.list-cascade.in-view > *:nth-child(5) { opacity: 1; transform: translateY(0); transition-delay: 200ms; }
+.list-cascade.in-view > *:nth-child(6) { opacity: 1; transform: translateY(0); transition-delay: 250ms; }
+.list-cascade.in-view > *:nth-child(7) { opacity: 1; transform: translateY(0); transition-delay: 300ms; }
+.list-cascade.in-view > *:nth-child(8) { opacity: 1; transform: translateY(0); transition-delay: 350ms; }
+.list-cascade.in-view > *:nth-child(9) { opacity: 1; transform: translateY(0); transition-delay: 400ms; }
+.list-cascade.in-view > *:nth-child(10) { opacity: 1; transform: translateY(0); transition-delay: 450ms; }
+
+/* --- Smooth page transitions --- */
 .page-transition {
   animation: fadeIn 0.3s ease-out;
+}
+
+/* --- Badge / Stat Animations --- */
+.stat-value {
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s ease;
+}
+
+/* --- Button Scale on Press --- */
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* --- Respect motion preferences --- */
+@media (prefers-reduced-motion: reduce) {
+  .anim-fade-up,
+  .anim-fade-down,
+  .anim-fade-left,
+  .anim-fade-right,
+  .anim-scale,
+  .row-animate,
+  .list-cascade > * {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .animate-fade-in,
+  .page-transition {
+    animation: none !important;
+  }
+  .icon-float,
+  .glow-pulse,
+  .border-glow {
+    animation: none !important;
+  }
 }
 
