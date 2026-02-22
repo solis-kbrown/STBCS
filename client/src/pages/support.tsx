@@ -88,7 +88,7 @@ const membershipTiers = [
 ];
 
 export default function SupportPage() {
-  useDocumentTitle("Plans & Pricing | STB Cybersecurity", "Get real-time threat alerts, custom watchlists, and priority incident response. Plans start at $4.99/mo. 50% off during our grand opening.");
+  useDocumentTitle("Plans & Pricing | STB Cybersecurity", "Get real-time threat alerts, custom watchlists, and priority incident response. Plans start at $7.49/mo. 50% off during our grand opening.");
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
@@ -472,7 +472,7 @@ export default function SupportPage() {
                 Be one of the first names on the wall. Early supporters get permanent recognition.
               </p>
               <p className="text-xs text-zinc-500">
-                Start a Supporter plan at $4.99/month and your name appears here.
+                Start a Supporter plan at $7.49/month and your name appears here.
               </p>
             </div>
           </CardContent>

@@ -25,7 +25,7 @@ async function createProducts() {
 
   const supporterPrice = await stripe.prices.create({
     product: supporterProduct.id,
-    unit_amount: 999, // $9.99/month
+    unit_amount: 1499, // $14.99/month
     currency: 'usd',
     recurring: { interval: 'month' },
     metadata: { tier: 'supporter' },
@@ -45,7 +45,7 @@ async function createProducts() {
 
   const proMonthlyPrice = await stripe.prices.create({
     product: proProduct.id,
-    unit_amount: 2999, // $29.99/month
+    unit_amount: 4999, // $49.99/month
     currency: 'usd',
     recurring: { interval: 'month' },
     metadata: { tier: 'pro', billing: 'monthly' },
@@ -53,7 +53,7 @@ async function createProducts() {
 
   const proYearlyPrice = await stripe.prices.create({
     product: proProduct.id,
-    unit_amount: 29900, // $299/year (2 months free)
+    unit_amount: 49990, // $499.90/year (2 months free)
     currency: 'usd',
     recurring: { interval: 'year' },
     metadata: { tier: 'pro', billing: 'yearly' },
@@ -73,7 +73,7 @@ async function createProducts() {
 
   const enterprisePrice = await stripe.prices.create({
     product: enterpriseProduct.id,
-    unit_amount: 9999, // $99.99/month
+    unit_amount: 14999, // $149.99/month
     currency: 'usd',
     recurring: { interval: 'month' },
     metadata: { tier: 'enterprise' },
