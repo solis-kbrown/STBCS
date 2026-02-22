@@ -1478,3 +1478,148 @@ export function useTrending(contentType: string, limit = 10) {
     enabled: !!contentType,
   });
 }
+
+// ===== Uptime & Dark Web Monitoring =====
+
+export function useMonitorSummary() {
+  return useQuery<{
+    uptime: { total: number; up: number; down: number; degraded: number; avgUptime: number; sslExpiring: number; activeIncidents: number };
+    darkWeb: { total: number; totalFindings: number; unreadFindings: number };
+    limits: { uptimeMonitors: number; darkWebMonitors: number; darkWebSources: number };
+    tier: string;
+    recentIncidents: any[];
+    recentFindings: any[];
+  }>({
+    queryKey: ["/api/monitors/summary"],
+    queryFn: () => fetchApi("/api/monitors/summary"),
+    staleTime: 30000,
+    refetchInterval: 60000,
+  });
+}
+
+export function useUptimeMonitors() {
+  return useQuery<{ monitors: any[]; limits: any; tier: string }>({
+    queryKey: ["/api/monitors/uptime"],
+    queryFn: () => fetchApi("/api/monitors/uptime"),
+    staleTime: 30000,
+    refetchInterval: 60000,
+  });
+}
+
+export function useCreateUptimeMonitor() {
+  const qc = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: async (data) => {
+      const res = await fetch("/api/monitors/uptime", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data), credentials: "include" });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Failed to create monitor"); }
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/monitors/uptime"] }); qc.invalidateQueries({ queryKey: ["/api/monitors/summary"] }); },
+  });
+}
+
+export function useUpdateUptimeMonitor() {
+  const qc = useQueryClient();
+  return useMutation<any, Error, { id: string; data: any }>({
+    mutationFn: async ({ id, data }) => {
+      const res = await fetch(`/api/monitors/uptime/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data), credentials: "include" });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Failed to update monitor"); }
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/monitors/uptime"] }); qc.invalidateQueries({ queryKey: ["/api/monitors/summary"] }); },
+  });
+}
+
+export function useDeleteUptimeMonitor() {
+  const qc = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: async (id) => {
+      const res = await fetch(`/api/monitors/uptime/${id}`, { method: "DELETE", credentials: "include" });
+      if (!res.ok) throw new Error("Failed to delete monitor");
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/monitors/uptime"] }); qc.invalidateQueries({ queryKey: ["/api/monitors/summary"] }); },
+  });
+}
+
+export function useUptimeChecks(monitorId: string) {
+  return useQuery<{ checks: any[]; stats24h: any; stats7d: any }>({
+    queryKey: ["/api/monitors/uptime", monitorId, "checks"],
+    queryFn: () => fetchApi(`/api/monitors/uptime/${monitorId}/checks?limit=200`),
+    enabled: !!monitorId,
+    staleTime: 30000,
+    refetchInterval: 60000,
+  });
+}
+
+export function useUptimeIncidents(monitorId?: string) {
+  const endpoint = monitorId ? `/api/monitors/uptime/${monitorId}/incidents` : "/api/monitors/incidents";
+  return useQuery<{ incidents: any[] }>({
+    queryKey: ["/api/monitors/incidents", monitorId || "all"],
+    queryFn: () => fetchApi(endpoint),
+    staleTime: 30000,
+  });
+}
+
+export function useSslCheck(monitorId: string) {
+  return useQuery<{ ssl: any; monitor: any; error?: string }>({
+    queryKey: ["/api/monitors/ssl", monitorId],
+    queryFn: () => fetchApi(`/api/monitors/ssl/${monitorId}`),
+    enabled: !!monitorId,
+    staleTime: 300000,
+  });
+}
+
+export function useDarkWebMonitors() {
+  return useQuery<{ monitors: any[]; limits: any; tier: string }>({
+    queryKey: ["/api/monitors/darkweb"],
+    queryFn: () => fetchApi("/api/monitors/darkweb"),
+    staleTime: 30000,
+    refetchInterval: 120000,
+  });
+}
+
+export function useCreateDarkWebMonitor() {
+  const qc = useQueryClient();
+  return useMutation<any, Error, any>({
+    mutationFn: async (data) => {
+      const res = await fetch("/api/monitors/darkweb", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data), credentials: "include" });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Failed to create monitor"); }
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/monitors/darkweb"] }); qc.invalidateQueries({ queryKey: ["/api/monitors/summary"] }); },
+  });
+}
+
+export function useDeleteDarkWebMonitor() {
+  const qc = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: async (id) => {
+      const res = await fetch(`/api/monitors/darkweb/${id}`, { method: "DELETE", credentials: "include" });
+      if (!res.ok) throw new Error("Failed to delete monitor");
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/monitors/darkweb"] }); qc.invalidateQueries({ queryKey: ["/api/monitors/summary"] }); },
+  });
+}
+
+export function useDarkWebFindings(monitorId?: string) {
+  const endpoint = monitorId ? `/api/monitors/darkweb/${monitorId}/findings` : "/api/monitors/darkweb/findings/all";
+  return useQuery<{ findings: any[] }>({
+    queryKey: ["/api/monitors/darkweb/findings", monitorId || "all"],
+    queryFn: () => fetchApi(endpoint),
+    staleTime: 60000,
+  });
+}
+
+export function useMarkFindingRead() {
+  const qc = useQueryClient();
+  return useMutation<any, Error, string>({
+    mutationFn: async (id) => {
+      const res = await fetch(`/api/monitors/darkweb/findings/${id}/read`, { method: "POST", credentials: "include" });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/monitors/darkweb/findings"] }); qc.invalidateQueries({ queryKey: ["/api/monitors/summary"] }); },
+  });
+}

@@ -121,6 +121,11 @@ const PAGE_META: Record<string, PageMeta> = {
     description: 'Internal style preview page.',
     noindex: true,
   },
+  '/monitors': {
+    title: 'Monitoring Suite | STB Cybersecurity',
+    description: 'Real-time uptime monitoring, SSL certificate tracking, and dark web intelligence scanning for Pro and Business subscribers.',
+    noindex: true,
+  },
 };
 
 const MAX_TITLE_LENGTH = 60;

@@ -24,11 +24,14 @@ import {
   type AddOn, type InsertAddOn,
   type UserAddOn, type InsertUserAddOn,
   type MonitorAlertLog,
+  type UptimeMonitor, type InsertUptimeMonitor, type UptimeCheck, type UptimeIncident,
+  type DarkWebMonitor, type InsertDarkWebMonitor, type DarkWebFinding,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
   userNotifications, watchlistItems, breachIncidents, cisaIcsAdvisories, newsletterSubscriptions,
   smsMessages, exploitSubmissions, liveChatSessions, contentViews, siteVisitors, dailyVisitorCounts,
-  apiKeys, apiKeyUsage, addOns, userAddOns, monitorAlertLog
+  apiKeys, apiKeyUsage, addOns, userAddOns, monitorAlertLog,
+  uptimeMonitors, uptimeChecks, uptimeIncidents, darkWebMonitors, darkWebFindings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte } from "drizzle-orm";
@@ -231,6 +234,47 @@ export interface IStorage {
   // Monitor Alert Log
   hasAlertBeenSent(watchlistItemId: string, matchedDataType: string, matchedDataId: string): Promise<boolean>;
   logMonitorAlert(log: { watchlistItemId: string; matchedDataType: string; matchedDataId: string; deliveryChannel: string; deliveryStatus?: string }): Promise<void>;
+
+  // Uptime Monitors
+  getUptimeMonitorsByUser(userId: string): Promise<UptimeMonitor[]>;
+  getUptimeMonitorById(id: string): Promise<UptimeMonitor | undefined>;
+  createUptimeMonitor(data: InsertUptimeMonitor): Promise<UptimeMonitor>;
+  updateUptimeMonitor(id: string, userId: string, updates: Partial<InsertUptimeMonitor>): Promise<UptimeMonitor>;
+  deleteUptimeMonitor(id: string, userId: string): Promise<void>;
+  getUptimeMonitorsDue(): Promise<UptimeMonitor[]>;
+  updateMonitorState(id: string, state: Partial<UptimeMonitor>): Promise<void>;
+  getUserMonitorCount(userId: string): Promise<number>;
+
+  // Uptime Checks
+  recordUptimeCheck(check: { monitorId: string; status: string; statusCode?: number; responseTime?: number; errorMessage?: string; sslValid?: boolean; sslDaysRemaining?: number }): Promise<UptimeCheck>;
+  getUptimeChecks(monitorId: string, limit?: number): Promise<UptimeCheck[]>;
+  getUptimeCheckStats(monitorId: string, hours?: number): Promise<{ totalChecks: number; upChecks: number; avgResponseTime: number; minResponseTime: number; maxResponseTime: number }>;
+  cleanupOldChecks(retainDays?: number): Promise<number>;
+
+  // Uptime Incidents
+  createUptimeIncident(incident: { monitorId: string; userId: string; type: string; title: string; description?: string }): Promise<UptimeIncident>;
+  resolveUptimeIncident(monitorId: string): Promise<void>;
+  getActiveIncident(monitorId: string): Promise<UptimeIncident | undefined>;
+  getUptimeIncidents(userId: string, limit?: number): Promise<UptimeIncident[]>;
+  getUptimeIncidentsByMonitor(monitorId: string, limit?: number): Promise<UptimeIncident[]>;
+
+  // Dark Web Monitors
+  getDarkWebMonitorsByUser(userId: string): Promise<DarkWebMonitor[]>;
+  getDarkWebMonitorById(id: string): Promise<DarkWebMonitor | undefined>;
+  createDarkWebMonitor(data: InsertDarkWebMonitor): Promise<DarkWebMonitor>;
+  updateDarkWebMonitor(id: string, userId: string, updates: Partial<InsertDarkWebMonitor>): Promise<DarkWebMonitor>;
+  deleteDarkWebMonitor(id: string, userId: string): Promise<void>;
+  getDarkWebMonitorsDue(): Promise<DarkWebMonitor[]>;
+  updateDarkWebMonitorState(id: string, state: Partial<DarkWebMonitor>): Promise<void>;
+  getUserDarkWebMonitorCount(userId: string): Promise<number>;
+
+  // Dark Web Findings
+  createDarkWebFinding(finding: { monitorId: string; userId: string; source: string; findingType: string; title: string; description?: string; severity?: string; rawData?: string; breachDate?: Date }): Promise<DarkWebFinding>;
+  getDarkWebFindings(userId: string, limit?: number): Promise<DarkWebFinding[]>;
+  getDarkWebFindingsByMonitor(monitorId: string, limit?: number): Promise<DarkWebFinding[]>;
+  markDarkWebFindingRead(id: string, userId: string): Promise<void>;
+  getDarkWebFindingCount(userId: string): Promise<number>;
+  hasDarkWebFindingBeenRecorded(monitorId: string, source: string, title: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -1696,6 +1740,230 @@ export class DatabaseStorage implements IStorage {
       return { ...item, user };
     }));
     return enriched;
+  }
+
+  // ===== Uptime Monitors =====
+  async getUptimeMonitorsByUser(userId: string): Promise<UptimeMonitor[]> {
+    return db.select().from(uptimeMonitors)
+      .where(and(eq(uptimeMonitors.userId, userId), eq(uptimeMonitors.status, "active")))
+      .orderBy(desc(uptimeMonitors.createdAt));
+  }
+
+  async getUptimeMonitorById(id: string): Promise<UptimeMonitor | undefined> {
+    const [mon] = await db.select().from(uptimeMonitors).where(eq(uptimeMonitors.id, id));
+    return mon;
+  }
+
+  async createUptimeMonitor(data: InsertUptimeMonitor): Promise<UptimeMonitor> {
+    const [mon] = await db.insert(uptimeMonitors).values({
+      ...data,
+      nextCheckAt: new Date(),
+    }).returning();
+    return mon;
+  }
+
+  async updateUptimeMonitor(id: string, userId: string, updates: Partial<InsertUptimeMonitor>): Promise<UptimeMonitor> {
+    const [mon] = await db.update(uptimeMonitors)
+      .set(updates)
+      .where(and(eq(uptimeMonitors.id, id), eq(uptimeMonitors.userId, userId)))
+      .returning();
+    return mon;
+  }
+
+  async deleteUptimeMonitor(id: string, userId: string): Promise<void> {
+    await db.update(uptimeMonitors)
+      .set({ status: "deleted" })
+      .where(and(eq(uptimeMonitors.id, id), eq(uptimeMonitors.userId, userId)));
+  }
+
+  async getUptimeMonitorsDue(): Promise<UptimeMonitor[]> {
+    return db.select().from(uptimeMonitors)
+      .where(and(
+        eq(uptimeMonitors.status, "active"),
+        sql`${uptimeMonitors.nextCheckAt} IS NULL OR ${uptimeMonitors.nextCheckAt} <= NOW()`
+      ))
+      .limit(100);
+  }
+
+  async updateMonitorState(id: string, state: Partial<UptimeMonitor>): Promise<void> {
+    await db.update(uptimeMonitors).set(state).where(eq(uptimeMonitors.id, id));
+  }
+
+  async getUserMonitorCount(userId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(uptimeMonitors)
+      .where(and(eq(uptimeMonitors.userId, userId), eq(uptimeMonitors.status, "active")));
+    return Number(result[0]?.count || 0);
+  }
+
+  // ===== Uptime Checks =====
+  async recordUptimeCheck(check: { monitorId: string; status: string; statusCode?: number; responseTime?: number; errorMessage?: string; sslValid?: boolean; sslDaysRemaining?: number }): Promise<UptimeCheck> {
+    const [rec] = await db.insert(uptimeChecks).values(check).returning();
+    return rec;
+  }
+
+  async getUptimeChecks(monitorId: string, limit = 100): Promise<UptimeCheck[]> {
+    return db.select().from(uptimeChecks)
+      .where(eq(uptimeChecks.monitorId, monitorId))
+      .orderBy(desc(uptimeChecks.checkedAt))
+      .limit(limit);
+  }
+
+  async getUptimeCheckStats(monitorId: string, hours = 24): Promise<{ totalChecks: number; upChecks: number; avgResponseTime: number; minResponseTime: number; maxResponseTime: number }> {
+    const since = new Date(Date.now() - hours * 60 * 60 * 1000);
+    const result = await db.select({
+      totalChecks: sql<number>`count(*)`,
+      upChecks: sql<number>`count(*) filter (where ${uptimeChecks.status} = 'up')`,
+      avgResponseTime: sql<number>`coalesce(avg(${uptimeChecks.responseTime}), 0)`,
+      minResponseTime: sql<number>`coalesce(min(${uptimeChecks.responseTime}), 0)`,
+      maxResponseTime: sql<number>`coalesce(max(${uptimeChecks.responseTime}), 0)`,
+    }).from(uptimeChecks)
+      .where(and(eq(uptimeChecks.monitorId, monitorId), gte(uptimeChecks.checkedAt, since)));
+    return {
+      totalChecks: Number(result[0]?.totalChecks || 0),
+      upChecks: Number(result[0]?.upChecks || 0),
+      avgResponseTime: Math.round(Number(result[0]?.avgResponseTime || 0)),
+      minResponseTime: Math.round(Number(result[0]?.minResponseTime || 0)),
+      maxResponseTime: Math.round(Number(result[0]?.maxResponseTime || 0)),
+    };
+  }
+
+  async cleanupOldChecks(retainDays = 30): Promise<number> {
+    const cutoff = new Date(Date.now() - retainDays * 24 * 60 * 60 * 1000);
+    const result = await db.delete(uptimeChecks).where(sql`${uptimeChecks.checkedAt} < ${cutoff}`).returning();
+    return result.length;
+  }
+
+  // ===== Uptime Incidents =====
+  async createUptimeIncident(incident: { monitorId: string; userId: string; type: string; title: string; description?: string }): Promise<UptimeIncident> {
+    const [inc] = await db.insert(uptimeIncidents).values(incident).returning();
+    return inc;
+  }
+
+  async resolveUptimeIncident(monitorId: string): Promise<void> {
+    const now = new Date();
+    await db.update(uptimeIncidents)
+      .set({
+        status: "resolved",
+        resolvedAt: now,
+        duration: sql`EXTRACT(EPOCH FROM (${now}::timestamp - ${uptimeIncidents.startedAt}))::integer`,
+      })
+      .where(and(eq(uptimeIncidents.monitorId, monitorId), eq(uptimeIncidents.status, "ongoing")));
+  }
+
+  async getActiveIncident(monitorId: string): Promise<UptimeIncident | undefined> {
+    const [inc] = await db.select().from(uptimeIncidents)
+      .where(and(eq(uptimeIncidents.monitorId, monitorId), eq(uptimeIncidents.status, "ongoing")));
+    return inc;
+  }
+
+  async getUptimeIncidents(userId: string, limit = 50): Promise<UptimeIncident[]> {
+    return db.select().from(uptimeIncidents)
+      .where(eq(uptimeIncidents.userId, userId))
+      .orderBy(desc(uptimeIncidents.startedAt))
+      .limit(limit);
+  }
+
+  async getUptimeIncidentsByMonitor(monitorId: string, limit = 20): Promise<UptimeIncident[]> {
+    return db.select().from(uptimeIncidents)
+      .where(eq(uptimeIncidents.monitorId, monitorId))
+      .orderBy(desc(uptimeIncidents.startedAt))
+      .limit(limit);
+  }
+
+  // ===== Dark Web Monitors =====
+  async getDarkWebMonitorsByUser(userId: string): Promise<DarkWebMonitor[]> {
+    return db.select().from(darkWebMonitors)
+      .where(and(eq(darkWebMonitors.userId, userId), eq(darkWebMonitors.status, "active")))
+      .orderBy(desc(darkWebMonitors.createdAt));
+  }
+
+  async getDarkWebMonitorById(id: string): Promise<DarkWebMonitor | undefined> {
+    const [mon] = await db.select().from(darkWebMonitors).where(eq(darkWebMonitors.id, id));
+    return mon;
+  }
+
+  async createDarkWebMonitor(data: InsertDarkWebMonitor): Promise<DarkWebMonitor> {
+    const [mon] = await db.insert(darkWebMonitors).values({
+      ...data,
+      nextScanAt: new Date(),
+    }).returning();
+    return mon;
+  }
+
+  async updateDarkWebMonitor(id: string, userId: string, updates: Partial<InsertDarkWebMonitor>): Promise<DarkWebMonitor> {
+    const [mon] = await db.update(darkWebMonitors)
+      .set(updates)
+      .where(and(eq(darkWebMonitors.id, id), eq(darkWebMonitors.userId, userId)))
+      .returning();
+    return mon;
+  }
+
+  async deleteDarkWebMonitor(id: string, userId: string): Promise<void> {
+    await db.update(darkWebMonitors)
+      .set({ status: "deleted" })
+      .where(and(eq(darkWebMonitors.id, id), eq(darkWebMonitors.userId, userId)));
+  }
+
+  async getDarkWebMonitorsDue(): Promise<DarkWebMonitor[]> {
+    return db.select().from(darkWebMonitors)
+      .where(and(
+        eq(darkWebMonitors.status, "active"),
+        sql`${darkWebMonitors.nextScanAt} IS NULL OR ${darkWebMonitors.nextScanAt} <= NOW()`
+      ))
+      .limit(50);
+  }
+
+  async updateDarkWebMonitorState(id: string, state: Partial<DarkWebMonitor>): Promise<void> {
+    await db.update(darkWebMonitors).set(state).where(eq(darkWebMonitors.id, id));
+  }
+
+  async getUserDarkWebMonitorCount(userId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(darkWebMonitors)
+      .where(and(eq(darkWebMonitors.userId, userId), eq(darkWebMonitors.status, "active")));
+    return Number(result[0]?.count || 0);
+  }
+
+  // ===== Dark Web Findings =====
+  async createDarkWebFinding(finding: { monitorId: string; userId: string; source: string; findingType: string; title: string; description?: string; severity?: string; rawData?: string; breachDate?: Date }): Promise<DarkWebFinding> {
+    const [f] = await db.insert(darkWebFindings).values(finding).returning();
+    return f;
+  }
+
+  async getDarkWebFindings(userId: string, limit = 50): Promise<DarkWebFinding[]> {
+    return db.select().from(darkWebFindings)
+      .where(eq(darkWebFindings.userId, userId))
+      .orderBy(desc(darkWebFindings.discoveredAt))
+      .limit(limit);
+  }
+
+  async getDarkWebFindingsByMonitor(monitorId: string, limit = 50): Promise<DarkWebFinding[]> {
+    return db.select().from(darkWebFindings)
+      .where(eq(darkWebFindings.monitorId, monitorId))
+      .orderBy(desc(darkWebFindings.discoveredAt))
+      .limit(limit);
+  }
+
+  async markDarkWebFindingRead(id: string, userId: string): Promise<void> {
+    await db.update(darkWebFindings)
+      .set({ isRead: true })
+      .where(and(eq(darkWebFindings.id, id), eq(darkWebFindings.userId, userId)));
+  }
+
+  async getDarkWebFindingCount(userId: string): Promise<number> {
+    const result = await db.select({ count: sql<number>`count(*)` }).from(darkWebFindings)
+      .where(eq(darkWebFindings.userId, userId));
+    return Number(result[0]?.count || 0);
+  }
+
+  async hasDarkWebFindingBeenRecorded(monitorId: string, source: string, title: string): Promise<boolean> {
+    const [existing] = await db.select({ id: darkWebFindings.id }).from(darkWebFindings)
+      .where(and(
+        eq(darkWebFindings.monitorId, monitorId),
+        eq(darkWebFindings.source, source),
+        eq(darkWebFindings.title, title),
+      ))
+      .limit(1);
+    return !!existing;
   }
 }
 

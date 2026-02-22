@@ -209,6 +209,14 @@ app.use((req, res, next) => {
   const { startMaintenanceScheduler, reportCriticalError } = await import("./maintenance");
   startMaintenanceScheduler();
 
+  // Start uptime monitoring engine (checks every 60s)
+  const { startUptimeScheduler } = await import("./uptimeEngine");
+  startUptimeScheduler(60);
+
+  // Start dark web monitoring engine (scans every 6 hours)
+  const { startDarkWebScheduler } = await import("./darkWebEngine");
+  startDarkWebScheduler(360);
+
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const internalMessage = err.message || "Internal Server Error";

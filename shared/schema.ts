@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, real, boolean, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, real, boolean, index, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -847,3 +847,145 @@ export const monitorAlertLog = pgTable("monitor_alert_log", {
 ]);
 
 export type MonitorAlertLog = typeof monitorAlertLog.$inferSelect;
+
+// ===== Uptime Monitors =====
+export const uptimeMonitors = pgTable("uptime_monitors", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  name: text("name").notNull(),
+  url: text("url").notNull(),
+  protocol: text("protocol").notNull().default("https"),
+  checkInterval: integer("check_interval").default(300),
+  timeout: integer("timeout").default(30),
+  expectedStatusCode: integer("expected_status_code").default(200),
+  alertOnDown: boolean("alert_on_down").default(true),
+  alertOnSslExpiry: boolean("alert_on_ssl_expiry").default(true),
+  sslExpiryThresholdDays: integer("ssl_expiry_threshold_days").default(14),
+  emailAlert: boolean("email_alert").default(true),
+  smsAlert: boolean("sms_alert").default(false),
+  status: text("status").notNull().default("active"),
+  currentState: text("current_state").default("unknown"),
+  lastCheckAt: timestamp("last_check_at"),
+  nextCheckAt: timestamp("next_check_at"),
+  uptimePercent: real("uptime_percent").default(100),
+  avgResponseTime: real("avg_response_time"),
+  totalChecks: integer("total_checks").default(0),
+  totalDowntime: integer("total_downtime").default(0),
+  consecutiveFailures: integer("consecutive_failures").default(0),
+  sslExpiresAt: timestamp("ssl_expires_at"),
+  sslIssuer: text("ssl_issuer"),
+  httpVersion: text("http_version"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("uptime_mon_user_idx").on(table.userId),
+  index("uptime_mon_status_idx").on(table.status),
+  index("uptime_mon_next_check_idx").on(table.nextCheckAt),
+  index("uptime_mon_state_idx").on(table.currentState),
+]);
+
+export const uptimeChecks = pgTable("uptime_checks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  monitorId: varchar("monitor_id").notNull(),
+  status: text("status").notNull(),
+  statusCode: integer("status_code"),
+  responseTime: real("response_time"),
+  errorMessage: text("error_message"),
+  sslValid: boolean("ssl_valid"),
+  sslDaysRemaining: integer("ssl_days_remaining"),
+  checkedAt: timestamp("checked_at").defaultNow(),
+}, (table) => [
+  index("uptime_check_mon_idx").on(table.monitorId),
+  index("uptime_check_time_idx").on(table.checkedAt),
+]);
+
+export const uptimeIncidents = pgTable("uptime_incidents", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  monitorId: varchar("monitor_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  type: text("type").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  status: text("status").notNull().default("ongoing"),
+  startedAt: timestamp("started_at").defaultNow(),
+  resolvedAt: timestamp("resolved_at"),
+  duration: integer("duration"),
+  alertsSent: boolean("alerts_sent").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("uptime_inc_mon_idx").on(table.monitorId),
+  index("uptime_inc_user_idx").on(table.userId),
+  index("uptime_inc_status_idx").on(table.status),
+]);
+
+export const insertUptimeMonitorSchema = createInsertSchema(uptimeMonitors).omit({
+  id: true,
+  currentState: true,
+  lastCheckAt: true,
+  nextCheckAt: true,
+  uptimePercent: true,
+  avgResponseTime: true,
+  totalChecks: true,
+  totalDowntime: true,
+  consecutiveFailures: true,
+  sslExpiresAt: true,
+  sslIssuer: true,
+  httpVersion: true,
+  createdAt: true,
+});
+
+export type InsertUptimeMonitor = z.infer<typeof insertUptimeMonitorSchema>;
+export type UptimeMonitor = typeof uptimeMonitors.$inferSelect;
+export type UptimeCheck = typeof uptimeChecks.$inferSelect;
+export type UptimeIncident = typeof uptimeIncidents.$inferSelect;
+
+// ===== Dark Web Monitoring =====
+export const darkWebMonitors = pgTable("dark_web_monitors", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  targetType: text("target_type").notNull(),
+  targetValue: text("target_value").notNull(),
+  label: text("label"),
+  emailAlert: boolean("email_alert").default(true),
+  smsAlert: boolean("sms_alert").default(false),
+  status: text("status").notNull().default("active"),
+  lastScanAt: timestamp("last_scan_at"),
+  nextScanAt: timestamp("next_scan_at"),
+  totalFindings: integer("total_findings").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("dwm_user_idx").on(table.userId),
+  index("dwm_status_idx").on(table.status),
+  index("dwm_next_scan_idx").on(table.nextScanAt),
+]);
+
+export const darkWebFindings = pgTable("dark_web_findings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  monitorId: varchar("monitor_id").notNull(),
+  userId: varchar("user_id").notNull(),
+  source: text("source").notNull(),
+  findingType: text("finding_type").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  severity: text("severity").default("medium"),
+  rawData: text("raw_data"),
+  breachDate: timestamp("breach_date"),
+  isRead: boolean("is_read").default(false),
+  alertSent: boolean("alert_sent").default(false),
+  discoveredAt: timestamp("discovered_at").defaultNow(),
+}, (table) => [
+  index("dwf_mon_idx").on(table.monitorId),
+  index("dwf_user_idx").on(table.userId),
+  index("dwf_severity_idx").on(table.severity),
+]);
+
+export const insertDarkWebMonitorSchema = createInsertSchema(darkWebMonitors).omit({
+  id: true,
+  lastScanAt: true,
+  nextScanAt: true,
+  totalFindings: true,
+  createdAt: true,
+});
+
+export type InsertDarkWebMonitor = z.infer<typeof insertDarkWebMonitorSchema>;
+export type DarkWebMonitor = typeof darkWebMonitors.$inferSelect;
+export type DarkWebFinding = typeof darkWebFindings.$inferSelect;

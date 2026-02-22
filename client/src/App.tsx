@@ -38,6 +38,7 @@ const RansomwarePayments = lazy(() => import("@/pages/ransomware-payments"));
 const ICSAdvisories = lazy(() => import("@/pages/ics-advisories"));
 const IOCSearch = lazy(() => import("@/pages/ioc-search"));
 const RiskScore = lazy(() => import("@/pages/risk-score"));
+const MonitorsPage = lazy(() => import("@/pages/monitors"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -85,6 +86,7 @@ function Router() {
         <Route path="/ics-advisories" component={ICSAdvisories}/>
         <Route path="/ioc-search" component={IOCSearch}/>
         <Route path="/risk-score" component={RiskScore}/>
+        <Route path="/monitors" component={MonitorsPage}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

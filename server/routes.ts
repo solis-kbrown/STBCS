@@ -4184,5 +4184,289 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
+  // ===== UPTIME & DARK WEB MONITORING (Pro/Business) =====
+  
+  const monitorTierLimits: Record<string, { uptimeMonitors: number; darkWebMonitors: number; darkWebSources: number }> = {
+    free: { uptimeMonitors: 0, darkWebMonitors: 0, darkWebSources: 0 },
+    pro: { uptimeMonitors: 5, darkWebMonitors: 5, darkWebSources: 5 },
+    supporter: { uptimeMonitors: 5, darkWebMonitors: 5, darkWebSources: 5 },
+    business: { uptimeMonitors: 25, darkWebMonitors: 25, darkWebSources: 12 },
+    enterprise: { uptimeMonitors: 100, darkWebMonitors: 100, darkWebSources: 12 },
+  };
+
+  app.get("/api/monitors/uptime", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tier = req.user!.tier || "free";
+      if (tier === "free") { res.status(403).json({ error: "Uptime monitoring requires a Pro or Business subscription" }); return; }
+      const monitors = await storage.getUptimeMonitorsByUser(req.user!.id);
+      const limits = monitorTierLimits[tier] || monitorTierLimits.free;
+      res.json({ monitors, limits, tier });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch monitors" });
+    }
+  });
+
+  app.post("/api/monitors/uptime", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tier = req.user!.tier || "free";
+      if (tier === "free") { res.status(403).json({ error: "Uptime monitoring requires a Pro or Business subscription" }); return; }
+      const limits = monitorTierLimits[tier] || monitorTierLimits.free;
+      const count = await storage.getUserMonitorCount(req.user!.id);
+      if (count >= limits.uptimeMonitors) { res.status(400).json({ error: `Maximum ${limits.uptimeMonitors} monitors for your plan. Upgrade to add more.` }); return; }
+      const schema = z.object({
+        name: z.string().min(1).max(100),
+        url: z.string().min(1).max(500),
+        protocol: z.enum(["http", "https", "tcp"]).default("https"),
+        checkInterval: z.number().min(60).max(3600).default(300),
+        timeout: z.number().min(5).max(120).default(30),
+        expectedStatusCode: z.number().min(100).max(599).default(200),
+        alertOnDown: z.boolean().default(true),
+        alertOnSslExpiry: z.boolean().default(true),
+        sslExpiryThresholdDays: z.number().min(1).max(90).default(14),
+        emailAlert: z.boolean().default(true),
+        smsAlert: z.boolean().default(false),
+      });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) { res.status(400).json({ error: "Invalid monitor configuration", details: parsed.error.issues }); return; }
+      const monitor = await storage.createUptimeMonitor({ ...parsed.data, userId: req.user!.id, status: "active" });
+      res.json({ monitor, message: "Monitor created. First check will run shortly." });
+    } catch (error) {
+      console.error("Create monitor error:", error);
+      res.status(500).json({ error: "Failed to create monitor" });
+    }
+  });
+
+  app.put("/api/monitors/uptime/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tier = req.user!.tier || "free";
+      if (tier === "free") { res.status(403).json({ error: "Upgrade required" }); return; }
+      const id = asString(req.params.id);
+      const existing = await storage.getUptimeMonitorById(id);
+      if (!existing || existing.userId !== req.user!.id) { res.status(404).json({ error: "Monitor not found" }); return; }
+      const schema = z.object({
+        name: z.string().min(1).max(100).optional(),
+        url: z.string().min(1).max(500).optional(),
+        protocol: z.enum(["http", "https", "tcp"]).optional(),
+        checkInterval: z.number().min(60).max(3600).optional(),
+        timeout: z.number().min(5).max(120).optional(),
+        expectedStatusCode: z.number().min(100).max(599).optional(),
+        alertOnDown: z.boolean().optional(),
+        alertOnSslExpiry: z.boolean().optional(),
+        sslExpiryThresholdDays: z.number().min(1).max(90).optional(),
+        emailAlert: z.boolean().optional(),
+        smsAlert: z.boolean().optional(),
+      });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) { res.status(400).json({ error: "Invalid data" }); return; }
+      const updated = await storage.updateUptimeMonitor(id, req.user!.id, parsed.data);
+      res.json({ monitor: updated });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update monitor" });
+    }
+  });
+
+  app.delete("/api/monitors/uptime/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tier = req.user!.tier || "free";
+      if (tier === "free") { res.status(403).json({ error: "Upgrade required" }); return; }
+      await storage.deleteUptimeMonitor(asString(req.params.id), req.user!.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete monitor" });
+    }
+  });
+
+  app.get("/api/monitors/uptime/:id/checks", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const id = asString(req.params.id);
+      const monitor = await storage.getUptimeMonitorById(id);
+      if (!monitor || monitor.userId !== req.user!.id) { res.status(404).json({ error: "Monitor not found" }); return; }
+      const limit = Math.min(parseInt(req.query.limit as string) || 100, 500);
+      const checks = await storage.getUptimeChecks(id, limit);
+      const stats24h = await storage.getUptimeCheckStats(id, 24);
+      const stats7d = await storage.getUptimeCheckStats(id, 168);
+      res.json({ checks, stats24h, stats7d });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch checks" });
+    }
+  });
+
+  app.get("/api/monitors/uptime/:id/incidents", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const id = asString(req.params.id);
+      const monitor = await storage.getUptimeMonitorById(id);
+      if (!monitor || monitor.userId !== req.user!.id) { res.status(404).json({ error: "Monitor not found" }); return; }
+      const incidents = await storage.getUptimeIncidentsByMonitor(id, 50);
+      res.json({ incidents });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch incidents" });
+    }
+  });
+
+  app.get("/api/monitors/incidents", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tier = req.user!.tier || "free";
+      if (tier === "free") { res.status(403).json({ error: "Upgrade required" }); return; }
+      const incidents = await storage.getUptimeIncidents(req.user!.id, 100);
+      res.json({ incidents });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch incidents" });
+    }
+  });
+
+  app.get("/api/monitors/ssl/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tier = req.user!.tier || "free";
+      if (!["business", "enterprise"].includes(tier)) { res.status(403).json({ error: "SSL certificate monitoring requires a Business subscription" }); return; }
+      const id = asString(req.params.id);
+      const monitor = await storage.getUptimeMonitorById(id);
+      if (!monitor || monitor.userId !== req.user!.id) { res.status(404).json({ error: "Monitor not found" }); return; }
+      try {
+        const parsed = new URL(monitor.url.startsWith("http") ? monitor.url : `https://${monitor.url}`);
+        const { checkSslCertificate } = await import("./uptimeEngine");
+        const sslInfo = await checkSslCertificate(parsed.hostname, parseInt(parsed.port) || 443);
+        res.json({ ssl: sslInfo, monitor: { id: monitor.id, name: monitor.name, url: monitor.url } });
+      } catch {
+        res.json({ ssl: null, error: "Could not check SSL certificate" });
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check SSL" });
+    }
+  });
+
+  app.get("/api/monitors/summary", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tier = req.user!.tier || "free";
+      if (tier === "free") { res.status(403).json({ error: "Upgrade required" }); return; }
+      const uptimeMonitors = await storage.getUptimeMonitorsByUser(req.user!.id);
+      const darkWebMonitors = await storage.getDarkWebMonitorsByUser(req.user!.id);
+      const incidents = await storage.getUptimeIncidents(req.user!.id, 10);
+      const darkWebFindings = await storage.getDarkWebFindings(req.user!.id, 10);
+      const limits = monitorTierLimits[tier] || monitorTierLimits.free;
+
+      const totalUp = uptimeMonitors.filter(m => m.currentState === "up").length;
+      const totalDown = uptimeMonitors.filter(m => m.currentState === "down").length;
+      const totalDegraded = uptimeMonitors.filter(m => m.currentState === "degraded").length;
+      const avgUptime = uptimeMonitors.length > 0
+        ? Math.round(uptimeMonitors.reduce((sum, m) => sum + (m.uptimePercent || 0), 0) / uptimeMonitors.length * 100) / 100
+        : 100;
+      const sslExpiring = uptimeMonitors.filter(m => m.sslExpiresAt && new Date(m.sslExpiresAt).getTime() - Date.now() < 14 * 24 * 60 * 60 * 1000).length;
+      const activeIncidents = incidents.filter(i => i.status === "ongoing").length;
+      const unreadFindings = darkWebFindings.filter(f => !f.isRead).length;
+
+      res.json({
+        uptime: { total: uptimeMonitors.length, up: totalUp, down: totalDown, degraded: totalDegraded, avgUptime, sslExpiring, activeIncidents },
+        darkWeb: { total: darkWebMonitors.length, totalFindings: darkWebFindings.length, unreadFindings },
+        limits,
+        tier,
+        recentIncidents: incidents.slice(0, 5),
+        recentFindings: darkWebFindings.slice(0, 5),
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch monitor summary" });
+    }
+  });
+
+  // Dark Web Monitoring Routes
+  app.get("/api/monitors/darkweb", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tier = req.user!.tier || "free";
+      if (tier === "free") { res.status(403).json({ error: "Dark web monitoring requires a Pro or Business subscription" }); return; }
+      const monitors = await storage.getDarkWebMonitorsByUser(req.user!.id);
+      const limits = monitorTierLimits[tier] || monitorTierLimits.free;
+      res.json({ monitors, limits, tier });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch dark web monitors" });
+    }
+  });
+
+  app.post("/api/monitors/darkweb", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tier = req.user!.tier || "free";
+      if (tier === "free") { res.status(403).json({ error: "Dark web monitoring requires a Pro or Business subscription" }); return; }
+      const limits = monitorTierLimits[tier] || monitorTierLimits.free;
+      const count = await storage.getUserDarkWebMonitorCount(req.user!.id);
+      if (count >= limits.darkWebMonitors) { res.status(400).json({ error: `Maximum ${limits.darkWebMonitors} dark web monitors for your plan.` }); return; }
+      const schema = z.object({
+        targetType: z.enum(["domain", "email", "ip", "keyword", "url"]),
+        targetValue: z.string().min(1).max(500),
+        label: z.string().max(100).optional(),
+        emailAlert: z.boolean().default(true),
+        smsAlert: z.boolean().default(false),
+      });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) { res.status(400).json({ error: "Invalid monitor configuration" }); return; }
+      const monitor = await storage.createDarkWebMonitor({ ...parsed.data, userId: req.user!.id, status: "active" });
+      res.json({ monitor, message: "Dark web monitor created. Initial scan will run shortly." });
+    } catch (error) {
+      console.error("Create dark web monitor error:", error);
+      res.status(500).json({ error: "Failed to create dark web monitor" });
+    }
+  });
+
+  app.put("/api/monitors/darkweb/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tier = req.user!.tier || "free";
+      if (tier === "free") { res.status(403).json({ error: "Upgrade required" }); return; }
+      const id = asString(req.params.id);
+      const existing = await storage.getDarkWebMonitorById(id);
+      if (!existing || existing.userId !== req.user!.id) { res.status(404).json({ error: "Monitor not found" }); return; }
+      const schema = z.object({
+        label: z.string().max(100).optional(),
+        emailAlert: z.boolean().optional(),
+        smsAlert: z.boolean().optional(),
+      });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) { res.status(400).json({ error: "Invalid data" }); return; }
+      const updated = await storage.updateDarkWebMonitor(id, req.user!.id, parsed.data);
+      res.json({ monitor: updated });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update monitor" });
+    }
+  });
+
+  app.delete("/api/monitors/darkweb/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tier = req.user!.tier || "free";
+      if (tier === "free") { res.status(403).json({ error: "Upgrade required" }); return; }
+      await storage.deleteDarkWebMonitor(asString(req.params.id), req.user!.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete monitor" });
+    }
+  });
+
+  app.get("/api/monitors/darkweb/:id/findings", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const id = asString(req.params.id);
+      const monitor = await storage.getDarkWebMonitorById(id);
+      if (!monitor || monitor.userId !== req.user!.id) { res.status(404).json({ error: "Monitor not found" }); return; }
+      const findings = await storage.getDarkWebFindingsByMonitor(id, 100);
+      res.json({ findings });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch findings" });
+    }
+  });
+
+  app.get("/api/monitors/darkweb/findings/all", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tier = req.user!.tier || "free";
+      if (tier === "free") { res.status(403).json({ error: "Upgrade required" }); return; }
+      const findings = await storage.getDarkWebFindings(req.user!.id, 200);
+      res.json({ findings });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch findings" });
+    }
+  });
+
+  app.post("/api/monitors/darkweb/findings/:id/read", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      await storage.markDarkWebFindingRead(asString(req.params.id), req.user!.id);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to mark finding as read" });
+    }
+  });
+
   return httpServer;
 }
