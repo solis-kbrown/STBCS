@@ -2415,14 +2415,13 @@ Hiring: https://stbcybersecurity.com/support
       
       const session = await stripeService.createCheckoutSession({
         priceId,
-        successUrl: `${baseUrl}/support?success=true`,
-        cancelUrl: `${baseUrl}/support?canceled=true`,
+        returnUrl: `${baseUrl}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
         customerEmail,
         mode,
         metadata: { source: 'stbcs_support' },
       });
       
-      res.json({ url: session.url });
+      res.json({ clientSecret: session.client_secret });
     } catch (error) {
       console.error("Checkout error:", error);
       reportCriticalError(error instanceof Error ? error : new Error(String(error)), "Stripe Checkout");
@@ -2450,17 +2449,36 @@ Hiring: https://stbcybersecurity.com/support
       
       const session = await stripeService.createDonationCheckout({
         amount,
-        successUrl: `${baseUrl}/support?donated=true`,
-        cancelUrl: `${baseUrl}/support?canceled=true`,
+        returnUrl: `${baseUrl}/checkout/return?session_id={CHECKOUT_SESSION_ID}`,
         customerEmail,
         donorName,
       });
       
-      res.json({ url: session.url });
+      res.json({ clientSecret: session.client_secret });
     } catch (error) {
       console.error("Donation error:", error);
       reportCriticalError(error instanceof Error ? error : new Error(String(error)), "Stripe Donation");
       res.status(500).json({ error: "Failed to create donation session" });
+    }
+  });
+
+  // Get checkout session status (for embedded checkout return page)
+  app.get("/api/stripe/session-status", async (req: Request, res: Response) => {
+    try {
+      const sessionId = req.query.session_id as string;
+      if (!sessionId || typeof sessionId !== 'string' || !sessionId.startsWith('cs_')) {
+        return res.status(400).json({ error: "Invalid session" });
+      }
+      const status = await stripeService.getSessionStatus(sessionId);
+      res.json({
+        status: status.status,
+        payment_status: status.payment_status,
+        mode: status.mode,
+        metadata: status.metadata ? { type: status.metadata.type } : null,
+      });
+    } catch (error) {
+      console.error("Session status error:", error);
+      res.status(500).json({ error: "Failed to retrieve session status" });
     }
   });
 

@@ -13,8 +13,7 @@ export class StripeService {
 
   async createCheckoutSession(params: {
     priceId: string;
-    successUrl: string;
-    cancelUrl: string;
+    returnUrl: string;
     customerEmail?: string;
     mode: 'payment' | 'subscription';
     metadata?: Record<string, string>;
@@ -22,17 +21,16 @@ export class StripeService {
     const stripe = await getUncachableStripeClient();
     
     const sessionParams: any = {
+      ui_mode: 'embedded',
       payment_method_types: ['card'],
       line_items: [{ price: params.priceId, quantity: 1 }],
       mode: params.mode,
-      success_url: params.successUrl,
-      cancel_url: params.cancelUrl,
+      return_url: params.returnUrl,
       customer_email: params.customerEmail,
       metadata: params.metadata,
       billing_address_collection: 'auto',
     };
     
-    // Apply Grand Opening 50% discount automatically for subscriptions (if still active)
     if (params.mode === 'subscription') {
       try {
         const { isGrandOpeningActive } = await import("./maintenance");
@@ -40,7 +38,6 @@ export class StripeService {
           sessionParams.discounts = [{ coupon: 'GRANDOPENING50' }];
         }
       } catch (error) {
-        // If maintenance module fails, still apply discount as fallback
         sessionParams.discounts = [{ coupon: 'GRANDOPENING50' }];
       }
     }
@@ -50,13 +47,13 @@ export class StripeService {
 
   async createDonationCheckout(params: {
     amount: number;
-    successUrl: string;
-    cancelUrl: string;
+    returnUrl: string;
     customerEmail?: string;
     donorName?: string;
   }) {
     const stripe = await getUncachableStripeClient();
     return await stripe.checkout.sessions.create({
+      ui_mode: 'embedded',
       payment_method_types: ['card'],
       line_items: [{
         price_data: {
@@ -70,8 +67,7 @@ export class StripeService {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: params.successUrl,
-      cancel_url: params.cancelUrl,
+      return_url: params.returnUrl,
       customer_email: params.customerEmail,
       metadata: {
         type: 'donation',
@@ -79,6 +75,18 @@ export class StripeService {
       },
       billing_address_collection: 'auto',
     });
+  }
+
+  async getSessionStatus(sessionId: string) {
+    const stripe = await getUncachableStripeClient();
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+    return {
+      status: session.status,
+      payment_status: session.payment_status,
+      customer_email: session.customer_details?.email || session.customer_email,
+      mode: session.mode,
+      metadata: session.metadata,
+    };
   }
 
   async createCustomerPortalSession(customerId: string, returnUrl: string) {

@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { Heart, Shield, Users, Zap, Check, Coffee, Rocket, Building2, ExternalLink, Loader2, CreditCard, Lock, ArrowRight, PartyPopper, CheckCircle2 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
+import { Heart, Shield, Users, Zap, Check, Coffee, Rocket, Building2, ExternalLink, CreditCard, Lock, ArrowRight } from "lucide-react";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -83,10 +84,7 @@ const membershipTiers = [
 export default function SupportPage() {
   useDocumentTitle("Support & Membership | STB Cybersecurity", "Subscribe to STBCS Supporter, Pro, or Business plans for advanced threat intelligence, real-time alerts, watchlists, and priority incident response. Donate to support free cybersecurity tools for the community.");
   const { toast } = useToast();
-  const searchParams = new URLSearchParams(window.location.search);
-  const success = searchParams.get('success') === 'true';
-  const donated = searchParams.get('donated') === 'true';
-  const canceled = searchParams.get('canceled') === 'true';
+  const [, navigate] = useLocation();
 
   const [selectedAmount, setSelectedAmount] = useState(2500);
   const [customAmount, setCustomAmount] = useState("");
@@ -94,48 +92,6 @@ export default function SupportPage() {
   const [donorName, setDonorName] = useState("");
   const [donationAgreed, setDonationAgreed] = useState(false);
   const [subscriptionAgreed, setSubscriptionAgreed] = useState(false);
-
-  const donateMutation = useMutation({
-    mutationFn: async (data: { amount: number; customerEmail?: string; donorName?: string }) => {
-      const res = await fetch("/api/stripe/donate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to create donation session");
-      }
-      return res.json();
-    },
-    onSuccess: (data) => {
-      if (data.url) window.location.href = data.url;
-    },
-    onError: (error: Error) => {
-      toast({ title: "Donation Error", description: error.message, variant: "destructive" });
-    },
-  });
-
-  const checkoutMutation = useMutation({
-    mutationFn: async (data: { priceId: string; customerEmail?: string; mode: 'subscription' }) => {
-      const res = await fetch("/api/stripe/checkout", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error || "Failed to create checkout session");
-      }
-      return res.json();
-    },
-    onSuccess: (data) => {
-      if (data.url) window.location.href = data.url;
-    },
-    onError: (error: Error) => {
-      toast({ title: "Checkout Error", description: error.message, variant: "destructive" });
-    },
-  });
 
   const { data: productsData } = useQuery({
     queryKey: ["stripe-products"],
@@ -154,11 +110,12 @@ export default function SupportPage() {
     const amount = customAmount ? Math.round(parseFloat(customAmount) * 100) : selectedAmount;
     if (amount < 100 || amount > 100000) return;
     
-    donateMutation.mutate({
-      amount,
-      customerEmail: donorEmail || undefined,
+    sessionStorage.setItem("stbcs_checkout", JSON.stringify({
+      email: donorEmail || undefined,
       donorName: donorName || undefined,
-    });
+    }));
+    
+    navigate(`/checkout?type=donation&amount=${amount}`);
   };
 
   const handleSubscribe = (tierName: string) => {
@@ -185,93 +142,12 @@ export default function SupportPage() {
       return;
     }
 
-    checkoutMutation.mutate({
-      priceId: price.id,
-      customerEmail: donorEmail || undefined,
-      mode: 'subscription',
-    });
+    navigate(`/checkout?type=subscription&priceId=${encodeURIComponent(price.id)}&tier=${encodeURIComponent(tierName)}`);
   };
 
   return (
     <Layout>
       <div className="space-y-8 animate-in fade-in duration-500">
-        {(success || donated) && (
-          <Card className="bg-green-500/10 border-green-500/30" data-testid="card-payment-success">
-            <CardContent className="py-8">
-              <div className="text-center space-y-4 max-w-lg mx-auto">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-green-500/20 mb-2">
-                  <CheckCircle2 className="h-8 w-8 text-green-400" />
-                </div>
-                <h2 className="text-2xl font-bold text-white">
-                  {donated ? "Thank You for Your Donation!" : "Welcome to STBCS!"}
-                </h2>
-                <p className="text-green-400/80">
-                  {donated 
-                    ? "Your generous donation has been received. You're directly helping strengthen the cybersecurity community and keep our tools free for everyone."
-                    : "Your subscription is now active. You've unlocked full access to STBCS features including advanced tools, watchlists, and real-time alerts."
-                  }
-                </p>
-                <div className="pt-2 space-y-2">
-                  <p className="text-xs text-zinc-500">
-                    {donated 
-                      ? "A receipt has been sent to your email by Stripe."
-                      : "What's next? Set up your watchlist, configure alerts, and explore your new tools."
-                    }
-                  </p>
-                  {!donated && (
-                    <div className="flex flex-wrap justify-center gap-3 pt-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-green-500/30 text-green-400 hover:bg-green-500/10"
-                        onClick={() => window.location.href = "/account"}
-                        data-testid="button-go-account"
-                      >
-                        <ArrowRight className="h-3 w-3 mr-1.5" />
-                        View Account
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-green-500/30 text-green-400 hover:bg-green-500/10"
-                        onClick={() => window.location.href = "/alerts"}
-                        data-testid="button-go-alerts"
-                      >
-                        Set Up Alerts
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="border-green-500/30 text-green-400 hover:bg-green-500/10"
-                        onClick={() => window.location.href = "/tools"}
-                        data-testid="button-go-tools"
-                      >
-                        Explore Tools
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {canceled && (
-          <Card className="bg-yellow-500/10 border-yellow-500/30" data-testid="card-payment-canceled">
-            <CardContent className="py-6">
-              <div className="flex items-center gap-3 text-yellow-400">
-                <Shield className="h-6 w-6 shrink-0" />
-                <div>
-                  <p className="font-bold">Payment was canceled</p>
-                  <p className="text-sm text-yellow-400/80">
-                    No charges were made. Feel free to try again whenever you're ready, or{" "}
-                    <a href="mailto:support@stbcybersecurity.com" className="underline hover:text-yellow-300">contact us</a> if you have questions.
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         <div className="bg-gradient-to-r from-green-500/20 via-green-600/30 to-green-500/20 border border-green-500/50 rounded-xl p-4 mb-6 text-center">
           <div className="flex items-center justify-center gap-3 flex-wrap">
@@ -431,14 +307,10 @@ export default function SupportPage() {
               <Button 
                 className="w-full font-bold text-lg py-6 bg-orange-500 hover:bg-orange-600 text-white" 
                 onClick={handleDonate}
-                disabled={donateMutation.isPending || !donationAgreed}
+                disabled={!donationAgreed}
                 data-testid="button-donate"
               >
-                {donateMutation.isPending ? (
-                  <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                ) : (
-                  <Heart className="h-5 w-5 mr-2" />
-                )}
+                <Heart className="h-5 w-5 mr-2" />
                 Donate {customAmount ? `$${customAmount}` : `$${(selectedAmount / 100).toFixed(2)}`}
               </Button>
 
@@ -500,14 +372,10 @@ export default function SupportPage() {
                     className={`w-full font-bold ${tier.popular ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border-zinc-700 text-zinc-300 hover:bg-zinc-800'}`}
                     variant={tier.popular ? "default" : "outline"}
                     onClick={() => handleSubscribe(tier.name)}
-                    disabled={checkoutMutation.isPending || !subscriptionAgreed}
+                    disabled={!subscriptionAgreed}
                     data-testid={`button-subscribe-${tier.name.toLowerCase()}`}
                   >
-                    {checkoutMutation.isPending ? (
-                      <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                    ) : (
-                      <CreditCard className="h-4 w-4 mr-2" />
-                    )}
+                    <CreditCard className="h-4 w-4 mr-2" />
                     Subscribe
                   </Button>
                 </CardContent>
