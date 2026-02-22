@@ -337,6 +337,13 @@ export async function registerRoutes(
   </url>
 
   <url>
+    <loc>https://stbcybersecurity.com/contact</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
     <loc>https://stbcybersecurity.com/logos</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
@@ -4021,6 +4028,43 @@ Hiring: https://stbcybersecurity.com/support
       res.json({ votedFor: myVotes.map(v => v.logoVariant) });
     } catch (error) {
       res.status(500).json({ error: "Failed to get votes" });
+    }
+  });
+
+  app.post("/api/contact", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const { insertContactMessageSchema } = await import("@shared/schema");
+      const result = insertContactMessageSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Please fill in all fields correctly", details: result.error.issues });
+      }
+
+      const { contactMessages } = await import("@shared/schema");
+      await db.insert(contactMessages).values(result.data);
+
+      try {
+        const { sendEmail } = await import("./email");
+        await sendEmail({
+          to: "kbpc.inc@gmail.com",
+          subject: `[STBCS Contact] ${result.data.category.toUpperCase()}: ${result.data.subject}`,
+          html: `<div style="font-family:sans-serif;color:#fff;background:#1a1a1a;padding:20px;border-radius:8px;">
+            <h2 style="color:#f97316;">New Contact Form Submission</h2>
+            <p><strong>From:</strong> ${result.data.name} &lt;${result.data.email}&gt;</p>
+            <p><strong>Category:</strong> ${result.data.category}</p>
+            <p><strong>Subject:</strong> ${result.data.subject}</p>
+            <hr style="border-color:#333;"/>
+            <p style="white-space:pre-wrap;">${result.data.message}</p>
+          </div>`,
+          text: `New Contact: ${result.data.name} (${result.data.email})\nCategory: ${result.data.category}\nSubject: ${result.data.subject}\n\n${result.data.message}`,
+        });
+      } catch (emailErr) {
+        console.error("Contact email notification failed:", emailErr);
+      }
+
+      res.json({ success: true, message: "Message received. We'll respond within 24 hours." });
+    } catch (error) {
+      console.error("Contact form error:", error);
+      res.status(500).json({ error: "Failed to send message. Please try again." });
     }
   });
 

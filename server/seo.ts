@@ -49,8 +49,12 @@ const PAGE_META: Record<string, PageMeta> = {
     description: 'REST API docs for real-time threat intelligence: CVEs, ransomware incidents, malicious IPs, phishing URLs, and CISA KEV. Free and Pro tiers available.',
   },
   '/about': {
-    title: 'About Us | STBCS',
-    description: 'About STB Cybersecurity. Professional cybersecurity services, threat intelligence, and incident response for small to medium-sized businesses.',
+    title: 'About Us — Incident Response & Threat Intelligence | STB Cybersecurity',
+    description: 'Meet STB Cybersecurity: incident responders, recovery engineers, and threat hunters protecting SMBs. 45+ live threat feeds, 24/7 IR, ransomware recovery, and security consulting.',
+  },
+  '/contact': {
+    title: 'Contact Us | STB Cybersecurity',
+    description: 'Get in touch with STB Cybersecurity for incident response, security consulting, vulnerability reporting, or general inquiries. 24/7 emergency hotline: (855) STB-1987.',
   },
   '/privacy': {
     title: 'Privacy Policy | STB Cybersecurity',
@@ -243,6 +247,7 @@ function getH1Text(path: string, meta: PageMeta): string {
     '/alerts': 'Pro Alerts & Watchlist',
     '/api-docs': 'API Documentation',
     '/about': 'About STB Cybersecurity',
+    '/contact': 'Contact Us',
     '/privacy': 'Privacy Policy',
     '/terms': 'Terms of Service',
     '/sms-terms': 'SMS Terms & Conditions',
@@ -272,10 +277,12 @@ function generateSSRContent(path: string, meta: PageMeta): string {
     `<li><a href="/search">Search</a></li>` +
     `<li><a href="/support">Support</a></li>` +
     `<li><a href="/about">About</a></li>` +
+    `<li><a href="/contact">Contact</a></li>` +
     `</ul></nav>`;
 
   const footer = `<footer><nav aria-label="Legal"><ul>` +
     `<li><a href="/about">About</a></li>` +
+    `<li><a href="/contact">Contact</a></li>` +
     `<li><a href="/privacy">Privacy Policy</a></li>` +
     `<li><a href="/terms">Terms of Service</a></li>` +
     `<li><a href="/sms-terms">SMS Terms</a></li>` +

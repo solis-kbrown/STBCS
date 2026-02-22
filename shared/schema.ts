@@ -713,3 +713,26 @@ export const logoVotes = pgTable("logo_votes", {
 ]);
 
 export type LogoVote = typeof logoVotes.$inferSelect;
+
+export const contactMessages = pgTable("contact_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  email: text("email").notNull(),
+  subject: text("subject").notNull(),
+  category: text("category").notNull(),
+  message: text("message").notNull(),
+  status: text("status").default("new"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("contact_messages_status_idx").on(table.status),
+  index("contact_messages_category_idx").on(table.category),
+]);
+
+export const insertContactMessageSchema = createInsertSchema(contactMessages).omit({
+  id: true,
+  status: true,
+  createdAt: true,
+});
+
+export type InsertContactMessage = z.infer<typeof insertContactMessageSchema>;
+export type ContactMessage = typeof contactMessages.$inferSelect;

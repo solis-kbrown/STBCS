@@ -1,19 +1,21 @@
-import { Shield, Target, Search, MessageSquare, Phone, Mail } from "lucide-react";
+import { Shield, Target, Search, MessageSquare, Phone, Mail, Users, Award, Clock, Globe, TrendingUp, Zap, CheckCircle } from "lucide-react";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import { Link } from "wouter";
 
 const services = [
   {
     icon: Shield,
     title: "Incident Response",
-    description: "Active breach? Our team deploys immediately to contain the attack, investigate root cause, and get your systems back to a known-good state.",
+    description: "Active breach? Our team deploys immediately to contain the attack, investigate root cause, and get your systems back to a known-good state. We handle ransomware negotiations, forensic analysis, and recovery end to end.",
   },
   {
     icon: Target,
     title: "Ransomware Recovery",
-    description: "We negotiate with threat actors, attempt decryption, and restore your operations. Our goal: get you back online as fast as possible.",
+    description: "We negotiate with threat actors, attempt decryption, and restore your operations. Our recovery engineers work around the clock to get your business back online as fast as possible.",
   },
   {
     icon: Search,
@@ -23,16 +25,35 @@ const services = [
   {
     icon: MessageSquare,
     title: "Security Consulting",
-    description: "Gap assessments, policy development, and hands-on guidance. We help you build defenses that match your risk profile and budget.",
+    description: "Gap assessments, policy development, compliance readiness, and hands-on guidance. We help you build defenses that match your risk profile and budget.",
   },
 ];
 
+const stats = [
+  { value: "45+", label: "Threat Intelligence Feeds", icon: Globe },
+  { value: "24/7", label: "Emergency Response", icon: Clock },
+  { value: "15min", label: "Threat Data Refresh Cycle", icon: Zap },
+  { value: "SMB", label: "Focused on Small Business", icon: Users },
+];
+
+const whyUs = [
+  "Real practitioners who handle real incidents every day",
+  "Threat intelligence from 45+ live public and commercial feeds",
+  "No long-term contracts required for consulting engagements",
+  "Free security tools and threat intelligence for everyone",
+  "Subscription plans that scale with your business",
+  "24/7 emergency hotline for active incidents",
+];
+
 export default function AboutPage() {
-  useDocumentTitle("About Us | STB Cybersecurity", "Incident response, ransomware recovery, and threat hunting for small to medium-sized businesses. Real practitioners. Real cases. Real results.");
+  useDocumentTitle(
+    "About Us — Incident Response & Threat Intelligence | STB Cybersecurity",
+    "Meet STB Cybersecurity: incident responders, recovery engineers, and threat hunters protecting SMBs. 45+ live threat feeds, 24/7 IR, ransomware recovery, and security consulting."
+  );
 
   return (
     <Layout>
-      <div className="space-y-8 animate-in fade-in duration-500" data-testid="about-page">
+      <div className="space-y-10 animate-in fade-in duration-500" data-testid="about-page">
         <div className="text-center space-y-4">
           <img src="/brand/logo-main.png" alt="STB Cybersecurity" className="h-32 w-auto mx-auto drop-shadow-[0_0_14px_rgba(239,68,68,0.3)]" data-testid="img-about-logo" />
           <h1 className="text-4xl font-display font-bold tracking-tight text-white" data-testid="text-about-title">
@@ -40,9 +61,21 @@ export default function AboutPage() {
           </h1>
           <p className="text-xl text-zinc-400 max-w-3xl mx-auto leading-relaxed" data-testid="text-about-description">
             STB Cybersecurity is a team of incident responders, recovery engineers, and threat hunters.
-            We work with small to medium-sized businesses who need real security help, not a sales pitch.
+            We work with small to medium-sized businesses who need real security help — not a sales pitch.
             When ransomware locks your files or an attacker gets inside your network, we're the team you call.
           </p>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-testid="stats-grid">
+          {stats.map((stat) => (
+            <Card key={stat.label} className="bg-zinc-900/50 border-zinc-800 text-center">
+              <CardContent className="pt-6 pb-5 space-y-2">
+                <stat.icon className="h-6 w-6 text-orange-400 mx-auto" />
+                <p className="text-2xl font-bold text-white font-display">{stat.value}</p>
+                <p className="text-xs text-zinc-400">{stat.label}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
 
         <Card className="bg-gradient-to-r from-orange-500/5 to-zinc-900/50 border-orange-500/20">
@@ -76,7 +109,55 @@ export default function AboutPage() {
           </div>
         </div>
 
-        <Card className="border-orange-500/20 bg-zinc-900/50">
+        <div>
+          <h2 className="text-2xl font-bold text-white text-center mb-6" data-testid="text-about-platform-title">
+            What the Platform Does
+          </h2>
+          <Card className="bg-zinc-900/50 border-zinc-800">
+            <CardContent className="pt-6">
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <TrendingUp className="h-5 w-5 text-orange-400" />
+                    Real-Time Threat Intelligence
+                  </h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">
+                    STBCS aggregates data from over 45 public and commercial threat feeds — NVD, CISA KEV, URLhaus,
+                    OpenPhish, Shodan, AlienVault OTX, VirusTotal, and many more — refreshed every 15 minutes.
+                    Track ransomware groups, CVEs, malicious IPs, phishing URLs, and threat actors all in one place.
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Search className="h-5 w-5 text-orange-400" />
+                    Free Security Tools
+                  </h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">
+                    Our free tools let anyone check IP/domain reputation, scan ports, analyze email headers,
+                    check SSL certificates, assess password strength, calculate subnets, search IOCs across 40+ feeds,
+                    and generate a cyber risk score. No account required.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <Card className="bg-zinc-900/50 border-zinc-800">
+          <CardContent className="py-8">
+            <h2 className="text-2xl font-bold text-white text-center mb-6" data-testid="text-about-why-title">Why Work With Us</h2>
+            <div className="grid sm:grid-cols-2 gap-3 max-w-3xl mx-auto">
+              {whyUs.map((item) => (
+                <div key={item} className="flex items-start gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0 mt-0.5" />
+                  <p className="text-sm text-zinc-300">{item}</p>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-orange-500/20 bg-gradient-to-r from-orange-500/5 to-zinc-900/50">
           <CardContent className="py-8">
             <div className="max-w-3xl mx-auto text-center space-y-6">
               <h2 className="text-2xl font-bold text-white" data-testid="text-about-contact-title">Under Attack? Call Now.</h2>
@@ -102,6 +183,12 @@ export default function AboutPage() {
                   info@stbcybersecurity.com
                 </a>
               </div>
+              <Link href="/contact">
+                <Button className="bg-orange-500 hover:bg-orange-600 text-white mt-2" data-testid="button-about-contact">
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Contact Us
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
