@@ -27,16 +27,16 @@ const products: ProductConfig[] = [
     },
     prices: [
       {
-        unit_amount: 999, // $9.99
+        unit_amount: 1499, // $14.99
         currency: 'usd',
         recurring: { interval: 'month' },
-        metadata: { display: '$9.99/month' },
+        metadata: { display: '$14.99/month' },
       },
       {
-        unit_amount: 9990, // $99.90 (2 months free)
+        unit_amount: 14990, // $149.90 (2 months free)
         currency: 'usd',
         recurring: { interval: 'year' },
-        metadata: { display: '$99.90/year', savings: '2 months free' },
+        metadata: { display: '$149.90/year', savings: '2 months free' },
       },
     ],
   },
@@ -51,16 +51,16 @@ const products: ProductConfig[] = [
     },
     prices: [
       {
-        unit_amount: 2999, // $29.99
+        unit_amount: 4999, // $49.99
         currency: 'usd',
         recurring: { interval: 'month' },
-        metadata: { display: '$29.99/month' },
+        metadata: { display: '$49.99/month' },
       },
       {
-        unit_amount: 29990, // $299.90 (2 months free)
+        unit_amount: 49990, // $499.90 (2 months free)
         currency: 'usd',
         recurring: { interval: 'year' },
-        metadata: { display: '$299.90/year', savings: '2 months free' },
+        metadata: { display: '$499.90/year', savings: '2 months free' },
       },
     ],
   },
@@ -74,16 +74,16 @@ const products: ProductConfig[] = [
     },
     prices: [
       {
-        unit_amount: 9999, // $99.99
+        unit_amount: 14999, // $149.99
         currency: 'usd',
         recurring: { interval: 'month' },
-        metadata: { display: '$99.99/month' },
+        metadata: { display: '$149.99/month' },
       },
       {
-        unit_amount: 99990, // $999.90 (2 months free)
+        unit_amount: 149990, // $1,499.90 (2 months free)
         currency: 'usd',
         recurring: { interval: 'year' },
-        metadata: { display: '$999.90/year', savings: '2 months free' },
+        metadata: { display: '$1,499.90/year', savings: '2 months free' },
       },
     ],
   },
