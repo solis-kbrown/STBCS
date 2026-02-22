@@ -101,7 +101,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Security & US Compliance
 - **Security Headers**: CSP (unsafe-eval removed in production), HSTS (preload), X-Frame-Options DENY, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, Cross-Origin-Opener-Policy (same-origin), Cross-Origin-Resource-Policy (same-origin), frame-ancestors none. X-Powered-By disabled.
-- **Authentication**: bcrypt (12 rounds), 12-char minimum passwords with uppercase+lowercase+number complexity requirement. Per-account lockout after 5 failed attempts (15-minute cooldown). Per-IP rate limiting (10 attempts/15 min).
+- **Authentication**: bcrypt (12 rounds), 12-char minimum passwords with uppercase+lowercase+number complexity requirement. Per-account lockout after 5 failed attempts (15-minute cooldown). Per-IP rate limiting (10 attempts/15 min). Lockout triggers email alert to user + admin notification. Admin can manually unlock via `POST /api/admin/unlock-account` (header auth).
 - **Sessions**: 7-day expiry, cryptographic tokens (32 bytes), httpOnly/secure/sameSite=lax cookies. Session tokens never in API JSON responses or URLs.
 - **Rate Limiting**: Auth: 10/15min. General API: 100/min. Tools: 10/min (free), 60/min (pro), 120/min (business). Live chat: 20/min.
 - **Admin/Internal APIs**: Header-only authentication (no query string keys). Dedicated INTERNAL_API_KEY required (no fallback). ADMIN_STATS_KEY required with 16+ char minimum.

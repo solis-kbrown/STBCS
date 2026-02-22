@@ -17,7 +17,8 @@ import crypto from "crypto";
 import { stripeService } from "./stripeService";
 import { getStripePublishableKey } from "./stripeClient";
 import { getQuoService, isQuoConfigured } from "./quoService";
-import { reportCriticalError } from "./maintenance";
+import { reportCriticalError, sendAdminNotification } from "./maintenance";
+import { sendAccountLockoutEmail } from "./email";
 import { 
   hashPassword, 
   verifyPassword, 
@@ -501,7 +502,23 @@ Hiring: https://stbcybersecurity.com/support
         if (current.count >= LOGIN_MAX_ATTEMPTS) {
           current.lockedUntil = Date.now() + LOGIN_LOCKOUT_MS;
           current.count = 0;
-          console.warn(`[Security] Account locked: ${user.username} after ${LOGIN_MAX_ATTEMPTS} failed attempts`);
+          const clientIp = req.ip || req.socket.remoteAddress || "unknown";
+          console.warn(`[Security] Account locked: ${user.username} after ${LOGIN_MAX_ATTEMPTS} failed attempts from ${clientIp}`);
+
+          if (user.email) {
+            sendAccountLockoutEmail(user.email, user.username, clientIp).catch(err =>
+              console.error("[Security] Failed to send lockout email to user:", err)
+            );
+          }
+
+          sendAdminNotification({
+            type: "warning",
+            title: "Account Lockout Triggered",
+            message: `Account "${user.username}" was locked after ${LOGIN_MAX_ATTEMPTS} consecutive failed login attempts.`,
+            details: `Username: ${user.username}\nEmail: ${user.email || "N/A"}\nIP Address: ${clientIp}\nLocked At: ${new Date().toISOString()}\nLockout Duration: 15 minutes\nAuto-unlocks at: ${new Date(Date.now() + LOGIN_LOCKOUT_MS).toISOString()}`
+          }).catch(err =>
+            console.error("[Security] Failed to send lockout admin notification:", err)
+          );
         }
         loginAttempts.set(accountKey, current);
 
@@ -1009,6 +1026,45 @@ Hiring: https://stbcybersecurity.com/support
     } catch (error) {
       console.error("Error cleaning up data:", error);
       res.status(500).json({ error: "Failed to cleanup data" });
+    }
+  });
+
+  // Admin: Unlock a locked account immediately
+  app.post("/api/admin/unlock-account", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const adminKey = process.env.ADMIN_STATS_KEY;
+      if (!adminKey || adminKey.length < 16) {
+        return res.status(503).json({ error: "Admin endpoint not configured" });
+      }
+      const headerKey = req.headers["x-admin-key"];
+      if (!headerKey || typeof headerKey !== 'string' || headerKey !== adminKey) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
+      const schema = z.object({ username: z.string().min(1).max(100) });
+      const result = schema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ error: "Must provide a valid username" });
+      }
+
+      const user = await storage.getUserByUsername(result.data.username);
+      if (!user) {
+        return res.status(404).json({ error: "User not found" });
+      }
+
+      const accountKey = user.id;
+      const attempts = loginAttempts.get(accountKey);
+      if (!attempts || attempts.lockedUntil <= Date.now()) {
+        return res.json({ success: true, message: "Account is not currently locked" });
+      }
+
+      loginAttempts.delete(accountKey);
+      console.info(`[Security] Admin manually unlocked account: ${user.username}`);
+
+      res.json({ success: true, message: `Account "${user.username}" has been unlocked` });
+    } catch (error) {
+      console.error("Admin unlock error:", error);
+      res.status(500).json({ error: "Failed to unlock account" });
     }
   });
 

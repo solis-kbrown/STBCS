@@ -452,6 +452,89 @@ export async function sendCriticalThreatAlert(
   });
 }
 
+export async function sendAccountLockoutEmail(
+  userEmail: string,
+  username: string,
+  ipAddress?: string
+): Promise<boolean> {
+  const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #0a0a0a; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0a0a0a; padding: 20px;">
+    <tr>
+      <td align="center">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #1a1a1a; border-radius: 8px; border: 1px solid #333;">
+          <tr>
+            <td style="padding: 30px 40px; border-bottom: 1px solid #333;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td>
+                    <h1 style="margin: 0; color: #fff; font-size: 24px; font-weight: bold;">
+                      <span style="color: #f97316;">STBCS</span> Security Alert
+                    </h1>
+                  </td>
+                  <td align="right">
+                    <span style="background-color: #dc2626; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold;">
+                      ACCOUNT LOCKED
+                    </span>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 30px 40px;">
+              <h2 style="margin: 0 0 15px; color: #fff; font-size: 20px;">Your Account Has Been Temporarily Locked</h2>
+              <p style="margin: 0 0 15px; color: #ccc; font-size: 14px; line-height: 1.6;">
+                We detected <strong>5 consecutive failed login attempts</strong> on your account <strong>${username}</strong>. 
+                As a precaution, your account has been temporarily locked for <strong>15 minutes</strong>.
+              </p>
+              <p style="margin: 0 0 15px; color: #ccc; font-size: 14px; line-height: 1.6;">
+                Your account will automatically unlock after the cooldown period. If this was you, simply wait and try again.
+              </p>
+              <div style="background-color: #111; border: 1px solid #333; border-radius: 4px; padding: 15px; margin: 20px 0;">
+                <p style="margin: 0 0 8px; color: #f97316; font-size: 13px; font-weight: bold;">If this wasn't you:</p>
+                <ul style="margin: 0; padding-left: 20px; color: #ccc; font-size: 13px; line-height: 1.8;">
+                  <li>Someone may be trying to access your account</li>
+                  <li>Change your password immediately after unlocking</li>
+                  <li>Use a strong, unique password (12+ characters)</li>
+                  <li>Contact us at <a href="mailto:kbpc.inc@gmail.com" style="color: #f97316;">kbpc.inc@gmail.com</a> if you need immediate help</li>
+                </ul>
+              </div>
+              <p style="margin: 0; color: #888; font-size: 12px;">
+                Locked at: ${new Date().toISOString()}${ipAddress ? ` | IP: ${ipAddress}` : ''}
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 20px 40px; border-top: 1px solid #333; background-color: #111;">
+              <p style="margin: 0; color: #666; font-size: 12px;">
+                STB Cybersecurity &mdash; Protecting your digital assets
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `STBCS Security Alert: Account Locked\n\nYour account "${username}" has been temporarily locked after 5 failed login attempts.\n\nYour account will automatically unlock after 15 minutes.\n\nIf this wasn't you, change your password immediately and contact kbpc.inc@gmail.com.\n\nLocked at: ${new Date().toISOString()}${ipAddress ? ` | IP: ${ipAddress}` : ''}`;
+
+  return sendEmail({
+    to: userEmail,
+    subject: "[STBCS Security] Your Account Has Been Temporarily Locked",
+    html,
+    text
+  });
+}
+
 export async function processBusinessCriticalAlerts(): Promise<void> {
   log.debug("Processing critical alerts for Business users...");
   
