@@ -11,13 +11,22 @@ export function serveStatic(app: Express) {
     );
   }
 
-  app.use(express.static(distPath));
+  app.use(express.static(distPath, {
+    maxAge: '1y',
+    immutable: true,
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');
+      }
+    },
+  }));
 
   app.use("/{*path}", (req, res) => {
     const indexPath = path.resolve(distPath, "index.html");
     let html = fs.readFileSync(indexPath, "utf-8");
     html = injectMetaTags(html, req.originalUrl);
     res.setHeader("Content-Type", "text/html");
+    res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
     res.send(html);
   });
 }

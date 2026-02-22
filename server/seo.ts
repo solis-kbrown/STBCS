@@ -196,7 +196,77 @@ export function injectMetaTags(html: string, path: string): string {
     );
   }
 
+  const ssrContent = generateSSRContent(path, meta);
+  html = html.replace(
+    '<div id="root"></div>',
+    `<div id="root">${ssrContent}</div>`
+  );
+
   return html;
+}
+
+function getH1Text(path: string, meta: PageMeta): string {
+  const titleMap: Record<string, string> = {
+    '/': 'Real-Time Threat Intelligence & Incident Response',
+    '/ransomware': 'Ransomware Tracker',
+    '/exploits': 'Exploits & CVE Database',
+    '/tools': 'Free Security Tools',
+    '/search': 'Global Threat Search',
+    '/threat-feeds': 'Threat Intelligence Feeds',
+    '/news': 'Cybersecurity Intel & News',
+    '/support': 'Support & Membership',
+    '/alerts': 'Pro Alerts & Watchlist',
+    '/api-docs': 'API Documentation',
+    '/about': 'About STB Cybersecurity',
+    '/privacy': 'Privacy Policy',
+    '/terms': 'Terms of Service',
+    '/sms-terms': 'SMS Terms & Conditions',
+    '/logos': 'Brand Assets & Logo Gallery',
+  };
+  const cleanPath = path.split('?')[0].split('#')[0].replace(/\/$/, '') || '/';
+  if (titleMap[cleanPath]) return titleMap[cleanPath];
+  if (cleanPath.startsWith('/group/')) {
+    const name = decodeURIComponent(cleanPath.replace('/group/', ''));
+    return `${name} Ransomware Group Profile`;
+  }
+  return meta.title.split('|')[0].trim();
+}
+
+function generateSSRContent(path: string, meta: PageMeta): string {
+  const h1 = escapeHtml(getH1Text(path, meta));
+  const desc = escapeHtml(meta.description);
+
+  const nav = `<nav aria-label="Main navigation"><ul>` +
+    `<li><a href="/">Dashboard</a></li>` +
+    `<li><a href="/ransomware">Ransomware Tracker</a></li>` +
+    `<li><a href="/exploits">Exploits & CVEs</a></li>` +
+    `<li><a href="/tools">Security Tools</a></li>` +
+    `<li><a href="/threat-feeds">Threat Feeds</a></li>` +
+    `<li><a href="/news">Intel & News</a></li>` +
+    `<li><a href="/search">Search</a></li>` +
+    `<li><a href="/support">Support</a></li>` +
+    `<li><a href="/about">About</a></li>` +
+    `</ul></nav>`;
+
+  const footer = `<footer><nav aria-label="Legal"><ul>` +
+    `<li><a href="/about">About</a></li>` +
+    `<li><a href="/privacy">Privacy Policy</a></li>` +
+    `<li><a href="/terms">Terms of Service</a></li>` +
+    `<li><a href="/sms-terms">SMS Terms</a></li>` +
+    `<li><a href="/api-docs">API Documentation</a></li>` +
+    `</ul></nav>` +
+    `<p>&copy; ${new Date().getFullYear()} STB Cybersecurity. All rights reserved.</p>` +
+    `<p>Emergency Hotline: <a href="tel:+18557821987">(855) STB-1987</a></p>` +
+    `<p>Email: <a href="mailto:info@stbcybersecurity.com">info@stbcybersecurity.com</a></p>` +
+    `</footer>`;
+
+  return `<a href="#main-content" class="sr-only">Skip to main content</a>` +
+    nav +
+    `<main id="main-content">` +
+    `<h1>${h1}</h1>` +
+    `<p>${desc}</p>` +
+    `</main>` +
+    footer;
 }
 
 function escapeHtml(str: string): string {
