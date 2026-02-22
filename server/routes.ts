@@ -283,6 +283,8 @@ Allow: /logos
 Allow: /group/
 
 Disallow: /account
+Disallow: /checkout
+Disallow: /checkout/return
 
 Disallow: /api/
 Disallow: /admin/

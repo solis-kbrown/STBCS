@@ -87,7 +87,16 @@ Preferred communication style: Simple, everyday language.
 - `stripe`, `stripe-replit-sync`
 
 ### Payment Gateway
-- Stripe (for subscriptions and donations, uses Stripe-hosted checkout pages and webhooks).
+- Stripe (subscriptions and donations via PCI-compliant embedded checkout using `@stripe/react-stripe-js`). Checkout stays on-site (/checkout), returns to /checkout/return. PII stored in sessionStorage, never in URLs. Webhooks managed via stripe-replit-sync.
+
+### SEO
+- **Server-Side Meta Injection** (`server/seo.ts`): Every route gets correct title, description, canonical URL, OG tags, and Twitter cards injected server-side before HTML reaches the browser. Works for both dev (Vite middleware intercept) and production (static.ts).
+- **Dynamic Routes**: `/group/:name` gets dynamic ransomware group-specific meta tags.
+- **noindex**: Transactional/private pages (checkout, account, messages, style-preview) get `noindex, nofollow` in both robots meta tag and `X-Robots-Tag` HTTP header.
+- **Structured Data**: Organization, WebSite, ProfessionalService, FAQPage, WebApplication, Dataset, and SiteNavigationElement ItemList schemas.
+- **useDocumentTitle hook** (`client/src/lib/use-document-title.ts`): Client-side meta tag updates for SPA navigation (title, description, OG, Twitter, canonical).
+- **Sitemap**: Dynamic XML sitemap with all public pages + all ransomware group profile pages.
+- **robots.txt**: Allows all public pages, disallows /api, /admin, /account, /checkout, /messages, /style-preview. Includes Googlebot and Bingbot specific rules.
 
 ### Security & US Compliance
 - **Security Headers**: CSP, HSTS (preload), X-Frame-Options DENY, X-Content-Type-Options, Referrer-Policy, Permissions-Policy. X-Powered-By disabled.

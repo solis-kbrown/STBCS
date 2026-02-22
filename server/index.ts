@@ -100,6 +100,10 @@ app.use((req, res, next) => {
     "form-action 'self' https://checkout.stripe.com",
     "upgrade-insecure-requests",
   ].join('; '));
+  const path = req.path;
+  if (path.startsWith('/api/') || path.startsWith('/checkout') || path === '/account' || path === '/messages' || path === '/style-preview') {
+    res.setHeader('X-Robots-Tag', 'noindex, nofollow');
+  }
   next();
 });
 
@@ -218,6 +222,20 @@ app.use((req, res, next) => {
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
+    const { injectMetaTags } = await import("./seo");
+    app.use((req, res, next) => {
+      if (req.path.startsWith('/api/') || req.path.startsWith('/@') || req.path.includes('.')) {
+        return next();
+      }
+      const originalEnd = res.end.bind(res);
+      res.end = function(chunk?: any, ...args: any[]) {
+        if (typeof chunk === 'string' && chunk.includes('<!DOCTYPE html>')) {
+          chunk = injectMetaTags(chunk, req.originalUrl);
+        }
+        return originalEnd(chunk, ...args);
+      } as any;
+      next();
+    });
     const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
   }
