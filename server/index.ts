@@ -37,15 +37,21 @@ async function initStripe() {
     const stripeSync = await getStripeSync();
 
     console.log('Setting up managed webhook...');
+    const customDomain = process.env.CUSTOM_DOMAIN;
     const replitDomains = process.env.REPLIT_DOMAINS;
-    if (replitDomains) {
-      const webhookBaseUrl = `https://${replitDomains.split(',')[0]}`;
+    let webhookBaseUrl: string | null = null;
+    if (customDomain) {
+      webhookBaseUrl = `https://${customDomain}`;
+    } else if (replitDomains) {
+      webhookBaseUrl = `https://${replitDomains.split(',')[0]}`;
+    }
+    if (webhookBaseUrl) {
       const { webhook } = await stripeSync.findOrCreateManagedWebhook(
         `${webhookBaseUrl}/api/stripe/webhook`
       );
       console.log(`Webhook configured: ${webhook?.url || 'pending'}`);
     } else {
-      console.log('REPLIT_DOMAINS not set, skipping webhook configuration');
+      console.log('No domain available, skipping webhook configuration');
     }
 
     console.log('Syncing Stripe data...');
@@ -98,13 +104,13 @@ app.post(
       const sig = Array.isArray(signature) ? signature[0] : signature;
       if (!Buffer.isBuffer(req.body)) {
         console.error('STRIPE WEBHOOK ERROR: req.body is not a Buffer');
-        return res.status(500).json({ error: 'Webhook processing error' });
+        return res.status(400).json({ error: 'Invalid request body' });
       }
       await WebhookHandlers.processWebhook(req.body as Buffer, sig);
       res.status(200).json({ received: true });
     } catch (error: any) {
       console.error('Webhook error:', error.message);
-      res.status(400).json({ error: 'Webhook processing error' });
+      res.status(400).json({ error: 'Webhook signature verification failed' });
     }
   }
 );
