@@ -7,6 +7,7 @@ import { I18nProvider } from "@/lib/i18n/context";
 import { AuthProvider } from "@/lib/auth";
 import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
+import LiveChatWidget from "@/components/live-chat-widget";
 
 // Lazy load pages for better performance
 const Dashboard = lazy(() => import("@/pages/dashboard"));
@@ -83,6 +84,7 @@ function App() {
           <TooltipProvider>
             <Toaster />
             <Router />
+            <LiveChatWidget />
           </TooltipProvider>
         </I18nProvider>
       </AuthProvider>

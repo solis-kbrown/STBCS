@@ -644,3 +644,28 @@ export const dailyVisitorCounts = pgTable("daily_visitor_counts", {
 
 export type SiteVisitor = typeof siteVisitors.$inferSelect;
 export type DailyVisitorCount = typeof dailyVisitorCounts.$inferSelect;
+
+export const liveChatSessions = pgTable("live_chat_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  sessionToken: text("session_token").notNull().unique(),
+  visitorPhone: text("visitor_phone").notNull(),
+  visitorName: text("visitor_name"),
+  tcpaConsent: boolean("tcpa_consent").notNull().default(false),
+  consentTimestamp: timestamp("consent_timestamp"),
+  status: text("status").notNull().default("active"),
+  createdAt: timestamp("created_at").defaultNow(),
+  lastActivityAt: timestamp("last_activity_at").defaultNow(),
+}, (table) => [
+  index("chat_session_token_idx").on(table.sessionToken),
+  index("chat_session_phone_idx").on(table.visitorPhone),
+  index("chat_session_status_idx").on(table.status),
+]);
+
+export const insertLiveChatSessionSchema = createInsertSchema(liveChatSessions).omit({
+  id: true,
+  createdAt: true,
+  lastActivityAt: true,
+});
+
+export type InsertLiveChatSession = z.infer<typeof insertLiveChatSessionSchema>;
+export type LiveChatSession = typeof liveChatSessions.$inferSelect;

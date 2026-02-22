@@ -16,12 +16,13 @@ import {
   type NewsletterSubscription, type InsertNewsletter,
   type SmsMessage, type InsertSmsMessage,
   type ExploitSubmission, type InsertExploitSubmission,
+  type LiveChatSession, type InsertLiveChatSession,
   type ContentView,
   type DailyVisitorCount,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
   userNotifications, watchlistItems, breachIncidents, newsletterSubscriptions,
-  smsMessages, exploitSubmissions, contentViews, siteVisitors, dailyVisitorCounts
+  smsMessages, exploitSubmissions, liveChatSessions, contentViews, siteVisitors, dailyVisitorCounts
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte } from "drizzle-orm";
@@ -175,6 +176,13 @@ export interface IStorage {
   markConversationRead(phoneNumber: string): Promise<void>;
   getUnreadMessageCount(): Promise<number>;
   
+  // Live Chat Sessions
+  createLiveChatSession(session: InsertLiveChatSession): Promise<LiveChatSession>;
+  getLiveChatSessionByToken(token: string): Promise<LiveChatSession | undefined>;
+  getLiveChatSessionByPhone(phone: string): Promise<LiveChatSession | undefined>;
+  updateLiveChatActivity(token: string): Promise<void>;
+  closeLiveChatSession(token: string): Promise<void>;
+
   // Exploit Submissions
   createExploitSubmission(submission: InsertExploitSubmission): Promise<ExploitSubmission>;
   getExploitSubmissions(limit?: number, offset?: number): Promise<ExploitSubmission[]>;
@@ -1312,6 +1320,41 @@ export class DatabaseStorage implements IStorage {
         eq(smsMessages.direction, 'inbound')
       ));
     return Number(result[0]?.count || 0);
+  }
+
+  // Live Chat Sessions
+  async createLiveChatSession(session: InsertLiveChatSession): Promise<LiveChatSession> {
+    const [created] = await db.insert(liveChatSessions).values(session).returning();
+    return created;
+  }
+
+  async getLiveChatSessionByToken(token: string): Promise<LiveChatSession | undefined> {
+    const [session] = await db.select().from(liveChatSessions)
+      .where(eq(liveChatSessions.sessionToken, token))
+      .limit(1);
+    return session;
+  }
+
+  async getLiveChatSessionByPhone(phone: string): Promise<LiveChatSession | undefined> {
+    const [session] = await db.select().from(liveChatSessions)
+      .where(and(
+        eq(liveChatSessions.visitorPhone, phone),
+        eq(liveChatSessions.status, 'active')
+      ))
+      .limit(1);
+    return session;
+  }
+
+  async updateLiveChatActivity(token: string): Promise<void> {
+    await db.update(liveChatSessions)
+      .set({ lastActivityAt: new Date() })
+      .where(eq(liveChatSessions.sessionToken, token));
+  }
+
+  async closeLiveChatSession(token: string): Promise<void> {
+    await db.update(liveChatSessions)
+      .set({ status: 'closed' })
+      .where(eq(liveChatSessions.sessionToken, token));
   }
 
   // Exploit Submissions

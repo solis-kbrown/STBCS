@@ -97,6 +97,15 @@ const businessToolsLimiter = rateLimit({
   validate: { xForwardedForHeader: false },
 });
 
+const liveChatLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  message: { error: "Too many requests. Please wait a moment." },
+  standardHeaders: true,
+  legacyHeaders: false,
+  validate: { xForwardedForHeader: false },
+});
+
 function tieredToolsLimiter(req: Request, res: Response, next: NextFunction) {
   const authReq = req as AuthenticatedRequest;
   const tier = authReq.user?.tier;
@@ -3275,6 +3284,159 @@ Hiring: https://stbcybersecurity.com/support
     } catch (error) {
       console.error("Error getting unread count:", error);
       res.status(500).json({ error: "Failed to get unread count" });
+    }
+  });
+
+  // ========================================
+  // Live Chat Widget Routes (Public - No Auth Required)
+  // ========================================
+
+  app.post("/api/live-chat/start", liveChatLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        phone: z.string().min(10).max(20),
+        name: z.string().max(100).optional(),
+        tcpaConsent: z.boolean().refine(v => v === true, { message: "TCPA consent is required" }),
+      });
+
+      const data = schema.parse(req.body);
+      const formattedPhone = data.phone.startsWith('+') ? data.phone : `+1${data.phone.replace(/\D/g, '')}`;
+
+      const existing = await storage.getLiveChatSessionByPhone(formattedPhone);
+      if (existing) {
+        res.json({ sessionToken: existing.sessionToken, resumed: true });
+        return;
+      }
+
+      const crypto = await import('crypto');
+      const sessionToken = crypto.randomBytes(32).toString('hex');
+
+      await storage.createLiveChatSession({
+        sessionToken,
+        visitorPhone: formattedPhone,
+        visitorName: data.name || null,
+        tcpaConsent: true,
+        consentTimestamp: new Date(),
+        status: 'active',
+      });
+
+      if (isQuoConfigured()) {
+        try {
+          const quoService = getQuoService();
+          const greeting = data.name ? `Hi ${data.name}!` : 'Hello!';
+          await quoService.sendSMS(formattedPhone, `${greeting} Thanks for reaching out to STB Cybersecurity. A team member will reply shortly. For emergencies, call (855) STB-1987.`);
+
+          await storage.createSmsMessage({
+            direction: 'outbound',
+            fromNumber: '+18557821987',
+            toNumber: formattedPhone,
+            content: `${greeting} Thanks for reaching out to STB Cybersecurity. A team member will reply shortly. For emergencies, call (855) STB-1987.`,
+            status: 'delivered',
+            conversationId: formattedPhone.replace(/\D/g, ''),
+            isRead: true,
+          });
+        } catch (smsErr) {
+          console.error("[Live Chat] Welcome SMS failed:", smsErr);
+        }
+      }
+
+      res.json({ sessionToken, resumed: false });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors[0].message });
+        return;
+      }
+      console.error("[Live Chat] Start error:", error);
+      res.status(500).json({ error: "Failed to start chat session" });
+    }
+  });
+
+  app.post("/api/live-chat/send", liveChatLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        sessionToken: z.string().min(1),
+        content: z.string().min(1).max(1600),
+      });
+
+      const data = schema.parse(req.body);
+      const session = await storage.getLiveChatSessionByToken(data.sessionToken);
+
+      if (!session || session.status !== 'active') {
+        res.status(404).json({ error: "Chat session not found or closed" });
+        return;
+      }
+
+      const chatPrefix = `[LIVE CHAT${session.visitorName ? ` - ${session.visitorName}` : ''}] `;
+
+      await storage.createSmsMessage({
+        direction: 'inbound',
+        fromNumber: session.visitorPhone,
+        toNumber: '+18557821987',
+        content: `${chatPrefix}${data.content}`,
+        status: 'delivered',
+        conversationId: session.visitorPhone.replace(/\D/g, ''),
+        isRead: false,
+      });
+
+      await storage.updateLiveChatActivity(data.sessionToken);
+
+      res.json({ success: true });
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors[0].message });
+        return;
+      }
+      console.error("[Live Chat] Send error:", error);
+      res.status(500).json({ error: "Failed to send message" });
+    }
+  });
+
+  app.get("/api/live-chat/messages", liveChatLimiter, async (req: Request, res: Response) => {
+    try {
+      const sessionToken = asString(req.query.sessionToken as string);
+      if (!sessionToken) {
+        res.status(400).json({ error: "Session token required" });
+        return;
+      }
+
+      const session = await storage.getLiveChatSessionByToken(sessionToken);
+      if (!session) {
+        res.status(404).json({ error: "Chat session not found" });
+        return;
+      }
+
+      const messages = await storage.getConversationMessages(session.visitorPhone, 50);
+
+      const chatMessages = messages
+        .map(msg => {
+          let content = msg.content;
+          if (msg.direction === 'inbound') {
+            content = content.replace(/^\[LIVE CHAT(?:\s*-\s*[^\]]*)?\]\s*/, '');
+          }
+          return {
+            id: msg.id,
+            content,
+            direction: msg.direction === 'inbound' ? 'visitor' : 'support',
+            createdAt: msg.createdAt,
+          };
+        })
+        .sort((a, b) => new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime());
+
+      res.json(chatMessages);
+    } catch (error) {
+      console.error("[Live Chat] Messages error:", error);
+      res.status(500).json({ error: "Failed to fetch messages" });
+    }
+  });
+
+  app.post("/api/live-chat/end", liveChatLimiter, async (req: Request, res: Response) => {
+    try {
+      const { sessionToken } = z.object({ sessionToken: z.string() }).parse(req.body);
+      await storage.closeLiveChatSession(sessionToken);
+      res.json({ success: true });
+    } catch (error) {
+      console.error("[Live Chat] End error:", error);
+      res.status(500).json({ error: "Failed to end chat session" });
     }
   });
 

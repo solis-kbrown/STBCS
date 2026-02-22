@@ -49,6 +49,7 @@ Preferred communication style: Simple, everyday language.
 - **Security & US Compliance**: Implements robust security headers, httpOnly/secure cookies, API logging controls, strict rate limiting, and comprehensive consent flows/legal pages (CCPA/CPRA, COPPA, CAN-SPAM).
 - **Authentication**: Secure signup/login with bcrypt, cryptographic session tokens, and database-backed sessions.
 - **Logging**: Structured logging with configurable levels, specialized for scraper, maintenance, and routine operations.
+- **Live Chat Widget**: Floating chat bubble on every page (except /messages) that lets website visitors chat with the STBCS team via SMS. Visitors enter phone number + TCPA consent, messages are stored in `sms_messages` with `[LIVE CHAT]` prefix for admin identification, replies from the Business Messages inbox go back to the visitor. Sessions tracked in `live_chat_sessions` table. Rate-limited at 20 req/min. Polls every 5s for new messages.
 - **Maintenance & Monitoring**: Scheduled data cleanup, critical error reporting to admin, daily health checks, weekly admin reports, and automated management of promotional sales.
 
 ## External Dependencies
