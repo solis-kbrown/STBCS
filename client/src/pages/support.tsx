@@ -82,7 +82,7 @@ const membershipTiers = [
 ];
 
 export default function SupportPage() {
-  useDocumentTitle("Support & Membership | STB Cybersecurity", "Subscribe to STBCS Supporter, Pro, or Business plans for advanced threat intelligence, real-time alerts, watchlists, and priority incident response. Donate to support free cybersecurity tools for the community.");
+  useDocumentTitle("Support & Membership | STB Cybersecurity", "Subscribe to STBCS Supporter, Pro, or Business plans for advanced threat intelligence, real-time alerts, watchlists, and priority incident response.");
   const { toast } = useToast();
   const [, navigate] = useLocation();
 

@@ -9,28 +9,28 @@ interface PageMeta {
 
 const PAGE_META: Record<string, PageMeta> = {
   '/': {
-    title: 'STB Cybersecurity | Real-Time Threat Intelligence & Incident Response',
-    description: 'STBCS delivers 24/7 incident response, ransomware recovery, threat hunting, and real-time threat intelligence from 45+ feeds. Trusted cybersecurity partner for SMBs worldwide. Emergency hotline: (855) STB-1987.',
+    title: 'STBCS | Threat Intelligence & Incident Response',
+    description: 'STBCS delivers 24/7 incident response, ransomware recovery, and real-time threat intelligence from 45+ feeds. Trusted cybersecurity partner for SMBs.',
   },
   '/ransomware': {
     title: 'Ransomware Tracker | STB Cybersecurity',
-    description: 'Monitor active ransomware groups, victim postings, attack analytics, and negotiation statuses in real-time. Track groups like LockBit, BlackCat, Cl0p with detailed profiles, TTPs, and sector targeting data.',
+    description: 'Monitor active ransomware groups, victim postings, and attack analytics in real-time. Track LockBit, BlackCat, Cl0p with profiles, TTPs, and targeting data.',
   },
   '/exploits': {
     title: 'Exploits & CVE Database | STB Cybersecurity',
-    description: 'Search and track CVEs, zero-day vulnerabilities, and exploits from NVD, CISA KEV, and 45+ threat intelligence feeds. CVSS scoring, EPSS predictions, vendor tracking, and real-time exploit alerts.',
+    description: 'Search and track CVEs, zero-days, and exploits from NVD, CISA KEV, and 45+ feeds. CVSS scoring, EPSS predictions, and real-time exploit alerts.',
   },
   '/tools': {
     title: 'Free Security Tools | STB Cybersecurity',
-    description: 'Free online cybersecurity tools: IP WHOIS, Domain WHOIS, Port Scanner, SSL Checker, Password Strength Checker, Hash Analyzer, Email Header Analyzer, Subnet Calculator, and more. No account required.',
+    description: 'Free cybersecurity tools: IP/Domain WHOIS, Port Scanner, SSL Checker, Password Checker, Hash Analyzer, Email Header Analyzer, and more. No account needed.',
   },
   '/search': {
     title: 'Global Threat Search | STB Cybersecurity',
-    description: 'Search across CVEs, ransomware incidents, malicious IPs, phishing URLs, threat actors, and security news. Unified cybersecurity threat intelligence search powered by 45+ data feeds.',
+    description: 'Search CVEs, ransomware incidents, malicious IPs, phishing URLs, threat actors, and security news. Unified threat intelligence search across 45+ feeds.',
   },
   '/threat-feeds': {
     title: 'Threat Intelligence Feeds | STB Cybersecurity',
-    description: 'Real-time malicious IP addresses, phishing URLs, CISA Known Exploited Vulnerabilities (KEV), and threat indicators from 45+ intelligence feeds including SANS DShield, Feodo Tracker, and more.',
+    description: 'Real-time malicious IPs, phishing URLs, CISA KEV, and threat indicators from 45+ feeds including SANS DShield, Feodo Tracker, and more.',
   },
   '/news': {
     title: 'Cybersecurity Intel & News | STB Cybersecurity',
@@ -38,19 +38,23 @@ const PAGE_META: Record<string, PageMeta> = {
   },
   '/support': {
     title: 'Support & Membership | STB Cybersecurity',
-    description: 'Subscribe to STBCS Supporter, Pro, or Business plans for advanced threat intelligence, real-time alerts, watchlists, and priority incident response. Donate to support free cybersecurity tools for the community.',
+    description: 'Subscribe to STBCS Supporter, Pro, or Business plans for advanced threat intelligence, real-time alerts, watchlists, and priority incident response.',
   },
   '/alerts': {
     title: 'Pro Alerts & Watchlist | STB Cybersecurity',
-    description: 'Set up custom watchlists to track CVEs, IPs, domains, ransomware groups, and keywords. Get real-time email and SMS alerts when your monitored threats are detected across 45+ intelligence feeds.',
+    description: 'Set up watchlists to track CVEs, IPs, domains, ransomware groups, and keywords. Get real-time email and SMS alerts when threats are detected.',
   },
   '/api-docs': {
     title: 'API Documentation | STB Cybersecurity',
-    description: 'REST API documentation for accessing real-time threat intelligence data including CVEs, ransomware incidents, malicious IPs, phishing URLs, and CISA KEV entries. Free and Pro tier endpoints available.',
+    description: 'REST API docs for real-time threat intelligence: CVEs, ransomware incidents, malicious IPs, phishing URLs, and CISA KEV. Free and Pro tiers available.',
+  },
+  '/about': {
+    title: 'About Us | STBCS',
+    description: 'About STB Cybersecurity. Professional cybersecurity services, threat intelligence, and incident response for small to medium-sized businesses.',
   },
   '/privacy': {
     title: 'Privacy Policy | STB Cybersecurity',
-    description: 'Privacy policy for STB Cybersecurity. Learn how we collect, use, and protect your data across our threat intelligence platform and security services. CCPA/CPRA compliant.',
+    description: 'Learn how STBCS collects, uses, and protects your data across our threat intelligence platform and security services. CCPA/CPRA compliant.',
   },
   '/terms': {
     title: 'Terms of Service | STB Cybersecurity',
@@ -91,6 +95,30 @@ const PAGE_META: Record<string, PageMeta> = {
   },
 };
 
+const MAX_TITLE_LENGTH = 60;
+const TITLE_SUFFIX = ' | STBCS';
+
+function truncateGroupTitle(groupName: string): string {
+  const fullSuffix = ' | STB Cybersecurity';
+  const middlePart = ' Ransomware Profile';
+  const fullTitle = `${groupName}${middlePart}${fullSuffix}`;
+
+  if (fullTitle.length <= MAX_TITLE_LENGTH) {
+    return fullTitle;
+  }
+
+  const shortSuffix = TITLE_SUFFIX;
+  const shortTitle = `${groupName}${middlePart}${shortSuffix}`;
+
+  if (shortTitle.length <= MAX_TITLE_LENGTH) {
+    return shortTitle;
+  }
+
+  const maxNameLength = MAX_TITLE_LENGTH - middlePart.length - shortSuffix.length;
+  const truncatedName = groupName.slice(0, maxNameLength - 1) + '…';
+  return `${truncatedName}${middlePart}${shortSuffix}`;
+}
+
 export function getPageMeta(path: string): PageMeta {
   const cleanPath = path.split('?')[0].split('#')[0].replace(/\/$/, '') || '/';
 
@@ -100,10 +128,18 @@ export function getPageMeta(path: string): PageMeta {
 
   if (cleanPath.startsWith('/group/')) {
     const groupName = decodeURIComponent(cleanPath.replace('/group/', ''));
-    return {
-      title: `${groupName} Ransomware Group Profile | STB Cybersecurity`,
-      description: `Detailed threat intelligence profile for ${groupName} ransomware group including TTPs, targeted sectors, victim countries, attack timeline, and MITRE ATT&CK mapping.`,
-    };
+    const title = truncateGroupTitle(groupName);
+    const descPrefix = `Threat profile for ${groupName} ransomware group: `;
+    const descBody = 'TTPs, targeted sectors, victim countries, attack timeline, and MITRE ATT&CK mapping.';
+    let description = descPrefix + descBody;
+    if (description.length > 160) {
+      description = `Threat profile for ${groupName}: TTPs, targeted sectors, attack timeline, and MITRE ATT&CK mapping.`;
+    }
+    if (description.length > 160) {
+      const maxLen = 160 - 4;
+      description = description.slice(0, maxLen) + '…';
+    }
+    return { title, description };
   }
 
   return PAGE_META['/'];

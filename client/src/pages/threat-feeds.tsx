@@ -18,7 +18,7 @@ type UrlSortOption = "newest" | "oldest" | "source" | "status";
 type KevSortOption = "newest" | "oldest" | "vendor-az" | "due-soonest";
 
 export default function ThreatFeeds() {
-  useDocumentTitle("Threat Intelligence Feeds | STB Cybersecurity", "Real-time malicious IP addresses, phishing URLs, CISA Known Exploited Vulnerabilities (KEV), and threat indicators from 45+ intelligence feeds including SANS DShield, Feodo Tracker, and more.");
+  useDocumentTitle("Threat Intelligence Feeds | STB Cybersecurity", "Real-time malicious IPs, phishing URLs, CISA KEV, and threat indicators from 45+ feeds including SANS DShield, Feodo Tracker, and more.");
   const { data: feeds, isLoading: feedsLoading } = useThreatFeeds();
   const { data: ipsData, isLoading: ipsLoading } = useMaliciousIps(1000);
   const { data: urlsData, isLoading: urlsLoading } = useMaliciousUrls(1000);

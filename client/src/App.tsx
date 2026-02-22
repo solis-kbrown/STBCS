@@ -29,6 +29,7 @@ const GroupProfile = lazy(() => import("@/pages/group-profile"));
 const AccountPage = lazy(() => import("@/pages/account"));
 const CheckoutPage = lazy(() => import("@/pages/checkout"));
 const CheckoutReturnPage = lazy(() => import("@/pages/checkout-return"));
+const AboutPage = lazy(() => import("@/pages/about"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -67,6 +68,7 @@ function Router() {
         <Route path="/account" component={AccountPage}/>
         <Route path="/checkout" component={CheckoutPage}/>
         <Route path="/checkout/return" component={CheckoutReturnPage}/>
+        <Route path="/about" component={AboutPage}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

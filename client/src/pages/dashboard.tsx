@@ -12,7 +12,7 @@ import { useMemo } from "react";
 import { format, parseISO } from "date-fns";
 
 export default function Dashboard() {
-  useDocumentTitle("Threat Intelligence Dashboard | STB Cybersecurity", "Real-time cybersecurity threat intelligence dashboard tracking ransomware groups, critical CVEs, malicious IPs, phishing URLs, and CISA KEV data from 45+ feeds. Updated every 15 minutes.");
+  useDocumentTitle("STBCS | Threat Intelligence & Incident Response", "STBCS delivers 24/7 incident response, ransomware recovery, and real-time threat intelligence from 45+ feeds. Trusted cybersecurity partner for SMBs.");
   const { data: stats, isLoading: statsLoading } = useStats();
   const { data: cvesData, isLoading: cvesLoading } = useCves(5);
   const { data: ransomwareData, isLoading: ransomwareLoading } = useRansomware(5);

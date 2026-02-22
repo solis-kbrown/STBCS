@@ -191,6 +191,7 @@ export default function Footer() {
               &copy; {currentYear} STB Cybersecurity. All rights reserved.
             </p>
             <div className="flex items-center gap-4 text-xs text-muted-foreground">
+              <a href="/about" className="hover:text-primary transition-colors">About</a>
               <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
               <a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a>
               <a href="/sms-terms" className="hover:text-primary transition-colors">SMS Terms</a>

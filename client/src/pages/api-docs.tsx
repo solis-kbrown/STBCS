@@ -7,7 +7,7 @@ import { Code, Lock, Zap, Globe, Shield, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function ApiDocs() {
-  useDocumentTitle("API Documentation | STB Cybersecurity", "REST API documentation for accessing real-time threat intelligence data including CVEs, ransomware incidents, malicious IPs, phishing URLs, and CISA KEV entries. Free and Pro tier endpoints available.");
+  useDocumentTitle("API Documentation | STB Cybersecurity", "REST API docs for real-time threat intelligence: CVEs, ransomware incidents, malicious IPs, phishing URLs, and CISA KEV. Free and Pro tiers available.");
 
   return (
     <Layout>

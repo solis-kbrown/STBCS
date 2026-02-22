@@ -1,4 +1,5 @@
 import express, { type Request, Response, NextFunction } from "express";
+import compression from "compression";
 import { registerRoutes } from "./routes";
 import { serveStatic } from "./static";
 import { createServer } from "http";
@@ -106,6 +107,9 @@ app.use((req, res, next) => {
   }
   next();
 });
+
+// Enable gzip/brotli compression for all responses
+app.use(compression());
 
 // CRITICAL: Register Stripe webhook route BEFORE express.json()
 app.post(

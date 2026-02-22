@@ -127,6 +127,10 @@ export async function registerRoutes(
 ): Promise<Server> {
 
 
+  app.get(['/sitemap_index.xml', '/sitemap-index.xml', '/sitemaps.xml', '/sitemap1.xml', '/post-sitemap.xml', '/sitemap0.xml', '/wp-sitemap.xml', '/page-sitemap.xml', '/news-sitemap.xml', '/category-sitemap.xml'], (_req: Request, res: Response) => {
+    res.redirect(301, '/sitemap.xml');
+  });
+
   app.get("/sitemap.xml", async (_req: Request, res: Response) => {
     try {
       const today = new Date().toISOString().split("T")[0];

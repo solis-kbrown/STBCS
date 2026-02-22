@@ -85,7 +85,7 @@ function getTypeIcon(type: string) {
 }
 
 export default function Alerts() {
-  useDocumentTitle("Pro Alerts & Watchlist | STB Cybersecurity", "Set up custom watchlists to track CVEs, IPs, domains, ransomware groups, and keywords. Get real-time email and SMS alerts when your monitored threats are detected across 45+ intelligence feeds.");
+  useDocumentTitle("Pro Alerts & Watchlist | STB Cybersecurity", "Set up watchlists to track CVEs, IPs, domains, ransomware groups, and keywords. Get real-time email and SMS alerts when threats are detected.");
   const { user, isAuthenticated, isPro, isBusiness } = useAuth();
   const [activeTab, setActiveTab] = useState("notifications");
   const [newWatchItem, setNewWatchItem] = useState({ type: "company", value: "" });

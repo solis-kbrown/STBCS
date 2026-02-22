@@ -16,7 +16,7 @@ import PaginationControls from "@/components/pagination-controls";
 type SortOption = "newest" | "oldest" | "group-az" | "group-za" | "status";
 
 export default function Ransomware() {
-  useDocumentTitle("Ransomware Tracker | STB Cybersecurity", "Monitor active ransomware groups, victim postings, attack analytics, and negotiation statuses in real-time. Track groups like LockBit, BlackCat, Cl0p with detailed profiles, TTPs, and sector targeting data.");
+  useDocumentTitle("Ransomware Tracker | STB Cybersecurity", "Monitor active ransomware groups, victim postings, and attack analytics in real-time. Track LockBit, BlackCat, Cl0p with profiles, TTPs, and targeting data.");
   const [selectedGroup, setSelectedGroup] = useState<string | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
