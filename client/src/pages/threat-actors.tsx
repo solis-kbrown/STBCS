@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PaginationControls from "@/components/pagination-controls";
 import { useQuery } from "@tanstack/react-query";
+import { useExportData } from "@/lib/api";
 import { useState, useMemo, useCallback } from "react";
 import {
   Users,
@@ -27,8 +28,11 @@ import {
   Crosshair,
   ArrowUpDown,
   RotateCcw,
+  Download,
+  Loader2,
 } from "lucide-react";
 import type { ThreatActor } from "@shared/schema";
+import { getActorTechniques, getTacticBreakdown, TACTIC_COLORS, type MitreTechnique } from "@shared/mitre-attack";
 
 type SortOption = "name" | "victims" | "recent" | "ransom";
 
@@ -89,6 +93,7 @@ export default function ThreatActors() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
+  const exportMutation = useExportData();
   const { data: actors, isLoading, isError } = useQuery<ThreatActor[]>({
     queryKey: ["/api/threat-actors"],
     queryFn: async () => {
@@ -201,6 +206,16 @@ export default function ThreatActors() {
             <p className="text-muted-foreground">
               Browse nation-state groups, criminal organizations, and hacktivists. Analyze TTPs, malware families, and ransomware operations.
             </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-actors-csv" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'csv' })} disabled={exportMutation.isPending}>
+              {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+              CSV
+            </Button>
+            <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-actors-json" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'json' })} disabled={exportMutation.isPending}>
+              <Download className="h-4 w-4 mr-2" />
+              JSON
+            </Button>
           </div>
         </div>
 
@@ -648,6 +663,46 @@ export default function ThreatActors() {
                             </div>
                           )}
                         </div>
+
+                        {/* MITRE ATT&CK Techniques */}
+                        {(() => {
+                          const techniques = getActorTechniques(actor.name);
+                          if (techniques.length === 0) return null;
+                          const tacticBreakdown = getTacticBreakdown(techniques);
+                          return (
+                            <div>
+                              <h4 className="text-xs font-bold text-zinc-300 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                <Shield className="h-3.5 w-3.5 text-orange-400" />
+                                MITRE ATT&CK Techniques ({techniques.length})
+                              </h4>
+                              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+                                {Object.entries(tacticBreakdown).map(([tactic, techs]) => (
+                                  <div key={tactic} className="bg-zinc-900/50 rounded-lg p-3 border border-white/5">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: TACTIC_COLORS[tactic] || '#666' }} />
+                                      <span className="text-[11px] font-semibold text-zinc-300">{tactic}</span>
+                                      <span className="text-[10px] text-zinc-500 ml-auto">{techs.length}</span>
+                                    </div>
+                                    <div className="flex flex-wrap gap-1">
+                                      {techs.map((t) => (
+                                        <a
+                                          key={t.id}
+                                          href={t.url}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 border border-white/5 text-zinc-400 hover:text-orange-300 hover:border-orange-500/30 transition-colors"
+                                          title={t.name}
+                                        >
+                                          <span className="font-mono">{t.id}</span>
+                                        </a>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         {/* Ransom & Operations Stats */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

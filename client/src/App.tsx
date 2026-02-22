@@ -34,6 +34,9 @@ const AboutPage = lazy(() => import("@/pages/about"));
 const Breaches = lazy(() => import("@/pages/breaches"));
 const ThreatActors = lazy(() => import("@/pages/threat-actors"));
 const RansomwarePayments = lazy(() => import("@/pages/ransomware-payments"));
+const ICSAdvisories = lazy(() => import("@/pages/ics-advisories"));
+const IOCSearch = lazy(() => import("@/pages/ioc-search"));
+const RiskScore = lazy(() => import("@/pages/risk-score"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -54,6 +57,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard}/>
         <Route path="/ransomware" component={Ransomware}/>
+        <Route path="/ransomware-payments" component={RansomwarePayments}/>
         <Route path="/group/:name" component={GroupProfile}/>
         <Route path="/exploits" component={Exploits}/>
         <Route path="/news" component={News}/>
@@ -75,6 +79,9 @@ function Router() {
         <Route path="/about" component={AboutPage}/>
         <Route path="/breaches" component={Breaches}/>
         <Route path="/threat-actors" component={ThreatActors}/>
+        <Route path="/ics-advisories" component={ICSAdvisories}/>
+        <Route path="/ioc-search" component={IOCSearch}/>
+        <Route path="/risk-score" component={RiskScore}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

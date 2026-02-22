@@ -13,6 +13,7 @@ import {
   type UserNotification, type InsertNotification,
   type WatchlistItem, type InsertWatchlistItem,
   type BreachIncident, type InsertBreach,
+  type IcsAdvisory, type InsertIcsAdvisory,
   type NewsletterSubscription, type InsertNewsletter,
   type SmsMessage, type InsertSmsMessage,
   type ExploitSubmission, type InsertExploitSubmission,
@@ -21,7 +22,7 @@ import {
   type DailyVisitorCount,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
-  userNotifications, watchlistItems, breachIncidents, newsletterSubscriptions,
+  userNotifications, watchlistItems, breachIncidents, cisaIcsAdvisories, newsletterSubscriptions,
   smsMessages, exploitSubmissions, liveChatSessions, contentViews, siteVisitors, dailyVisitorCounts
 } from "@shared/schema";
 import { db } from "./db";
@@ -167,6 +168,11 @@ export interface IStorage {
   searchBreaches(query: string, limit?: number): Promise<BreachIncident[]>;
   getBreachCount(): Promise<number>;
   
+  // CISA ICS Advisories
+  getIcsAdvisories(limit?: number, offset?: number): Promise<IcsAdvisory[]>;
+  getIcsAdvisoryCount(): Promise<number>;
+  batchUpsertIcsAdvisories(advisories: InsertIcsAdvisory[]): Promise<void>;
+
   // SMS Messages (Pro/Business feature)
   getSmsMessages(limit?: number, offset?: number): Promise<SmsMessage[]>;
   getSmsConversations(): Promise<{ phoneNumber: string; lastMessage: SmsMessage; unreadCount: number }[]>;
@@ -1171,6 +1177,43 @@ export class DatabaseStorage implements IStorage {
   async getBreachCount(): Promise<number> {
     const [result] = await db.select({ count: sql<number>`count(*)` }).from(breachIncidents);
     return Number(result?.count || 0);
+  }
+
+  // CISA ICS Advisories
+  async getIcsAdvisories(limit = 50, offset = 0): Promise<IcsAdvisory[]> {
+    return db.select().from(cisaIcsAdvisories)
+      .orderBy(desc(cisaIcsAdvisories.publishedDate))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getIcsAdvisoryCount(): Promise<number> {
+    const [result] = await db.select({ count: sql<number>`count(*)` }).from(cisaIcsAdvisories);
+    return Number(result?.count || 0);
+  }
+
+  async batchUpsertIcsAdvisories(advisories: InsertIcsAdvisory[]): Promise<void> {
+    if (advisories.length === 0) return;
+    for (const advisory of advisories) {
+      await db.insert(cisaIcsAdvisories)
+        .values(advisory)
+        .onConflictDoUpdate({
+          target: cisaIcsAdvisories.advisoryId,
+          set: {
+            title: advisory.title,
+            summary: advisory.summary,
+            vendor: advisory.vendor,
+            product: advisory.product,
+            cvssScore: advisory.cvssScore,
+            cveIds: advisory.cveIds,
+            affectedSystems: advisory.affectedSystems,
+            mitigations: advisory.mitigations,
+            severity: advisory.severity,
+            sourceUrl: advisory.sourceUrl,
+            lastUpdated: advisory.lastUpdated,
+          },
+        });
+    }
   }
 
   // Newsletter Subscriptions

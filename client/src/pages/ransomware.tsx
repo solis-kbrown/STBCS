@@ -148,7 +148,7 @@ export default function Ransomware() {
               variant="outline" 
               className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" 
               data-testid="button-export"
-              onClick={() => exportMutation.mutate('ransomware')}
+              onClick={() => exportMutation.mutate({ type: 'ransomware' })}
               disabled={exportMutation.isPending}
             >
               {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}

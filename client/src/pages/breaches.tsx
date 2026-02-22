@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import PaginationControls from "@/components/pagination-controls";
 import { useQuery } from "@tanstack/react-query";
+import { useExportData } from "@/lib/api";
 import { useState, useMemo, useCallback } from "react";
 import {
   ShieldOff,
@@ -25,6 +26,8 @@ import {
   Crown,
   ArrowUpDown,
   RotateCcw,
+  Download,
+  Loader2,
 } from "lucide-react";
 import type { BreachIncident } from "@shared/schema";
 
@@ -68,6 +71,7 @@ export default function Breaches() {
     "Search known data breaches, compromised accounts, and exposed credentials. Track breach incidents with verified status and affected data types."
   );
 
+  const exportMutation = useExportData();
   const [search, setSearch] = useState("");
   const [domainSearch, setDomainSearch] = useState("");
   const [showFilters, setShowFilters] = useState(false);
@@ -188,6 +192,16 @@ export default function Breaches() {
             <p className="text-muted-foreground">
               Search known data breaches, compromised accounts, and exposed credentials across thousands of incidents.
             </p>
+          </div>
+          <div className="flex gap-2">
+            <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-breaches-csv" onClick={() => exportMutation.mutate({ type: 'breaches', format: 'csv' })} disabled={exportMutation.isPending}>
+              {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+              CSV
+            </Button>
+            <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-breaches-json" onClick={() => exportMutation.mutate({ type: 'breaches', format: 'json' })} disabled={exportMutation.isPending}>
+              <Download className="h-4 w-4 mr-2" />
+              JSON
+            </Button>
           </div>
         </div>
 

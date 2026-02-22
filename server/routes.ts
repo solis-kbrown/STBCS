@@ -973,6 +973,135 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
+  // STIX 2.1 Export - Format threat data as STIX bundle
+  app.get("/api/export/stix", async (req: Request, res: Response) => {
+    try {
+      const exportSchema = z.object({
+        type: z.enum(["ips", "urls", "cves", "kev", "all"]).default("all"),
+        limit: z.coerce.number().int().min(1).max(500).default(100),
+        format: z.enum(["json", "download"]).default("json"),
+      });
+      const parsed = exportSchema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid parameters", details: parsed.error.issues });
+      }
+      const { type, limit, format } = parsed.data;
+      const key = `stix:${type}:${limit}`;
+      if (format === "json" && cachedJson(res, key, TTL.FEEDS_LIST)) return;
+
+      const stixObjects: any[] = [];
+      const identity = {
+        type: "identity",
+        spec_version: "2.1",
+        id: "identity--stbcs-threat-intel",
+        created: new Date().toISOString(),
+        modified: new Date().toISOString(),
+        name: "STB Cybersecurity",
+        identity_class: "organization",
+        description: "STB Cybersecurity Threat Intelligence Platform",
+      };
+      stixObjects.push(identity);
+
+      if (type === "ips" || type === "all") {
+        const ips = await storage.getMaliciousIps(limit);
+        for (const ip of ips) {
+          stixObjects.push({
+            type: "indicator",
+            spec_version: "2.1",
+            id: `indicator--ip-${Buffer.from(ip.ipAddress).toString("hex").slice(0, 36)}`,
+            created: ip.lastSeen || new Date().toISOString(),
+            modified: ip.lastSeen || new Date().toISOString(),
+            name: `Malicious IP: ${ip.ipAddress}`,
+            description: `${ip.threatType || "Malicious"} IP from ${ip.source || "threat feed"}`,
+            indicator_types: ["malicious-activity"],
+            pattern: `[ipv4-addr:value = '${ip.ipAddress}']`,
+            pattern_type: "stix",
+            valid_from: ip.lastSeen || new Date().toISOString(),
+            labels: [ip.threatType || "malicious", ip.source || "unknown"].filter(Boolean),
+          });
+        }
+      }
+
+      if (type === "urls" || type === "all") {
+        const urls = await storage.getMaliciousUrls(limit);
+        for (const url of urls) {
+          const safeUrl = url.url.replace(/'/g, "\\'");
+          stixObjects.push({
+            type: "indicator",
+            spec_version: "2.1",
+            id: `indicator--url-${Buffer.from(url.url).toString("hex").slice(0, 36)}`,
+            created: url.lastSeen || new Date().toISOString(),
+            modified: url.lastSeen || new Date().toISOString(),
+            name: `Malicious URL: ${url.url.slice(0, 80)}`,
+            description: `${url.threatType || "Malware"} URL from ${url.source || "threat feed"}`,
+            indicator_types: ["malicious-activity"],
+            pattern: `[url:value = '${safeUrl}']`,
+            pattern_type: "stix",
+            valid_from: url.lastSeen || new Date().toISOString(),
+            labels: [url.threatType || "malicious", url.source || "unknown"].filter(Boolean),
+          });
+        }
+      }
+
+      if (type === "cves" || type === "all") {
+        const cves = await storage.getCves(Math.min(limit, 50));
+        for (const cve of cves) {
+          stixObjects.push({
+            type: "vulnerability",
+            spec_version: "2.1",
+            id: `vulnerability--${cve.cveId.toLowerCase().replace(/[^a-z0-9-]/g, "-")}`,
+            created: cve.publishedDate || new Date().toISOString(),
+            modified: cve.lastModifiedDate || new Date().toISOString(),
+            name: cve.cveId,
+            description: cve.description?.slice(0, 500) || `Vulnerability ${cve.cveId}`,
+            external_references: [
+              { source_name: "cve", external_id: cve.cveId, url: `https://nvd.nist.gov/vuln/detail/${cve.cveId}` },
+            ],
+          });
+        }
+      }
+
+      if (type === "kev" || type === "all") {
+        const kevs = await storage.getCisaKev(Math.min(limit, 50));
+        for (const kev of kevs) {
+          stixObjects.push({
+            type: "vulnerability",
+            spec_version: "2.1",
+            id: `vulnerability--kev-${kev.cveId.toLowerCase().replace(/[^a-z0-9-]/g, "-")}`,
+            created: kev.dateAdded || new Date().toISOString(),
+            modified: kev.dateAdded || new Date().toISOString(),
+            name: `${kev.cveId} (CISA KEV)`,
+            description: `${kev.vulnerabilityName || kev.cveId} - Known Exploited. ${kev.shortDescription || ""}`.trim(),
+            external_references: [
+              { source_name: "cve", external_id: kev.cveId },
+              { source_name: "cisa-kev", url: "https://www.cisa.gov/known-exploited-vulnerabilities-catalog" },
+            ],
+            labels: ["known-exploited"],
+          });
+        }
+      }
+
+      const bundle = {
+        type: "bundle",
+        id: `bundle--stbcs-${Date.now()}`,
+        spec_version: "2.1",
+        created: new Date().toISOString(),
+        objects: stixObjects,
+      };
+
+      if (format === "download") {
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Content-Disposition", `attachment; filename="stbcs-stix-${type}-${new Date().toISOString().slice(0, 10)}.json"`);
+        return res.json(bundle);
+      }
+
+      cacheAndSend(res, key, bundle, TTL.FEEDS_LIST);
+    } catch (error) {
+      console.error("Error generating STIX export:", error);
+      res.status(500).json({ error: "Failed to generate STIX export" });
+    }
+  });
+
   // Global Search across all threat data
   app.get("/api/search", async (req: Request, res: Response) => {
     try {
@@ -1521,6 +1650,25 @@ Hiring: https://stbcybersecurity.com/support
     } catch (error) {
       console.error("Get breaches error:", error);
       res.status(500).json({ error: "Failed to fetch breach incidents" });
+    }
+  });
+
+  // CISA ICS-CERT Advisories
+  app.get("/api/ics-advisories", strictLimiter, async (req: Request, res: Response) => {
+    try {
+      const parsed = paginationSchema.safeParse(req.query);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid query parameters" });
+      }
+      const { limit, offset } = parsed.data;
+      const [advisories, count] = await Promise.all([
+        storage.getIcsAdvisories(limit, offset),
+        storage.getIcsAdvisoryCount(),
+      ]);
+      res.json({ data: advisories, total: count, limit, offset });
+    } catch (error) {
+      console.error("Get ICS advisories error:", error);
+      res.status(500).json({ error: "Failed to fetch ICS advisories" });
     }
   });
 
@@ -3326,6 +3474,14 @@ Hiring: https://stbcybersecurity.com/support
         case "kev":
           data = await storage.getCisaKev(limit, 0);
           filename = "stbcs_cisa_kev";
+          break;
+        case "breaches":
+          data = await storage.getBreachIncidents(limit, 0);
+          filename = "stbcs_breaches";
+          break;
+        case "threat-actors":
+          data = await storage.getThreatActors(limit);
+          filename = "stbcs_threat_actors";
           break;
         default:
           res.status(400).json({ error: "Invalid export type" });

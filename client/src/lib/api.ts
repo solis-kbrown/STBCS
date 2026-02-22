@@ -431,14 +431,14 @@ export function useAdminStats() {
 
 export function useExportData() {
   return useMutation({
-    mutationFn: async (type: 'cves' | 'ips' | 'urls' | 'kev' | 'ransomware') => {
-      const response = await fetch(`/api/export/${type}`);
+    mutationFn: async ({ type, format = 'json' }: { type: 'cves' | 'ips' | 'urls' | 'kev' | 'ransomware' | 'breaches' | 'threat-actors'; format?: 'json' | 'csv' }) => {
+      const response = await fetch(`/api/export/${type}?format=${format}`);
       if (!response.ok) throw new Error("Failed to export data");
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${type}_export_${Date.now()}.json`;
+      a.download = `stbcs_${type}_${Date.now()}.${format}`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

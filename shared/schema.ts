@@ -422,6 +422,30 @@ export const breachIncidents = pgTable("breach_incidents", {
   index("breach_domain_idx").on(table.domain),
 ]);
 
+// CISA ICS-CERT Advisories for Industrial Control Systems
+export const cisaIcsAdvisories = pgTable("cisa_ics_advisories", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  advisoryId: text("advisory_id").notNull().unique(),
+  title: text("title").notNull(),
+  summary: text("summary"),
+  vendor: text("vendor"),
+  product: text("product"),
+  cvssScore: real("cvss_score"),
+  cveIds: text("cve_ids"),
+  affectedSystems: text("affected_systems"),
+  mitigations: text("mitigations"),
+  publishedDate: timestamp("published_date"),
+  lastUpdated: timestamp("last_updated"),
+  severity: text("severity"),
+  sourceUrl: text("source_url"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("ics_advisory_id_idx").on(table.advisoryId),
+  index("ics_vendor_idx").on(table.vendor),
+  index("ics_severity_idx").on(table.severity),
+  index("ics_published_idx").on(table.publishedDate),
+]);
+
 // System configuration for admins
 export const systemConfig = pgTable("system_config", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -530,6 +554,14 @@ export type WatchlistItem = typeof watchlistItems.$inferSelect;
 
 export type InsertBreach = z.infer<typeof insertBreachSchema>;
 export type BreachIncident = typeof breachIncidents.$inferSelect;
+
+export const insertIcsAdvisorySchema = createInsertSchema(cisaIcsAdvisories).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertIcsAdvisory = z.infer<typeof insertIcsAdvisorySchema>;
+export type IcsAdvisory = typeof cisaIcsAdvisories.$inferSelect;
 
 export const insertNewsletterSchema = createInsertSchema(newsletterSubscriptions).omit({
   id: true,
