@@ -56,7 +56,7 @@ export default function Dashboard() {
           
           <div className="relative z-10 p-8 max-w-2xl">
             <Badge className="mb-4 bg-primary/20 text-primary border-primary/50 hover:bg-primary/30" data-testid="badge-threat-level">
-              <span className="w-2 h-2 rounded-full bg-primary mr-2 animate-pulse"></span>
+              <span className="w-2 h-2 rounded-full bg-primary mr-2 animate-pulse motion-reduce:animate-none"></span>
               LIVE THREAT LEVEL: ELEVATED
             </Badge>
             <h1 className="text-4xl font-display font-bold text-white mb-2 tracking-wide">
@@ -66,12 +66,8 @@ export default function Dashboard() {
               Real-time threat monitoring backed by expert consulting. We help small to medium-sized businesses build proactive defenses and respond decisively when incidents occur.
             </p>
             <div className="flex gap-4">
-              <Button 
-                className="bg-primary hover:bg-primary/90 text-white font-bold" 
-                data-testid="button-view-incidents"
-                onClick={() => window.location.href = '/ransomware'}
-              >
-                VIEW LATEST INCIDENTS
+              <Button className="bg-primary hover:bg-primary/90 text-white font-bold" data-testid="button-view-incidents" asChild>
+                <a href="/ransomware">VIEW LATEST INCIDENTS</a>
               </Button>
               <Button 
                 variant="outline" 
@@ -80,7 +76,7 @@ export default function Dashboard() {
                 disabled={refreshMutation.isPending}
                 data-testid="button-refresh-data"
               >
-                <RefreshCw className={`h-4 w-4 mr-2 ${refreshMutation.isPending ? 'animate-spin' : ''}`} />
+                <RefreshCw className={`h-4 w-4 mr-2 ${refreshMutation.isPending ? 'animate-spin motion-reduce:animate-none' : ''}`} />
                 REFRESH DATA
               </Button>
             </div>
@@ -109,7 +105,7 @@ export default function Dashboard() {
               { title: "Malicious URLs", value: stats?.maliciousUrls || 0, change: "Active", icon: Link2, color: "text-yellow-500" },
               { title: "CISA KEV", value: stats?.cisaKevCount || 0, change: "Exploited", icon: AlertTriangle, color: "text-red-400" },
             ].map((stat, i) => (
-              <Card key={i} className={`border-white/5 bg-card/50 backdrop-blur-sm hover:border-primary/30 card-hover animate-fade-in stagger-${Math.min(i + 1, 5)}`} data-testid={`card-stat-${i}`}>
+              <Card key={i} className={`border-white/5 bg-card/50 backdrop-blur-sm hover:border-primary/30 card-hover animate-fade-in motion-reduce:animate-none stagger-${Math.min(i + 1, 5)}`} data-testid={`card-stat-${i}`}>
                 <CardContent className="p-4">
                   <div className="flex justify-between items-start mb-3">
                     <div className={`p-1.5 rounded-lg bg-background border border-white/5 ${stat.color}`}>
@@ -120,7 +116,7 @@ export default function Dashboard() {
                     </Badge>
                   </div>
                   <div className="space-y-0.5">
-                    <h3 className="text-2xl font-display font-bold text-white" data-testid={`text-stat-value-${i}`}>{stat.value}</h3>
+                    <h3 className="text-2xl font-display font-bold text-white" data-testid={`text-stat-value-${i}`} style={{ fontVariantNumeric: 'tabular-nums' }}>{stat.value}</h3>
                     <p className="text-xs text-muted-foreground font-medium">{stat.title}</p>
                   </div>
                 </CardContent>
@@ -206,7 +202,7 @@ export default function Dashboard() {
                 ))
               ) : cves.length > 0 ? (
                 cves.slice(0, 4).map((cve) => (
-                  <div key={cve.id} className="group flex items-center justify-between p-3 rounded-lg border border-transparent hover:border-white/10 hover:bg-white/5 transition-all" data-testid={`card-cve-${cve.cveId}`}>
+                  <div key={cve.id} className="group flex items-center justify-between p-3 rounded-lg border border-transparent hover:border-white/10 hover:bg-white/5 transition-colors" data-testid={`card-cve-${cve.cveId}`}>
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-white group-hover:text-secondary transition-colors">{cve.cveId}</span>
@@ -219,6 +215,7 @@ export default function Dashboard() {
                       size="icon" 
                       className="h-8 w-8 text-muted-foreground hover:text-white"
                       onClick={() => window.open(`https://nvd.nist.gov/vuln/detail/${cve.cveId}`, '_blank')}
+                      aria-label="View CVE details"
                     >
                       <ArrowUpRight className="h-4 w-4" />
                     </Button>
@@ -227,8 +224,8 @@ export default function Dashboard() {
               ) : (
                 <p className="text-sm text-muted-foreground text-center py-4">No CVEs loaded yet. Click refresh to fetch data.</p>
               )}
-              <Button variant="ghost" className="w-full text-xs text-muted-foreground hover:text-primary" onClick={() => window.location.href = '/exploits'}>
-                VIEW ALL EXPLOITS
+              <Button variant="ghost" className="w-full text-xs text-muted-foreground hover:text-primary" asChild>
+                <a href="/exploits">VIEW ALL EXPLOITS</a>
               </Button>
             </CardContent>
           </Card>
@@ -241,14 +238,8 @@ export default function Dashboard() {
               <CardTitle className="font-display">Recent Ransomware Incidents</CardTitle>
               <CardDescription>Live feed from dark web monitoring and victim sites.</CardDescription>
             </div>
-            <Button 
-              variant="outline" 
-              className="border-white/10 hover:bg-white/5 text-xs" 
-              data-testid="button-export-csv"
-              onClick={() => window.location.href = '/support'}
-            >
-              <ExternalLink className="h-3 w-3 mr-2" />
-              EXPORT CSV (PRO)
+            <Button variant="outline" className="border-white/10 hover:bg-white/5 text-xs" data-testid="button-export-csv" asChild>
+              <a href="/support"><ExternalLink className="h-3 w-3 mr-2" aria-hidden="true" />EXPORT CSV (PRO)</a>
             </Button>
           </CardHeader>
           <CardContent>
@@ -279,7 +270,7 @@ export default function Dashboard() {
                   <tbody>
                     {ransomware.map((incident) => (
                       <tr key={incident.id} className="border-b border-white/5 hover:bg-white/5 transition-colors" data-testid={`row-ransomware-${incident.id}`}>
-                        <td className="px-6 py-4 font-mono text-xs">{incident.discoveredAt ? new Date(incident.discoveredAt).toLocaleDateString() : 'N/A'}</td>
+                        <td className="px-6 py-4 font-mono text-xs">{incident.discoveredAt ? new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(incident.discoveredAt)) : 'N/A'}</td>
                         <td className="px-6 py-4 font-medium text-white">{incident.victim}</td>
                         <td className="px-6 py-4 text-primary font-bold">{incident.groupName}</td>
                         <td className="px-6 py-4">{incident.sector}</td>

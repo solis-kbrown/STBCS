@@ -123,13 +123,13 @@ export default function CheckoutPage() {
           </Button>
           <div className="flex items-center gap-4 text-xs text-zinc-500">
             <span className="flex items-center gap-1">
-              <Lock className="h-3 w-3 text-green-500" /> SSL Encrypted
+              <Lock className="h-3 w-3 text-green-500" aria-hidden="true" /> SSL Encrypted
             </span>
             <span className="flex items-center gap-1">
-              <Shield className="h-3 w-3 text-green-500" /> PCI Compliant
+              <Shield className="h-3 w-3 text-green-500" aria-hidden="true" /> PCI Compliant
             </span>
             <span className="flex items-center gap-1">
-              <CreditCard className="h-3 w-3 text-green-500" /> Powered by Stripe
+              <CreditCard className="h-3 w-3 text-green-500" aria-hidden="true" /> Powered by Stripe
             </span>
           </div>
         </div>

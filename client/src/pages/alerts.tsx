@@ -302,7 +302,7 @@ export default function Alerts() {
                             <div className="flex items-center gap-4 text-xs text-muted-foreground">
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
-                                {notif.createdAt ? new Date(notif.createdAt).toLocaleString() : 'Unknown'}
+                                {notif.createdAt ? new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(notif.createdAt)) : 'Unknown'}
                               </span>
                               {notif.severity && (
                                 <Badge className={`text-xs ${getSeverityColor(notif.severity)}`}>
@@ -349,10 +349,12 @@ export default function Alerts() {
                     </SelectContent>
                   </Select>
                   <Input
-                    placeholder={`Enter ${WATCHLIST_TYPES.find(t => t.value === newWatchItem.type)?.label.toLowerCase() || 'value'} to watch...`}
+                    placeholder={`Enter ${WATCHLIST_TYPES.find(t => t.value === newWatchItem.type)?.label.toLowerCase() || 'value'} to watch\u2026`}
                     value={newWatchItem.value}
                     onChange={(e) => setNewWatchItem(prev => ({ ...prev, value: e.target.value }))}
                     className="flex-1 bg-background/50 border-white/10"
+                    name="watchlist-value"
+                    autoComplete="off"
                     data-testid="input-watchlist-value"
                     onKeyDown={(e) => e.key === 'Enter' && handleAddWatchItem()}
                   />
@@ -432,7 +434,7 @@ export default function Alerts() {
                                 </Badge>
                               )}
                               <span className="text-xs text-muted-foreground">
-                                Added {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : 'Unknown'}
+                                Added {item.createdAt ? new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(item.createdAt)) : 'Unknown'}
                               </span>
                             </div>
                           </div>
@@ -445,6 +447,7 @@ export default function Alerts() {
                                 ? "text-blue-400 hover:bg-blue-500/10" 
                                 : "text-muted-foreground hover:bg-muted/10"}
                               title={item.emailOnMatch ? "Disable email alerts" : "Enable email alerts"}
+                              aria-label={item.emailOnMatch ? "Disable email alerts" : "Enable email alerts"}
                               data-testid={`button-toggle-email-${item.id}`}
                             >
                               {item.emailOnMatch ? <Mail className="h-4 w-4" /> : <MailX className="h-4 w-4" />}
@@ -458,6 +461,7 @@ export default function Alerts() {
                                   ? "text-purple-400 hover:bg-purple-500/10" 
                                   : "text-muted-foreground hover:bg-muted/10"}
                                 title={item.smsOnMatch ? "Disable SMS alerts" : "Enable SMS alerts (Business)"}
+                                aria-label={item.smsOnMatch ? "Disable SMS alerts" : "Enable SMS alerts"}
                                 data-testid={`button-toggle-sms-${item.id}`}
                               >
                                 {item.smsOnMatch ? <MessageSquare className="h-4 w-4" /> : <MessageSquareOff className="h-4 w-4" />}
@@ -466,8 +470,9 @@ export default function Alerts() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              onClick={() => handleDeleteWatchItem(item.id)}
+                              onClick={() => { if (window.confirm('Remove this item from your watchlist?')) handleDeleteWatchItem(item.id); }}
                               className="text-destructive hover:bg-destructive/10"
+                              aria-label="Delete watchlist item"
                               data-testid={`button-delete-watchlist-${item.id}`}
                             >
                               <Trash2 className="h-4 w-4" />
@@ -487,10 +492,13 @@ export default function Alerts() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search breaches by name, domain, or description..."
+                  placeholder="Search breaches by name, domain, or description\u2026"
                   value={breachSearch}
                   onChange={(e) => setBreachSearch(e.target.value)}
                   className="pl-10 bg-background/50 border-white/10"
+                  name="breach-search"
+                  autoComplete="off"
+                  aria-label="Search breaches"
                   data-testid="input-breach-search"
                 />
               </div>
@@ -559,7 +567,7 @@ export default function Alerts() {
                               </div>
                             )}
                             <span className="text-xs text-muted-foreground">
-                              {breach.breachDate ? new Date(breach.breachDate).toLocaleDateString() : 'Date unknown'}
+                              {breach.breachDate ? new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(breach.breachDate)) : 'Date unknown'}
                             </span>
                           </div>
                         </div>

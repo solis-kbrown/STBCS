@@ -39,7 +39,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
             <div className="flex items-center gap-2 mb-3">
-              <Shield className="h-5 w-5 text-primary" />
+              <Shield aria-hidden="true" className="h-5 w-5 text-primary" />
               <span className="font-display font-bold text-lg text-primary">STBCS</span>
             </div>
             <p className="text-sm text-muted-foreground mb-4 max-w-md">
@@ -48,7 +48,7 @@ export default function Footer() {
             
             <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mb-4 max-w-md">
               <p className="text-xs text-primary font-bold mb-1 flex items-center gap-1">
-                <Phone className="h-3 w-3" /> EMERGENCY HOTLINE
+                <Phone aria-hidden="true" className="h-3 w-3" /> EMERGENCY HOTLINE
               </p>
               <a 
                 href="tel:+18557821987" 
@@ -60,7 +60,7 @@ export default function Footer() {
               <p className="text-xs text-muted-foreground mt-1">24/7 Incident Response</p>
             </div>
             <div className="flex items-center gap-2 text-xs text-muted-foreground">
-              <Globe className="h-3 w-3" />
+              <Globe aria-hidden="true" className="h-3 w-3" />
               <span>stbcybersecurity.com</span>
             </div>
           </div>
@@ -70,27 +70,27 @@ export default function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <a href="tel:+18557821987" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-call-footer">
-                  <Phone className="h-3 w-3" /> (855) STB-1987
+                  <Phone aria-hidden="true" className="h-3 w-3" /> (855) STB-1987
                 </a>
               </li>
               <li>
                 <a href="sms:+18557821987" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-sms-footer">
-                  <MessageSquare className="h-3 w-3" /> Text Us
+                  <MessageSquare aria-hidden="true" className="h-3 w-3" /> Text Us
                 </a>
               </li>
               <li>
                 <a href="mailto:info@stbcybersecurity.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-info">
-                  <Mail className="h-3 w-3" /> info@stbcybersecurity.com
+                  <Mail aria-hidden="true" className="h-3 w-3" /> info@stbcybersecurity.com
                 </a>
               </li>
               <li>
                 <a href="mailto:sales@stbcybersecurity.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-sales">
-                  <Mail className="h-3 w-3" /> sales@stbcybersecurity.com
+                  <Mail aria-hidden="true" className="h-3 w-3" /> sales@stbcybersecurity.com
                 </a>
               </li>
               <li>
                 <a href="mailto:support@stbcybersecurity.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-support">
-                  <Mail className="h-3 w-3" /> support@stbcybersecurity.com
+                  <Mail aria-hidden="true" className="h-3 w-3" /> support@stbcybersecurity.com
                 </a>
               </li>
             </ul>
@@ -116,14 +116,17 @@ export default function Footer() {
             <form onSubmit={handleNewsletterSubscribe} className="w-full md:w-auto space-y-2">
               <div className="flex items-center gap-2">
                 <div className="relative flex-1 md:w-64">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Mail aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <input
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="Enter your email…"
                     value={newsletterEmail}
                     onChange={(e) => setNewsletterEmail(e.target.value)}
                     required
-                    className="w-full pl-9 pr-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30"
+                    name="email"
+                    autoComplete="email"
+                    spellCheck={false}
+                    className="w-full pl-9 pr-3 py-2 bg-zinc-900 border border-zinc-700 rounded-lg text-sm text-white placeholder:text-zinc-500 focus-visible:outline-none focus-visible:border-orange-500/50 focus-visible:ring-1 focus-visible:ring-orange-500/30"
                     data-testid="input-newsletter-email"
                   />
                 </div>
@@ -170,19 +173,19 @@ export default function Footer() {
         <div className="border-t border-white/5 mt-4 pt-6 space-y-4">
           <div className="flex flex-wrap justify-center gap-6 text-[11px] text-zinc-500">
             <span className="flex items-center gap-1.5">
-              <Lock className="h-3.5 w-3.5 text-green-500" />
+              <Lock aria-hidden="true" className="h-3.5 w-3.5 text-green-500" />
               <span>SSL/TLS Encrypted</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <CreditCard className="h-3.5 w-3.5 text-green-500" />
+              <CreditCard aria-hidden="true" className="h-3.5 w-3.5 text-green-500" />
               <span>Payments by Stripe</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <ShieldCheck className="h-3.5 w-3.5 text-green-500" />
+              <ShieldCheck aria-hidden="true" className="h-3.5 w-3.5 text-green-500" />
               <span>HTTPS Enforced</span>
             </span>
             <span className="flex items-center gap-1.5">
-              <Shield className="h-3.5 w-3.5 text-green-500" />
+              <Shield aria-hidden="true" className="h-3.5 w-3.5 text-green-500" />
               <span>Data Protected</span>
             </span>
           </div>

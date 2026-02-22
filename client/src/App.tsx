@@ -37,8 +37,8 @@ function PageLoader() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-center space-y-4">
-        <Loader2 className="h-10 w-10 animate-spin text-primary mx-auto" />
-        <p className="text-muted-foreground text-sm">Loading...</p>
+        <Loader2 className="h-10 w-10 animate-spin motion-reduce:animate-none text-primary mx-auto" />
+        <p className="text-muted-foreground text-sm">Loading…</p>
       </div>
     </div>
   );

@@ -157,9 +157,11 @@ export default function Ransomware() {
             <Button 
               className="bg-primary hover:bg-primary/90" 
               data-testid="button-report-incident"
-              onClick={() => window.location.href = 'mailto:info@stbcybersecurity.com?subject=Ransomware%20Incident%20Report&body=Please%20provide%20details%20about%20the%20ransomware%20incident.'}
+              asChild
             >
-              Report Incident
+              <a href="mailto:info@stbcybersecurity.com?subject=Ransomware%20Incident%20Report&body=Please%20provide%20details%20about%20the%20ransomware%20incident.">
+                Report Incident
+              </a>
             </Button>
           </div>
         </div>
@@ -170,7 +172,7 @@ export default function Ransomware() {
               <Card className="border-white/5 bg-card/40">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <Target className="h-3.5 w-3.5 text-red-400" />
+                    <Target className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
                     <span className="text-[10px] text-zinc-400">Total Victims</span>
                   </div>
                   <p className="text-xl font-bold text-white" data-testid="text-total-incidents">{(analytics.totalVictims || 0).toLocaleString()}</p>
@@ -179,7 +181,7 @@ export default function Ransomware() {
               <Card className="border-white/5 bg-card/40">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <Users className="h-3.5 w-3.5 text-orange-400" />
+                    <Users className="h-3.5 w-3.5 text-orange-400" aria-hidden="true" />
                     <span className="text-[10px] text-zinc-400">Groups Tracked</span>
                   </div>
                   <p className="text-xl font-bold text-white" data-testid="text-active-groups">{analytics.totalGroups || 0}</p>
@@ -188,7 +190,7 @@ export default function Ransomware() {
               <Card className="border-white/5 bg-card/40">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <TrendingUp className="h-3.5 w-3.5 text-green-400" />
+                    <TrendingUp className="h-3.5 w-3.5 text-green-400" aria-hidden="true" />
                     <span className="text-[10px] text-zinc-400">Active (30d)</span>
                   </div>
                   <p className="text-xl font-bold text-white" data-testid="text-last-30-days">{analytics.activeGroupsLast30d || 0}</p>
@@ -198,7 +200,7 @@ export default function Ransomware() {
               <Card className="border-red-500/20 bg-red-950/20">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <Target className="h-3.5 w-3.5 text-red-500 animate-pulse" />
+                    <Target className="h-3.5 w-3.5 text-red-500 animate-pulse" aria-hidden="true" />
                     <span className="text-[10px] text-red-300">New Today</span>
                   </div>
                   <p className="text-xl font-bold text-red-400" data-testid="text-new-today">{analytics.newToday || 0}</p>
@@ -208,7 +210,7 @@ export default function Ransomware() {
               <Card className="border-orange-500/20 bg-orange-950/20">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <BarChart3 className="h-3.5 w-3.5 text-orange-400" />
+                    <BarChart3 className="h-3.5 w-3.5 text-orange-400" aria-hidden="true" />
                     <span className="text-[10px] text-orange-300">This Week</span>
                   </div>
                   <p className="text-xl font-bold text-orange-400" data-testid="text-new-week">{analytics.newThisWeek || 0}</p>
@@ -218,7 +220,7 @@ export default function Ransomware() {
               <Card className="border-white/5 bg-card/40">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <MapPin className="h-3.5 w-3.5 text-yellow-400" />
+                    <MapPin className="h-3.5 w-3.5 text-yellow-400" aria-hidden="true" />
                     <span className="text-[10px] text-zinc-400">Countries Hit</span>
                   </div>
                   <p className="text-xl font-bold text-white" data-testid="text-countries-hit">{analytics.totalCountries || analytics.topCountries?.length || 0}</p>
@@ -227,7 +229,7 @@ export default function Ransomware() {
               <Card className="border-white/5 bg-card/40">
                 <CardContent className="p-3">
                   <div className="flex items-center gap-1.5 mb-1">
-                    <BarChart3 className="h-3.5 w-3.5 text-cyan-400" />
+                    <BarChart3 className="h-3.5 w-3.5 text-cyan-400" aria-hidden="true" />
                     <span className="text-[10px] text-zinc-400">Daily Avg</span>
                   </div>
                   <p className="text-xl font-bold text-white" data-testid="text-daily-avg">{analytics.avgDailyAttacks || 0}</p>
@@ -240,7 +242,7 @@ export default function Ransomware() {
               <Card className="border-white/5 bg-card/40">
                 <CardContent className="p-4">
                   <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-green-400" />
+                    <TrendingUp className="h-4 w-4 text-green-400" aria-hidden="true" />
                     Daily Attack Activity (Last 30 Days)
                   </h3>
                   <div className="flex items-end gap-[2px] h-32">
@@ -273,13 +275,16 @@ export default function Ransomware() {
               <Card className="border-white/5 bg-card/40">
                 <CardContent className="p-4">
                   <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                    <Users className="h-4 w-4 text-orange-400" />
+                    <Users className="h-4 w-4 text-orange-400" aria-hidden="true" />
                     Top 10 Most Active Groups
                   </h3>
                   <div className="space-y-2">
                     {(analytics.topGroups || []).slice(0, 10).map((g: { name: string; victims: number }, i: number) => (
                       <div key={g.name} className="flex items-center justify-between group cursor-pointer hover:bg-white/5 rounded px-2 py-1 transition-colors"
+                        role="link"
+                        tabIndex={0}
                         onClick={() => setLocation(`/group/${toSlug(g.name)}`)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setLocation(`/group/${toSlug(g.name)}`); } }}
                         data-testid={`row-top-group-${i}`}
                       >
                         <div className="flex items-center gap-2">
@@ -304,7 +309,7 @@ export default function Ransomware() {
               <Card className="border-white/5 bg-card/40">
                 <CardContent className="p-4">
                   <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                    <MapPin className="h-4 w-4 text-yellow-400" />
+                    <MapPin className="h-4 w-4 text-yellow-400" aria-hidden="true" />
                     Top Targeted Countries
                   </h3>
                   <div className="space-y-2">
@@ -335,7 +340,7 @@ export default function Ransomware() {
                 <Card className="border-white/5 bg-card/40">
                   <CardContent className="p-4">
                     <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                      <Building2 className="h-4 w-4 text-blue-400" />
+                      <Building2 className="h-4 w-4 text-blue-400" aria-hidden="true" />
                       Top Targeted Sectors
                     </h3>
                     <div className="space-y-2">
@@ -365,7 +370,7 @@ export default function Ransomware() {
                 <Card className="border-white/5 bg-card/40">
                   <CardContent className="p-4">
                     <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-green-400" />
+                      <TrendingUp className="h-4 w-4 text-green-400" aria-hidden="true" />
                       Monthly Attack Trend
                     </h3>
                     <div className="flex items-end gap-1 h-32">
@@ -395,7 +400,7 @@ export default function Ransomware() {
               <Card className="border-white/5 bg-card/40">
                 <CardContent className="p-4">
                   <h3 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
-                    <Globe className="h-4 w-4 text-cyan-400" />
+                    <Globe className="h-4 w-4 text-cyan-400" aria-hidden="true" />
                     Intelligence Sources
                   </h3>
                   <div className="flex flex-wrap gap-2">
@@ -415,10 +420,13 @@ export default function Ransomware() {
           <CardContent className="p-4 space-y-3">
             <div className="flex flex-col md:flex-row gap-3 items-stretch">
               <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Input 
-                  placeholder="Search victims, groups, countries... (press Enter)" 
+                  name="search"
+                  placeholder="Search victims, groups, countries\u2026 (press Enter)" 
                   className="pl-10 bg-background/50 border-white/10 h-10"
+                  autoComplete="off"
+                  aria-label="Search ransomware incidents"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleSearch}
@@ -585,7 +593,7 @@ export default function Ransomware() {
         {/* Search Results Info */}
         {activeSearch && (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Search className="h-4 w-4" />
+            <Search className="h-4 w-4" aria-hidden="true" />
             <span>Search results for "{activeSearch}" - {incidents.length} results found</span>
           </div>
         )}
@@ -658,7 +666,7 @@ export default function Ransomware() {
                         )}
                         <span className="flex items-center gap-1">
                           <span className="w-2 h-2 rounded-full bg-white/20"></span>
-                          {incident.discoveredAt ? new Date(incident.discoveredAt).toLocaleDateString() : 'N/A'}
+                          {incident.discoveredAt ? new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(incident.discoveredAt)) : 'N/A'}
                         </span>
                         {incident.country && (
                           <span className="flex items-center gap-1">

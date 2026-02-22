@@ -103,14 +103,17 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               <div className="space-y-2">
                 <Label htmlFor="login-username" className="text-zinc-300">Username or Email</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                  <User aria-hidden="true" className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
                   <Input
                     id="login-username"
-                    placeholder="Enter username or email"
+                    placeholder="Enter username or email…"
                     value={loginForm.username}
                     onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
                     className="pl-10 bg-zinc-800 border-zinc-700 text-white"
                     required
+                    name="username"
+                    autoComplete="username"
+                    spellCheck={false}
                     data-testid="input-login-username"
                   />
                 </div>
@@ -118,15 +121,17 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               <div className="space-y-2">
                 <Label htmlFor="login-password" className="text-zinc-300">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                  <Lock aria-hidden="true" className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
                   <Input
                     id="login-password"
                     type="password"
-                    placeholder="Enter password"
+                    placeholder="Enter password…"
                     value={loginForm.password}
                     onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                     className="pl-10 bg-zinc-800 border-zinc-700 text-white"
                     required
+                    name="password"
+                    autoComplete="current-password"
                     data-testid="input-login-password"
                   />
                 </div>
@@ -147,14 +152,17 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               <div className="space-y-2">
                 <Label htmlFor="signup-username" className="text-zinc-300">Username</Label>
                 <div className="relative">
-                  <User className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                  <User aria-hidden="true" className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
                   <Input
                     id="signup-username"
-                    placeholder="Choose a username"
+                    placeholder="Choose a username…"
                     value={signupForm.username}
                     onChange={(e) => setSignupForm({ ...signupForm, username: e.target.value })}
                     className="pl-10 bg-zinc-800 border-zinc-700 text-white"
                     required
+                    name="username"
+                    autoComplete="username"
+                    spellCheck={false}
                     data-testid="input-signup-username"
                   />
                 </div>
@@ -162,15 +170,18 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               <div className="space-y-2">
                 <Label htmlFor="signup-email" className="text-zinc-300">Email</Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                  <Mail aria-hidden="true" className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
                   <Input
                     id="signup-email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="Enter your email…"
                     value={signupForm.email}
                     onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
                     className="pl-10 bg-zinc-800 border-zinc-700 text-white"
                     required
+                    name="email"
+                    autoComplete="email"
+                    spellCheck={false}
                     data-testid="input-signup-email"
                   />
                 </div>
@@ -178,15 +189,17 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               <div className="space-y-2">
                 <Label htmlFor="signup-password" className="text-zinc-300">Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                  <Lock aria-hidden="true" className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
                   <Input
                     id="signup-password"
                     type="password"
-                    placeholder="Create a password (min 8 chars)"
+                    placeholder="Create a password (min 8 chars)…"
                     value={signupForm.password}
                     onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
                     className="pl-10 bg-zinc-800 border-zinc-700 text-white"
                     required
+                    name="new-password"
+                    autoComplete="new-password"
                     data-testid="input-signup-password"
                   />
                 </div>
@@ -194,15 +207,17 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
               <div className="space-y-2">
                 <Label htmlFor="signup-confirm" className="text-zinc-300">Confirm Password</Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
+                  <Lock aria-hidden="true" className="absolute left-3 top-2.5 h-4 w-4 text-zinc-500" />
                   <Input
                     id="signup-confirm"
                     type="password"
-                    placeholder="Confirm your password"
+                    placeholder="Confirm your password…"
                     value={signupForm.confirmPassword}
                     onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
                     className="pl-10 bg-zinc-800 border-zinc-700 text-white"
                     required
+                    name="confirm-password"
+                    autoComplete="new-password"
                     data-testid="input-signup-confirm"
                   />
                 </div>

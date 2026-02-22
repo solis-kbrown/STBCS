@@ -45,12 +45,12 @@ export default function PaginationControls({
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-white/5" data-testid="pagination-controls">
       <div className="flex items-center gap-3 text-xs text-muted-foreground">
-        <span data-testid="text-pagination-info">
+        <span data-testid="text-pagination-info" style={{ fontVariantNumeric: 'tabular-nums' }}>
           {startItem}-{endItem} of {totalItems}
         </span>
         <div className="flex items-center gap-1.5">
           <span>Show</span>
-          <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
+          <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))} aria-label="Items per page">
             <SelectTrigger className="w-[70px] h-7 text-xs bg-background/50 border-white/10" data-testid="select-page-size">
               <SelectValue />
             </SelectTrigger>
@@ -72,6 +72,7 @@ export default function PaginationControls({
           onClick={() => onPageChange(1)}
           disabled={currentPage === 1}
           data-testid="button-first-page"
+          aria-label="First page"
         >
           <ChevronsLeft className="h-3.5 w-3.5" />
         </Button>
@@ -82,13 +83,14 @@ export default function PaginationControls({
           onClick={() => onPageChange(currentPage - 1)}
           disabled={currentPage === 1}
           data-testid="button-prev-page"
+          aria-label="Previous page"
         >
           <ChevronLeft className="h-3.5 w-3.5" />
         </Button>
 
         {getVisiblePages().map((page, i) =>
           page === "..." ? (
-            <span key={`ellipsis-${i}`} className="px-1 text-xs text-muted-foreground">...</span>
+            <span key={`ellipsis-${i}`} className="px-1 text-xs text-muted-foreground">…</span>
           ) : (
             <Button
               key={page}
@@ -110,6 +112,7 @@ export default function PaginationControls({
           onClick={() => onPageChange(currentPage + 1)}
           disabled={currentPage === totalPages}
           data-testid="button-next-page"
+          aria-label="Next page"
         >
           <ChevronRight className="h-3.5 w-3.5" />
         </Button>
@@ -120,6 +123,7 @@ export default function PaginationControls({
           onClick={() => onPageChange(totalPages)}
           disabled={currentPage === totalPages}
           data-testid="button-last-page"
+          aria-label="Last page"
         >
           <ChevronsRight className="h-3.5 w-3.5" />
         </Button>

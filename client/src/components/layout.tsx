@@ -85,14 +85,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <Link key={item.href} href={item.href}>
               <div 
                 className={`
-                  flex items-center gap-3 px-4 py-3 rounded-r-md transition-all duration-200 cursor-pointer group
+                  flex items-center gap-3 px-4 py-3 rounded-r-md transition-colors duration-200 cursor-pointer group
                   ${isActive 
                     ? "bg-orange-500/15 text-orange-400 border-l-2 border-orange-500" 
                     : "text-zinc-500 hover:bg-zinc-800/50 hover:text-orange-300 border-l-2 border-transparent hover:border-orange-500/50"
                   }
                 `}
               >
-                <item.icon className={`h-5 w-5 transition-colors ${isActive ? "text-orange-400" : "text-zinc-600 group-hover:text-orange-400/80"}`} />
+                <item.icon aria-hidden="true" className={`h-5 w-5 transition-colors ${isActive ? "text-orange-400" : "text-zinc-600 group-hover:text-orange-400/80"}`} />
                 <span className="font-medium">{t(item.labelKey)}</span>
                 {'isPro' in item && item.isPro && (
                   <span className="ml-auto text-[10px] font-bold bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded">PRO</span>
@@ -109,7 +109,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="p-4 border-t border-zinc-800/50 space-y-3">
         <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3">
           <p className="text-[10px] text-orange-400 font-bold mb-1 flex items-center gap-1">
-            <Phone className="h-3 w-3" /> {t('hotline.emergency')}
+            <Phone aria-hidden="true" className="h-3 w-3" /> {t('hotline.emergency')}
           </p>
           <a 
             href="tel:+18557821987" 
@@ -125,14 +125,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-colors"
               data-testid="button-call-sidebar"
             >
-              <Phone className="h-3 w-3" /> {t('hotline.callNow')}
+              <Phone aria-hidden="true" className="h-3 w-3" /> {t('hotline.callNow')}
             </a>
             <a 
               href="sms:+18557821987" 
               className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-colors"
               data-testid="button-sms-sidebar"
             >
-              <MessageSquare className="h-3 w-3" /> {t('hotline.textUs')}
+              <MessageSquare aria-hidden="true" className="h-3 w-3" /> {t('hotline.textUs')}
             </a>
           </div>
         </div>
@@ -148,14 +148,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             href="mailto:info@stbcybersecurity.com" 
             className="flex items-center gap-2 text-xs text-zinc-500 hover:text-orange-400 transition-colors"
           >
-            <Mail className="h-3 w-3" />
+            <Mail aria-hidden="true" className="h-3 w-3" />
             <span>info@stbcybersecurity.com</span>
           </a>
           <a 
             href="mailto:support@stbcybersecurity.com" 
             className="flex items-center gap-2 text-xs text-zinc-500 hover:text-orange-400 transition-colors"
           >
-            <Mail className="h-3 w-3" />
+            <Mail aria-hidden="true" className="h-3 w-3" />
             <span>support@stbcybersecurity.com</span>
           </a>
         </div>
@@ -190,17 +190,20 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           {/* Header */}
           <header className="h-16 border-b border-border bg-background/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-50">
             <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(true)}>
+              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
                 <Menu className="h-5 w-5" />
               </Button>
               <div className="relative hidden sm:block w-96">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
-                  placeholder="Search CVEs, Groups, Incidents... (Press Enter)" 
+                  placeholder="Search CVEs, Groups, Incidents… (Press Enter)" 
                   className="pl-10 bg-sidebar-accent border-input focus:border-primary/50 transition-colors"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyDown={handleSearchKeyDown}
+                  name="search"
+                  autoComplete="off"
+                  aria-label="Search threats"
                   data-testid="input-header-search"
                 />
               </div>
@@ -211,9 +214,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               
               {isAuthenticated && (
                 <Link href="/alerts">
-                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-orange-400 relative">
+                  <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-orange-400 relative" aria-label="View alerts">
                     <Bell className="h-5 w-5" />
-                    <span className="absolute top-3 right-3 h-2 w-2 bg-orange-500 rounded-full animate-pulse"></span>
+                    <span className="absolute top-3 right-3 h-2 w-2 bg-orange-500 rounded-full animate-pulse motion-reduce:animate-none"></span>
                   </Button>
                 </Link>
               )}

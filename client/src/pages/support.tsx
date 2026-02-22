@@ -162,7 +162,7 @@ export default function SupportPage() {
         <div className="text-center space-y-4">
           <div className="inline-flex items-center justify-center gap-2">
             <div className="p-3 bg-orange-500/10 rounded-xl">
-              <Heart className="h-8 w-8 text-orange-400 fill-orange-400/30" />
+              <Heart className="h-8 w-8 text-orange-400 fill-orange-400/30" aria-hidden="true" />
             </div>
           </div>
           <h1 className="text-4xl font-display font-bold tracking-tight text-white">Support STBCS</h1>
@@ -176,7 +176,7 @@ export default function SupportPage() {
         <div className="grid md:grid-cols-3 gap-6 py-6">
           <Card className="bg-zinc-900/50 border-zinc-800">
             <CardContent className="pt-6 text-center space-y-2">
-              <Shield className="h-10 w-10 mx-auto text-orange-400" />
+              <Shield className="h-10 w-10 mx-auto text-orange-400" aria-hidden="true" />
               <h3 className="font-bold text-white">Free Security Tools</h3>
               <p className="text-sm text-zinc-400">
                 Your support keeps our security tools free for researchers, students, and small businesses worldwide.
@@ -185,7 +185,7 @@ export default function SupportPage() {
           </Card>
           <Card className="bg-zinc-900/50 border-zinc-800">
             <CardContent className="pt-6 text-center space-y-2">
-              <Users className="h-10 w-10 mx-auto text-blue-400" />
+              <Users className="h-10 w-10 mx-auto text-blue-400" aria-hidden="true" />
               <h3 className="font-bold text-white">Community Building</h3>
               <p className="text-sm text-zinc-400">
                 We're building a network of security professionals sharing knowledge to protect everyone.
@@ -194,7 +194,7 @@ export default function SupportPage() {
           </Card>
           <Card className="bg-zinc-900/50 border-zinc-800">
             <CardContent className="pt-6 text-center space-y-2">
-              <Zap className="h-10 w-10 mx-auto text-yellow-400" />
+              <Zap className="h-10 w-10 mx-auto text-yellow-400" aria-hidden="true" />
               <h3 className="font-bold text-white">New Development</h3>
               <p className="text-sm text-zinc-400">
                 Funding goes directly toward developing new threat intelligence features and integrations.
@@ -213,7 +213,7 @@ export default function SupportPage() {
           <Card className="max-w-xl mx-auto bg-zinc-900/50 border-zinc-800">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
-                <Heart className="h-5 w-5 text-orange-400" />
+                <Heart className="h-5 w-5 text-orange-400" aria-hidden="true" />
                 Make a Donation
               </CardTitle>
               <CardDescription className="text-zinc-400">
@@ -248,10 +248,12 @@ export default function SupportPage() {
                   <span className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500">$</span>
                   <Input
                     id="custom-amount"
+                    name="custom-amount"
                     type="number"
                     min="1"
                     max="1000"
-                    placeholder="Enter amount"
+                    placeholder="Enter amount…"
+                    autoComplete="off"
                     value={customAmount}
                     onChange={(e) => setCustomAmount(e.target.value)}
                     className="pl-8 bg-zinc-800 border-zinc-700 text-white"
@@ -265,7 +267,9 @@ export default function SupportPage() {
                   <Label htmlFor="donor-name" className="text-zinc-300">Name (optional)</Label>
                   <Input
                     id="donor-name"
-                    placeholder="Your name"
+                    name="donor-name"
+                    placeholder="Your name…"
+                    autoComplete="name"
                     value={donorName}
                     onChange={(e) => setDonorName(e.target.value)}
                     className="bg-zinc-800 border-zinc-700 text-white"
@@ -276,8 +280,11 @@ export default function SupportPage() {
                   <Label htmlFor="donor-email" className="text-zinc-300">Email (optional)</Label>
                   <Input
                     id="donor-email"
+                    name="donor-email"
                     type="email"
-                    placeholder="your@email.com"
+                    placeholder="Enter your email…"
+                    autoComplete="email"
+                    spellCheck={false}
                     value={donorEmail}
                     onChange={(e) => setDonorEmail(e.target.value)}
                     className="bg-zinc-800 border-zinc-700 text-white"
@@ -310,12 +317,12 @@ export default function SupportPage() {
                 disabled={!donationAgreed}
                 data-testid="button-donate"
               >
-                <Heart className="h-5 w-5 mr-2" />
+                <Heart className="h-5 w-5 mr-2" aria-hidden="true" />
                 Donate {customAmount ? `$${customAmount}` : `$${(selectedAmount / 100).toFixed(2)}`}
               </Button>
 
               <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
-                <Lock className="h-3 w-3" />
+                <Lock className="h-3 w-3" aria-hidden="true" />
                 <span>Payments are processed securely by Stripe. We never store your payment information.</span>
               </div>
             </CardContent>
@@ -363,7 +370,7 @@ export default function SupportPage() {
                   <ul className="space-y-2">
                     {tier.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-zinc-300">
-                        <Check className="h-4 w-4 text-green-400 shrink-0 mt-0.5" />
+                        <Check className="h-4 w-4 text-green-400 shrink-0 mt-0.5" aria-hidden="true" />
                         <span>{feature}</span>
                       </li>
                     ))}
@@ -375,7 +382,7 @@ export default function SupportPage() {
                     disabled={!subscriptionAgreed}
                     data-testid={`button-subscribe-${tier.name.toLowerCase()}`}
                   >
-                    <CreditCard className="h-4 w-4 mr-2" />
+                    <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />
                     Subscribe
                   </Button>
                 </CardContent>
@@ -404,7 +411,7 @@ export default function SupportPage() {
           </div>
 
           <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
-            <Lock className="h-3 w-3" />
+            <Lock className="h-3 w-3" aria-hidden="true" />
             <span>All subscriptions are billed monthly through Stripe. You can cancel anytime. We never store your payment information.</span>
           </div>
         </TabsContent>
@@ -436,10 +443,10 @@ export default function SupportPage() {
                 to continue providing a service like no other.
               </p>
               <div className="flex flex-wrap justify-center gap-4 text-xs text-zinc-500 pt-2">
-                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" /> Hosting & Infrastructure</span>
-                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" /> API & Data Feeds</span>
-                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" /> Development & Research</span>
-                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" /> Security Operations</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" aria-hidden="true" /> Hosting & Infrastructure</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" aria-hidden="true" /> API & Data Feeds</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" aria-hidden="true" /> Development & Research</span>
+                <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" aria-hidden="true" /> Security Operations</span>
               </div>
             </div>
           </CardContent>
@@ -448,7 +455,7 @@ export default function SupportPage() {
         <Card className="border-white/5 bg-card/50">
           <CardHeader>
             <CardTitle className="text-xl text-white flex items-center gap-2">
-              <Heart className="h-5 w-5 text-red-400" />
+              <Heart className="h-5 w-5 text-red-400" aria-hidden="true" />
               Our Supporters
             </CardTitle>
             <CardDescription>Thank you to everyone who helps keep STBCS running</CardDescription>
