@@ -44,8 +44,9 @@ function PageLoader() {
   return (
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-center space-y-4">
-        <Loader2 className="h-10 w-10 animate-spin motion-reduce:animate-none text-primary mx-auto" />
-        <p className="text-muted-foreground text-sm">Loading…</p>
+        <img src="/brand/icon-shield.png" alt="STBCS" className="h-16 w-16 mx-auto animate-pulse drop-shadow-[0_0_12px_rgba(0,200,255,0.4)]" />
+        <Loader2 className="h-6 w-6 animate-spin motion-reduce:animate-none text-primary mx-auto" />
+        <p className="text-muted-foreground text-sm font-display tracking-wider">Loading…</p>
       </div>
     </div>
   );

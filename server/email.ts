@@ -113,16 +113,23 @@ export function generateAlertEmail(params: {
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #1a1a1a; border-radius: 8px; border: 1px solid #333;">
           <tr>
-            <td style="padding: 30px 40px; border-bottom: 1px solid #333;">
+            <td style="padding: 30px 40px; border-bottom: 1px solid #333; background: linear-gradient(135deg, #1a1a1a 0%, #0f172a 100%);">
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td>
-                    <h1 style="margin: 0; color: #fff; font-size: 24px; font-weight: bold;">
-                      <span style="color: #3b82f6;">STB</span> Cybersecurity
-                    </h1>
-                    <p style="margin: 5px 0 0; color: #888; font-size: 12px;">Stop The Bleed - Threat Intelligence</p>
+                  <td style="vertical-align: middle;">
+                    <table cellpadding="0" cellspacing="0"><tr>
+                      <td style="vertical-align: middle; padding-right: 12px;">
+                        <img src="https://stbcybersecurity.com/brand/icon-shield.png" alt="STBCS" width="40" height="40" style="display: block; border: 0;" />
+                      </td>
+                      <td style="vertical-align: middle;">
+                        <h1 style="margin: 0; color: #fff; font-size: 22px; font-weight: bold;">
+                          <span style="color: #06b6d4;">STB</span> Cybersecurity
+                        </h1>
+                        <p style="margin: 3px 0 0; color: #888; font-size: 11px; letter-spacing: 1px;">STOP THE BLEED &bull; THREAT INTELLIGENCE</p>
+                      </td>
+                    </tr></table>
                   </td>
-                  <td align="right">
+                  <td align="right" style="vertical-align: middle;">
                     <span style="background-color: ${severityColor}; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold;">
                       ${params.severity || typeLabel.toUpperCase()}
                     </span>
@@ -204,11 +211,18 @@ export function generateWeeklyDigestEmail(params: {
         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #1a1a1a; border-radius: 8px; border: 1px solid #333;">
           <tr>
             <td style="padding: 30px 40px; border-bottom: 1px solid #333; background: linear-gradient(135deg, #1a1a1a 0%, #0f172a 100%);">
-              <h1 style="margin: 0; color: #fff; font-size: 24px; font-weight: bold;">
-                <span style="color: #3b82f6;">STB</span> Cybersecurity
-              </h1>
-              <p style="margin: 5px 0 0; color: #888; font-size: 12px;">Weekly Security Digest</p>
-              <p style="margin: 15px 0 0; color: #666; font-size: 14px;">${params.weekStart} - ${params.weekEnd}</p>
+              <table cellpadding="0" cellspacing="0"><tr>
+                <td style="vertical-align: middle; padding-right: 14px;">
+                  <img src="https://stbcybersecurity.com/brand/icon-shield.png" alt="STBCS" width="48" height="48" style="display: block; border: 0;" />
+                </td>
+                <td style="vertical-align: middle;">
+                  <h1 style="margin: 0; color: #fff; font-size: 22px; font-weight: bold;">
+                    <span style="color: #06b6d4;">STB</span> Cybersecurity
+                  </h1>
+                  <p style="margin: 3px 0 0; color: #888; font-size: 11px; letter-spacing: 1px;">STOP THE BLEED &bull; WEEKLY SECURITY DIGEST</p>
+                  <p style="margin: 10px 0 0; color: #666; font-size: 13px;">${params.weekStart} - ${params.weekEnd}</p>
+                </td>
+              </tr></table>
             </td>
           </tr>
           
@@ -470,15 +484,22 @@ export async function sendAccountLockoutEmail(
       <td align="center">
         <table width="600" cellpadding="0" cellspacing="0" style="background-color: #1a1a1a; border-radius: 8px; border: 1px solid #333;">
           <tr>
-            <td style="padding: 30px 40px; border-bottom: 1px solid #333;">
+            <td style="padding: 30px 40px; border-bottom: 1px solid #333; background: linear-gradient(135deg, #1a1a1a 0%, #0f172a 100%);">
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td>
-                    <h1 style="margin: 0; color: #fff; font-size: 24px; font-weight: bold;">
-                      <span style="color: #f97316;">STBCS</span> Security Alert
-                    </h1>
+                  <td style="vertical-align: middle;">
+                    <table cellpadding="0" cellspacing="0"><tr>
+                      <td style="vertical-align: middle; padding-right: 12px;">
+                        <img src="https://stbcybersecurity.com/brand/icon-shield.png" alt="STBCS" width="40" height="40" style="display: block; border: 0;" />
+                      </td>
+                      <td style="vertical-align: middle;">
+                        <h1 style="margin: 0; color: #fff; font-size: 22px; font-weight: bold;">
+                          <span style="color: #f97316;">STBCS</span> Security Alert
+                        </h1>
+                      </td>
+                    </tr></table>
                   </td>
-                  <td align="right">
+                  <td align="right" style="vertical-align: middle;">
                     <span style="background-color: #dc2626; color: white; padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: bold;">
                       ACCOUNT LOCKED
                     </span>

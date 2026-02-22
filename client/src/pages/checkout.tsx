@@ -134,7 +134,8 @@ export default function CheckoutPage() {
           </div>
         </div>
 
-        <div className="text-center space-y-2">
+        <div className="text-center space-y-3">
+          <img src="/brand/icon-shield.png" alt="STBCS" className="h-16 w-16 mx-auto drop-shadow-[0_0_10px_rgba(0,200,255,0.3)]" data-testid="img-checkout-logo" />
           <h1 className="text-2xl font-bold text-white" data-testid="text-checkout-title">
             {type === "donation" ? "Complete Your Donation" : `Subscribe to ${tierName || "STBCS"}`}
           </h1>

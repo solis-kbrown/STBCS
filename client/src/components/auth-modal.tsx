@@ -87,7 +87,10 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800">
         <DialogHeader>
-          <DialogTitle className="text-xl font-display text-orange-400">STBCS Account</DialogTitle>
+          <div className="flex items-center gap-3 mb-1">
+            <img src="/brand/icon-shield.png" alt="STBCS" className="h-10 w-10 drop-shadow-[0_0_6px_rgba(0,200,255,0.3)]" />
+            <DialogTitle className="text-xl font-display text-orange-400">STBCS Account</DialogTitle>
+          </div>
           <DialogDescription className="text-zinc-400">
             Sign in or create an account to access Pro features.
           </DialogDescription>

@@ -62,10 +62,11 @@ export default function CheckoutReturnPage() {
         <div className="max-w-2xl mx-auto py-12 space-y-6 animate-in fade-in duration-500">
           <Card className={isDonation ? "bg-pink-500/10 border-pink-500/30" : "bg-green-500/10 border-green-500/30"} data-testid="card-payment-success">
             <CardContent className="pt-6 text-center space-y-4">
+              <img src="/brand/icon-shield.png" alt="STBCS" className="h-16 w-16 mx-auto drop-shadow-[0_0_12px_rgba(0,200,255,0.4)]" data-testid="img-success-logo" />
               {isDonation ? (
-                <Heart className="h-12 w-12 text-pink-400 mx-auto" />
+                <Heart className="h-8 w-8 text-pink-400 mx-auto" />
               ) : (
-                <CheckCircle2 className="h-12 w-12 text-green-400 mx-auto" />
+                <CheckCircle2 className="h-8 w-8 text-green-400 mx-auto" />
               )}
               <h2 className="text-2xl font-bold text-white" data-testid="text-success-title">
                 {isDonation ? "Thank You for Your Donation!" : "Welcome to STBCS!"}

@@ -38,9 +38,9 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="md:col-span-2">
-            <div className="flex items-center gap-2 mb-3">
-              <Shield aria-hidden="true" className="h-5 w-5 text-primary" />
-              <span className="font-display font-bold text-lg text-primary">STBCS</span>
+            <div className="flex items-center gap-3 mb-3">
+              <img src="/brand/icon-shield.png" alt="STBCS" className="h-10 w-10 drop-shadow-[0_0_6px_rgba(0,200,255,0.3)]" />
+              <span className="font-display font-bold text-lg text-primary">STB Cybersecurity</span>
             </div>
             <p className="text-sm text-muted-foreground mb-4 max-w-md">
               Your trusted partner in cybersecurity. We help small to medium-sized businesses stay ahead of threats with proactive security consulting and rapid incident response when it matters most. Whether you're strengthening defenses or navigating a crisis, our experts are here for you.

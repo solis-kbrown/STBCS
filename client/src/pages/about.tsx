@@ -34,11 +34,7 @@ export default function AboutPage() {
     <Layout>
       <div className="space-y-8 animate-in fade-in duration-500" data-testid="about-page">
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center gap-2">
-            <div className="p-3 bg-orange-500/10 rounded-xl">
-              <Shield className="h-8 w-8 text-orange-400" />
-            </div>
-          </div>
+          <img src="/brand/logo-main.png" alt="STB Cybersecurity Labs" className="h-32 w-auto mx-auto drop-shadow-[0_0_14px_rgba(0,200,255,0.3)]" data-testid="img-about-logo" />
           <h1 className="text-4xl font-display font-bold tracking-tight text-white" data-testid="text-about-title">
             We Fight Cyberattacks for a Living
           </h1>

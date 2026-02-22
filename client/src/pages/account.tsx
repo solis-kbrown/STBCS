@@ -76,7 +76,7 @@ export default function AccountPage() {
     return (
       <Layout>
         <div className="max-w-lg mx-auto text-center py-20 space-y-4">
-          <Shield className="h-16 w-16 mx-auto text-zinc-600" />
+          <img src="/brand/icon-shield.png" alt="STBCS" className="h-20 w-20 mx-auto drop-shadow-[0_0_10px_rgba(0,200,255,0.3)] opacity-70" />
           <h1 className="text-2xl font-bold text-white">Sign in to view your account</h1>
           <p className="text-zinc-400">You need to be logged in to access your account settings and subscription details.</p>
           <Button
