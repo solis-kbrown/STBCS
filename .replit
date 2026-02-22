@@ -45,6 +45,4 @@ integrations = ["resend:1.0.0", "stripe:2.0.0"]
 [userenv]
 
 [userenv.shared]
-ADMIN_STATS_KEY = "stbcs-x7k9m2p4-admin-stats"
 CUSTOM_DOMAIN = "stbcybersecurity.com"
-INTERNAL_API_KEY = "79b8039b76aa9ecc09dc9579b7d9fa56ec8658d7207c6358226cd2ef27c9e970"
