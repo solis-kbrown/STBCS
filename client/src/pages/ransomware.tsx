@@ -582,10 +582,11 @@ export default function Ransomware() {
 
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span data-testid="text-result-count">
-                {incidents.length} incidents{incidents.length !== rawIncidents.length ? ` (filtered from ${rawIncidents.length})` : ''}
-                {activeFilterCount > 0 && ` | ${activeFilterCount} filter${activeFilterCount > 1 ? 's' : ''} active`}
+                {activeFilterCount > 0 || selectedGroup
+                  ? `${incidents.length} incidents (filtered from ${(data?.total || 0).toLocaleString()}) | ${activeFilterCount} filter${activeFilterCount > 1 ? 's' : ''} active`
+                  : `${(data?.total || 0).toLocaleString()} incidents`
+                }
               </span>
-              <span>{data?.total || 0} total in database</span>
             </div>
           </CardContent>
         </Card>

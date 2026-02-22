@@ -164,10 +164,11 @@ export default function News() {
 
             <div className="flex items-center justify-between text-xs text-muted-foreground">
               <span data-testid="text-result-count">
-                {news.length} articles{news.length !== rawNews.length ? ` (filtered from ${rawNews.length})` : ''}
-                {activeFilterCount > 0 && ` | ${activeFilterCount} filter${activeFilterCount > 1 ? 's' : ''} active`}
+                {activeFilterCount > 0
+                  ? `${news.length} articles (filtered from ${(data?.total || 0).toLocaleString()}) | ${activeFilterCount} filter${activeFilterCount > 1 ? 's' : ''} active`
+                  : `${(data?.total || 0).toLocaleString()} articles`
+                }
               </span>
-              <span>{data?.total || 0} total in database</span>
             </div>
           </CardContent>
         </Card>

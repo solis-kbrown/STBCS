@@ -289,7 +289,7 @@ export default function ThreatFeeds() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{maliciousIps.length} IPs{maliciousIps.length !== rawIps.length ? ` (filtered from ${rawIps.length})` : ''}</span>
+                  <span>{(ipSearch || ipSourceFilter !== "all" || ipSort !== "newest") ? `${maliciousIps.length} IPs (filtered from ${(ipsData?.total || 0).toLocaleString()})` : `${(ipsData?.total || 0).toLocaleString()} IPs`}</span>
                   {(ipSearch || ipSourceFilter !== "all" || ipSort !== "newest") && (
                     <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-white px-2" onClick={() => { setIpSearch(""); setIpSort("newest"); setIpSourceFilter("all"); setIpPage(1); }} data-testid="button-clear-ip-filters">
                       <RotateCcw className="h-3 w-3 mr-1" />
@@ -420,7 +420,7 @@ export default function ThreatFeeds() {
                   </div>
                 </div>
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
-                  <span>{maliciousUrls.length} URLs{maliciousUrls.length !== rawUrls.length ? ` (filtered from ${rawUrls.length})` : ''}</span>
+                  <span>{(urlSearch || urlSourceFilter !== "all" || urlStatusFilter !== "all" || urlSort !== "newest") ? `${maliciousUrls.length} URLs (filtered from ${(urlsData?.total || 0).toLocaleString()})` : `${(urlsData?.total || 0).toLocaleString()} URLs`}</span>
                   {(urlSearch || urlSourceFilter !== "all" || urlStatusFilter !== "all" || urlSort !== "newest") && (
                     <Button variant="ghost" size="sm" className="h-6 text-xs text-muted-foreground hover:text-white px-2" onClick={() => { setUrlSearch(""); setUrlSort("newest"); setUrlSourceFilter("all"); setUrlStatusFilter("all"); setUrlPage(1); }} data-testid="button-clear-url-filters">
                       <RotateCcw className="h-3 w-3 mr-1" />
@@ -538,7 +538,7 @@ export default function ThreatFeeds() {
                   </div>
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  {cisaKev.length} entries{cisaKev.length !== rawKev.length ? ` (filtered from ${rawKev.length})` : ''}
+                  {(kevSearch || kevSort !== "newest" || kevVendorFilter !== "all") ? `${cisaKev.length} entries (filtered from ${(kevData?.total || 0).toLocaleString()})` : `${(kevData?.total || 0).toLocaleString()} entries`}
                 </div>
                 {kevLoading ? (
                   <div className="space-y-2">
