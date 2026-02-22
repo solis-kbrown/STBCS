@@ -67,6 +67,18 @@ async function initStripe() {
 // Initialize Stripe on startup
 initStripe();
 
+// Domain canonicalization - redirect www and secondary domains to primary domain
+const PRIMARY_DOMAIN = process.env.CUSTOM_DOMAIN || 'stbcybersecurity.com';
+const SECONDARY_DOMAINS = ['www.stbcybersecurity.com', 'stoptbcs.com', 'www.stoptbcs.com'];
+app.use((req, res, next) => {
+  const host = req.get('host')?.split(':')[0];
+  if (host && (SECONDARY_DOMAINS.includes(host) || host === `www.${PRIMARY_DOMAIN}`)) {
+    const redirectUrl = `https://${PRIMARY_DOMAIN}${req.originalUrl}`;
+    return res.redirect(301, redirectUrl);
+  }
+  next();
+});
+
 // Security Headers Middleware (US compliance: NIST SP 800-53, OWASP best practices)
 app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');

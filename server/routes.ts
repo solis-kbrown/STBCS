@@ -139,7 +139,7 @@ export async function registerRoutes(
           return true;
         })
         .map((a: any) => `  <url>
-    <loc>https://www.stbcybersecurity.com/group/${encodeURIComponent(a.name)}</loc>
+    <loc>https://stbcybersecurity.com/group/${encodeURIComponent(a.name)}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
@@ -153,91 +153,98 @@ export async function registerRoutes(
         http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
 
   <url>
-    <loc>https://www.stbcybersecurity.com/</loc>
+    <loc>https://stbcybersecurity.com/</loc>
     <lastmod>${today}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <url>
-    <loc>https://www.stbcybersecurity.com/ransomware</loc>
+    <loc>https://stbcybersecurity.com/ransomware</loc>
     <lastmod>${today}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.stbcybersecurity.com/exploits</loc>
+    <loc>https://stbcybersecurity.com/exploits</loc>
     <lastmod>${today}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.stbcybersecurity.com/tools</loc>
+    <loc>https://stbcybersecurity.com/tools</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.stbcybersecurity.com/search</loc>
+    <loc>https://stbcybersecurity.com/search</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.9</priority>
   </url>
 
   <url>
-    <loc>https://www.stbcybersecurity.com/threat-feeds</loc>
+    <loc>https://stbcybersecurity.com/threat-feeds</loc>
     <lastmod>${today}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.stbcybersecurity.com/news</loc>
+    <loc>https://stbcybersecurity.com/news</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.stbcybersecurity.com/support</loc>
+    <loc>https://stbcybersecurity.com/support</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://www.stbcybersecurity.com/alerts</loc>
+    <loc>https://stbcybersecurity.com/alerts</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
 
   <url>
-    <loc>https://www.stbcybersecurity.com/api-docs</loc>
+    <loc>https://stbcybersecurity.com/api-docs</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://www.stbcybersecurity.com/privacy</loc>
+    <loc>https://stbcybersecurity.com/privacy</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <url>
-    <loc>https://www.stbcybersecurity.com/terms</loc>
+    <loc>https://stbcybersecurity.com/terms</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 
   <url>
-    <loc>https://www.stbcybersecurity.com/logos</loc>
+    <loc>https://stbcybersecurity.com/sms-terms</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/logos</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
@@ -256,7 +263,7 @@ ${groupEntries}
 
   app.get("/robots.txt", (_req: Request, res: Response) => {
     const txt = `# STB Cybersecurity - robots.txt
-# https://www.stbcybersecurity.com
+# https://stbcybersecurity.com
 
 User-agent: *
 Allow: /
@@ -269,10 +276,13 @@ Allow: /search
 Allow: /support
 Allow: /privacy
 Allow: /terms
+Allow: /sms-terms
 Allow: /api-docs
 Allow: /alerts
 Allow: /logos
 Allow: /group/
+
+Disallow: /account
 
 Disallow: /api/
 Disallow: /admin/
@@ -281,7 +291,7 @@ Disallow: /style-preview
 
 Crawl-delay: 1
 
-Sitemap: https://www.stbcybersecurity.com/sitemap.xml
+Sitemap: https://stbcybersecurity.com/sitemap.xml
 
 User-agent: Googlebot
 Allow: /
@@ -304,9 +314,9 @@ Contact: mailto:info@stbcybersecurity.com
 Contact: tel:+1-855-782-1987
 Expires: 2027-02-10T00:00:00.000Z
 Preferred-Languages: en
-Canonical: https://www.stbcybersecurity.com/.well-known/security.txt
-Policy: https://www.stbcybersecurity.com/privacy
-Hiring: https://www.stbcybersecurity.com/support
+Canonical: https://stbcybersecurity.com/.well-known/security.txt
+Policy: https://stbcybersecurity.com/privacy
+Hiring: https://stbcybersecurity.com/support
 `;
     res.setHeader("Content-Type", "text/plain; charset=utf-8");
     res.setHeader("Cache-Control", "public, max-age=86400");
@@ -2400,8 +2410,8 @@ Hiring: https://www.stbcybersecurity.com/support
         return res.status(400).json({ error: "Invalid product" });
       }
       
-      const customDomain = process.env.CUSTOM_DOMAIN;
-      const baseUrl = customDomain ? `https://${customDomain}` : `https://${req.get('host')}`;
+      const customDomain = process.env.CUSTOM_DOMAIN || 'stbcybersecurity.com';
+      const baseUrl = `https://${customDomain}`;
       
       const session = await stripeService.createCheckoutSession({
         priceId,
@@ -2435,8 +2445,8 @@ Hiring: https://www.stbcybersecurity.com/support
       }
       
       const { amount, customerEmail, donorName } = parsed.data;
-      const customDomain = process.env.CUSTOM_DOMAIN;
-      const baseUrl = customDomain ? `https://${customDomain}` : `https://${req.get('host')}`;
+      const customDomain = process.env.CUSTOM_DOMAIN || 'stbcybersecurity.com';
+      const baseUrl = `https://${customDomain}`;
       
       const session = await stripeService.createDonationCheckout({
         amount,
@@ -2465,11 +2475,8 @@ Hiring: https://www.stbcybersecurity.com/support
         return res.status(400).json({ error: "No active subscription found" });
       }
       
-      const customDomain = process.env.CUSTOM_DOMAIN;
-      if (!customDomain) {
-        console.error("CUSTOM_DOMAIN not set - required for Stripe portal redirects");
-      }
-      const baseUrl = customDomain ? `https://${customDomain}` : `https://${req.get('host')}`;
+      const customDomain = process.env.CUSTOM_DOMAIN || 'stbcybersecurity.com';
+      const baseUrl = `https://${customDomain}`;
       
       const session = await stripeService.createCustomerPortalSession(
         req.user.stripeCustomerId,
