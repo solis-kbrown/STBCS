@@ -201,6 +201,15 @@ export function useStats() {
   });
 }
 
+export function useLastRefresh() {
+  return useQuery<{ lastRefresh: string | null; timestamp: number; nextRefreshIn: number | null }>({
+    queryKey: ["/api/last-refresh"],
+    queryFn: () => fetchApi("/api/last-refresh"),
+    staleTime: 30000,
+    refetchInterval: 60000,
+  });
+}
+
 export function useTrends(days = 30) {
   return useQuery<ThreatTrends>({
     queryKey: ["/api/trends", days],

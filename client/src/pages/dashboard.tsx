@@ -1,6 +1,6 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
-import { useStats, useCves, useRansomware, useRefreshData, useTrends } from "@/lib/api";
+import { useStats, useCves, useRansomware, useRefreshData, useTrends, useLastRefresh } from "@/lib/api";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +54,7 @@ export default function Dashboard() {
   const { data: cvesData, isLoading: cvesLoading } = useCves(5);
   const { data: ransomwareData, isLoading: ransomwareLoading } = useRansomware(5);
   const { data: trends, isLoading: trendsLoading } = useTrends(14);
+  const { data: refreshInfo } = useLastRefresh();
   const refreshMutation = useRefreshData();
 
   const cves = cvesData?.data || [];
@@ -144,6 +145,25 @@ export default function Dashboard() {
             ))
           )}
         </div>
+
+        {refreshInfo?.lastRefresh && (
+          <div className="flex items-center justify-end gap-2 text-xs text-zinc-500" data-testid="text-last-refresh">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse motion-reduce:animate-none"></span>
+            Feeds updated {(() => {
+              const diff = Date.now() - (refreshInfo.timestamp || 0);
+              const mins = Math.floor(diff / 60000);
+              if (mins < 1) return "just now";
+              if (mins < 60) return `${mins}m ago`;
+              return `${Math.floor(mins / 60)}h ${mins % 60}m ago`;
+            })()}
+            <span className="text-zinc-600">|</span>
+            Next refresh in {(() => {
+              const ms = refreshInfo.nextRefreshIn || 0;
+              const mins = Math.max(0, Math.ceil(ms / 60000));
+              return mins <= 0 ? "soon" : `${mins}m`;
+            })()}
+          </div>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <AnimatedSection animation="fade-up" className="col-span-2">

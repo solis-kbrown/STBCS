@@ -3646,12 +3646,16 @@ export async function checkIPWithAbuseIPDB(ip: string): Promise<{
 // ============================================
 let refreshInterval: NodeJS.Timeout | null = null;
 
+let lastRefreshTimestamp = 0;
+export function getLastRefreshTimestamp(): number { return lastRefreshTimestamp; }
+
 export function startDataRefreshScheduler(intervalMinutes = 15): void {
   log.info(`Starting threat intel refresh every ${intervalMinutes} minutes (40+ sources)`);
   
   const fetchAndInvalidate = async () => {
     try {
       await fetchAllData();
+      lastRefreshTimestamp = Date.now();
     } finally {
       try {
         const { cache } = await import("./cache");

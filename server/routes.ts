@@ -446,6 +446,16 @@ Hiring: https://stbcybersecurity.com/support
   // Apply rate limiting to all API routes
   app.use("/api", generalLimiter);
 
+  // CORS headers for Public API v1 (allow external consumers)
+  app.use("/api/v1", (req, res, next) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader("Access-Control-Allow-Methods", "GET, OPTIONS");
+    res.setHeader("Access-Control-Allow-Headers", "X-API-Key, Authorization, Content-Type");
+    res.setHeader("Access-Control-Expose-Headers", "X-RateLimit-Limit, X-RateLimit-Remaining, X-Daily-Quota-Remaining");
+    if (req.method === "OPTIONS") { res.status(204).end(); return; }
+    next();
+  });
+
   // Mount Public API v1 (API key authenticated, separate from session auth)
   app.use("/api", apiV1Router);
 
@@ -659,6 +669,16 @@ Hiring: https://stbcybersecurity.com/support
     } catch (error) {
       console.error("Error fetching stats:", error);
       res.status(500).json({ error: "Failed to fetch dashboard stats" });
+    }
+  });
+
+  app.get("/api/last-refresh", (req: Request, res: Response) => {
+    try {
+      const { getLastRefreshTimestamp } = require("./scrapers");
+      const ts = getLastRefreshTimestamp();
+      res.json({ lastRefresh: ts ? new Date(ts).toISOString() : null, timestamp: ts, nextRefreshIn: ts ? Math.max(0, 15 * 60 * 1000 - (Date.now() - ts)) : null });
+    } catch {
+      res.json({ lastRefresh: null, timestamp: 0, nextRefreshIn: null });
     }
   });
 
