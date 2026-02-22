@@ -992,7 +992,7 @@ export type DarkWebFinding = typeof darkWebFindings.$inferSelect;
 
 export const dailyThreatStats = pgTable("daily_threat_stats", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  date: text("date").notNull(),
+  date: text("date").notNull().unique(),
   totalCves: integer("total_cves").default(0),
   newCvesToday: integer("new_cves_today").default(0),
   criticalCves: integer("critical_cves").default(0),
