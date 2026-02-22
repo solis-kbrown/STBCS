@@ -258,6 +258,48 @@ export async function registerRoutes(
   </url>
 
   <url>
+    <loc>https://stbcybersecurity.com/ioc-search</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/risk-score</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/ics-advisories</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>hourly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/breaches</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/threat-actors</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/ransomware-payments</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
     <loc>https://stbcybersecurity.com/alerts</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
@@ -328,6 +370,13 @@ Allow: /terms
 Allow: /sms-terms
 Allow: /api-docs
 Allow: /alerts
+Allow: /ioc-search
+Allow: /risk-score
+Allow: /ics-advisories
+Allow: /breaches
+Allow: /threat-actors
+Allow: /ransomware-payments
+Allow: /about
 Allow: /logos
 Allow: /group/
 
@@ -1030,14 +1079,14 @@ Hiring: https://stbcybersecurity.com/support
             type: "indicator",
             spec_version: "2.1",
             id: `indicator--url-${Buffer.from(url.url).toString("hex").slice(0, 36)}`,
-            created: url.lastSeen || new Date().toISOString(),
-            modified: url.lastSeen || new Date().toISOString(),
+            created: (url.reportedAt || url.lastOnline || new Date()).toISOString?.() || new Date().toISOString(),
+            modified: (url.reportedAt || url.lastOnline || new Date()).toISOString?.() || new Date().toISOString(),
             name: `Malicious URL: ${url.url.slice(0, 80)}`,
             description: `${url.threatType || "Malware"} URL from ${url.source || "threat feed"}`,
             indicator_types: ["malicious-activity"],
             pattern: `[url:value = '${safeUrl}']`,
             pattern_type: "stix",
-            valid_from: url.lastSeen || new Date().toISOString(),
+            valid_from: (url.reportedAt || url.lastOnline || new Date()).toISOString?.() || new Date().toISOString(),
             labels: [url.threatType || "malicious", url.source || "unknown"].filter(Boolean),
           });
         }
@@ -1051,7 +1100,7 @@ Hiring: https://stbcybersecurity.com/support
             spec_version: "2.1",
             id: `vulnerability--${cve.cveId.toLowerCase().replace(/[^a-z0-9-]/g, "-")}`,
             created: cve.publishedDate || new Date().toISOString(),
-            modified: cve.lastModifiedDate || new Date().toISOString(),
+            modified: cve.lastModified || new Date().toISOString(),
             name: cve.cveId,
             description: cve.description?.slice(0, 500) || `Vulnerability ${cve.cveId}`,
             external_references: [
@@ -2286,7 +2335,7 @@ Hiring: https://stbcybersecurity.com/support
         malwareVerdict,
         malwareFamily,
         detectionRate,
-        tags: [...new Set(tags)].slice(0, 15),
+        tags: Array.from(new Set(tags)).slice(0, 15),
         sources,
         checkedAt: new Date().toISOString(),
       });

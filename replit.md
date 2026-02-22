@@ -44,6 +44,12 @@ Preferred communication style: Simple, everyday language.
 ### Features
 - **Threat Intelligence**: Aggregates NVD, CISA KEV, URLhaus, OpenPhish, and many more, with 15-minute refresh cycles.
 - **Security Tools**: Includes IP/Domain WHOIS, Port Scanner, Threat Database Check, Shodan Integration, Password Strength Checker, Subnet Calculator, Encoding/Decoding, Email Header Analyzer, SSL Certificate Checker, Hash Analyzer, and advanced threat lookups.
+- **IOC Search** (`/ioc-search`): Unified Indicator of Compromise search across 40+ feeds. Detects IP/domain/hash/URL/CVE types automatically, correlates results from multiple sources, and displays overall risk score.
+- **Cyber Risk Score Calculator** (`/risk-score`): Free 12-question SMB security assessment. Generates letter grade (A+ to F), category breakdowns, weak area identification, prioritized recommendations, and downloadable report.
+- **ICS-CERT Advisories** (`/ics-advisories`): CISA ICS-CERT industrial control system advisories with severity/vendor filtering and statistics dashboard.
+- **MITRE ATT&CK Mapping**: Threat actor profiles include mapped ATT&CK techniques and tactic breakdown visualization. Static mapping in `shared/mitre-attack.ts`.
+- **STIX 2.1 Export** (`/api/export/stix`): Export threat data (IPs, URLs, CVEs, CISA KEV) as STIX 2.1 bundles. Supports type filtering and download mode.
+- **Data Export**: CSV and JSON export buttons on breaches and threat-actors pages via `useExportData` hook.
 - **Communication Systems**: Newsletter system, Quo Phone System integration for emergency hotline and SMS, and email notifications for alerts and digests.
 - **Pro Tier Features**: User authentication, subscription management (Stripe integration), watchlist system with real-time alerts (email/SMS), two-way SMS messaging (Business exclusive), breach database, tiered API rate limiting, data export, and advanced search/scanning capabilities.
 - **Security & US Compliance**: Implements robust security headers, httpOnly/secure cookies, API logging controls, strict rate limiting, and comprehensive consent flows/legal pages (CCPA/CPRA, COPPA, CAN-SPAM).

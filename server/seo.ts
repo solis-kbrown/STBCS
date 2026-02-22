@@ -68,6 +68,30 @@ const PAGE_META: Record<string, PageMeta> = {
     title: 'Brand Assets & Logo Gallery | STB Cybersecurity',
     description: 'Official STB Cybersecurity brand assets, logo designs, and visual identity gallery for media and partners.',
   },
+  '/ioc-search': {
+    title: 'IOC Search | STB Cybersecurity',
+    description: 'Search Indicators of Compromise across 40+ threat intelligence feeds. Check IPs, domains, file hashes, URLs, and CVEs against multiple threat databases instantly.',
+  },
+  '/risk-score': {
+    title: 'Cyber Risk Score Calculator | STB Cybersecurity',
+    description: 'Free cybersecurity risk assessment for small and medium businesses. Answer 12 questions to get your security grade, category scores, and actionable recommendations.',
+  },
+  '/ics-advisories': {
+    title: 'ICS-CERT Advisories | STB Cybersecurity',
+    description: 'CISA ICS-CERT industrial control system advisories. Track critical infrastructure vulnerabilities, SCADA/ICS threats, and operational technology security alerts.',
+  },
+  '/breaches': {
+    title: 'Data Breach Database | STB Cybersecurity',
+    description: 'Search the breach database for compromised credentials and data exposures. Check if your email or domain has been involved in known data breaches.',
+  },
+  '/threat-actors': {
+    title: 'Threat Actor Profiles | STB Cybersecurity',
+    description: 'Comprehensive threat actor database with MITRE ATT&CK mappings, TTPs, targeting patterns, and historical attack data for ransomware groups and APTs.',
+  },
+  '/ransomware-payments': {
+    title: 'Ransomware Payment Tracker | STB Cybersecurity',
+    description: 'Track ransomware payment trends, cryptocurrency flows, and financial impact analysis of major ransomware campaigns and threat actor groups.',
+  },
   '/messages': {
     title: 'Messages | STB Cybersecurity',
     description: 'Secure two-way SMS messaging with STB Cybersecurity for Business subscribers. Direct communication for incident response and threat alerts.',
