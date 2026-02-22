@@ -426,7 +426,7 @@ Hiring: https://stbcybersecurity.com/support
         httpOnly: true,
         secure: true,
         sameSite: "lax",
-        maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         path: "/",
       });
       
@@ -448,6 +448,23 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
+  // Per-account login attempt tracking (brute force protection)
+  const LOGIN_MAX_ATTEMPTS = 5;
+  const LOGIN_LOCKOUT_MS = 15 * 60 * 1000; // 15 minutes
+  const loginAttempts = new Map<string, { count: number; lastAttempt: number; lockedUntil: number }>();
+
+  // Cleanup stale lockout entries every 30 minutes
+  setInterval(() => {
+    const now = Date.now();
+    const keysToDelete: string[] = [];
+    loginAttempts.forEach((data, key) => {
+      if (now - data.lastAttempt > LOGIN_LOCKOUT_MS * 2) {
+        keysToDelete.push(key);
+      }
+    });
+    keysToDelete.forEach(k => loginAttempts.delete(k));
+  }, 30 * 60 * 1000);
+
   // Login
   app.post("/api/auth/login", authLimiter, async (req: Request, res: Response) => {
     try {
@@ -463,14 +480,38 @@ Hiring: https://stbcybersecurity.com/support
         res.status(401).json({ error: "Invalid credentials" });
         return;
       }
+
+      // Check account lockout
+      const accountKey = user.id;
+      const attempts = loginAttempts.get(accountKey);
+      if (attempts && attempts.lockedUntil > Date.now()) {
+        const remainingMs = attempts.lockedUntil - Date.now();
+        const remainingMin = Math.ceil(remainingMs / 60000);
+        res.status(429).json({ error: `Account temporarily locked. Try again in ${remainingMin} minute${remainingMin === 1 ? '' : 's'}.` });
+        return;
+      }
       
       // Verify password
       const valid = await verifyPassword(data.password, user.password);
       if (!valid) {
+        // Track failed attempt
+        const current = loginAttempts.get(accountKey) || { count: 0, lastAttempt: 0, lockedUntil: 0 };
+        current.count++;
+        current.lastAttempt = Date.now();
+        if (current.count >= LOGIN_MAX_ATTEMPTS) {
+          current.lockedUntil = Date.now() + LOGIN_LOCKOUT_MS;
+          current.count = 0;
+          console.warn(`[Security] Account locked: ${user.username} after ${LOGIN_MAX_ATTEMPTS} failed attempts`);
+        }
+        loginAttempts.set(accountKey, current);
+
         res.status(401).json({ error: "Invalid credentials" });
         return;
       }
       
+      // Successful login — clear any failed attempts
+      loginAttempts.delete(accountKey);
+
       // Create session
       const token = generateSessionToken();
       await storage.createSession({
@@ -483,7 +524,7 @@ Hiring: https://stbcybersecurity.com/support
         httpOnly: true,
         secure: true,
         sameSite: "lax",
-        maxAge: 30 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
         path: "/",
       });
       

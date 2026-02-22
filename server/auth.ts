@@ -4,7 +4,7 @@ import { Request, Response, NextFunction } from "express";
 import { storage } from "./storage";
 
 const SALT_ROUNDS = 12;
-const SESSION_EXPIRY_DAYS = 30;
+const SESSION_EXPIRY_DAYS = 7;
 
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, SALT_ROUNDS);

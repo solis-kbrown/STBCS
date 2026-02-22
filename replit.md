@@ -100,9 +100,12 @@ Preferred communication style: Simple, everyday language.
 - **robots.txt**: Allows all public pages, disallows /api, /admin, /account, /checkout, /messages, /style-preview. Includes Googlebot and Bingbot specific rules.
 
 ### Security & US Compliance
-- **Security Headers**: CSP, HSTS (preload), X-Frame-Options DENY, X-Content-Type-Options, Referrer-Policy, Permissions-Policy. X-Powered-By disabled.
-- **Cookies**: All cookies httpOnly, secure, sameSite=lax. Session tokens never in API JSON responses.
-- **Rate Limiting**: Auth: 10/15min. General API: 100/min. Tools: 10/min (free), 60/min (pro).
-- **Consent Flows**: Signup (Terms+Privacy+age 18+), Subscriptions (Terms+Privacy+recurring billing), Donations (Terms+Privacy+non-refundable), Newsletter (Privacy consent checkbox), SMS alerts (TCPA consent with SMS Terms+Privacy), Two-way SMS messaging (consent checkbox before first message).
+- **Security Headers**: CSP (unsafe-eval removed in production), HSTS (preload), X-Frame-Options DENY, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, Cross-Origin-Opener-Policy (same-origin), Cross-Origin-Resource-Policy (same-origin), frame-ancestors none. X-Powered-By disabled.
+- **Authentication**: bcrypt (12 rounds), 12-char minimum passwords with uppercase+lowercase+number complexity requirement. Per-account lockout after 5 failed attempts (15-minute cooldown). Per-IP rate limiting (10 attempts/15 min).
+- **Sessions**: 7-day expiry, cryptographic tokens (32 bytes), httpOnly/secure/sameSite=lax cookies. Session tokens never in API JSON responses or URLs.
+- **Rate Limiting**: Auth: 10/15min. General API: 100/min. Tools: 10/min (free), 60/min (pro), 120/min (business). Live chat: 20/min.
+- **Admin/Internal APIs**: Header-only authentication (no query string keys). Dedicated INTERNAL_API_KEY required (no fallback). ADMIN_STATS_KEY required with 16+ char minimum.
+- **Error Handling**: 500-level errors return generic messages, never leak internal details. All errors logged server-side and critical errors reported to admin.
+- **Consent Flows**: Signup (Terms+Privacy+age 18+), Subscriptions (Terms+Privacy+recurring billing), Donations (Terms+Privacy+non-refundable), Newsletter (Privacy consent checkbox), SMS alerts (TCPA consent with SMS Terms+Privacy), Two-way SMS messaging (consent checkbox before first message), Live Chat (TCPA consent before chat start).
 - **Legal Pages**: Privacy Policy (CCPA/CPRA, COPPA, CAN-SPAM, SMS/TCPA, data breach 72hr, Do Not Track). Terms of Service (DMCA, SMS/TCPA, governing law, AAA arbitration, export compliance). SMS Terms & Conditions (TCPA, CTIA, STOP/HELP, carrier disclaimers, data rates, message frequency).
 - **SMS Compliance**: Dedicated /sms-terms page. TCPA express written consent required via checkbox before enabling SMS alerts or sending SMS. STOP/HELP keywords documented. Carrier liability disclaimers. "Consent not required to purchase" disclosure.

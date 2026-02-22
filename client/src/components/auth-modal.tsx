@@ -58,8 +58,13 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
       return;
     }
 
-    if (signupForm.password.length < 8) {
-      toast({ title: "Password must be at least 8 characters", variant: "destructive" });
+    if (signupForm.password.length < 12) {
+      toast({ title: "Password must be at least 12 characters", variant: "destructive" });
+      return;
+    }
+
+    if (!/[a-z]/.test(signupForm.password) || !/[A-Z]/.test(signupForm.password) || !/[0-9]/.test(signupForm.password)) {
+      toast({ title: "Password must include uppercase, lowercase, and a number", variant: "destructive" });
       return;
     }
 
@@ -193,7 +198,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
                   <Input
                     id="signup-password"
                     type="password"
-                    placeholder="Create a password (min 8 chars)…"
+                    placeholder="Min 12 chars, upper + lower + number"
                     value={signupForm.password}
                     onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
                     className="pl-10 bg-zinc-800 border-zinc-700 text-white"

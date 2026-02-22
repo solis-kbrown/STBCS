@@ -81,6 +81,7 @@ app.use((req, res, next) => {
 });
 
 // Security Headers Middleware (US compliance: NIST SP 800-53, OWASP best practices)
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 app.use((req, res, next) => {
   res.setHeader('X-Frame-Options', 'DENY');
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -88,14 +89,20 @@ app.use((req, res, next) => {
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
   res.setHeader('Permissions-Policy', 'geolocation=(), microphone=(), camera=(), payment=(self)');
   res.setHeader('Strict-Transport-Security', 'max-age=63072000; includeSubDomains; preload');
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'same-origin');
+  const scriptSrc = IS_PRODUCTION
+    ? "script-src 'self' 'unsafe-inline' https://js.stripe.com"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com";
   res.setHeader('Content-Security-Policy', [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://js.stripe.com",
+    scriptSrc,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: blob: https:",
     "connect-src 'self' https://api.stripe.com https://*.stripe.com https://r.stripe.com",
     "frame-src https://js.stripe.com https://hooks.stripe.com https://checkout.stripe.com",
+    "frame-ancestors 'none'",
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self' https://checkout.stripe.com",
@@ -204,20 +211,22 @@ app.use((req, res, next) => {
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
-    const message = err.message || "Internal Server Error";
+    const internalMessage = err.message || "Internal Server Error";
 
     console.error("Internal Server Error:", err);
     
     // Report critical server errors to admin
     if (status >= 500) {
-      reportCriticalError(err instanceof Error ? err : new Error(message), "Express Error Handler");
+      reportCriticalError(err instanceof Error ? err : new Error(internalMessage), "Express Error Handler");
     }
 
     if (res.headersSent) {
       return next(err);
     }
 
-    return res.status(status).json({ message });
+    // Never leak internal error details to clients
+    const safeMessage = status >= 500 ? "An internal error occurred. Please try again later." : internalMessage;
+    return res.status(status).json({ error: safeMessage });
   });
 
   // importantly only setup vite in development and after
