@@ -17,9 +17,9 @@ Preferred communication style: Simple, everyday language.
 - **Text**: Zinc-500 inactive, orange-400 active/accent
 
 ### Brand Assets (Feb 2026)
-- **Logo**: Hex Lock — silver chrome hexagonal shield with honeycomb mesh, padlock, cyan glow, "STBCS" + "STB Cybersecurity Labs" text
-- **Logo file (full)**: `/brand/logo-main.png` (1024x1024, clean dark bg)
-- **Icon file (shield only)**: `/brand/icon-shield.png` (1024x1024, clean dark bg)
+- **Logo**: Hex Lock — silver chrome hexagonal shield with honeycomb mesh, orange binary code inside shield, padlock, cyan glow, "STBCS" + "STB Cybersecurity" text
+- **Logo file (full)**: `/brand/logo-main.png` (1024x1024, transparent bg)
+- **Icon file (shield only)**: `/brand/icon-shield.png` (1024x1024, dark bg)
 - **Favicons**: `/brand/favicons/` (16, 32, 48, 64, 96, 128, 256px)
 - **App icons**: `/brand/app-icons/` (Apple touch icons 57-180px, Android 192/384/512px, MS 70/150/310px)
 - **Social media**: `/brand/social/og-image.png` (1200x630), `twitter-header.png` (1500x500), `email-header.png` (600x150), `pdf-letterhead.png` (2550x400)

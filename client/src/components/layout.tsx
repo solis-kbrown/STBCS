@@ -79,7 +79,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="p-5 group">
         <Link href="/">
           <div className="flex flex-col items-center cursor-pointer">
-            <img src="/brand/logo-main.png" alt="STB Cybersecurity Logo" className="h-32 w-auto rounded-lg group-hover:drop-shadow-[0_0_12px_rgba(0,200,255,0.3)] transition-all duration-300" />
+            <img src="/brand/logo-main.png" alt="STB Cybersecurity" className="h-32 w-auto rounded-lg group-hover:drop-shadow-[0_0_12px_rgba(0,200,255,0.3)] transition-all duration-300" />
           </div>
         </Link>
       </div>

@@ -160,7 +160,7 @@ export default function SupportPage() {
         </div>
 
         <div className="text-center space-y-4">
-          <img src="/brand/logo-main.png" alt="STB Cybersecurity Labs" className="h-28 w-auto mx-auto drop-shadow-[0_0_14px_rgba(0,200,255,0.3)]" data-testid="img-support-logo" />
+          <img src="/brand/logo-main.png" alt="STB Cybersecurity" className="h-28 w-auto mx-auto drop-shadow-[0_0_14px_rgba(0,200,255,0.3)]" data-testid="img-support-logo" />
           <h1 className="text-4xl font-display font-bold tracking-tight text-white">Stay Ahead of the Threats That Target Your Business</h1>
           <p className="text-xl text-zinc-400 max-w-3xl mx-auto leading-relaxed">
             Real-time alerts when ransomware groups hit your industry. Custom watchlists for the CVEs and threat actors that matter to you. Pick a plan and start monitoring in minutes.
