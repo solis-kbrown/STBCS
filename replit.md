@@ -66,6 +66,8 @@ Preferred communication style: Simple, everyday language.
 - **MITRE ATT&CK Mapping**: Threat actor profiles include mapped ATT&CK techniques and tactic breakdown visualization. Static mapping in `shared/mitre-attack.ts`.
 - **STIX 2.1 Export** (`/api/export/stix`): Export threat data (IPs, URLs, CVEs, CISA KEV) as STIX 2.1 bundles. Supports type filtering and download mode.
 - **Data Export**: CSV and JSON export buttons on breaches and threat-actors pages via `useExportData` hook.
+- **Contact Page** (`/contact`): Professional contact form with 7 category types (general, incident, consulting, sales, support, vulnerability, partnership), emergency hotline banner, response times, business hours, and contact info sidebar. Submissions stored in `contact_messages` table and forwarded via email. Rate-limited.
+- **About Page** (`/about`): Enhanced with stats grid, mission, services, platform capabilities, why-us checklist, and CTA section linking to contact page. SEO-optimized title and description.
 - **Communication Systems**: Newsletter system, Quo Phone System integration for emergency hotline and SMS, and email notifications for alerts and digests.
 - **Pro Tier Features**: User authentication, subscription management (Stripe integration), watchlist system with real-time alerts (email/SMS), two-way SMS messaging (Business exclusive), breach database, tiered API rate limiting, data export, and advanced search/scanning capabilities.
 - **Security & US Compliance**: Implements robust security headers, httpOnly/secure cookies, API logging controls, strict rate limiting, and comprehensive consent flows/legal pages (CCPA/CPRA, COPPA, CAN-SPAM).
