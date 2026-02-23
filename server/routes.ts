@@ -340,6 +340,13 @@ export async function registerRoutes(
   </url>
 
   <url>
+    <loc>https://stbcybersecurity.com/about</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
     <loc>https://stbcybersecurity.com/contact</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>

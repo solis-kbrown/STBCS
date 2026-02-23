@@ -263,6 +263,12 @@ function getH1Text(path: string, meta: PageMeta): string {
     '/terms': 'Terms of Service',
     '/sms-terms': 'SMS Terms & Conditions',
     '/logos': 'Brand Assets & Logo Gallery',
+    '/ioc-search': 'IOC Search',
+    '/risk-score': 'Cyber Risk Score Calculator',
+    '/ics-advisories': 'ICS-CERT Advisories',
+    '/breaches': 'Data Breach Database',
+    '/ransomware-payments': 'Ransomware Payment Tracker',
+    '/monitors': 'Monitoring Suite',
   };
   const cleanPath = path.split('?')[0].split('#')[0].replace(/\/$/, '') || '/';
   if (titleMap[cleanPath]) return titleMap[cleanPath];
@@ -281,8 +287,13 @@ function generateSSRContent(path: string, meta: PageMeta): string {
   const nav = `<nav aria-label="Main navigation"><ul>` +
     `<li><a href="/">Dashboard</a></li>` +
     `<li><a href="/ransomware">Ransomware Tracker</a></li>` +
+    `<li><a href="/groups">Groups & Threat Actors</a></li>` +
     `<li><a href="/exploits">Exploits & CVEs</a></li>` +
     `<li><a href="/tools">Security Tools</a></li>` +
+    `<li><a href="/ioc-search">IOC Search</a></li>` +
+    `<li><a href="/risk-score">Cyber Risk Score</a></li>` +
+    `<li><a href="/breaches">Breach Database</a></li>` +
+    `<li><a href="/ics-advisories">ICS Advisories</a></li>` +
     `<li><a href="/threat-feeds">Threat Feeds</a></li>` +
     `<li><a href="/news">Intel & News</a></li>` +
     `<li><a href="/search">Search</a></li>` +
