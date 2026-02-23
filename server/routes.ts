@@ -184,6 +184,26 @@ export async function registerRoutes(
     res.redirect(301, '/groups');
   });
 
+  app.get('/ransomware-payments', (_req: Request, res: Response) => {
+    res.redirect(301, '/ransomware?tab=payments');
+  });
+
+  app.get('/news', (_req: Request, res: Response) => {
+    res.redirect(301, '/intel?tab=news');
+  });
+
+  app.get('/threat-feeds', (_req: Request, res: Response) => {
+    res.redirect(301, '/intel?tab=threat-feeds');
+  });
+
+  app.get('/ioc-search', (_req: Request, res: Response) => {
+    res.redirect(301, '/search?tab=ioc');
+  });
+
+  app.get('/alerts', (_req: Request, res: Response) => {
+    res.redirect(301, '/monitors?tab=alerts');
+  });
+
   app.get("/sitemap.xml", async (_req: Request, res: Response) => {
     try {
       const today = new Date().toISOString().split("T")[0];
@@ -252,17 +272,17 @@ export async function registerRoutes(
   </url>
 
   <url>
-    <loc>https://stbcybersecurity.com/threat-feeds</loc>
+    <loc>https://stbcybersecurity.com/intel</loc>
     <lastmod>${today}</lastmod>
     <changefreq>hourly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <url>
-    <loc>https://stbcybersecurity.com/news</loc>
+    <loc>https://stbcybersecurity.com/monitors</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
 
   <url>
@@ -270,13 +290,6 @@ export async function registerRoutes(
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-  </url>
-
-  <url>
-    <loc>https://stbcybersecurity.com/ioc-search</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.9</priority>
   </url>
 
   <url>
@@ -300,20 +313,6 @@ export async function registerRoutes(
     <priority>0.8</priority>
   </url>
 
-
-  <url>
-    <loc>https://stbcybersecurity.com/ransomware-payments</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
-    <loc>https://stbcybersecurity.com/alerts</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
 
   <url>
     <loc>https://stbcybersecurity.com/api-docs</loc>

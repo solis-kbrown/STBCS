@@ -16,7 +16,7 @@ import {
   Wifi, WifiOff, ShieldAlert, Search, RefreshCw,
   ArrowUpRight, ArrowDownRight, Minus, ChevronRight,
   MonitorCheck, Radar, Skull, KeyRound, Server, FileWarning,
-  ExternalLink, TrendingUp, ShieldCheck, AlertCircle
+  ExternalLink, TrendingUp, ShieldCheck, AlertCircle, Bell
 } from "lucide-react";
 import {
   useMonitorSummary, useUptimeMonitors, useCreateUptimeMonitor, useDeleteUptimeMonitor,
@@ -24,7 +24,9 @@ import {
   useDarkWebFindings, useMarkFindingRead, useUptimeIncidents
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { useLocation } from "wouter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import AlertsTab from "./alerts-tab";
 
 function StatusDot({ state }: { state: string }) {
   const colors: Record<string, string> = {
@@ -771,18 +773,54 @@ function FreeTierGate() {
   );
 }
 
+function MonitorsContent() {
+  return (
+    <div className="space-y-6">
+      <OverviewPanel />
+      <Tabs defaultValue="uptime" className="w-full">
+        <TabsList className="bg-zinc-900 border border-white/10 w-full md:w-auto">
+          <TabsTrigger value="uptime" className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary" data-testid="tab-uptime">
+            <MonitorCheck className="h-4 w-4" /> Uptime
+          </TabsTrigger>
+          <TabsTrigger value="darkweb" className="flex items-center gap-2 data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400" data-testid="tab-darkweb">
+            <Radar className="h-4 w-4" /> Dark Web
+          </TabsTrigger>
+          <TabsTrigger value="incidents" className="flex items-center gap-2 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400" data-testid="tab-incidents">
+            <AlertTriangle className="h-4 w-4" /> Incidents
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="uptime" className="mt-4"><UptimeTab /></TabsContent>
+        <TabsContent value="darkweb" className="mt-4"><DarkWebTab /></TabsContent>
+        <TabsContent value="incidents" className="mt-4"><IncidentsTab /></TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
 export default function MonitorsPage() {
+  const [location, setLocation] = useLocation();
+  const searchParams = new URLSearchParams(window.location.search);
+  const activeTopTab = searchParams.get("tab") || "monitors";
+
   useDocumentTitle(
-    "Monitoring Suite | STB Cybersecurity",
-    "Real-time uptime monitoring, SSL certificate tracking, and dark web intelligence. Monitor your domains, services, and digital footprint 24/7."
+    activeTopTab === "alerts"
+      ? "Alerts & Watchlist | STB Cybersecurity"
+      : "Monitoring & Alerts | STB Cybersecurity",
+    activeTopTab === "alerts"
+      ? "Set up watchlists to track CVEs, IPs, domains, ransomware groups, and keywords. Get real-time email and SMS alerts when threats are detected."
+      : "Real-time uptime monitoring, SSL certificate tracking, and dark web intelligence. Monitor your domains, services, and digital footprint 24/7."
   );
 
-  const { data: auth, isLoading: authLoading } = useAuth();
-  const isPaid = auth?.user?.tier && auth.user.tier !== "free";
+  const { user, isLoading: authLoading } = useAuth();
+  const isPaid = user?.tier && user.tier !== "free";
+
+  const handleTopTabChange = (value: string) => {
+    setLocation(`/monitors?tab=${value}`);
+  };
 
   if (authLoading) return <Layout><div className="flex justify-center py-20"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div></Layout>;
 
-  if (!auth?.user) {
+  if (!user) {
     return (
       <Layout>
         <div className="min-h-[60vh] flex items-center justify-center">
@@ -807,22 +845,26 @@ export default function MonitorsPage() {
   return (
     <Layout>
       <div className="space-y-6 page-transition">
-        <OverviewPanel />
-        <Tabs defaultValue="uptime" className="w-full">
-          <TabsList className="bg-zinc-900 border border-white/10 w-full md:w-auto">
-            <TabsTrigger value="uptime" className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary" data-testid="tab-uptime">
-              <MonitorCheck className="h-4 w-4" /> Uptime
+        <div>
+          <h1 className="text-3xl font-display font-bold text-white mb-2">Monitoring & Alerts</h1>
+          <p className="text-zinc-400">Real-time uptime monitoring, dark web intelligence, and threat alerting — all in one place.</p>
+        </div>
+
+        <Tabs value={activeTopTab} onValueChange={handleTopTabChange} className="w-full">
+          <TabsList className="bg-zinc-900/50 border border-white/10">
+            <TabsTrigger value="monitors" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400" data-testid="tab-top-monitors">
+              <MonitorCheck className="h-4 w-4 mr-2" /> Monitors
             </TabsTrigger>
-            <TabsTrigger value="darkweb" className="flex items-center gap-2 data-[state=active]:bg-purple-500/20 data-[state=active]:text-purple-400" data-testid="tab-darkweb">
-              <Radar className="h-4 w-4" /> Dark Web
-            </TabsTrigger>
-            <TabsTrigger value="incidents" className="flex items-center gap-2 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400" data-testid="tab-incidents">
-              <AlertTriangle className="h-4 w-4" /> Incidents
+            <TabsTrigger value="alerts" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400" data-testid="tab-top-alerts">
+              <Bell className="h-4 w-4 mr-2" /> Alerts & Watchlist
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="uptime" className="mt-4"><UptimeTab /></TabsContent>
-          <TabsContent value="darkweb" className="mt-4"><DarkWebTab /></TabsContent>
-          <TabsContent value="incidents" className="mt-4"><IncidentsTab /></TabsContent>
+          <TabsContent value="monitors" className="mt-4">
+            <MonitorsContent />
+          </TabsContent>
+          <TabsContent value="alerts" className="mt-4">
+            <AlertsTab />
+          </TabsContent>
         </Tabs>
       </div>
       <Footer />

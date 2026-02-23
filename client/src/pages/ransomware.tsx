@@ -14,11 +14,20 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo, useCallback, KeyboardEvent } from "react";
 import PaginationControls from "@/components/pagination-controls";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import RansomwarePaymentsTab from "./ransomware-payments-tab";
 
 type SortOption = "newest" | "oldest" | "group-az" | "group-za" | "status";
 
 export default function Ransomware() {
-  useDocumentTitle("Ransomware Tracker | STB Cybersecurity", "Monitor active ransomware groups, victim postings, and attack analytics in real-time. Track LockBit, BlackCat, Cl0p with profiles, TTPs, and targeting data.");
+  const initialTab = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tab") || "tracker" : "tracker";
+  const [activeTab, setActiveTab] = useState(initialTab === "payments" ? "payments" : "tracker");
+  useDocumentTitle(
+    activeTab === "payments" ? "Ransomware Payments Dashboard | STB Cybersecurity" : "Ransomware Tracker | STB Cybersecurity",
+    activeTab === "payments"
+      ? "Track ransomware payment demands, bitcoin wallets, and payment statuses across threat groups. Data from publicly available leak site information."
+      : "Monitor active ransomware groups, victim postings, and attack analytics in real-time. Track LockBit, BlackCat, Cl0p with profiles, TTPs, and targeting data."
+  );
   const [selectedGroup, setSelectedGroup] = useState<string | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
   const [activeSearch, setActiveSearch] = useState("");
@@ -33,7 +42,11 @@ export default function Ransomware() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
   
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    setLocation(value === "tracker" ? "/ransomware" : `/ransomware?tab=${value}`);
+  };
   const { data, isLoading } = useRansomware(1000, 0, selectedGroup);
   const { data: groups } = useRansomwareGroups();
   const trackView = useTrackView();
@@ -149,17 +162,6 @@ export default function Ransomware() {
             <Button 
               variant="outline" 
               className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" 
-              data-testid="button-payments-dashboard"
-              asChild
-            >
-              <a href="/ransomware-payments">
-                <DollarSign className="h-4 w-4 mr-2" />
-                Payments
-              </a>
-            </Button>
-             <Button 
-              variant="outline" 
-              className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" 
               data-testid="button-export"
               onClick={() => exportMutation.mutate({ type: 'ransomware' })}
               disabled={exportMutation.isPending}
@@ -179,6 +181,22 @@ export default function Ransomware() {
           </div>
           </div>
         </AnimatedSection>
+
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="bg-zinc-900/50 border border-white/10">
+            <TabsTrigger value="tracker" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400" data-testid="tab-tracker">
+              Tracker
+            </TabsTrigger>
+            <TabsTrigger value="payments" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400" data-testid="tab-payments">
+              Payments
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="payments">
+            <RansomwarePaymentsTab />
+          </TabsContent>
+
+          <TabsContent value="tracker" className="space-y-6">
 
         {showAnalytics && analytics && (
           <div className="space-y-4" data-testid="section-analytics">
@@ -797,6 +815,10 @@ export default function Ransomware() {
             onPageSizeChange={handlePageSizeChange}
           />
         )}
+
+          </TabsContent>
+        </Tabs>
+
         <Footer />
       </div>
     </Layout>

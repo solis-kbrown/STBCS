@@ -3,11 +3,9 @@ import {
   GalleryVerticalEnd,
   Scan,
   Wrench,
-  Activity,
   ShieldOff,
   Bug,
   Satellite,
-  TrendingUp,
   Heart,
   Menu, 
   Search, 
@@ -24,7 +22,6 @@ import {
   ShieldCheck,
   MonitorCheck,
   Users,
-  DollarSign,
   Info,
   Send
 } from "lucide-react";
@@ -65,18 +62,14 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/search", labelKey: "nav.search", icon: Scan },
     { href: "/tools", labelKey: "nav.tools", icon: Wrench },
     { href: "/monitors", labelKey: "nav.monitors", icon: MonitorCheck, isPro: true },
-    { href: "/alerts", labelKey: "nav.alerts", icon: Activity, isPro: true },
     { href: "/messages", labelKey: "nav.messages", icon: MessageSquare, isBusiness: true },
     { href: "/ransomware", labelKey: "nav.ransomware", icon: ShieldOff },
-    { href: "/ransomware-payments", labelKey: "nav.ransomwarePayments", icon: DollarSign },
     { href: "/groups", labelKey: "nav.groups", icon: Users },
     { href: "/exploits", labelKey: "nav.exploits", icon: Bug },
     { href: "/breaches", labelKey: "nav.breaches", icon: Database },
     { href: "/ics-advisories", labelKey: "nav.icsAdvisories", icon: Factory },
-    { href: "/ioc-search", labelKey: "nav.iocSearch", icon: Scan },
     { href: "/risk-score", labelKey: "nav.riskScore", icon: ShieldCheck },
-    { href: "/threat-feeds", labelKey: "nav.threatFeeds", icon: Satellite },
-    { href: "/news", labelKey: "nav.news", icon: TrendingUp },
+    { href: "/intel", labelKey: "nav.intel", icon: Satellite },
     { href: "/support", labelKey: "nav.support", icon: Heart },
     { href: "/about", labelKey: "nav.about", icon: Info },
     { href: "/contact", labelKey: "nav.contact", icon: Send },
@@ -231,7 +224,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               <LanguageSelector />
               
               {isAuthenticated && (
-                <Link href="/alerts">
+                <Link href="/monitors?tab=alerts">
                   <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-orange-400 relative" aria-label="View alerts">
                     <Bell className="h-5 w-5" />
                     <span className="absolute top-3 right-3 h-2 w-2 bg-orange-500 rounded-full animate-pulse motion-reduce:animate-none"></span>
@@ -266,7 +259,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         <span>My Account</span>
                       </DropdownMenuItem>
                     </Link>
-                    <Link href="/alerts">
+                    <Link href="/monitors?tab=alerts">
                       <DropdownMenuItem className="cursor-pointer text-zinc-400 hover:text-white" data-testid="dropdown-alert-preferences">
                         <Bell className="mr-2 h-4 w-4" />
                         <span>Alert Preferences</span>

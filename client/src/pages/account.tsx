@@ -431,7 +431,7 @@ export default function AccountPage() {
               <Button
                 variant="outline"
                 className="justify-start border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-                onClick={() => setLocation("/alerts")}
+                onClick={() => setLocation("/monitors?tab=alerts")}
                 data-testid="button-go-alerts"
               >
                 <Bell className="h-4 w-4 mr-2 text-orange-400" />

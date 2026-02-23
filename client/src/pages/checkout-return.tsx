@@ -95,7 +95,7 @@ export default function CheckoutReturnPage() {
                 <span>View Account</span>
               </Button>
               <Button
-                onClick={() => navigate("/alerts")}
+                onClick={() => navigate("/monitors?tab=alerts")}
                 variant="outline"
                 className="border-zinc-700 hover:border-orange-500/50 h-auto py-4 flex-col gap-2"
                 data-testid="button-setup-alerts"

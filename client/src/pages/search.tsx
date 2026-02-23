@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
@@ -13,12 +13,34 @@ import { Search, Shield, Skull, Globe, Link2, AlertTriangle, Newspaper, Loader2,
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/lib/auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import IOCSearchTab from "./ioc-search-tab";
 
 export default function SearchPage() {
-  useDocumentTitle("Global Threat Search | STB Cybersecurity", "Search CVEs, ransomware incidents, malicious IPs, phishing URLs, threat actors, and security news. Unified threat intelligence search across 45+ feeds.");
-  const [location] = useLocation();
+  const [location, setLocation] = useLocation();
   const params = new URLSearchParams(location.split('?')[1] || '');
   const initialQuery = params.get('q') || '';
+  const initialTab = params.get('tab') === 'ioc' ? 'ioc' : 'search';
+  const [activeTab, setActiveTab] = useState(initialTab);
+
+  useDocumentTitle(
+    activeTab === 'ioc'
+      ? "IOC Lookup | STB Cybersecurity"
+      : "Global Threat Search | STB Cybersecurity",
+    activeTab === 'ioc'
+      ? "Search Indicators of Compromise across 40+ threat intelligence feeds. Check IPs, domains, hashes, URLs, and CVEs against multiple threat databases."
+      : "Search CVEs, ransomware incidents, malicious IPs, phishing URLs, threat actors, and security news. Unified threat intelligence search across 45+ feeds."
+  );
+
+  const handleTabChange = useCallback((value: string) => {
+    setActiveTab(value);
+    if (value === 'ioc') {
+      setLocation('/search?tab=ioc');
+    } else {
+      const currentParams = new URLSearchParams(location.split('?')[1] || '');
+      const q = currentParams.get('q');
+      setLocation(q ? `/search?q=${encodeURIComponent(q)}` : '/search');
+    }
+  }, [location, setLocation]);
   const { user } = useAuth();
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
@@ -95,6 +117,18 @@ export default function SearchPage() {
             Search across all threat intelligence data including CVEs, ransomware incidents, malicious IPs/URLs, and more.
           </p>
         </div>
+
+        <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+          <TabsList className="bg-zinc-900/50 border border-white/10" data-testid="tabs-page-mode">
+            <TabsTrigger value="search" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400" data-testid="tab-global-search">
+              Global Search
+            </TabsTrigger>
+            <TabsTrigger value="ioc" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400" data-testid="tab-ioc-lookup">
+              IOC Lookup
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="search" className="space-y-6 mt-6">
 
         <Card className="border-white/5 bg-card/50">
           <CardContent className="pt-6">
@@ -578,6 +612,14 @@ export default function SearchPage() {
             </CardContent>
           </Card>
         )}
+
+          </TabsContent>
+
+          <TabsContent value="ioc" className="mt-6">
+            <IOCSearchTab />
+          </TabsContent>
+        </Tabs>
+
         <Footer />
       </div>
     </Layout>

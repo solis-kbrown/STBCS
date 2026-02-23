@@ -9,16 +9,13 @@ import { lazy, Suspense } from "react";
 import { Loader2 } from "lucide-react";
 import LiveChatWidget from "@/components/live-chat-widget";
 
-// Lazy load pages for better performance
 const Dashboard = lazy(() => import("@/pages/dashboard"));
 const Ransomware = lazy(() => import("@/pages/ransomware"));
 const Exploits = lazy(() => import("@/pages/exploits"));
-const News = lazy(() => import("@/pages/news"));
-const ThreatFeeds = lazy(() => import("@/pages/threat-feeds"));
+const IntelPage = lazy(() => import("@/pages/intel"));
 const SearchPage = lazy(() => import("@/pages/search"));
 const ToolsPage = lazy(() => import("@/pages/tools"));
 const LogoGallery = lazy(() => import("@/pages/logo-gallery"));
-const Alerts = lazy(() => import("@/pages/alerts"));
 const Messages = lazy(() => import("@/pages/messages"));
 const Support = lazy(() => import("@/pages/support"));
 const StylePreview = lazy(() => import("@/pages/style-preview"));
@@ -33,9 +30,7 @@ const CheckoutReturnPage = lazy(() => import("@/pages/checkout-return"));
 const AboutPage = lazy(() => import("@/pages/about"));
 const ContactPage = lazy(() => import("@/pages/contact"));
 const Breaches = lazy(() => import("@/pages/breaches"));
-const RansomwarePayments = lazy(() => import("@/pages/ransomware-payments"));
 const ICSAdvisories = lazy(() => import("@/pages/ics-advisories"));
-const IOCSearch = lazy(() => import("@/pages/ioc-search"));
 const RiskScore = lazy(() => import("@/pages/risk-score"));
 const MonitorsPage = lazy(() => import("@/pages/monitors"));
 const GroupsDirectory = lazy(() => import("@/pages/groups"));
@@ -60,15 +55,12 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard}/>
         <Route path="/ransomware" component={Ransomware}/>
-        <Route path="/ransomware-payments" component={RansomwarePayments}/>
         <Route path="/group/:name" component={GroupProfile}/>
         <Route path="/exploits" component={Exploits}/>
-        <Route path="/news" component={News}/>
-        <Route path="/threat-feeds" component={ThreatFeeds}/>
+        <Route path="/intel" component={IntelPage}/>
         <Route path="/search" component={SearchPage}/>
         <Route path="/tools" component={ToolsPage}/>
         <Route path="/logos" component={LogoGallery}/>
-        <Route path="/alerts" component={Alerts}/>
         <Route path="/messages" component={Messages}/>
         <Route path="/support" component={Support}/>
         <Route path="/style-preview" component={StylePreview}/>
@@ -82,9 +74,7 @@ function Router() {
         <Route path="/about" component={AboutPage}/>
         <Route path="/contact" component={ContactPage}/>
         <Route path="/breaches" component={Breaches}/>
-
         <Route path="/ics-advisories" component={ICSAdvisories}/>
-        <Route path="/ioc-search" component={IOCSearch}/>
         <Route path="/risk-score" component={RiskScore}/>
         <Route path="/monitors" component={MonitorsPage}/>
         <Route path="/groups" component={GroupsDirectory}/>

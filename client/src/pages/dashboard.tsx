@@ -350,12 +350,12 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             {[
               { href: "/tools", label: "Security Tools", icon: Wrench, desc: "IP lookup, port scan & more" },
-              { href: "/ioc-search", label: "IOC Search", icon: Scan, desc: "Search 40+ threat feeds" },
+              { href: "/search?tab=ioc", label: "IOC Lookup", icon: Scan, desc: "Search 40+ threat feeds" },
               { href: "/risk-score", label: "Risk Score", icon: ShieldCheck, desc: "Free cyber risk assessment" },
               { href: "/groups", label: "Threat Groups", icon: Users, desc: "Ransomware & APT profiles" },
               { href: "/breaches", label: "Breach Database", icon: Database, desc: "Known data breaches" },
               { href: "/ics-advisories", label: "ICS Advisories", icon: Factory, desc: "CISA ICS-CERT alerts" },
-              { href: "/ransomware-payments", label: "Ransom Payments", icon: AlertTriangle, desc: "Payment tracking dashboard" },
+              { href: "/intel", label: "Intel & Feeds", icon: AlertTriangle, desc: "News & live threat data" },
             ].map((item) => (
               <a key={item.href} href={item.href} className="group" data-testid={`card-quicklink-${item.href.slice(1)}`}>
                 <Card className="border-white/5 bg-card/50 hover:border-orange-500/30 hover:bg-orange-500/5 transition-all duration-200 h-full">

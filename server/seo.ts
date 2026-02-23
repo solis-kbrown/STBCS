@@ -29,24 +29,16 @@ const PAGE_META: Record<string, PageMeta> = {
     description: 'Free cybersecurity tools: IP/Domain WHOIS, Port Scanner, SSL Checker, Password Checker, Hash Analyzer, Email Header Analyzer, and more. No account needed.',
   },
   '/search': {
-    title: 'Global Threat Search | STB Cybersecurity',
-    description: 'Search CVEs, ransomware incidents, malicious IPs, phishing URLs, threat actors, and security news. Unified threat intelligence search across 45+ feeds.',
+    title: 'Threat Search & IOC Lookup | STB Cybersecurity',
+    description: 'Search CVEs, ransomware incidents, malicious IPs, phishing URLs, and threat actors. IOC lookup across 40+ threat intelligence feeds.',
   },
-  '/threat-feeds': {
-    title: 'Threat Intelligence Feeds | STB Cybersecurity',
-    description: 'Real-time malicious IPs, phishing URLs, CISA KEV, and threat indicators from 45+ feeds including SANS DShield, Feodo Tracker, and more.',
-  },
-  '/news': {
-    title: 'Cybersecurity Intel & News | STB Cybersecurity',
-    description: 'Curated cybersecurity news, threat intelligence reports, policy updates, and industry analysis from trusted security sources worldwide.',
+  '/intel': {
+    title: 'Intel & Threat Feeds | STB Cybersecurity',
+    description: 'Curated cybersecurity news, real-time malicious IPs, phishing URLs, CISA KEV, and threat indicators from 45+ feeds including SANS DShield and Feodo Tracker.',
   },
   '/support': {
     title: 'Support & Membership | STB Cybersecurity',
     description: 'Subscribe to STBCS Supporter, Pro, or Business plans for advanced threat intelligence, real-time alerts, watchlists, and priority incident response.',
-  },
-  '/alerts': {
-    title: 'Pro Alerts & Watchlist | STB Cybersecurity',
-    description: 'Set up watchlists to track CVEs, IPs, domains, ransomware groups, and keywords. Get real-time email and SMS alerts when threats are detected.',
   },
   '/api-docs': {
     title: 'API Documentation | STB Cybersecurity',
@@ -76,10 +68,6 @@ const PAGE_META: Record<string, PageMeta> = {
     title: 'Brand Assets & Logo Gallery | STB Cybersecurity',
     description: 'Official STB Cybersecurity brand assets, logo designs, and visual identity gallery for media and partners.',
   },
-  '/ioc-search': {
-    title: 'IOC Search | STB Cybersecurity',
-    description: 'Search Indicators of Compromise across 40+ threat intelligence feeds. Check IPs, domains, file hashes, URLs, and CVEs against multiple threat databases instantly.',
-  },
   '/risk-score': {
     title: 'Cyber Risk Score Calculator | STB Cybersecurity',
     description: 'Free cybersecurity risk assessment for small and medium businesses. Answer 12 questions to get your security grade, category scores, and actionable recommendations.',
@@ -91,10 +79,6 @@ const PAGE_META: Record<string, PageMeta> = {
   '/breaches': {
     title: 'Data Breach Database | STB Cybersecurity',
     description: 'Search the breach database for compromised credentials and data exposures. Check if your email or domain has been involved in known data breaches.',
-  },
-  '/ransomware-payments': {
-    title: 'Ransomware Payment Tracker | STB Cybersecurity',
-    description: 'Track ransomware payment trends, cryptocurrency flows, and financial impact analysis of major ransomware campaigns and threat actor groups.',
   },
   '/messages': {
     title: 'Messages | STB Cybersecurity',
@@ -122,8 +106,8 @@ const PAGE_META: Record<string, PageMeta> = {
     noindex: true,
   },
   '/monitors': {
-    title: 'Monitoring Suite | STB Cybersecurity',
-    description: 'Real-time uptime monitoring, SSL certificate tracking, and dark web intelligence scanning for Pro and Business subscribers.',
+    title: 'Monitoring & Alerts | STB Cybersecurity',
+    description: 'Real-time uptime monitoring, SSL certificate tracking, dark web scanning, watchlists, and threat alerts for Pro and Business subscribers.',
     noindex: true,
   },
 };
@@ -246,11 +230,9 @@ function getH1Text(path: string, meta: PageMeta): string {
     '/groups': 'Ransomware Groups Directory',
     '/exploits': 'Exploits & CVE Database',
     '/tools': 'Free Security Tools',
-    '/search': 'Global Threat Search',
-    '/threat-feeds': 'Threat Intelligence Feeds',
-    '/news': 'Cybersecurity Intel & News',
+    '/search': 'Threat Search & IOC Lookup',
+    '/intel': 'Intel & Threat Feeds',
     '/support': 'Support & Membership',
-    '/alerts': 'Pro Alerts & Watchlist',
     '/api-docs': 'API Documentation',
     '/about': 'About STB Cybersecurity',
     '/contact': 'Contact Us',
@@ -258,12 +240,10 @@ function getH1Text(path: string, meta: PageMeta): string {
     '/terms': 'Terms of Service',
     '/sms-terms': 'SMS Terms & Conditions',
     '/logos': 'Brand Assets & Logo Gallery',
-    '/ioc-search': 'IOC Search',
     '/risk-score': 'Cyber Risk Score Calculator',
     '/ics-advisories': 'ICS-CERT Advisories',
     '/breaches': 'Data Breach Database',
-    '/ransomware-payments': 'Ransomware Payment Tracker',
-    '/monitors': 'Monitoring Suite',
+    '/monitors': 'Monitoring & Alerts',
   };
   const cleanPath = path.split('?')[0].split('#')[0].replace(/\/$/, '') || '/';
   if (titleMap[cleanPath]) return titleMap[cleanPath];
@@ -285,13 +265,12 @@ function generateSSRContent(path: string, meta: PageMeta): string {
     `<li><a href="/groups">Groups & Threat Actors</a></li>` +
     `<li><a href="/exploits">Exploits & CVEs</a></li>` +
     `<li><a href="/tools">Security Tools</a></li>` +
-    `<li><a href="/ioc-search">IOC Search</a></li>` +
     `<li><a href="/risk-score">Cyber Risk Score</a></li>` +
     `<li><a href="/breaches">Breach Database</a></li>` +
     `<li><a href="/ics-advisories">ICS Advisories</a></li>` +
-    `<li><a href="/threat-feeds">Threat Feeds</a></li>` +
-    `<li><a href="/news">Intel & News</a></li>` +
-    `<li><a href="/search">Search</a></li>` +
+    `<li><a href="/intel">Intel & Feeds</a></li>` +
+    `<li><a href="/search">Search & IOC Lookup</a></li>` +
+    `<li><a href="/monitors">Monitoring & Alerts</a></li>` +
     `<li><a href="/support">Support</a></li>` +
     `<li><a href="/about">About</a></li>` +
     `<li><a href="/contact">Contact</a></li>` +

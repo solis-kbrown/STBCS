@@ -70,12 +70,10 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><a href="/exploits" className="hover:text-primary transition-colors" data-testid="link-footer-cves">CVE Database</a></li>
               <li><a href="/ransomware" className="hover:text-primary transition-colors" data-testid="link-footer-ransomware">Ransomware Tracker</a></li>
-              <li><a href="/ransomware-payments" className="hover:text-primary transition-colors" data-testid="link-footer-payments">Ransomware Payments</a></li>
               <li><a href="/groups" className="hover:text-primary transition-colors" data-testid="link-footer-groups">Groups & Threat Actors</a></li>
               <li><a href="/breaches" className="hover:text-primary transition-colors" data-testid="link-footer-breaches">Breach Database</a></li>
               <li><a href="/ics-advisories" className="hover:text-primary transition-colors" data-testid="link-footer-ics">ICS-CERT Advisories</a></li>
-              <li><a href="/threat-feeds" className="hover:text-primary transition-colors" data-testid="link-footer-feeds">Threat Feeds</a></li>
-              <li><a href="/news" className="hover:text-primary transition-colors" data-testid="link-footer-news">Security News</a></li>
+              <li><a href="/intel" className="hover:text-primary transition-colors" data-testid="link-footer-intel">Intel & Feeds</a></li>
             </ul>
           </div>
 
@@ -83,10 +81,9 @@ export default function Footer() {
             <h4 className="font-bold text-white text-sm mb-3">Tools & Services</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><a href="/tools" className="hover:text-primary transition-colors" data-testid="link-footer-tools">Security Tools</a></li>
-              <li><a href="/ioc-search" className="hover:text-primary transition-colors" data-testid="link-footer-ioc">IOC Search</a></li>
+              <li><a href="/search" className="hover:text-primary transition-colors" data-testid="link-footer-search">Search & IOC Lookup</a></li>
               <li><a href="/risk-score" className="hover:text-primary transition-colors" data-testid="link-footer-risk">Cyber Risk Score</a></li>
-              <li><a href="/search" className="hover:text-primary transition-colors" data-testid="link-footer-search">Global Search</a></li>
-              <li><a href="/monitors" className="hover:text-primary transition-colors" data-testid="link-footer-monitors">Uptime Monitors</a></li>
+              <li><a href="/monitors" className="hover:text-primary transition-colors" data-testid="link-footer-monitors">Monitoring & Alerts</a></li>
               <li><a href="/api-docs" className="hover:text-primary transition-colors" data-testid="link-footer-api">API Documentation</a></li>
               <li><a href="/support" className="hover:text-primary transition-colors" data-testid="link-footer-pricing">Plans & Pricing</a></li>
             </ul>
