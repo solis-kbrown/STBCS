@@ -92,11 +92,6 @@ const PAGE_META: Record<string, PageMeta> = {
     title: 'Data Breach Database | STB Cybersecurity',
     description: 'Search the breach database for compromised credentials and data exposures. Check if your email or domain has been involved in known data breaches.',
   },
-  '/threat-actors': {
-    title: 'Ransomware Groups Directory | STB Cybersecurity',
-    description: 'Browse all tracked ransomware groups with victim counts, activity status, TTPs, MITRE ATT&CK mapping, and threat intelligence. Click any group for detailed dossier.',
-    canonical: 'https://stbcybersecurity.com/groups',
-  },
   '/ransomware-payments': {
     title: 'Ransomware Payment Tracker | STB Cybersecurity',
     description: 'Track ransomware payment trends, cryptocurrency flows, and financial impact analysis of major ransomware campaigns and threat actor groups.',

@@ -180,6 +180,10 @@ export async function registerRoutes(
     res.redirect(301, '/sitemap.xml');
   });
 
+  app.get('/threat-actors', (_req: Request, res: Response) => {
+    res.redirect(301, '/groups');
+  });
+
   app.get("/sitemap.xml", async (_req: Request, res: Response) => {
     try {
       const today = new Date().toISOString().split("T")[0];
