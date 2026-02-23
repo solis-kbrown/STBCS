@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Download, ExternalLink, Globe, Loader2, ArrowUpDown, SlidersHorizontal, Calendar, RotateCcw, ChevronRight, BarChart3, TrendingUp, Users, Target, MapPin, Building2 } from "lucide-react";
+import { Search, Filter, Download, ExternalLink, Globe, Loader2, ArrowUpDown, SlidersHorizontal, Calendar, RotateCcw, ChevronRight, BarChart3, TrendingUp, Users, Target, MapPin, Building2, DollarSign } from "lucide-react";
 import { useLocation } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -145,6 +145,17 @@ export default function Ransomware() {
             >
               <BarChart3 className="h-4 w-4 mr-2" />
               Analytics
+            </Button>
+            <Button 
+              variant="outline" 
+              className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" 
+              data-testid="button-payments-dashboard"
+              asChild
+            >
+              <a href="/ransomware-payments">
+                <DollarSign className="h-4 w-4 mr-2" />
+                Payments
+              </a>
             </Button>
              <Button 
               variant="outline" 

@@ -36,14 +36,14 @@ export default function Footer() {
   return (
     <footer className="border-t border-white/5 bg-card/30 mt-8">
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="md:col-span-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
+          <div className="sm:col-span-2 lg:col-span-2">
             <div className="flex items-center gap-3 mb-3">
               <img src="/brand/icon-shield.png" alt="STBCS" className="h-10 w-10 drop-shadow-[0_0_6px_rgba(239,68,68,0.3)]" />
               <span className="font-display font-bold text-lg text-primary">STB Cybersecurity</span>
             </div>
             <p className="text-sm text-muted-foreground mb-4 max-w-md">
-              Your trusted partner in cybersecurity. We help small to medium-sized businesses stay ahead of threats with proactive security consulting and rapid incident response when it matters most. Whether you're strengthening defenses or navigating a crisis, our experts are here for you.
+              Your trusted partner in cybersecurity. We help small to medium-sized businesses stay ahead of threats with proactive security consulting and rapid incident response when it matters most.
             </p>
             
             <div className="bg-primary/10 border border-primary/30 rounded-lg p-3 mb-4 max-w-md">
@@ -63,6 +63,33 @@ export default function Footer() {
               <Globe aria-hidden="true" className="h-3 w-3" />
               <span>stbcybersecurity.com</span>
             </div>
+          </div>
+          
+          <div>
+            <h4 className="font-bold text-white text-sm mb-3">Threat Intelligence</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><a href="/exploits" className="hover:text-primary transition-colors" data-testid="link-footer-cves">CVE Database</a></li>
+              <li><a href="/ransomware" className="hover:text-primary transition-colors" data-testid="link-footer-ransomware">Ransomware Tracker</a></li>
+              <li><a href="/ransomware-payments" className="hover:text-primary transition-colors" data-testid="link-footer-payments">Ransomware Payments</a></li>
+              <li><a href="/groups" className="hover:text-primary transition-colors" data-testid="link-footer-groups">Groups & Threat Actors</a></li>
+              <li><a href="/breaches" className="hover:text-primary transition-colors" data-testid="link-footer-breaches">Breach Database</a></li>
+              <li><a href="/ics-advisories" className="hover:text-primary transition-colors" data-testid="link-footer-ics">ICS-CERT Advisories</a></li>
+              <li><a href="/threat-feeds" className="hover:text-primary transition-colors" data-testid="link-footer-feeds">Threat Feeds</a></li>
+              <li><a href="/news" className="hover:text-primary transition-colors" data-testid="link-footer-news">Security News</a></li>
+            </ul>
+          </div>
+
+          <div>
+            <h4 className="font-bold text-white text-sm mb-3">Tools & Services</h4>
+            <ul className="space-y-2 text-sm text-muted-foreground">
+              <li><a href="/tools" className="hover:text-primary transition-colors" data-testid="link-footer-tools">Security Tools</a></li>
+              <li><a href="/ioc-search" className="hover:text-primary transition-colors" data-testid="link-footer-ioc">IOC Search</a></li>
+              <li><a href="/risk-score" className="hover:text-primary transition-colors" data-testid="link-footer-risk">Cyber Risk Score</a></li>
+              <li><a href="/search" className="hover:text-primary transition-colors" data-testid="link-footer-search">Global Search</a></li>
+              <li><a href="/monitors" className="hover:text-primary transition-colors" data-testid="link-footer-monitors">Uptime Monitors</a></li>
+              <li><a href="/api-docs" className="hover:text-primary transition-colors" data-testid="link-footer-api">API Documentation</a></li>
+              <li><a href="/support" className="hover:text-primary transition-colors" data-testid="link-footer-pricing">Plans & Pricing</a></li>
+            </ul>
           </div>
           
           <div>
@@ -93,16 +120,16 @@ export default function Footer() {
                   <Mail aria-hidden="true" className="h-3 w-3" /> support@stbcybersecurity.com
                 </a>
               </li>
-            </ul>
-          </div>
-          
-          <div>
-            <h4 className="font-bold text-white text-sm mb-3">Resources</h4>
-            <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="/tools" className="hover:text-primary transition-colors">Security Tools</a></li>
-              <li><a href="/exploits" className="hover:text-primary transition-colors">CVE Database</a></li>
-              <li><a href="/ransomware" className="hover:text-primary transition-colors">Ransomware Tracker</a></li>
-              <li><a href="/threat-feeds" className="hover:text-primary transition-colors">Threat Feeds</a></li>
+              <li className="pt-2">
+                <a href="/contact" className="text-primary hover:text-orange-300 transition-colors font-medium flex items-center gap-2" data-testid="link-footer-contact-page">
+                  <Send aria-hidden="true" className="h-3 w-3" /> Contact Form
+                </a>
+              </li>
+              <li>
+                <a href="/about" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-footer-about">
+                  <Shield aria-hidden="true" className="h-3 w-3" /> About Us
+                </a>
+              </li>
             </ul>
           </div>
         </div>
@@ -193,13 +220,15 @@ export default function Footer() {
             <p className="text-xs text-muted-foreground">
               &copy; {currentYear} STB Cybersecurity. All rights reserved.
             </p>
-            <div className="flex items-center gap-4 text-xs text-muted-foreground">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
               <a href="/about" className="hover:text-primary transition-colors">About</a>
               <a href="/contact" className="hover:text-primary transition-colors">Contact</a>
+              <a href="/support" className="hover:text-primary transition-colors">Pricing</a>
+              <a href="/api-docs" className="hover:text-primary transition-colors">API</a>
+              <span className="text-zinc-700">|</span>
               <a href="/privacy" className="hover:text-primary transition-colors">Privacy Policy</a>
               <a href="/terms" className="hover:text-primary transition-colors">Terms of Service</a>
               <a href="/sms-terms" className="hover:text-primary transition-colors">SMS Terms</a>
-              <a href="/api-docs" className="hover:text-primary transition-colors">API Documentation</a>
             </div>
           </div>
         </div>

@@ -5,7 +5,7 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle } from "lucide-react";
+import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle, Wrench, Scan, ShieldCheck, Users, Database, Factory, ChevronRight } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useMemo, useEffect, useState } from "react";
@@ -343,6 +343,31 @@ export default function Dashboard() {
               </div>
             </CardContent>
           </Card>
+        </AnimatedSection>
+
+        <AnimatedSection animation="fade-up">
+          <h2 className="text-xl font-display font-bold text-white mb-4">Explore the Platform</h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
+            {[
+              { href: "/tools", label: "Security Tools", icon: Wrench, desc: "IP lookup, port scan & more" },
+              { href: "/ioc-search", label: "IOC Search", icon: Scan, desc: "Search 40+ threat feeds" },
+              { href: "/risk-score", label: "Risk Score", icon: ShieldCheck, desc: "Free cyber risk assessment" },
+              { href: "/groups", label: "Threat Groups", icon: Users, desc: "Ransomware & APT profiles" },
+              { href: "/breaches", label: "Breach Database", icon: Database, desc: "Known data breaches" },
+              { href: "/ics-advisories", label: "ICS Advisories", icon: Factory, desc: "CISA ICS-CERT alerts" },
+              { href: "/ransomware-payments", label: "Ransom Payments", icon: AlertTriangle, desc: "Payment tracking dashboard" },
+            ].map((item) => (
+              <a key={item.href} href={item.href} className="group" data-testid={`card-quicklink-${item.href.slice(1)}`}>
+                <Card className="border-white/5 bg-card/50 hover:border-orange-500/30 hover:bg-orange-500/5 transition-all duration-200 h-full">
+                  <CardContent className="p-4 flex flex-col items-center text-center gap-2">
+                    <item.icon className="h-6 w-6 text-zinc-500 group-hover:text-orange-400 transition-colors" />
+                    <span className="text-sm font-medium text-white group-hover:text-orange-400 transition-colors">{item.label}</span>
+                    <span className="text-[11px] text-zinc-500">{item.desc}</span>
+                  </CardContent>
+                </Card>
+              </a>
+            ))}
+          </div>
         </AnimatedSection>
 
         <Footer />

@@ -23,7 +23,10 @@ import {
   Factory,
   ShieldCheck,
   MonitorCheck,
-  Users
+  Users,
+  DollarSign,
+  Info,
+  Send
 } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -65,6 +68,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/alerts", labelKey: "nav.alerts", icon: Activity, isPro: true },
     { href: "/messages", labelKey: "nav.messages", icon: MessageSquare, isBusiness: true },
     { href: "/ransomware", labelKey: "nav.ransomware", icon: ShieldOff },
+    { href: "/ransomware-payments", labelKey: "nav.ransomwarePayments", icon: DollarSign },
     { href: "/groups", labelKey: "nav.groups", icon: Users },
     { href: "/exploits", labelKey: "nav.exploits", icon: Bug },
     { href: "/breaches", labelKey: "nav.breaches", icon: Database },
@@ -74,6 +78,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/threat-feeds", labelKey: "nav.threatFeeds", icon: Satellite },
     { href: "/news", labelKey: "nav.news", icon: TrendingUp },
     { href: "/support", labelKey: "nav.support", icon: Heart },
+    { href: "/about", labelKey: "nav.about", icon: Info },
+    { href: "/contact", labelKey: "nav.contact", icon: Send },
   ];
 
   const SidebarContent = () => (
