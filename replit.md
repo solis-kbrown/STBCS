@@ -7,6 +7,7 @@ STB Cybersecurity provides professional cybersecurity services and real-time thr
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
+- Export/download features (CSV, JSON, STIX) are Pro/Business tier only — always gate behind auth check on both frontend and backend.
 
 ### Visual Theme: Stealth Mode
 - **Accent Color**: Orange (#f97316 / orange-500)

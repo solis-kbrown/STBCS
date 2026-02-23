@@ -15,6 +15,7 @@ import { toSlug } from "@shared/schema";
 import { ACTOR_MITRE_MAPPING } from "@shared/mitre-attack";
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { useLocation } from "wouter";
+import { useAuth } from "@/lib/auth";
 import {
   Search, Globe, Users, Target, Skull, Eye, EyeOff,
   ChevronRight, ArrowUpDown, RotateCcw, Download, Loader2, MapPin,
@@ -87,6 +88,8 @@ export default function GroupsDirectory() {
   const [showFilters, setShowFilters] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(24);
+  const { isPro, isBusiness } = useAuth();
+  const canExport = isPro || isBusiness;
   const exportMutation = useExportData();
 
   const { data: groups, isLoading } = useQuery<GroupDirectoryEntry[]>({
@@ -225,14 +228,23 @@ export default function GroupsDirectory() {
               </p>
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-groups-csv" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'csv' })} disabled={exportMutation.isPending}>
-                {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-                CSV
-              </Button>
-              <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-groups-json" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'json' })} disabled={exportMutation.isPending}>
-                <Download className="h-4 w-4 mr-2" />
-                JSON
-              </Button>
+              {canExport ? (
+                <>
+                  <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-groups-csv" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'csv' })} disabled={exportMutation.isPending}>
+                    {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                    CSV
+                  </Button>
+                  <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-groups-json" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'json' })} disabled={exportMutation.isPending}>
+                    <Download className="h-4 w-4 mr-2" />
+                    JSON
+                  </Button>
+                </>
+              ) : (
+                <Button variant="outline" className="border-zinc-700 text-zinc-500 cursor-not-allowed" disabled data-testid="button-export-groups-locked">
+                  <Lock className="h-4 w-4 mr-2" />
+                  Export (Pro)
+                </Button>
+              )}
             </div>
           </div>
         </AnimatedSection>
