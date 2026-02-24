@@ -674,6 +674,576 @@ export function HeroBgSoarAutomation() {
   return <HeroBgImage src="/images/hero-bg/soar-automation.png" alt="SOAR automation" />;
 }
 
+export function HeroBgGlobePackets() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animRef = useRef<number>(0);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    let w = 0, h = 0;
+    const resize = () => {
+      const rect = canvas.parentElement?.getBoundingClientRect();
+      if (!rect) return;
+      const dpr = window.devicePixelRatio || 1;
+      w = rect.width; h = rect.height;
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      canvas.style.width = w + "px"; canvas.style.height = h + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    const cities = [
+      {x:18,y:28},{x:14,y:38},{x:22,y:42},{x:30,y:52},{x:35,y:48},
+      {x:42,y:24},{x:44,y:28},{x:48,y:20},{x:50,y:26},{x:52,y:32},
+      {x:55,y:22},{x:58,y:18},{x:60,y:28},{x:65,y:34},{x:68,y:26},
+      {x:72,y:30},{x:75,y:38},{x:78,y:24},{x:80,y:44},{x:82,y:28},
+      {x:38,y:56},{x:46,y:58},{x:25,y:34},{x:33,y:30},{x:62,y:40},
+    ];
+    const links: number[][] = [];
+    cities.forEach((a, i) => {
+      cities.forEach((b, j) => {
+        if (j <= i) return;
+        const d = Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+        if (d < 18) links.push([i, j]);
+      });
+    });
+    type Packet = { from: number; to: number; t: number; speed: number; color: string };
+    const packets: Packet[] = [];
+    let lastPacket = 0;
+    const draw = (time: number) => {
+      ctx.clearRect(0, 0, w, h);
+      ctx.fillStyle = "rgba(9,9,11,0.3)";
+      ctx.fillRect(0, 0, w, h);
+      const cx = w * 0.48, cy = h * 0.52, rx = w * 0.38, ry = h * 0.42;
+      const rot = time * 0.0001;
+      for (let lat = -80; lat <= 80; lat += 20) {
+        ctx.beginPath();
+        const latR = lat * Math.PI / 180;
+        for (let lon = 0; lon <= 360; lon += 3) {
+          const lonR = (lon + rot * 180 / Math.PI) * Math.PI / 180;
+          const px = cx + rx * Math.cos(latR) * Math.cos(lonR) * 0.8;
+          const py = cy - ry * Math.sin(latR) * 0.6 + ry * Math.cos(latR) * Math.sin(lonR) * 0.15;
+          lon === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.strokeStyle = "rgba(249,115,22,0.04)";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+      for (let lon = 0; lon < 360; lon += 30) {
+        ctx.beginPath();
+        const lonR = (lon + rot * 180 / Math.PI) * Math.PI / 180;
+        for (let lat = -90; lat <= 90; lat += 3) {
+          const latR = lat * Math.PI / 180;
+          const px = cx + rx * Math.cos(latR) * Math.cos(lonR) * 0.8;
+          const py = cy - ry * Math.sin(latR) * 0.6 + ry * Math.cos(latR) * Math.sin(lonR) * 0.15;
+          lat === -90 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        ctx.strokeStyle = "rgba(249,115,22,0.03)";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      }
+      links.forEach(([i, j]) => {
+        const a = cities[i], b = cities[j];
+        const ax = (a.x / 100) * w, ay = (a.y / 100) * h;
+        const bx = (b.x / 100) * w, by = (b.y / 100) * h;
+        const mx = (ax + bx) / 2, my = Math.min(ay, by) - 15 - Math.sqrt((ax - bx) ** 2 + (ay - by) ** 2) * 0.1;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.quadraticCurveTo(mx, my, bx, by);
+        ctx.strokeStyle = "rgba(249,115,22,0.06)";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      });
+      if (time - lastPacket > 400 && links.length > 0) {
+        const link = links[Math.floor(Math.random() * links.length)];
+        const reverse = Math.random() > 0.5;
+        packets.push({
+          from: reverse ? link[1] : link[0],
+          to: reverse ? link[0] : link[1],
+          t: 0,
+          speed: 0.006 + Math.random() * 0.008,
+          color: Math.random() > 0.3 ? "249,115,22" : "239,68,68",
+        });
+        lastPacket = time;
+      }
+      for (let i = packets.length - 1; i >= 0; i--) {
+        const p = packets[i];
+        p.t += p.speed;
+        if (p.t > 1) { packets.splice(i, 1); continue; }
+        const a = cities[p.from], b = cities[p.to];
+        const ax = (a.x / 100) * w, ay = (a.y / 100) * h;
+        const bx = (b.x / 100) * w, by = (b.y / 100) * h;
+        const mx = (ax + bx) / 2, my = Math.min(ay, by) - 15 - Math.sqrt((ax - bx) ** 2 + (ay - by) ** 2) * 0.1;
+        const t = p.t;
+        const px = (1 - t) * (1 - t) * ax + 2 * (1 - t) * t * mx + t * t * bx;
+        const py = (1 - t) * (1 - t) * ay + 2 * (1 - t) * t * my + t * t * by;
+        const g = ctx.createRadialGradient(px, py, 0, px, py, 6);
+        g.addColorStop(0, `rgba(${p.color},0.7)`);
+        g.addColorStop(1, `rgba(${p.color},0)`);
+        ctx.beginPath();
+        ctx.arc(px, py, 6, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(px, py, 1.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color},0.9)`;
+        ctx.fill();
+      }
+      cities.forEach((c, idx) => {
+        const nx = (c.x / 100) * w, ny = (c.y / 100) * h;
+        const pulse = 0.5 + Math.sin(time * 0.003 + idx * 0.7) * 0.3;
+        const g = ctx.createRadialGradient(nx, ny, 0, nx, ny, 10);
+        g.addColorStop(0, `rgba(249,115,22,${pulse * 0.5})`);
+        g.addColorStop(1, "rgba(249,115,22,0)");
+        ctx.beginPath();
+        ctx.arc(nx, ny, 10, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(nx, ny, 2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(249,115,22,${0.5 + pulse * 0.5})`;
+        ctx.fill();
+      });
+      animRef.current = requestAnimationFrame(draw);
+    };
+    animRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(animRef.current); window.removeEventListener("resize", resize); };
+  }, []);
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.7 }} aria-hidden="true" />;
+}
+
+export function HeroBgDataFlow() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animRef = useRef<number>(0);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    let w = 0, h = 0;
+    const resize = () => {
+      const rect = canvas.parentElement?.getBoundingClientRect();
+      if (!rect) return;
+      const dpr = window.devicePixelRatio || 1;
+      w = rect.width; h = rect.height;
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      canvas.style.width = w + "px"; canvas.style.height = h + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    const hubs = [
+      {x:15,y:30,r:40,label:"NA"},{x:42,y:25,r:35,label:"EU"},{x:60,y:20,r:30,label:"RU"},
+      {x:70,y:32,r:35,label:"APAC"},{x:35,y:55,r:25,label:"SA"},{x:50,y:50,r:25,label:"AF"},
+    ];
+    type Stream = { fromHub: number; toHub: number; particles: { t: number; speed: number; size: number }[] };
+    const streams: Stream[] = [];
+    const hubPairs = [[0,1],[0,4],[1,2],[1,5],[2,3],[3,5],[0,2],[1,3],[4,5],[0,3]];
+    hubPairs.forEach(([f, t]) => {
+      const count = 3 + Math.floor(Math.random() * 4);
+      const parts = Array.from({length: count}, () => ({
+        t: Math.random(), speed: 0.001 + Math.random() * 0.003, size: 1 + Math.random() * 2,
+      }));
+      streams.push({ fromHub: f, toHub: t, particles: parts });
+    });
+    const draw = (time: number) => {
+      ctx.fillStyle = "rgba(9,9,11,0.15)";
+      ctx.fillRect(0, 0, w, h);
+      hubs.forEach((hub, idx) => {
+        const hx = (hub.x / 100) * w, hy = (hub.y / 100) * h;
+        const r = hub.r * (w / 1000);
+        const pulse = 0.5 + Math.sin(time * 0.002 + idx) * 0.3;
+        ctx.beginPath();
+        ctx.arc(hx, hy, r, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(249,115,22,${0.05 + pulse * 0.05})`;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(hx, hy, r * 0.6, 0, Math.PI * 2);
+        ctx.strokeStyle = `rgba(249,115,22,${0.03 + pulse * 0.03})`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+        const inner = ctx.createRadialGradient(hx, hy, 0, hx, hy, r * 0.3);
+        inner.addColorStop(0, `rgba(249,115,22,${0.08 * pulse})`);
+        inner.addColorStop(1, "rgba(249,115,22,0)");
+        ctx.fillStyle = inner;
+        ctx.beginPath();
+        ctx.arc(hx, hy, r * 0.3, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      streams.forEach((s) => {
+        const a = hubs[s.fromHub], b = hubs[s.toHub];
+        const ax = (a.x / 100) * w, ay = (a.y / 100) * h;
+        const bx = (b.x / 100) * w, by = (b.y / 100) * h;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        ctx.lineTo(bx, by);
+        ctx.strokeStyle = "rgba(249,115,22,0.03)";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+        s.particles.forEach((p) => {
+          p.t += p.speed;
+          if (p.t > 1) p.t -= 1;
+          const px = ax + (bx - ax) * p.t;
+          const py = ay + (by - ay) * p.t;
+          const g = ctx.createRadialGradient(px, py, 0, px, py, p.size * 3);
+          g.addColorStop(0, `rgba(249,115,22,0.6)`);
+          g.addColorStop(1, "rgba(249,115,22,0)");
+          ctx.beginPath();
+          ctx.arc(px, py, p.size * 3, 0, Math.PI * 2);
+          ctx.fillStyle = g;
+          ctx.fill();
+          ctx.beginPath();
+          ctx.arc(px, py, p.size, 0, Math.PI * 2);
+          ctx.fillStyle = "rgba(249,115,22,0.8)";
+          ctx.fill();
+        });
+      });
+      const scanX = ((time * 0.02) % (w + 60)) - 30;
+      const scanGrad = ctx.createLinearGradient(scanX - 30, 0, scanX + 30, 0);
+      scanGrad.addColorStop(0, "rgba(249,115,22,0)");
+      scanGrad.addColorStop(0.5, "rgba(249,115,22,0.015)");
+      scanGrad.addColorStop(1, "rgba(249,115,22,0)");
+      ctx.fillStyle = scanGrad;
+      ctx.fillRect(scanX - 30, 0, 60, h);
+      animRef.current = requestAnimationFrame(draw);
+    };
+    ctx.fillStyle = "rgba(9,9,11,1)";
+    ctx.fillRect(0, 0, w, h);
+    animRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(animRef.current); window.removeEventListener("resize", resize); };
+  }, []);
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.7 }} aria-hidden="true" />;
+}
+
+export function HeroBgCyberMesh() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animRef = useRef<number>(0);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    let w = 0, h = 0;
+    const resize = () => {
+      const rect = canvas.parentElement?.getBoundingClientRect();
+      if (!rect) return;
+      const dpr = window.devicePixelRatio || 1;
+      w = rect.width; h = rect.height;
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      canvas.style.width = w + "px"; canvas.style.height = h + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    type Node = { x: number; y: number; vx: number; vy: number; size: number; type: "router"|"server"|"endpoint" };
+    const nodes: Node[] = [];
+    const types: Node["type"][] = ["router", "server", "endpoint"];
+    for (let i = 0; i < 50; i++) {
+      nodes.push({
+        x: Math.random() * 100, y: Math.random() * 100,
+        vx: (Math.random() - 0.5) * 0.015, vy: (Math.random() - 0.5) * 0.015,
+        size: 1.5 + Math.random() * 2.5, type: types[Math.floor(Math.random() * 3)],
+      });
+    }
+    type Ping = { from: number; to: number; t: number; speed: number };
+    const pings: Ping[] = [];
+    let lastPing = 0;
+    const draw = (time: number) => {
+      ctx.fillStyle = "rgba(9,9,11,0.08)";
+      ctx.fillRect(0, 0, w, h);
+      nodes.forEach((n) => {
+        n.x += n.vx; n.y += n.vy;
+        if (n.x < 2 || n.x > 98) n.vx *= -1;
+        if (n.y < 2 || n.y > 98) n.vy *= -1;
+      });
+      const connectionDist = 20;
+      const edges: [number, number][] = [];
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const d = Math.sqrt((nodes[i].x - nodes[j].x) ** 2 + (nodes[i].y - nodes[j].y) ** 2);
+          if (d < connectionDist) {
+            edges.push([i, j]);
+            const ax = (nodes[i].x / 100) * w, ay = (nodes[i].y / 100) * h;
+            const bx = (nodes[j].x / 100) * w, by = (nodes[j].y / 100) * h;
+            const alpha = 0.03 + (1 - d / connectionDist) * 0.06;
+            ctx.beginPath();
+            ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
+            ctx.strokeStyle = `rgba(249,115,22,${alpha})`;
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+          }
+        }
+      }
+      if (time - lastPing > 300 && edges.length > 0) {
+        const e = edges[Math.floor(Math.random() * edges.length)];
+        pings.push({ from: e[0], to: e[1], t: 0, speed: 0.01 + Math.random() * 0.015 });
+        lastPing = time;
+      }
+      for (let i = pings.length - 1; i >= 0; i--) {
+        const p = pings[i];
+        p.t += p.speed;
+        if (p.t > 1) { pings.splice(i, 1); continue; }
+        const a = nodes[p.from], b = nodes[p.to];
+        if (!a || !b) { pings.splice(i, 1); continue; }
+        const px = ((a.x + (b.x - a.x) * p.t) / 100) * w;
+        const py = ((a.y + (b.y - a.y) * p.t) / 100) * h;
+        const g = ctx.createRadialGradient(px, py, 0, px, py, 5);
+        g.addColorStop(0, "rgba(239,68,68,0.8)");
+        g.addColorStop(1, "rgba(239,68,68,0)");
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+      }
+      nodes.forEach((n, idx) => {
+        const nx = (n.x / 100) * w, ny = (n.y / 100) * h;
+        const pulse = 0.5 + Math.sin(time * 0.003 + idx) * 0.3;
+        if (n.type === "router") {
+          ctx.save();
+          ctx.translate(nx, ny);
+          ctx.rotate(Math.PI / 4);
+          ctx.fillStyle = `rgba(249,115,22,${0.4 + pulse * 0.4})`;
+          ctx.fillRect(-n.size, -n.size, n.size * 2, n.size * 2);
+          ctx.restore();
+        } else if (n.type === "server") {
+          ctx.fillStyle = `rgba(249,115,22,${0.4 + pulse * 0.4})`;
+          ctx.fillRect(nx - n.size, ny - n.size, n.size * 2, n.size * 2);
+        } else {
+          ctx.beginPath();
+          ctx.arc(nx, ny, n.size, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(249,115,22,${0.4 + pulse * 0.4})`;
+          ctx.fill();
+        }
+      });
+      animRef.current = requestAnimationFrame(draw);
+    };
+    ctx.fillStyle = "rgba(9,9,11,1)";
+    ctx.fillRect(0, 0, w, h);
+    animRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(animRef.current); window.removeEventListener("resize", resize); };
+  }, []);
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.7 }} aria-hidden="true" />;
+}
+
+export function HeroBgThreatStreams() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animRef = useRef<number>(0);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    let w = 0, h = 0;
+    const resize = () => {
+      const rect = canvas.parentElement?.getBoundingClientRect();
+      if (!rect) return;
+      const dpr = window.devicePixelRatio || 1;
+      w = rect.width; h = rect.height;
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      canvas.style.width = w + "px"; canvas.style.height = h + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    const regions = [
+      {x:18,y:32,name:"Americas",nodes:[{x:15,y:28},{x:20,y:35},{x:22,y:40},{x:17,y:44},{x:25,y:30}]},
+      {x:45,y:25,name:"Europe",nodes:[{x:42,y:22},{x:46,y:26},{x:44,y:30},{x:48,y:24},{x:50,y:28}]},
+      {x:58,y:20,name:"Russia",nodes:[{x:55,y:18},{x:60,y:20},{x:63,y:22},{x:56,y:24}]},
+      {x:72,y:30,name:"Asia",nodes:[{x:68,y:26},{x:72,y:32},{x:76,y:28},{x:78,y:36},{x:80,y:24}]},
+      {x:48,y:52,name:"Africa",nodes:[{x:46,y:48},{x:50,y:54},{x:48,y:58},{x:52,y:50}]},
+      {x:82,y:45,name:"Oceania",nodes:[{x:80,y:42},{x:84,y:46},{x:82,y:50}]},
+    ];
+    type ThreatArc = { fromR: number; toR: number; fromN: number; toN: number; t: number; speed: number; threat: boolean };
+    const arcs: ThreatArc[] = [];
+    let lastArc = 0;
+    const draw = (time: number) => {
+      ctx.fillStyle = "rgba(9,9,11,0.12)";
+      ctx.fillRect(0, 0, w, h);
+      regions.forEach((r, ri) => {
+        r.nodes.forEach((n, ni) => {
+          const nx = (n.x / 100) * w, ny = (n.y / 100) * h;
+          r.nodes.forEach((m, mi) => {
+            if (mi <= ni) return;
+            const mx = (m.x / 100) * w, my = (m.y / 100) * h;
+            ctx.beginPath();
+            ctx.moveTo(nx, ny); ctx.lineTo(mx, my);
+            ctx.strokeStyle = "rgba(249,115,22,0.04)";
+            ctx.lineWidth = 0.3;
+            ctx.stroke();
+          });
+          const pulse = 0.4 + Math.sin(time * 0.002 + ri + ni * 0.5) * 0.3;
+          ctx.beginPath();
+          ctx.arc(nx, ny, 2, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(249,115,22,${0.3 + pulse * 0.5})`;
+          ctx.fill();
+        });
+      });
+      if (time - lastArc > 600) {
+        const fromR = Math.floor(Math.random() * regions.length);
+        let toR = Math.floor(Math.random() * regions.length);
+        while (toR === fromR) toR = Math.floor(Math.random() * regions.length);
+        arcs.push({
+          fromR, toR,
+          fromN: Math.floor(Math.random() * regions[fromR].nodes.length),
+          toN: Math.floor(Math.random() * regions[toR].nodes.length),
+          t: 0, speed: 0.004 + Math.random() * 0.006,
+          threat: Math.random() > 0.6,
+        });
+        lastArc = time;
+      }
+      for (let i = arcs.length - 1; i >= 0; i--) {
+        const arc = arcs[i];
+        arc.t += arc.speed;
+        if (arc.t > 1) { arcs.splice(i, 1); continue; }
+        const fn = regions[arc.fromR].nodes[arc.fromN];
+        const tn = regions[arc.toR].nodes[arc.toN];
+        const ax = (fn.x / 100) * w, ay = (fn.y / 100) * h;
+        const bx = (tn.x / 100) * w, by = (tn.y / 100) * h;
+        const mx = (ax + bx) / 2, my = Math.min(ay, by) - 20 - Math.sqrt((ax - bx) ** 2 + (ay - by) ** 2) * 0.15;
+        const tailLen = 0.15;
+        const headT = arc.t;
+        const tailT = Math.max(0, arc.t - tailLen);
+        ctx.beginPath();
+        for (let s = 0; s <= 20; s++) {
+          const t = tailT + (headT - tailT) * (s / 20);
+          const px = (1 - t) * (1 - t) * ax + 2 * (1 - t) * t * mx + t * t * bx;
+          const py = (1 - t) * (1 - t) * ay + 2 * (1 - t) * t * my + t * t * by;
+          s === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+        }
+        const col = arc.threat ? "239,68,68" : "249,115,22";
+        ctx.strokeStyle = `rgba(${col},0.4)`;
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+        const hx = (1 - headT) * (1 - headT) * ax + 2 * (1 - headT) * headT * mx + headT * headT * bx;
+        const hy = (1 - headT) * (1 - headT) * ay + 2 * (1 - headT) * headT * my + headT * headT * by;
+        const g = ctx.createRadialGradient(hx, hy, 0, hx, hy, 8);
+        g.addColorStop(0, `rgba(${col},0.8)`);
+        g.addColorStop(1, `rgba(${col},0)`);
+        ctx.beginPath();
+        ctx.arc(hx, hy, 8, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+      }
+      animRef.current = requestAnimationFrame(draw);
+    };
+    ctx.fillStyle = "rgba(9,9,11,1)";
+    ctx.fillRect(0, 0, w, h);
+    animRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(animRef.current); window.removeEventListener("resize", resize); };
+  }, []);
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.7 }} aria-hidden="true" />;
+}
+
+export function HeroBgNetTopology() {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const animRef = useRef<number>(0);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    let w = 0, h = 0;
+    const resize = () => {
+      const rect = canvas.parentElement?.getBoundingClientRect();
+      if (!rect) return;
+      const dpr = window.devicePixelRatio || 1;
+      w = rect.width; h = rect.height;
+      canvas.width = w * dpr; canvas.height = h * dpr;
+      canvas.style.width = w + "px"; canvas.style.height = h + "px";
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    const core = { x: 50, y: 45 };
+    const rings = [
+      [{x:40,y:30},{x:60,y:30},{x:65,y:50},{x:55,y:65},{x:38,y:60},{x:32,y:42}],
+      [{x:20,y:20},{x:50,y:12},{x:80,y:22},{x:85,y:50},{x:78,y:75},{x:50,y:82},{x:22,y:72},{x:12,y:48}],
+      [{x:8,y:15},{x:35,y:5},{x:65,y:8},{x:92,y:18},{x:95,y:55},{x:88,y:85},{x:55,y:92},{x:18,y:88},{x:5,y:60}],
+    ];
+    const allNodes = [core, ...rings[0], ...rings[1], ...rings[2]];
+    const edges: [number, number][] = [];
+    rings[0].forEach((_, i) => edges.push([0, 1 + i]));
+    const r1Start = 1, r2Start = r1Start + rings[0].length, r3Start = r2Start + rings[1].length;
+    rings[0].forEach((_, i) => { edges.push([r1Start + i, r1Start + (i + 1) % rings[0].length]); });
+    rings[1].forEach((_, i) => {
+      edges.push([r2Start + i, r2Start + (i + 1) % rings[1].length]);
+      edges.push([r2Start + i, r1Start + (i % rings[0].length)]);
+    });
+    rings[2].forEach((_, i) => {
+      edges.push([r3Start + i, r3Start + (i + 1) % rings[2].length]);
+      edges.push([r3Start + i, r2Start + (i % rings[1].length)]);
+    });
+    type Pulse = { edge: number; t: number; speed: number; reverse: boolean };
+    const pulses: Pulse[] = [];
+    let lastPulse = 0;
+    const draw = (time: number) => {
+      ctx.fillStyle = "rgba(9,9,11,0.1)";
+      ctx.fillRect(0, 0, w, h);
+      edges.forEach(([i, j]) => {
+        const a = allNodes[i], b = allNodes[j];
+        if (!a || !b) return;
+        const ax = (a.x / 100) * w, ay = (a.y / 100) * h;
+        const bx = (b.x / 100) * w, by = (b.y / 100) * h;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay); ctx.lineTo(bx, by);
+        ctx.strokeStyle = "rgba(249,115,22,0.05)";
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+      });
+      if (time - lastPulse > 250) {
+        const ei = Math.floor(Math.random() * edges.length);
+        pulses.push({ edge: ei, t: 0, speed: 0.008 + Math.random() * 0.012, reverse: Math.random() > 0.5 });
+        lastPulse = time;
+      }
+      for (let i = pulses.length - 1; i >= 0; i--) {
+        const p = pulses[i];
+        p.t += p.speed;
+        if (p.t > 1) { pulses.splice(i, 1); continue; }
+        const [fi, ti] = edges[p.edge];
+        const a = allNodes[p.reverse ? ti : fi], b = allNodes[p.reverse ? fi : ti];
+        if (!a || !b) { pulses.splice(i, 1); continue; }
+        const px = ((a.x + (b.x - a.x) * p.t) / 100) * w;
+        const py = ((a.y + (b.y - a.y) * p.t) / 100) * h;
+        const g = ctx.createRadialGradient(px, py, 0, px, py, 5);
+        g.addColorStop(0, "rgba(249,115,22,0.7)");
+        g.addColorStop(1, "rgba(249,115,22,0)");
+        ctx.beginPath();
+        ctx.arc(px, py, 5, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+      }
+      allNodes.forEach((n, idx) => {
+        const nx = (n.x / 100) * w, ny = (n.y / 100) * h;
+        const pulse = 0.4 + Math.sin(time * 0.002 + idx * 0.5) * 0.3;
+        const isCore = idx === 0;
+        const r = isCore ? 5 : (idx < r2Start ? 3 : (idx < r3Start ? 2 : 1.5));
+        if (isCore) {
+          const glow = ctx.createRadialGradient(nx, ny, 0, nx, ny, 25);
+          glow.addColorStop(0, `rgba(249,115,22,${0.15 * pulse})`);
+          glow.addColorStop(1, "rgba(249,115,22,0)");
+          ctx.beginPath();
+          ctx.arc(nx, ny, 25, 0, Math.PI * 2);
+          ctx.fillStyle = glow;
+          ctx.fill();
+        }
+        ctx.beginPath();
+        ctx.arc(nx, ny, r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(249,115,22,${0.4 + pulse * 0.5})`;
+        ctx.fill();
+      });
+      animRef.current = requestAnimationFrame(draw);
+    };
+    ctx.fillStyle = "rgba(9,9,11,1)";
+    ctx.fillRect(0, 0, w, h);
+    animRef.current = requestAnimationFrame(draw);
+    return () => { cancelAnimationFrame(animRef.current); window.removeEventListener("resize", resize); };
+  }, []);
+  return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.7 }} aria-hidden="true" />;
+}
+
 export const HERO_BACKGROUNDS = [
   {
     id: "threat-map",
@@ -990,6 +1560,41 @@ export const HERO_BACKGROUNDS = [
     tags: ["image", "SOAR", "automation"],
     component: "HeroBgSoarAutomation",
   },
+  {
+    id: "globe-packets",
+    name: "Globe Packet Flow",
+    description: "Animated rotating globe wireframe with 25 city nodes and data packets flowing along curved arcs between continents.",
+    tags: ["animated", "globe", "packets", "network"],
+    component: "HeroBgGlobePackets",
+  },
+  {
+    id: "data-flow",
+    name: "Regional Data Flow",
+    description: "Animated continental hub regions with continuous particle streams flowing between NA, EU, RU, APAC, SA, and AF.",
+    tags: ["animated", "regions", "streams", "flow"],
+    component: "HeroBgDataFlow",
+  },
+  {
+    id: "cyber-mesh",
+    name: "Dynamic Cyber Mesh",
+    description: "50 drifting network nodes (routers, servers, endpoints) that auto-connect when nearby, with pings traveling along edges.",
+    tags: ["animated", "mesh", "topology", "dynamic"],
+    component: "HeroBgCyberMesh",
+  },
+  {
+    id: "threat-streams",
+    name: "Threat Arc Streams",
+    description: "Animated arcing threat trajectories between world regions. Red arcs for threats, orange for legitimate traffic.",
+    tags: ["animated", "threats", "arcs", "regions"],
+    component: "HeroBgThreatStreams",
+  },
+  {
+    id: "net-topology",
+    name: "Network Topology",
+    description: "Animated concentric ring topology with a core hub, 3 tiers of nodes, and data pulses radiating outward along edges.",
+    tags: ["animated", "topology", "rings", "core"],
+    component: "HeroBgNetTopology",
+  },
 ] as const;
 
 export type HeroBgId = typeof HERO_BACKGROUNDS[number]["id"];
@@ -1040,6 +1645,11 @@ export function getHeroBackground(id: string) {
     case "risk-matrix": return <HeroBgRiskMatrix />;
     case "forensics-trail": return <HeroBgForensicsTrail />;
     case "soar-automation": return <HeroBgSoarAutomation />;
+    case "globe-packets": return <HeroBgGlobePackets />;
+    case "data-flow": return <HeroBgDataFlow />;
+    case "cyber-mesh": return <HeroBgCyberMesh />;
+    case "threat-streams": return <HeroBgThreatStreams />;
+    case "net-topology": return <HeroBgNetTopology />;
     default: return null;
   }
 }
