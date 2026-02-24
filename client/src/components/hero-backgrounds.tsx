@@ -583,6 +583,66 @@ export function HeroBgThreatLandscape() {
 export function HeroBgSecureBlueprint() {
   return <HeroBgImage src="/images/hero-bg/secure-blueprint.png" alt="Secure infrastructure blueprint" />;
 }
+export function HeroBgFirewallDefense() {
+  return <HeroBgImage src="/images/hero-bg/firewall-defense.png" alt="Firewall defense shields" />;
+}
+export function HeroBgSatelliteNetwork() {
+  return <HeroBgImage src="/images/hero-bg/satellite-network.png" alt="Satellite surveillance network" />;
+}
+export function HeroBgBlockchainGrid() {
+  return <HeroBgImage src="/images/hero-bg/blockchain-grid.png" alt="Blockchain distributed ledger" />;
+}
+export function HeroBgNeuralDefense() {
+  return <HeroBgImage src="/images/hero-bg/neural-defense.png" alt="AI neural defense network" />;
+}
+export function HeroBgSubmarineCables() {
+  return <HeroBgImage src="/images/hero-bg/submarine-cables.png" alt="Submarine fiber optic cables" />;
+}
+export function HeroBgZeroTrust() {
+  return <HeroBgImage src="/images/hero-bg/zero-trust.png" alt="Zero trust security architecture" />;
+}
+export function HeroBgCloudSecurity() {
+  return <HeroBgImage src="/images/hero-bg/cloud-security.png" alt="Cloud infrastructure security" />;
+}
+export function HeroBgEndpointGrid() {
+  return <HeroBgImage src="/images/hero-bg/endpoint-grid.png" alt="Endpoint detection response grid" />;
+}
+export function HeroBgSiemFlow() {
+  return <HeroBgImage src="/images/hero-bg/siem-flow.png" alt="SIEM event correlation flow" />;
+}
+export function HeroBgDarkwebIntel() {
+  return <HeroBgImage src="/images/hero-bg/darkweb-intel.png" alt="Dark web threat intelligence" />;
+}
+export function HeroBgThreatHunting() {
+  return <HeroBgImage src="/images/hero-bg/threat-hunting.png" alt="Threat hunting visualization" />;
+}
+export function HeroBgIncidentResponse() {
+  return <HeroBgImage src="/images/hero-bg/incident-response.png" alt="Incident response war room" />;
+}
+export function HeroBgQuantumCrypto() {
+  return <HeroBgImage src="/images/hero-bg/quantum-crypto.png" alt="Quantum encryption lattice" />;
+}
+export function HeroBgIcsScada() {
+  return <HeroBgImage src="/images/hero-bg/ics-scada.png" alt="ICS SCADA infrastructure" />;
+}
+export function HeroBgPentestSurface() {
+  return <HeroBgImage src="/images/hero-bg/pentest-surface.png" alt="Penetration testing attack surface" />;
+}
+export function HeroBgDnsSinkhole() {
+  return <HeroBgImage src="/images/hero-bg/dns-sinkhole.png" alt="DNS sinkhole traffic analysis" />;
+}
+export function HeroBgVulnHeatmap() {
+  return <HeroBgImage src="/images/hero-bg/vuln-heatmap.png" alt="Vulnerability assessment heat map" />;
+}
+export function HeroBgKillChain() {
+  return <HeroBgImage src="/images/hero-bg/kill-chain.png" alt="Cyber kill chain" />;
+}
+export function HeroBgHoneypotNet() {
+  return <HeroBgImage src="/images/hero-bg/honeypot-net.png" alt="Honeypot decoy network" />;
+}
+export function HeroBgIntelFusion() {
+  return <HeroBgImage src="/images/hero-bg/intel-fusion.png" alt="Threat intelligence fusion center" />;
+}
 
 export const HERO_BACKGROUNDS = [
   {
@@ -690,6 +750,146 @@ export const HERO_BACKGROUNDS = [
     tags: ["image", "blueprint", "architecture"],
     component: "HeroBgSecureBlueprint",
   },
+  {
+    id: "firewall-defense",
+    name: "Firewall Defense",
+    description: "Layered shield barriers deflecting incoming threat particles. Active perimeter defense visualization.",
+    tags: ["image", "defense", "firewall"],
+    component: "HeroBgFirewallDefense",
+  },
+  {
+    id: "satellite-network",
+    name: "Satellite Surveillance",
+    description: "Orbital satellite nodes with data downlinks monitoring global cyber activity from space.",
+    tags: ["image", "space", "surveillance"],
+    component: "HeroBgSatelliteNetwork",
+  },
+  {
+    id: "blockchain-grid",
+    name: "Blockchain Ledger",
+    description: "Distributed cryptographic blocks with hash chains and verification nodes. Decentralized security.",
+    tags: ["image", "blockchain", "crypto"],
+    component: "HeroBgBlockchainGrid",
+  },
+  {
+    id: "neural-defense",
+    name: "AI Neural Defense",
+    description: "Deep learning neural pathways with synaptic connections firing for AI-powered threat detection.",
+    tags: ["image", "AI", "neural"],
+    component: "HeroBgNeuralDefense",
+  },
+  {
+    id: "submarine-cables",
+    name: "Submarine Cable Network",
+    description: "Undersea fiber optic cables connecting continents. Critical internet infrastructure visualization.",
+    tags: ["image", "infrastructure", "undersea"],
+    component: "HeroBgSubmarineCables",
+  },
+  {
+    id: "zero-trust",
+    name: "Zero Trust Architecture",
+    description: "Concentric verification rings with authentication checkpoints and microsegmentation boundaries.",
+    tags: ["image", "zero-trust", "access"],
+    component: "HeroBgZeroTrust",
+  },
+  {
+    id: "cloud-security",
+    name: "Cloud Security Map",
+    description: "Multi-cloud regions connected by encrypted tunnels with security perimeters. Hybrid architecture.",
+    tags: ["image", "cloud", "enterprise"],
+    component: "HeroBgCloudSecurity",
+  },
+  {
+    id: "endpoint-grid",
+    name: "Endpoint Detection Grid",
+    description: "Thousands of managed device nodes with status indicators and central EDR management hub.",
+    tags: ["image", "EDR", "endpoints"],
+    component: "HeroBgEndpointGrid",
+  },
+  {
+    id: "siem-flow",
+    name: "SIEM Event Correlation",
+    description: "Streaming log data rivers converging into analysis nodes with alert highlights and pattern matching.",
+    tags: ["image", "SIEM", "analytics"],
+    component: "HeroBgSiemFlow",
+  },
+  {
+    id: "darkweb-intel",
+    name: "Dark Web Intelligence",
+    description: "Onion network topology with monitoring probes scanning hidden services. Covert threat tracking.",
+    tags: ["image", "darkweb", "intel"],
+    component: "HeroBgDarkwebIntel",
+  },
+  {
+    id: "threat-hunting",
+    name: "Threat Hunting",
+    description: "Hunter-seeker probes scanning a digital forest with detection beams illuminating hidden threats.",
+    tags: ["image", "hunting", "proactive"],
+    component: "HeroBgThreatHunting",
+  },
+  {
+    id: "incident-response",
+    name: "Incident Response",
+    description: "War room with tactical screens showing active breach containment and response timelines.",
+    tags: ["image", "IR", "tactical"],
+    component: "HeroBgIncidentResponse",
+  },
+  {
+    id: "quantum-crypto",
+    name: "Quantum Encryption",
+    description: "Crystalline quantum key distribution lattice with entangled particle paths. Post-quantum ready.",
+    tags: ["image", "quantum", "crypto"],
+    component: "HeroBgQuantumCrypto",
+  },
+  {
+    id: "ics-scada",
+    name: "ICS/SCADA Network",
+    description: "Industrial control systems with power grid, pipeline, and critical infrastructure monitoring points.",
+    tags: ["image", "ICS", "OT"],
+    component: "HeroBgIcsScada",
+  },
+  {
+    id: "pentest-surface",
+    name: "Attack Surface Map",
+    description: "Network perimeter with probe vectors testing entry points and vulnerability scan rays.",
+    tags: ["image", "pentest", "offensive"],
+    component: "HeroBgPentestSurface",
+  },
+  {
+    id: "dns-sinkhole",
+    name: "DNS Sinkhole",
+    description: "Domain resolution paths with malicious domains being redirected to sinkholes. Traffic analysis.",
+    tags: ["image", "DNS", "defense"],
+    component: "HeroBgDnsSinkhole",
+  },
+  {
+    id: "vuln-heatmap",
+    name: "Vulnerability Heat Map",
+    description: "Enterprise network with CVSS severity heat zones across network segments. Risk management.",
+    tags: ["image", "vulns", "risk"],
+    component: "HeroBgVulnHeatmap",
+  },
+  {
+    id: "kill-chain",
+    name: "Cyber Kill Chain",
+    description: "Seven-stage attack progression from reconnaissance to actions on objectives with defense breakpoints.",
+    tags: ["image", "MITRE", "killchain"],
+    component: "HeroBgKillChain",
+  },
+  {
+    id: "honeypot-net",
+    name: "Honeypot Network",
+    description: "Decoy server nodes with tripwire connections redirecting attackers into containment zones.",
+    tags: ["image", "deception", "traps"],
+    component: "HeroBgHoneypotNet",
+  },
+  {
+    id: "intel-fusion",
+    name: "Intelligence Fusion",
+    description: "Multi-source data streams converging into a central analysis hub with correlation lines.",
+    tags: ["image", "CTI", "fusion"],
+    component: "HeroBgIntelFusion",
+  },
 ] as const;
 
 export type HeroBgId = typeof HERO_BACKGROUNDS[number]["id"];
@@ -710,6 +910,26 @@ export function getHeroBackground(id: string) {
     case "command-center": return <HeroBgCommandCenter />;
     case "threat-landscape": return <HeroBgThreatLandscape />;
     case "secure-blueprint": return <HeroBgSecureBlueprint />;
+    case "firewall-defense": return <HeroBgFirewallDefense />;
+    case "satellite-network": return <HeroBgSatelliteNetwork />;
+    case "blockchain-grid": return <HeroBgBlockchainGrid />;
+    case "neural-defense": return <HeroBgNeuralDefense />;
+    case "submarine-cables": return <HeroBgSubmarineCables />;
+    case "zero-trust": return <HeroBgZeroTrust />;
+    case "cloud-security": return <HeroBgCloudSecurity />;
+    case "endpoint-grid": return <HeroBgEndpointGrid />;
+    case "siem-flow": return <HeroBgSiemFlow />;
+    case "darkweb-intel": return <HeroBgDarkwebIntel />;
+    case "threat-hunting": return <HeroBgThreatHunting />;
+    case "incident-response": return <HeroBgIncidentResponse />;
+    case "quantum-crypto": return <HeroBgQuantumCrypto />;
+    case "ics-scada": return <HeroBgIcsScada />;
+    case "pentest-surface": return <HeroBgPentestSurface />;
+    case "dns-sinkhole": return <HeroBgDnsSinkhole />;
+    case "vuln-heatmap": return <HeroBgVulnHeatmap />;
+    case "kill-chain": return <HeroBgKillChain />;
+    case "honeypot-net": return <HeroBgHoneypotNet />;
+    case "intel-fusion": return <HeroBgIntelFusion />;
     default: return null;
   }
 }

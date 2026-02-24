@@ -4,7 +4,7 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Check, Monitor, Zap, Layers, Eye } from "lucide-react";
+import { ArrowLeft, Check, Monitor, Zap, Layers, Eye, Image } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -66,6 +66,9 @@ export default function HeroGallery() {
           </Badge>
           <Badge variant="outline" className="border-zinc-700 text-zinc-400">
             <Layers className="h-3 w-3 mr-1" /> {HERO_BACKGROUNDS.filter(b => (b.tags as readonly string[]).includes("static")).length} Static
+          </Badge>
+          <Badge variant="outline" className="border-zinc-700 text-zinc-400">
+            <Image className="h-3 w-3 mr-1" /> {HERO_BACKGROUNDS.filter(b => (b.tags as readonly string[]).includes("image")).length} HD Images
           </Badge>
         </div>
 
