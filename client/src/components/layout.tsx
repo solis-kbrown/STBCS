@@ -43,6 +43,7 @@ import { useTranslation } from "@/lib/i18n/context";
 import { useAuth } from "@/lib/auth";
 import { AuthModal } from "@/components/auth-modal";
 import { useLogoTheme } from "@/lib/use-logo-theme";
+import { useIconTheme } from "@/lib/use-icon-theme";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -52,6 +53,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
   const { user, isAuthenticated, isPro, logout } = useAuth();
   const { activeTheme } = useLogoTheme();
+  const { activeTheme: iconTheme } = useIconTheme();
 
   const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
@@ -101,7 +103,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   }
                 `}
               >
-                <item.icon aria-hidden="true" className={`h-5 w-5 transition-colors ${isActive ? "text-orange-400" : "text-zinc-600 group-hover:text-orange-400/80"}`} />
+                <span className={isActive && iconTheme.styles.activeIconBg ? iconTheme.styles.activeIconBg : iconTheme.styles.iconBg || ""}>
+                  <item.icon aria-hidden="true" className={`h-5 w-5 transition-colors ${isActive ? `${iconTheme.styles.activeIcon} ${iconTheme.styles.activeGlow || ""}` : `${iconTheme.styles.inactiveIcon} ${iconTheme.styles.hoverIcon}`}`} strokeWidth={iconTheme.styles.strokeWidth} />
+                </span>
                 <span className="font-medium">{t(item.labelKey)}</span>
                 {'isPro' in item && item.isPro && (
                   <span className="ml-auto text-[10px] font-bold bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded">PRO</span>

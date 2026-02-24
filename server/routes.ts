@@ -4113,7 +4113,10 @@ Hiring: https://stbcybersecurity.com/support
     "shield-eye", "data-eye", "hex-vision", "ghost-hacker", "cyber-mask",
     "ops-desk", "vr-skull", "ai-sentinel", "breach-force", "key-access",
     "web-spider", "threat-scope", "athena-guard", "cyber-ninja", "holo-lock",
-    "code-blade", "global-guard",
+    "code-blade", "global-guard", "cyber-phoenix", "digital-fort", "neural-brain",
+    "space-ops", "rune-guard", "medusa-net", "cyber-clock", "bug-hunter",
+    "cyber-trident", "gene-shield", "signal-shield", "hex-maze", "smart-city",
+    "pack-ops", "intel-book",
   ];
 
   app.get("/api/site-settings/logo-theme", generalLimiter, async (_req: Request, res: Response) => {
@@ -4138,6 +4141,41 @@ Hiring: https://stbcybersecurity.com/support
       res.json({ value, updated: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to update logo theme" });
+    }
+  });
+
+  const ICON_THEMES = [
+    "default", "neon-green", "cyber-blue", "blood-red", "plasma-purple",
+    "arctic-cyan", "solar-amber", "toxic-lime", "rose-signal", "emerald-shield",
+    "ghost-white", "indigo-ops", "fire-orange-glow", "teal-sentinel",
+    "duotone-blue-orange", "duotone-green-red", "duotone-purple-cyan",
+    "neon-badge-green", "neon-badge-blue", "neon-badge-red",
+    "outlined-cyan", "outlined-amber", "bold-orange", "bold-blue", "bold-red",
+    "holo-violet", "midnight-blue", "infrared", "gold-command", "sky-patrol",
+  ];
+
+  app.get("/api/site-settings/icon-theme", generalLimiter, async (_req: Request, res: Response) => {
+    try {
+      const result = await db.select().from(siteSettings).where(eq(siteSettings.key, "icon-theme")).limit(1);
+      res.json({ value: result[0]?.value || "default" });
+    } catch {
+      res.json({ value: "default" });
+    }
+  });
+
+  app.post("/api/site-settings/icon-theme", generalLimiter, async (req: Request, res: Response) => {
+    try {
+      const { value } = req.body;
+      if (!value || !ICON_THEMES.includes(value)) {
+        res.status(400).json({ error: "Invalid icon theme" });
+        return;
+      }
+      await db.insert(siteSettings)
+        .values({ key: "icon-theme", value, updatedAt: new Date() })
+        .onConflictDoUpdate({ target: siteSettings.key, set: { value, updatedAt: new Date() } });
+      res.json({ value, updated: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update icon theme" });
     }
   });
 

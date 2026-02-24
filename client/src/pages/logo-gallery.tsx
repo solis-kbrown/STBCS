@@ -7,6 +7,11 @@ import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { useLogoTheme, LOGO_THEMES } from "@/lib/use-logo-theme";
+import { useIconTheme, ICON_THEMES } from "@/lib/use-icon-theme";
+import {
+  GalleryVerticalEnd, Scan, Wrench, ShieldOff, Bug as BugIcon, Satellite, Heart as HeartIcon,
+  Database as DatabaseIcon, Factory, ShieldCheck, MonitorCheck, Users, Info as InfoIcon, Send as SendIcon, Paintbrush
+} from "lucide-react";
 
 const currentLogo = {
   name: "Hex Lock — Red Banner",
@@ -256,6 +261,138 @@ function LogoThemePicker() {
   );
 }
 
+const sampleIcons = [GalleryVerticalEnd, Scan, Wrench, ShieldOff, BugIcon, Satellite, HeartIcon, DatabaseIcon, Factory, ShieldCheck, MonitorCheck, Users, InfoIcon, SendIcon];
+
+function IconThemePicker() {
+  const { activeTheme, activeThemeId, setTheme } = useIconTheme();
+  const [filter, setFilter] = useState("all");
+  const categories = ["all", ...Array.from(new Set(ICON_THEMES.map(t => t.category)))];
+  const filtered = filter === "all" ? ICON_THEMES : ICON_THEMES.filter(t => t.category === filter);
+
+  return (
+    <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-zinc-900 via-zinc-900/95 to-orange-950/5 p-6 md:p-8" data-testid="section-icon-themes">
+      <div className="flex items-center gap-3 mb-2">
+        <Paintbrush className="h-5 w-5 text-orange-500" />
+        <h2 className="text-xl font-bold text-white">Icon & Menu Themes</h2>
+        <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">{ICON_THEMES.length} themes</Badge>
+      </div>
+      <p className="text-zinc-500 text-sm mb-4">Change the color and style of all navigation icons, menu icons, and UI icons throughout the site.</p>
+
+      <div className="flex items-center gap-4 mb-6 overflow-x-auto">
+        <div className="flex items-center gap-3 bg-zinc-950 rounded-xl p-3 border border-zinc-800 shrink-0">
+          <div className="flex items-center gap-1.5">
+            {sampleIcons.slice(0, 6).map((Icon, i) => (
+              <span key={i} className={activeTheme.styles.activeIconBg || ""}>
+                <Icon className={`h-5 w-5 ${activeTheme.styles.activeIcon} ${activeTheme.styles.activeGlow || ""}`} strokeWidth={activeTheme.styles.strokeWidth} />
+              </span>
+            ))}
+          </div>
+          <div>
+            <p className="text-white font-semibold text-sm">{activeTheme.name}</p>
+            <Badge className="bg-green-500/20 text-green-400 border-green-500/30 mt-0.5 text-[10px]">
+              <Check className="h-2.5 w-2.5 mr-0.5" /> Active
+            </Badge>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-5">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setFilter(cat)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              filter === cat
+                ? "bg-orange-500/20 text-orange-400 border border-orange-500/40"
+                : "bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-zinc-500"
+            }`}
+            data-testid={`filter-icon-theme-${cat.toLowerCase()}`}
+          >
+            {cat === "all" ? "All Styles" : cat}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {filtered.map((theme) => {
+          const isActive = theme.id === activeThemeId;
+          return (
+            <Card
+              key={theme.id}
+              className={`bg-zinc-900 transition-all cursor-pointer group ${
+                isActive
+                  ? "ring-2 ring-orange-500/50 border-orange-500/40"
+                  : "border-zinc-800 hover:border-zinc-600 hover:ring-1 hover:ring-orange-500/20"
+              }`}
+              onClick={() => !isActive && setTheme.mutate(theme.id)}
+              data-testid={`icon-theme-card-${theme.id}`}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <p className="text-white text-sm font-semibold">{theme.name}</p>
+                    <p className="text-zinc-600 text-[10px] mt-0.5">{theme.description}</p>
+                  </div>
+                  {isActive && (
+                    <div className="h-5 w-5 bg-orange-500 rounded-full flex items-center justify-center shrink-0">
+                      <Check className="h-3 w-3 text-white" />
+                    </div>
+                  )}
+                </div>
+                <div className="bg-zinc-950 rounded-lg p-3 border border-zinc-800 mb-3">
+                  <div className="flex flex-col gap-1.5">
+                    {[
+                      { Icon: GalleryVerticalEnd, label: "Dashboard", active: true },
+                      { Icon: ShieldOff, label: "Ransomware", active: false },
+                      { Icon: BugIcon, label: "Exploits", active: false },
+                      { Icon: Satellite, label: "Intel", active: false },
+                    ].map(({ Icon, label, active }, i) => (
+                      <div key={i} className={`flex items-center gap-2.5 px-2 py-1 rounded-md ${active ? "bg-zinc-800/60" : ""}`}>
+                        <span className={active && theme.styles.activeIconBg ? theme.styles.activeIconBg : theme.styles.iconBg || ""}>
+                          <Icon
+                            className={`h-4 w-4 transition-colors ${active ? `${theme.styles.activeIcon} ${theme.styles.activeGlow || ""}` : theme.styles.inactiveIcon}`}
+                            strokeWidth={theme.styles.strokeWidth}
+                          />
+                        </span>
+                        <span className={`text-xs ${active ? "text-white font-medium" : "text-zinc-500"}`}>{label}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 mb-3">
+                  {sampleIcons.map((Icon, i) => (
+                    <span key={i} className={i === 0 && theme.styles.activeIconBg ? theme.styles.activeIconBg : ""}>
+                      <Icon
+                        className={`h-3.5 w-3.5 ${i === 0 ? `${theme.styles.activeIcon} ${theme.styles.activeGlow || ""}` : theme.styles.inactiveIcon}`}
+                        strokeWidth={theme.styles.strokeWidth}
+                      />
+                    </span>
+                  ))}
+                </div>
+                {isActive ? (
+                  <Badge className="bg-green-500/15 text-green-400 border-green-500/30 w-full justify-center text-[10px]">
+                    <Check className="h-2.5 w-2.5 mr-0.5" /> Selected
+                  </Badge>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full text-[10px] h-6 border-zinc-700 text-zinc-400 hover:text-orange-400 hover:border-orange-500/30"
+                    onClick={(e) => { e.stopPropagation(); setTheme.mutate(theme.id); }}
+                    data-testid={`button-select-icon-theme-${theme.id}`}
+                  >
+                    Apply Style
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 export default function LogoGallery() {
   useDocumentTitle("Brand Assets | STB Cybersecurity", "Official STBCS brand assets, logo variations, and trademark information.");
   const queryClient = useQueryClient();
@@ -443,6 +580,8 @@ export default function LogoGallery() {
         </div>
 
         <LogoThemePicker />
+
+        <IconThemePicker />
 
         {variations.map((section) => (
           <div key={section.category} data-testid={`section-${section.category.toLowerCase().replace(/\s+/g, "-")}`}>
