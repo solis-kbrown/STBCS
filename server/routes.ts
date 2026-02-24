@@ -958,8 +958,10 @@ Hiring: https://stbcybersecurity.com/support
       
       const key = `news:${limit}:${offset}:${category || ''}`;
       if (cachedJson(res, key, TTL.NEWS)) return;
-      const news = await storage.getNews(limit, offset, category);
-      const total = await storage.getNewsCount();
+      const [news, total] = await Promise.all([
+        storage.getNews(limit, offset, category),
+        storage.getNewsCount(),
+      ]);
       const result = { data: news, total, limit, offset };
       cacheAndSend(res, key, result, TTL.NEWS);
     } catch (error) {
@@ -992,8 +994,10 @@ Hiring: https://stbcybersecurity.com/support
       
       const key = `ips:${limit}:${offset}:${source || ''}:${threatType || ''}`;
       if (cachedJson(res, key, TTL.MALICIOUS_IPS)) return;
-      const ips = await storage.getMaliciousIps(limit, offset, source, threatType);
-      const total = await storage.getMaliciousIpCount();
+      const [ips, total] = await Promise.all([
+        storage.getMaliciousIps(limit, offset, source, threatType),
+        storage.getMaliciousIpCount(),
+      ]);
       const result = { data: ips, total, limit, offset };
       cacheAndSend(res, key, result, TTL.MALICIOUS_IPS);
     } catch (error) {
@@ -1013,8 +1017,10 @@ Hiring: https://stbcybersecurity.com/support
       
       const key = `urls:${limit}:${offset}:${source || ''}:${threatType || ''}`;
       if (cachedJson(res, key, TTL.MALICIOUS_URLS)) return;
-      const urls = await storage.getMaliciousUrls(limit, offset, source, threatType);
-      const total = await storage.getMaliciousUrlCount();
+      const [urls, total] = await Promise.all([
+        storage.getMaliciousUrls(limit, offset, source, threatType),
+        storage.getMaliciousUrlCount(),
+      ]);
       const result = { data: urls, total, limit, offset };
       cacheAndSend(res, key, result, TTL.MALICIOUS_URLS);
     } catch (error) {
@@ -1034,8 +1040,10 @@ Hiring: https://stbcybersecurity.com/support
       
       const key = `kev:${limit}:${offset}`;
       if (cachedJson(res, key, TTL.CISA_KEV)) return;
-      const kev = await storage.getCisaKev(limit, offset);
-      const total = await storage.getCisaKevCount();
+      const [kev, total] = await Promise.all([
+        storage.getCisaKev(limit, offset),
+        storage.getCisaKevCount(),
+      ]);
       const result = { data: kev, total, limit, offset };
       cacheAndSend(res, key, result, TTL.CISA_KEV);
     } catch (error) {
@@ -1537,8 +1545,10 @@ Hiring: https://stbcybersecurity.com/support
       }
       
       const { userId, limit, unreadOnly } = parsed.data;
-      const notifications = await storage.getUserNotifications(userId, limit, unreadOnly);
-      const unreadCount = await storage.getUnreadNotificationCount(userId);
+      const [notifications, unreadCount] = await Promise.all([
+        storage.getUserNotifications(userId, limit, unreadOnly),
+        storage.getUnreadNotificationCount(userId),
+      ]);
       
       res.json({ notifications, unreadCount });
     } catch (error) {
