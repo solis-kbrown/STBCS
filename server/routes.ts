@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import cookieParser from "cookie-parser";
 import { storage } from "./storage";
 import { visitorTrackingMiddleware } from "./visitors";
-import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema, toSlug, contentViews, logoVotes } from "@shared/schema";
+import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema, toSlug, contentViews, logoVotes, siteSettings } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql as dsql } from "drizzle-orm";
 import { z } from "zod";
@@ -4071,6 +4071,33 @@ Hiring: https://stbcybersecurity.com/support
     } catch (error) {
       console.error("Error recording logo page view:", error);
       res.status(500).json({ error: "Failed to record view" });
+    }
+  });
+
+  // Hero background site setting (DB-persisted)
+  app.get("/api/site-settings/hero-bg", generalLimiter, async (_req: Request, res: Response) => {
+    try {
+      const result = await db.select().from(siteSettings).where(eq(siteSettings.key, "hero-bg")).limit(1);
+      res.json({ value: result[0]?.value || "threat-map" });
+    } catch {
+      res.json({ value: "threat-map" });
+    }
+  });
+
+  app.post("/api/site-settings/hero-bg", generalLimiter, async (req: Request, res: Response) => {
+    try {
+      const { value } = req.body;
+      const validIds = ["threat-map", "static-dots", "cyber-grid", "matrix-rain", "honeycomb", "radar-sweep", "circuit-trace", "pulse-rings", "waveform"];
+      if (!value || !validIds.includes(value)) {
+        res.status(400).json({ error: "Invalid background ID" });
+        return;
+      }
+      await db.insert(siteSettings)
+        .values({ key: "hero-bg", value, updatedAt: new Date() })
+        .onConflictDoUpdate({ target: siteSettings.key, set: { value, updatedAt: new Date() } });
+      res.json({ value, updated: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update setting" });
     }
   });
 

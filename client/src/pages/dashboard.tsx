@@ -1,6 +1,8 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 import { useStats, useCves, useRansomware, useRefreshData, useTrends, useLastRefresh } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
+import { getHeroBackground } from "@/components/hero-backgrounds";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -56,6 +58,11 @@ export default function Dashboard() {
   const { data: trends, isLoading: trendsLoading } = useTrends(14);
   const { data: refreshInfo } = useLastRefresh();
   const refreshMutation = useRefreshData();
+  const { data: heroBgData } = useQuery({
+    queryKey: ["/api/site-settings/hero-bg"],
+    queryFn: () => fetch("/api/site-settings/hero-bg").then(r => r.json()).catch(() => ({ value: "threat-map" })),
+  });
+  const heroBgId = heroBgData?.value || "threat-map";
 
   const cves = cvesData?.data || [];
   const ransomware = ransomwareData?.data || [];
@@ -87,7 +94,7 @@ export default function Dashboard() {
         
         <div className="relative overflow-hidden rounded-xl border border-white/10 bg-card h-64 flex items-center">
           <div className="absolute inset-0 z-0">
-            <AnimatedMap />
+            {heroBgId === "threat-map" ? <AnimatedMap /> : getHeroBackground(heroBgId)}
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"></div>
           </div>
           

@@ -1,7 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useDocumentTitle } from "@/lib/use-document-title";
-import { ArrowLeft, Check, Shield, Copyright, Eye, ThumbsUp } from "lucide-react";
+import { ArrowLeft, Check, Shield, Copyright, Eye, ThumbsUp, Monitor } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -154,10 +154,17 @@ export default function LogoGallery() {
               <p className="text-zinc-400 text-sm mt-1">Official STB Cybersecurity logos, icons, and brand materials</p>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-zinc-900 rounded-lg px-3 py-2 border border-zinc-800" data-testid="visitor-counter">
+          <div className="flex items-center gap-3">
+            <Link href="/hero-backgrounds">
+              <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="link-hero-backgrounds">
+                <Monitor className="h-4 w-4 mr-2" /> Hero Backgrounds
+              </Button>
+            </Link>
+            <div className="flex items-center gap-2 bg-zinc-900 rounded-lg px-3 py-2 border border-zinc-800" data-testid="visitor-counter">
             <Eye className="h-4 w-4 text-orange-500" />
             <span className="text-sm text-zinc-300 font-medium" data-testid="text-view-count">{Math.round(pageViews).toLocaleString()}</span>
             <span className="text-xs text-zinc-500">views</span>
+          </div>
           </div>
         </div>
 

@@ -12,6 +12,14 @@ export function toSlug(name: string): string {
     .replace(/^-|-$/g, '');
 }
 
+export const siteSettings = pgTable("site_settings", {
+  key: varchar("key", { length: 100 }).primaryKey(),
+  value: text("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type SiteSetting = typeof siteSettings.$inferSelect;
+
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   username: text("username").notNull().unique(),
