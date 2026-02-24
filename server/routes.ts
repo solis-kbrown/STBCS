@@ -180,30 +180,6 @@ export async function registerRoutes(
     res.redirect(301, '/sitemap.xml');
   });
 
-  app.get('/threat-actors', (_req: Request, res: Response) => {
-    res.redirect(301, '/groups');
-  });
-
-  app.get('/ransomware-payments', (_req: Request, res: Response) => {
-    res.redirect(301, '/ransomware?tab=payments');
-  });
-
-  app.get('/news', (_req: Request, res: Response) => {
-    res.redirect(301, '/intel?tab=news');
-  });
-
-  app.get('/threat-feeds', (_req: Request, res: Response) => {
-    res.redirect(301, '/intel?tab=threat-feeds');
-  });
-
-  app.get('/ioc-search', (_req: Request, res: Response) => {
-    res.redirect(301, '/search?tab=ioc');
-  });
-
-  app.get('/alerts', (_req: Request, res: Response) => {
-    res.redirect(301, '/monitors?tab=alerts');
-  });
-
   app.get("/sitemap.xml", async (_req: Request, res: Response) => {
     try {
       const today = new Date().toISOString().split("T")[0];
