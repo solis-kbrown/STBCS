@@ -174,7 +174,7 @@ export default function Ransomware() {
               data-testid="button-report-incident"
               asChild
             >
-              <a href="mailto:info@stbcybersecurity.com?subject=Ransomware%20Incident%20Report&body=Please%20provide%20details%20about%20the%20ransomware%20incident.">
+              <a href="/contact?category=incident&subject=Ransomware%20Incident%20Report">
                 Report Incident
               </a>
             </Button>

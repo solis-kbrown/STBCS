@@ -170,7 +170,7 @@ export default function CheckoutReturnPage() {
             <h2 className="text-xl font-bold text-white">Something Went Wrong</h2>
             <p className="text-zinc-400">
               {error ? "Unable to verify payment status." : "An unexpected error occurred."}{" "}
-              Please <a href="mailto:support@stbcybersecurity.com" className="text-orange-400 hover:underline">contact us</a> if you believe this is an error.
+              Please <a href="/contact?category=billing&subject=Checkout%20Issue" className="text-orange-400 hover:underline">contact us</a> if you believe this is an error.
             </p>
             <Button
               onClick={() => navigate("/support")}

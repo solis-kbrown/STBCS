@@ -446,7 +446,7 @@ export default function AccountPage() {
                 <CreditCard className="h-4 w-4 mr-2 text-orange-400" />
                 Support & Membership
               </Button>
-              <a href="mailto:support@stbcybersecurity.com" className="w-full">
+              <a href="/contact?category=support&subject=Account%20Support" className="w-full">
                 <Button
                   variant="outline"
                   className="w-full justify-start border-zinc-700 text-zinc-300 hover:bg-zinc-800"

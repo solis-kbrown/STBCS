@@ -103,18 +103,18 @@ export default function Footer() {
                 </a>
               </li>
               <li>
-                <a href="mailto:info@stbcybersecurity.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-info">
-                  <Mail aria-hidden="true" className="h-3 w-3" /> info@stbcybersecurity.com
+                <a href="/contact?category=general" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-info">
+                  <Mail aria-hidden="true" className="h-3 w-3" /> General Inquiries
                 </a>
               </li>
               <li>
-                <a href="mailto:sales@stbcybersecurity.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-sales">
-                  <Mail aria-hidden="true" className="h-3 w-3" /> sales@stbcybersecurity.com
+                <a href="/contact?category=sales" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-sales">
+                  <Mail aria-hidden="true" className="h-3 w-3" /> Sales & Pricing
                 </a>
               </li>
               <li>
-                <a href="mailto:support@stbcybersecurity.com" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-support">
-                  <Mail aria-hidden="true" className="h-3 w-3" /> support@stbcybersecurity.com
+                <a href="/contact?category=support" className="text-muted-foreground hover:text-primary transition-colors flex items-center gap-2" data-testid="link-email-support">
+                  <Mail aria-hidden="true" className="h-3 w-3" /> Technical Support
                 </a>
               </li>
               <li className="pt-2">

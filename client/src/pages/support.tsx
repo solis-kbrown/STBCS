@@ -488,8 +488,8 @@ export default function SupportPage() {
               Limited sponsorship spots for cybersecurity vendors, training providers, and security-focused businesses.
               Our audience includes IT managers, security analysts, and business owners actively researching threats.
             </p>
-            <a href="mailto:partnerships@stbcybersecurity.com" className="text-orange-400 hover:underline">
-              partnerships@stbcybersecurity.com
+            <a href="/contact?category=partnership&subject=Partnership%20Inquiry" className="text-orange-400 hover:underline">
+              Contact our partnerships team
             </a>
           </CardContent>
         </Card>
@@ -505,17 +505,17 @@ export default function SupportPage() {
               or just a question - we're here. Please don't abuse these channels, but know they're always open.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-              <a href="mailto:info@stbcybersecurity.com" className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+              <a href="/contact?category=general" className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                 <span className="text-orange-400">General Inquiries</span>
-                <span className="text-zinc-500 text-xs">info@stbcybersecurity.com</span>
+                <span className="text-zinc-500 text-xs">Send us a message</span>
               </a>
-              <a href="mailto:support@stbcybersecurity.com" className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+              <a href="/contact?category=support" className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                 <span className="text-orange-400">Technical Support</span>
-                <span className="text-zinc-500 text-xs">support@stbcybersecurity.com</span>
+                <span className="text-zinc-500 text-xs">Get help from our team</span>
               </a>
-              <a href="mailto:feedback@stbcybersecurity.com" className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
+              <a href="/contact?category=feedback" className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                 <span className="text-orange-400">Feedback & Stories</span>
-                <span className="text-zinc-500 text-xs">feedback@stbcybersecurity.com</span>
+                <span className="text-zinc-500 text-xs">Share your experience</span>
               </a>
               <a href="tel:+18557821987" className="flex items-center gap-2 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-colors">
                 <span className="text-orange-400">Emergency Hotline</span>
@@ -537,7 +537,7 @@ export default function SupportPage() {
 
         <div className="text-center space-y-2 text-sm text-zinc-500 pb-8">
           <p>Questions about payments or memberships?</p>
-          <p>Contact us at <a href="mailto:billing@stbcybersecurity.com" className="text-orange-400 hover:underline">billing@stbcybersecurity.com</a></p>
+          <p><a href="/contact?category=billing&subject=Billing%20Question" className="text-orange-400 hover:underline">Contact us about billing</a></p>
         </div>
       </div>
       <Footer />

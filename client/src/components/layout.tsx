@@ -152,18 +152,18 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </div>
         <div className="px-2 space-y-1">
           <a 
-            href="mailto:info@stbcybersecurity.com" 
+            href="/contact?category=general" 
             className="flex items-center gap-2 text-xs text-zinc-500 hover:text-orange-400 transition-colors"
           >
             <Mail aria-hidden="true" className="h-3 w-3" />
-            <span>info@stbcybersecurity.com</span>
+            <span>Contact Us</span>
           </a>
           <a 
-            href="mailto:support@stbcybersecurity.com" 
+            href="/contact?category=support" 
             className="flex items-center gap-2 text-xs text-zinc-500 hover:text-orange-400 transition-colors"
           >
             <Mail aria-hidden="true" className="h-3 w-3" />
-            <span>support@stbcybersecurity.com</span>
+            <span>Get Support</span>
           </a>
         </div>
         <div className="px-2 pt-2 border-t border-zinc-800/50">

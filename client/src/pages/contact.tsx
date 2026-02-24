@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useDocumentTitle } from "@/lib/use-document-title";
+import { useLocation } from "wouter";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 import { Card, CardContent } from "@/components/ui/card";
@@ -20,6 +21,8 @@ const categories = [
   { value: "support", label: "Technical Support", icon: Headphones },
   { value: "vulnerability", label: "Report a Vulnerability", icon: Bug },
   { value: "partnership", label: "Partnership / Media", icon: FileText },
+  { value: "billing", label: "Billing & Payments", icon: Building2 },
+  { value: "feedback", label: "Feedback", icon: MessageSquare },
 ];
 
 export default function ContactPage() {
@@ -28,13 +31,26 @@ export default function ContactPage() {
     "Get in touch with STB Cybersecurity for incident response, security consulting, or general inquiries. 24/7 emergency hotline available."
   );
 
+  const params = new URLSearchParams(window.location.search);
+  const initialCategory = categories.find(c => c.value === params.get("category"))?.value || "general";
+  const initialSubject = params.get("subject") || "";
+
   const [form, setForm] = useState({
     name: "",
     email: "",
-    subject: "",
-    category: "general",
+    subject: initialSubject,
+    category: initialCategory,
     message: "",
   });
+
+  useEffect(() => {
+    if (initialCategory !== "general" || initialSubject) {
+      const formEl = document.getElementById("contact-form");
+      if (formEl) {
+        setTimeout(() => formEl.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+      }
+    }
+  }, []);
 
   const submitMutation = useMutation({
     mutationFn: async (data: typeof form) => {
@@ -110,7 +126,7 @@ export default function ContactPage() {
 
         <div className="grid lg:grid-cols-3 gap-6">
           <AnimatedSection animation="fade-left" className="lg:col-span-2 space-y-6">
-            <Card className="bg-zinc-900/50 border-zinc-800 card-interactive" data-testid="card-contact-form">
+            <Card id="contact-form" className="bg-zinc-900/50 border-zinc-800 card-interactive" data-testid="card-contact-form">
               <CardContent className="pt-6">
                 <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
                   <Send className="h-5 w-5 text-orange-400" />
