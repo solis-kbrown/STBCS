@@ -359,22 +359,21 @@ Allow: /
 Allow: /tools
 Allow: /ransomware
 Allow: /exploits
-Allow: /threat-feeds
-Allow: /news
+Allow: /intel
 Allow: /search
+Allow: /monitors
 Allow: /support
 Allow: /privacy
 Allow: /terms
 Allow: /sms-terms
 Allow: /api-docs
-Allow: /alerts
-Allow: /ioc-search
 Allow: /risk-score
 Allow: /ics-advisories
 Allow: /breaches
-Allow: /ransomware-payments
 Allow: /about
+Allow: /contact
 Allow: /logos
+Allow: /groups
 Allow: /group/
 
 Disallow: /account
