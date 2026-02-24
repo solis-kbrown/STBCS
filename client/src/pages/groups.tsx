@@ -74,8 +74,8 @@ function parseField(value: string | null | undefined): string[] {
 
 export default function GroupsDirectory() {
   useDocumentTitle(
-    "Ransomware Groups Directory | STB Cybersecurity",
-    "Browse all tracked ransomware groups with victim counts, activity status, TTPs, and threat intelligence. Click any group for detailed dossier."
+    "Threat Actors | STB Cybersecurity",
+    "Browse all tracked threat actor groups with victim counts, activity status, TTPs, and threat intelligence. Click any group for detailed dossier."
   );
 
   const [, setLocation] = useLocation();
@@ -203,7 +203,7 @@ export default function GroupsDirectory() {
     const jsonLd = {
       "@context": "https://schema.org",
       "@type": "Dataset",
-      "name": "STBCS Ransomware Groups Directory",
+      "name": "STBCS Threat Actors Directory",
       "description": `Threat intelligence directory tracking ${stats.total} ransomware groups with ${stats.totalVictims.toLocaleString()} known victims. Includes group profiles, TTPs, MITRE ATT&CK mapping, and victim data.`,
       "url": "https://stbcybersecurity.com/groups",
       "creator": { "@type": "Organization", "name": "STB Cybersecurity" },
@@ -222,7 +222,7 @@ export default function GroupsDirectory() {
         <AnimatedSection animation="fade-down">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-display font-bold text-white mb-2">Ransomware Groups Directory</h1>
+              <h1 className="text-3xl font-display font-bold text-white mb-2">Threat Actors</h1>
               <p className="text-muted-foreground">
                 Browse {stats.total > 0 ? stats.total.toLocaleString() : ''} tracked ransomware groups. Click any group for a full intelligence dossier with MITRE ATT&CK mapping, victim data, and TTPs.
               </p>

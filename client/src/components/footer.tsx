@@ -70,7 +70,7 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><a href="/exploits" className="hover:text-primary transition-colors" data-testid="link-footer-cves">CVE Database</a></li>
               <li><a href="/ransomware" className="hover:text-primary transition-colors" data-testid="link-footer-ransomware">Ransomware Tracker</a></li>
-              <li><a href="/groups" className="hover:text-primary transition-colors" data-testid="link-footer-groups">Groups & Threat Actors</a></li>
+              <li><a href="/groups" className="hover:text-primary transition-colors" data-testid="link-footer-groups">Threat Actors</a></li>
               <li><a href="/breaches" className="hover:text-primary transition-colors" data-testid="link-footer-breaches">Breach Database</a></li>
               <li><a href="/ics-advisories" className="hover:text-primary transition-colors" data-testid="link-footer-ics">ICS-CERT Advisories</a></li>
               <li><a href="/intel" className="hover:text-primary transition-colors" data-testid="link-footer-intel">Intel & Feeds</a></li>

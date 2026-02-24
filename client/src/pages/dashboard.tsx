@@ -352,7 +352,7 @@ export default function Dashboard() {
               { href: "/tools", label: "Security Tools", icon: Wrench, desc: "IP lookup, port scan & more" },
               { href: "/search?tab=ioc", label: "IOC Lookup", icon: Scan, desc: "Search 40+ threat feeds" },
               { href: "/risk-score", label: "Risk Score", icon: ShieldCheck, desc: "Free cyber risk assessment" },
-              { href: "/groups", label: "Threat Groups", icon: Users, desc: "Ransomware & APT profiles" },
+              { href: "/groups", label: "Threat Actors", icon: Users, desc: "Ransomware & APT profiles" },
               { href: "/breaches", label: "Breach Database", icon: Database, desc: "Known data breaches" },
               { href: "/ics-advisories", label: "ICS Advisories", icon: Factory, desc: "CISA ICS-CERT alerts" },
               { href: "/intel", label: "Intel & Feeds", icon: AlertTriangle, desc: "News & live threat data" },

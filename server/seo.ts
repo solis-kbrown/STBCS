@@ -17,8 +17,8 @@ const PAGE_META: Record<string, PageMeta> = {
     description: 'Monitor active ransomware groups, victim postings, and attack analytics in real-time. Track LockBit, BlackCat, Cl0p with profiles, TTPs, and targeting data.',
   },
   '/groups': {
-    title: 'Ransomware Groups Directory | STB Cybersecurity',
-    description: 'Browse all tracked ransomware groups with victim counts, activity status, TTPs, MITRE ATT&CK mapping, and detailed threat intelligence dossiers.',
+    title: 'Threat Actors | STB Cybersecurity',
+    description: 'Browse all tracked threat actor groups with victim counts, activity status, TTPs, MITRE ATT&CK mapping, and detailed threat intelligence dossiers.',
   },
   '/exploits': {
     title: 'Exploits & CVE Database | STB Cybersecurity',
@@ -227,7 +227,7 @@ function getH1Text(path: string, meta: PageMeta): string {
   const titleMap: Record<string, string> = {
     '/': 'Real-Time Threat Intelligence & Incident Response',
     '/ransomware': 'Ransomware Tracker',
-    '/groups': 'Ransomware Groups Directory',
+    '/groups': 'Threat Actors',
     '/exploits': 'Exploits & CVE Database',
     '/tools': 'Free Security Tools',
     '/search': 'Threat Search & IOC Lookup',
@@ -262,7 +262,7 @@ function generateSSRContent(path: string, meta: PageMeta): string {
   const nav = `<nav aria-label="Main navigation"><ul>` +
     `<li><a href="/">Dashboard</a></li>` +
     `<li><a href="/ransomware">Ransomware Tracker</a></li>` +
-    `<li><a href="/groups">Groups & Threat Actors</a></li>` +
+    `<li><a href="/groups">Threat Actors</a></li>` +
     `<li><a href="/exploits">Exploits & CVEs</a></li>` +
     `<li><a href="/tools">Security Tools</a></li>` +
     `<li><a href="/risk-score">Cyber Risk Score</a></li>` +
