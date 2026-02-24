@@ -4101,6 +4101,42 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
+  const LOGO_THEMES = [
+    "default", "sentinel-shield", "neural-lock", "fortress-radar",
+    "sword-key", "quantum-core", "cyber-eye", "spartan-helm", "bio-helix",
+    "chain-shield", "lighthouse-beacon", "samurai-cyber", "radar-hex", "chess-knight",
+    "phoenix-rise", "dragon-fire", "shadow-hacker", "cyber-skull", "vault-server",
+    "crypto-lock", "firewall-barrier", "terminal-ops", "bio-print", "soc-command",
+    "zero-trust", "chip-shield", "orbital-intel", "breach-patch", "darkweb-intel",
+    "honeypot-trap", "redblue-team", "wolf-hunter", "eagle-scan", "cobra-strike",
+    "kraken-deep", "bear-circuit",
+  ];
+
+  app.get("/api/site-settings/logo-theme", generalLimiter, async (_req: Request, res: Response) => {
+    try {
+      const result = await db.select().from(siteSettings).where(eq(siteSettings.key, "logo-theme")).limit(1);
+      res.json({ value: result[0]?.value || "default" });
+    } catch {
+      res.json({ value: "default" });
+    }
+  });
+
+  app.post("/api/site-settings/logo-theme", generalLimiter, async (req: Request, res: Response) => {
+    try {
+      const { value } = req.body;
+      if (!value || !LOGO_THEMES.includes(value)) {
+        res.status(400).json({ error: "Invalid logo theme" });
+        return;
+      }
+      await db.insert(siteSettings)
+        .values({ key: "logo-theme", value, updatedAt: new Date() })
+        .onConflictDoUpdate({ target: siteSettings.key, set: { value, updatedAt: new Date() } });
+      res.json({ value, updated: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update logo theme" });
+    }
+  });
+
   app.get("/api/logos/views", generalLimiter, async (_req: Request, res: Response) => {
     try {
       const result = await db.select().from(contentViews).where(eq(contentViews.contentType, "logo_gallery")).limit(1);

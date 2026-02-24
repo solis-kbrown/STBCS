@@ -1,11 +1,12 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useDocumentTitle } from "@/lib/use-document-title";
-import { ArrowLeft, Check, Shield, Copyright, Eye, ThumbsUp, Monitor } from "lucide-react";
+import { ArrowLeft, Check, Shield, Copyright, Eye, ThumbsUp, Monitor, Palette } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { useLogoTheme, LOGO_THEMES } from "@/lib/use-logo-theme";
 
 const currentLogo = {
   name: "Hex Lock — Red Banner",
@@ -144,6 +145,116 @@ const trademarks = [
   { mark: "Stop The Bleed", type: "Tagline / Motto" },
   { mark: "Hex Lock", type: "Logo Design Name" },
 ];
+
+function LogoThemePicker() {
+  const { activeTheme, activeThemeId, setTheme } = useLogoTheme();
+  const [filter, setFilter] = useState("all");
+  const categories = ["all", ...Array.from(new Set(LOGO_THEMES.map(t => t.category)))];
+  const filtered = filter === "all" ? LOGO_THEMES : LOGO_THEMES.filter(t => t.category === filter);
+
+  return (
+    <div className="rounded-2xl border border-orange-500/20 bg-gradient-to-br from-zinc-900 via-zinc-900/95 to-orange-950/5 p-6 md:p-8" data-testid="section-logo-themes">
+      <div className="flex items-center gap-3 mb-2">
+        <Palette className="h-5 w-5 text-orange-500" />
+        <h2 className="text-xl font-bold text-white">Logo Themes</h2>
+        <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30">{LOGO_THEMES.length} themes</Badge>
+      </div>
+      <p className="text-zinc-500 text-sm mb-4">Select a logo theme to use across the entire site — sidebar, header, cards, and more.</p>
+
+      <div className="flex items-center gap-4 mb-6">
+        <div className="flex items-center gap-3 bg-zinc-950 rounded-xl p-3 border border-zinc-800 shrink-0">
+          <img src={activeTheme.fullLogo} alt={activeTheme.name} className="h-16 w-16 object-contain" data-testid="img-active-theme" />
+          <div>
+            <p className="text-white font-semibold text-sm">{activeTheme.name}</p>
+            <p className="text-zinc-500 text-xs">{activeTheme.description}</p>
+            <Badge className="bg-green-500/20 text-green-400 border-green-500/30 mt-1 text-[10px]">
+              <Check className="h-2.5 w-2.5 mr-0.5" /> Active
+            </Badge>
+          </div>
+        </div>
+        <div className="flex items-center gap-3 bg-zinc-950 rounded-xl p-3 border border-zinc-800 shrink-0">
+          <img src={activeTheme.icon} alt="Icon preview" className="h-12 w-12 object-contain" />
+          <div>
+            <p className="text-zinc-500 text-xs">Icon Preview</p>
+            <p className="text-white text-sm font-medium">Menu / Header</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-5">
+        {categories.map((cat) => (
+          <button
+            key={cat}
+            onClick={() => setFilter(cat)}
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+              filter === cat
+                ? "bg-orange-500/20 text-orange-400 border border-orange-500/40"
+                : "bg-zinc-800 text-zinc-400 border border-zinc-700 hover:border-zinc-500"
+            }`}
+            data-testid={`filter-theme-${cat.toLowerCase()}`}
+          >
+            {cat === "all" ? "All Themes" : cat}
+          </button>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        {filtered.map((theme) => {
+          const isActive = theme.id === activeThemeId;
+          return (
+            <Card
+              key={theme.id}
+              className={`bg-zinc-900 transition-all cursor-pointer group ${
+                isActive
+                  ? "ring-2 ring-orange-500/50 border-orange-500/40"
+                  : "border-zinc-800 hover:border-zinc-600 hover:ring-1 hover:ring-orange-500/20"
+              }`}
+              onClick={() => !isActive && setTheme.mutate(theme.id)}
+              data-testid={`theme-card-${theme.id}`}
+            >
+              <CardContent className="p-3">
+                <div className="aspect-square bg-zinc-950 rounded-lg overflow-hidden mb-2 flex items-center justify-center relative border border-zinc-800 group-hover:border-zinc-600">
+                  <img
+                    src={theme.fullLogo}
+                    alt={theme.name}
+                    className="max-w-[85%] max-h-[85%] object-contain"
+                  />
+                  {isActive && (
+                    <div className="absolute top-2 right-2 h-5 w-5 bg-orange-500 rounded-full flex items-center justify-center">
+                      <Check className="h-3 w-3 text-white" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex items-start justify-between gap-1">
+                  <div className="min-w-0">
+                    <p className="text-white text-xs font-semibold truncate">{theme.name}</p>
+                    <p className="text-zinc-600 text-[10px] mt-0.5 line-clamp-1">{theme.description}</p>
+                  </div>
+                  <img src={theme.icon} alt="" className="h-6 w-6 object-contain shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
+                </div>
+                {isActive ? (
+                  <Badge className="bg-green-500/15 text-green-400 border-green-500/30 mt-2 w-full justify-center text-[10px]">
+                    <Check className="h-2.5 w-2.5 mr-0.5" /> Selected
+                  </Badge>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="w-full mt-2 text-[10px] h-6 border-zinc-700 text-zinc-400 hover:text-orange-400 hover:border-orange-500/30"
+                    onClick={(e) => { e.stopPropagation(); setTheme.mutate(theme.id); }}
+                    data-testid={`button-select-theme-${theme.id}`}
+                  >
+                    Apply Theme
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function LogoGallery() {
   useDocumentTitle("Brand Assets | STB Cybersecurity", "Official STBCS brand assets, logo variations, and trademark information.");
@@ -330,6 +441,8 @@ export default function LogoGallery() {
             })}
           </div>
         </div>
+
+        <LogoThemePicker />
 
         {variations.map((section) => (
           <div key={section.category} data-testid={`section-${section.category.toLowerCase().replace(/\s+/g, "-")}`}>

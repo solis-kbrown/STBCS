@@ -42,6 +42,7 @@ import { LanguageSelector } from "@/components/language-selector";
 import { useTranslation } from "@/lib/i18n/context";
 import { useAuth } from "@/lib/auth";
 import { AuthModal } from "@/components/auth-modal";
+import { useLogoTheme } from "@/lib/use-logo-theme";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const [location, setLocation] = useLocation();
@@ -50,6 +51,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const { t } = useTranslation();
   const { user, isAuthenticated, isPro, logout } = useAuth();
+  const { activeTheme } = useLogoTheme();
 
   const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
@@ -80,7 +82,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <div className="p-5 group">
         <Link href="/">
           <div className="flex flex-col items-center cursor-pointer">
-            <img src="/brand/logo-main.png" alt="STB Cybersecurity" className="h-32 w-auto rounded-lg group-hover:drop-shadow-[0_0_12px_rgba(239,68,68,0.3)] transition-all duration-300" />
+            <img src={activeTheme.fullLogo} alt="STB Cybersecurity" className="h-32 w-auto rounded-lg group-hover:drop-shadow-[0_0_12px_rgba(239,68,68,0.3)] transition-all duration-300" />
           </div>
         </Link>
       </div>
@@ -202,7 +204,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <Menu className="h-5 w-5" />
               </Button>
               <Link href="/" className="flex items-center gap-2 md:hidden">
-                <img src="/brand/icon-shield.png" alt="STBCS Logo" className="h-8 w-8 drop-shadow-[0_0_4px_rgba(239,68,68,0.3)]" />
+                <img src={activeTheme.icon} alt="STBCS Logo" className="h-8 w-8 drop-shadow-[0_0_4px_rgba(239,68,68,0.3)]" />
                 <span className="font-display font-bold text-sm tracking-wider text-orange-400">STBCS</span>
               </Link>
               <div className="relative hidden sm:block w-96">
