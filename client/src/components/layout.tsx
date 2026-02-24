@@ -28,7 +28,7 @@ import {
 import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -181,7 +181,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-orange-500 focus:text-white focus:rounded-lg focus:text-sm focus:font-medium">Skip to main content</a>
       {/* Mobile Sidebar */}
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-        <SheetContent side="left" className="p-0 w-72 border-r border-sidebar-border bg-sidebar">
+        <SheetContent side="left" className="p-0 w-72 border-r border-sidebar-border bg-sidebar" aria-describedby={undefined}>
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <SidebarContent />
         </SheetContent>
       </Sheet>
