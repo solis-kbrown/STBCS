@@ -80,6 +80,31 @@ const variations = [
       { name: "Header Logo", file: "/brand/icon-header.png", size: "120×120", usage: "Mobile header bar" },
     ],
   },
+  {
+    category: "Concept Logos",
+    items: [
+      { name: "Hex Binary Shield", file: "/brand/logos/logo-hex-binary.png", size: "1024×1024", usage: "Hexagonal shield with binary code streams" },
+      { name: "Firewall Rings", file: "/brand/logos/logo-firewall-rings.png", size: "1024×1024", usage: "Layered firewall defense rings with keyhole" },
+      { name: "Stealth Shield", file: "/brand/logos/logo-stealth-shield.png", size: "1024×1024", usage: "Stealth fighter merged with shield shape" },
+      { name: "Neural Brain", file: "/brand/logos/logo-neural-brain.png", size: "1024×1024", usage: "AI neural network brain in hexagonal frame" },
+      { name: "Cyber Eye", file: "/brand/logos/logo-cyber-eye.png", size: "1024×1024", usage: "All-seeing surveillance eye with circuit pattern" },
+      { name: "DNA Lock", file: "/brand/logos/logo-dna-lock.png", size: "1024×1024", usage: "Double helix DNA morphing into digital lock" },
+      { name: "Spartan Cyber", file: "/brand/logos/logo-spartan-cyber.png", size: "1024×1024", usage: "Spartan helmet made of circuit board traces" },
+      { name: "Phoenix Rise", file: "/brand/logos/logo-phoenix-rise.png", size: "1024×1024", usage: "Phoenix rising from digital ashes — recovery" },
+      { name: "Global Mesh", file: "/brand/logos/logo-global-mesh.png", size: "1024×1024", usage: "Honeycomb mesh forming a globe shape" },
+      { name: "Sword & Key", file: "/brand/logos/logo-sword-key.png", size: "1024×1024", usage: "Sword crossed with key inside shield crest" },
+      { name: "Quantum Chip", file: "/brand/logos/logo-quantum-chip.png", size: "1024×1024", usage: "Quantum computing chip inside shield frame" },
+      { name: "Wolf Hunter", file: "/brand/logos/logo-wolf-hunter.png", size: "1024×1024", usage: "Low-poly wolf head — threat hunter predator" },
+      { name: "Radar Hex", file: "/brand/logos/logo-radar-hex.png", size: "1024×1024", usage: "Radar dish inside hexagonal surveillance frame" },
+      { name: "Digital Fortress", file: "/brand/logos/logo-digital-fortress.png", size: "1024×1024", usage: "Castle fortress with circuit board walls" },
+      { name: "Web Trap", file: "/brand/logos/logo-web-trap.png", size: "1024×1024", usage: "Spider web shield trapping threat icons" },
+      { name: "Orbital Shield", file: "/brand/logos/logo-orbital-shield.png", size: "1024×1024", usage: "Satellite orbiting shield-shaped earth" },
+      { name: "Dragon Eye", file: "/brand/logos/logo-dragon-eye.png", size: "1024×1024", usage: "Dragon guardian eye in diamond shield" },
+      { name: "Chain Infinity", file: "/brand/logos/logo-chain-infinity.png", size: "1024×1024", usage: "Chain infinity symbol with central lock" },
+      { name: "Cobra Server", file: "/brand/logos/logo-cobra-server.png", size: "1024×1024", usage: "Cobra coiled around server tower — defense" },
+      { name: "Trident WiFi", file: "/brand/logos/logo-trident-wifi.png", size: "1024×1024", usage: "Trident merged with WiFi signal — network defense" },
+    ],
+  },
 ];
 
 const trademarks = [
