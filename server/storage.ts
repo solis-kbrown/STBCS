@@ -27,13 +27,17 @@ import {
   type UptimeMonitor, type InsertUptimeMonitor, type UptimeCheck, type UptimeIncident,
   type DarkWebMonitor, type InsertDarkWebMonitor, type DarkWebFinding,
   type DailyThreatStats,
+  type AttackSurfaceScan, type InsertAttackSurfaceScan,
+  type AttackSurfaceAsset, type InsertAttackSurfaceAsset,
+  type ThreatReport, type InsertThreatReport,
+  type ReportSchedule, type InsertReportSchedule,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
   userNotifications, watchlistItems, breachIncidents, cisaIcsAdvisories, newsletterSubscriptions,
   smsMessages, exploitSubmissions, liveChatSessions, contentViews, siteVisitors, dailyVisitorCounts,
   apiKeys, apiKeyUsage, addOns, userAddOns, monitorAlertLog,
   uptimeMonitors, uptimeChecks, uptimeIncidents, darkWebMonitors, darkWebFindings,
-  dailyThreatStats
+  dailyThreatStats, attackSurfaceScans, attackSurfaceAssets, threatReports, reportSchedules
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte } from "drizzle-orm";
@@ -284,6 +288,27 @@ export interface IStorage {
   captureDailyThreatStats(): Promise<DailyThreatStats>;
   getDailyThreatStats(days?: number): Promise<DailyThreatStats[]>;
   getDailyThreatStatsByRange(startDate: string, endDate: string): Promise<DailyThreatStats[]>;
+
+  // Attack Surface Scans
+  createAttackSurfaceScan(data: InsertAttackSurfaceScan): Promise<AttackSurfaceScan>;
+  getAttackSurfaceScans(userId: string, limit?: number): Promise<AttackSurfaceScan[]>;
+  getAttackSurfaceScanById(id: string): Promise<AttackSurfaceScan | undefined>;
+  updateAttackSurfaceScan(id: string, updates: Partial<AttackSurfaceScan>): Promise<void>;
+  addAttackSurfaceAssets(assets: InsertAttackSurfaceAsset[]): Promise<void>;
+  getAttackSurfaceAssets(scanId: string): Promise<AttackSurfaceAsset[]>;
+  getUserScanCount(userId: string): Promise<number>;
+
+  // Threat Reports
+  createThreatReport(data: InsertThreatReport): Promise<ThreatReport>;
+  getThreatReports(userId: string, limit?: number): Promise<ThreatReport[]>;
+  getThreatReportById(id: string): Promise<ThreatReport | undefined>;
+  updateThreatReport(id: string, updates: Partial<ThreatReport>): Promise<void>;
+
+  // Report Schedules
+  getReportSchedule(userId: string): Promise<ReportSchedule | undefined>;
+  upsertReportSchedule(data: InsertReportSchedule): Promise<ReportSchedule>;
+  getDueReportSchedules(): Promise<ReportSchedule[]>;
+  updateReportSchedule(id: string, updates: Partial<ReportSchedule>): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2213,6 +2238,115 @@ export class DatabaseStorage implements IStorage {
         sql`${dailyThreatStats.date} <= ${endDate}`
       ))
       .orderBy(dailyThreatStats.date);
+  }
+
+  // Attack Surface Scans
+  async createAttackSurfaceScan(data: InsertAttackSurfaceScan): Promise<AttackSurfaceScan> {
+    const [scan] = await db.insert(attackSurfaceScans).values(data).returning();
+    return scan;
+  }
+
+  async getAttackSurfaceScans(userId: string, limit = 20): Promise<AttackSurfaceScan[]> {
+    return db.select().from(attackSurfaceScans)
+      .where(eq(attackSurfaceScans.userId, userId))
+      .orderBy(desc(attackSurfaceScans.createdAt))
+      .limit(limit);
+  }
+
+  async getAttackSurfaceScanById(id: string): Promise<AttackSurfaceScan | undefined> {
+    const [scan] = await db.select().from(attackSurfaceScans)
+      .where(eq(attackSurfaceScans.id, id));
+    return scan;
+  }
+
+  async updateAttackSurfaceScan(id: string, updates: Partial<AttackSurfaceScan>): Promise<void> {
+    await db.update(attackSurfaceScans).set(updates).where(eq(attackSurfaceScans.id, id));
+  }
+
+  async addAttackSurfaceAssets(assets: InsertAttackSurfaceAsset[]): Promise<void> {
+    if (assets.length === 0) return;
+    await db.insert(attackSurfaceAssets).values(assets);
+  }
+
+  async getAttackSurfaceAssets(scanId: string): Promise<AttackSurfaceAsset[]> {
+    return db.select().from(attackSurfaceAssets)
+      .where(eq(attackSurfaceAssets.scanId, scanId))
+      .orderBy(attackSurfaceAssets.assetType);
+  }
+
+  async getUserScanCount(userId: string): Promise<number> {
+    const [result] = await db.select({ count: sql<number>`count(*)::int` })
+      .from(attackSurfaceScans).where(eq(attackSurfaceScans.userId, userId));
+    return result?.count ?? 0;
+  }
+
+  // Threat Reports
+  async createThreatReport(data: InsertThreatReport): Promise<ThreatReport> {
+    const [report] = await db.insert(threatReports).values(data).returning();
+    return report;
+  }
+
+  async getThreatReports(userId: string, limit = 20): Promise<ThreatReport[]> {
+    return db.select().from(threatReports)
+      .where(eq(threatReports.userId, userId))
+      .orderBy(desc(threatReports.createdAt))
+      .limit(limit);
+  }
+
+  async getThreatReportById(id: string): Promise<ThreatReport | undefined> {
+    const [report] = await db.select().from(threatReports)
+      .where(eq(threatReports.id, id));
+    return report;
+  }
+
+  async updateThreatReport(id: string, updates: Partial<ThreatReport>): Promise<void> {
+    await db.update(threatReports).set(updates).where(eq(threatReports.id, id));
+  }
+
+  // Report Schedules
+  async getReportSchedule(userId: string): Promise<ReportSchedule | undefined> {
+    const [schedule] = await db.select().from(reportSchedules)
+      .where(eq(reportSchedules.userId, userId));
+    return schedule;
+  }
+
+  async upsertReportSchedule(data: InsertReportSchedule): Promise<ReportSchedule> {
+    const existing = await this.getReportSchedule(data.userId);
+    if (existing) {
+      const nextRun = this.computeNextRun(data.cadence || "weekly");
+      await db.update(reportSchedules).set({
+        cadence: data.cadence,
+        isActive: data.isActive,
+        nextRunAt: nextRun,
+      }).where(eq(reportSchedules.id, existing.id));
+      return { ...existing, ...data, nextRunAt: nextRun };
+    }
+    const nextRun = this.computeNextRun(data.cadence || "weekly");
+    const [schedule] = await db.insert(reportSchedules)
+      .values({ ...data, nextRunAt: nextRun })
+      .returning();
+    return schedule;
+  }
+
+  private computeNextRun(cadence: string): Date {
+    const now = new Date();
+    if (cadence === "monthly") {
+      return new Date(now.getFullYear(), now.getMonth() + 1, 1, 8, 0);
+    }
+    const daysUntilMonday = (8 - now.getDay()) % 7 || 7;
+    return new Date(now.getTime() + daysUntilMonday * 86400000);
+  }
+
+  async getDueReportSchedules(): Promise<ReportSchedule[]> {
+    return db.select().from(reportSchedules)
+      .where(and(
+        eq(reportSchedules.isActive, true),
+        sql`${reportSchedules.nextRunAt} <= NOW()`
+      ));
+  }
+
+  async updateReportSchedule(id: string, updates: Partial<ReportSchedule>): Promise<void> {
+    await db.update(reportSchedules).set(updates).where(eq(reportSchedules.id, id));
   }
 }
 

@@ -1033,3 +1033,102 @@ export const dailyThreatStats = pgTable("daily_threat_stats", {
 
 export type DailyThreatStats = typeof dailyThreatStats.$inferSelect;
 export type InsertDailyThreatStats = typeof dailyThreatStats.$inferInsert;
+
+// ===== Attack Surface Scans =====
+export const attackSurfaceScans = pgTable("attack_surface_scans", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  domain: text("domain").notNull(),
+  status: text("status").default("queued"),
+  startedAt: timestamp("started_at"),
+  completedAt: timestamp("completed_at"),
+  summary: text("summary"),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("as_scan_user_idx").on(table.userId),
+  index("as_scan_domain_idx").on(table.domain),
+]);
+
+export const attackSurfaceAssets = pgTable("attack_surface_assets", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  scanId: varchar("scan_id").notNull(),
+  assetType: text("asset_type").notNull(),
+  value: text("value").notNull(),
+  metadata: text("metadata"),
+  severity: text("severity").default("info"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("as_asset_scan_idx").on(table.scanId),
+  index("as_asset_type_idx").on(table.assetType),
+]);
+
+export const insertAttackSurfaceScanSchema = createInsertSchema(attackSurfaceScans).omit({
+  id: true,
+  startedAt: true,
+  completedAt: true,
+  summary: true,
+  lastError: true,
+  createdAt: true,
+});
+
+export const insertAttackSurfaceAssetSchema = createInsertSchema(attackSurfaceAssets).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type AttackSurfaceScan = typeof attackSurfaceScans.$inferSelect;
+export type InsertAttackSurfaceScan = z.infer<typeof insertAttackSurfaceScanSchema>;
+export type AttackSurfaceAsset = typeof attackSurfaceAssets.$inferSelect;
+export type InsertAttackSurfaceAsset = z.infer<typeof insertAttackSurfaceAssetSchema>;
+
+// ===== Threat Reports =====
+export const threatReports = pgTable("threat_reports", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull(),
+  title: text("title").notNull(),
+  periodStart: timestamp("period_start"),
+  periodEnd: timestamp("period_end"),
+  status: text("status").default("queued"),
+  reportData: text("report_data"),
+  generatedAt: timestamp("generated_at"),
+  lastError: text("last_error"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("tr_user_idx").on(table.userId),
+  index("tr_status_idx").on(table.status),
+]);
+
+export const reportSchedules = pgTable("report_schedules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().unique(),
+  cadence: text("cadence").default("weekly"),
+  isActive: boolean("is_active").default(true),
+  nextRunAt: timestamp("next_run_at"),
+  lastRunAt: timestamp("last_run_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("rs_user_idx").on(table.userId),
+  index("rs_next_run_idx").on(table.nextRunAt),
+]);
+
+export const insertThreatReportSchema = createInsertSchema(threatReports).omit({
+  id: true,
+  status: true,
+  reportData: true,
+  generatedAt: true,
+  lastError: true,
+  createdAt: true,
+});
+
+export const insertReportScheduleSchema = createInsertSchema(reportSchedules).omit({
+  id: true,
+  nextRunAt: true,
+  lastRunAt: true,
+  createdAt: true,
+});
+
+export type ThreatReport = typeof threatReports.$inferSelect;
+export type InsertThreatReport = z.infer<typeof insertThreatReportSchema>;
+export type ReportSchedule = typeof reportSchedules.$inferSelect;
+export type InsertReportSchedule = z.infer<typeof insertReportScheduleSchema>;
