@@ -1,6 +1,7 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 import AnimatedSection from "@/components/animated-section";
+import UpgradeBanner from "@/components/upgrade-banner";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -553,6 +554,7 @@ export default function GroupsDirectory() {
           />
         )}
 
+        <UpgradeBanner context="data" />
         <Footer />
       </div>
     </Layout>

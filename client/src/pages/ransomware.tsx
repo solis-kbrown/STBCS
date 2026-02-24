@@ -1,6 +1,7 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 import AnimatedSection, { AnimatedList } from "@/components/animated-section";
+import UpgradeBanner from "@/components/upgrade-banner";
 import { useRansomware, useRansomwareGroups, useRansomwareSearch, useExportData, useTrackView, useRansomwareAnalytics } from "@/lib/api";
 import { toSlug } from "@shared/schema";
 import { useDocumentTitle } from "@/lib/use-document-title";
@@ -8,7 +9,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Download, ExternalLink, Globe, Loader2, ArrowUpDown, SlidersHorizontal, Calendar, RotateCcw, ChevronRight, BarChart3, TrendingUp, Users, Target, MapPin, Building2, DollarSign } from "lucide-react";
+import { Search, Filter, Download, ExternalLink, Globe, Loader2, ArrowUpDown, SlidersHorizontal, Calendar, RotateCcw, ChevronRight, BarChart3, TrendingUp, Users, Target, MapPin, Building2, DollarSign, Lock, Crown } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -52,6 +54,8 @@ export default function Ransomware() {
   const trackView = useTrackView();
   const { data: searchResults, isLoading: isSearching } = useRansomwareSearch(activeSearch);
   const { data: analytics } = useRansomwareAnalytics();
+  const { isPro, isBusiness } = useAuth();
+  const canExport = isPro || isBusiness;
   const exportMutation = useExportData();
   
   const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
@@ -159,16 +163,23 @@ export default function Ransomware() {
               <BarChart3 className="h-4 w-4 mr-2" />
               Analytics
             </Button>
-            <Button 
-              variant="outline" 
-              className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" 
-              data-testid="button-export"
-              onClick={() => exportMutation.mutate({ type: 'ransomware' })}
-              disabled={exportMutation.isPending}
-            >
-              {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-              Export JSON
-            </Button>
+            {canExport ? (
+              <Button 
+                variant="outline" 
+                className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" 
+                data-testid="button-export"
+                onClick={() => exportMutation.mutate({ type: 'ransomware' })}
+                disabled={exportMutation.isPending}
+              >
+                {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                Export JSON
+              </Button>
+            ) : (
+              <Button variant="outline" className="border-zinc-700 text-zinc-500 cursor-not-allowed" disabled data-testid="button-export-locked">
+                <Lock className="h-4 w-4 mr-2" />
+                Export (Pro)
+              </Button>
+            )}
             <Button 
               className="bg-primary hover:bg-primary/90" 
               data-testid="button-report-incident"
@@ -819,6 +830,7 @@ export default function Ransomware() {
           </TabsContent>
         </Tabs>
 
+        <UpgradeBanner context="data" />
         <Footer />
       </div>
     </Layout>

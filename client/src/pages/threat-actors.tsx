@@ -1,5 +1,6 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import UpgradeBanner from "@/components/upgrade-banner";
 import AnimatedSection, { AnimatedList } from "@/components/animated-section";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
@@ -12,6 +13,7 @@ import PaginationControls from "@/components/pagination-controls";
 import { useQuery } from "@tanstack/react-query";
 import { useExportData } from "@/lib/api";
 import { useState, useMemo, useCallback } from "react";
+import { useAuth } from "@/lib/auth";
 import {
   Users,
   Search,
@@ -31,6 +33,8 @@ import {
   RotateCcw,
   Download,
   Loader2,
+  Lock,
+  Crown,
 } from "lucide-react";
 import type { ThreatActor } from "@shared/schema";
 import { getActorTechniques, getTacticBreakdown, TACTIC_COLORS, type MitreTechnique } from "@shared/mitre-attack";
@@ -94,6 +98,8 @@ export default function ThreatActors() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
 
+  const { isPro, isBusiness } = useAuth();
+  const canExport = isPro || isBusiness;
   const exportMutation = useExportData();
   const { data: actors, isLoading, isError } = useQuery<ThreatActor[]>({
     queryKey: ["/api/threat-actors"],
@@ -210,14 +216,23 @@ export default function ThreatActors() {
               </p>
             </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-actors-csv" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'csv' })} disabled={exportMutation.isPending}>
-              {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
-              CSV
-            </Button>
-            <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-actors-json" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'json' })} disabled={exportMutation.isPending}>
-              <Download className="h-4 w-4 mr-2" />
-              JSON
-            </Button>
+            {canExport ? (
+              <>
+                <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-actors-csv" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'csv' })} disabled={exportMutation.isPending}>
+                  {exportMutation.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Download className="h-4 w-4 mr-2" />}
+                  CSV
+                </Button>
+                <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-export-actors-json" onClick={() => exportMutation.mutate({ type: 'threat-actors', format: 'json' })} disabled={exportMutation.isPending}>
+                  <Download className="h-4 w-4 mr-2" />
+                  JSON
+                </Button>
+              </>
+            ) : (
+              <Button variant="outline" className="border-zinc-700 text-zinc-500 cursor-not-allowed" disabled data-testid="button-export-actors-locked">
+                <Lock className="h-4 w-4 mr-2" />
+                Export (Pro)
+              </Button>
+            )}
           </div>
           </div>
         </AnimatedSection>
@@ -828,6 +843,7 @@ export default function ThreatActors() {
           />
         )}
 
+        <UpgradeBanner context="data" />
         <Footer />
       </div>
     </Layout>

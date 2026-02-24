@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import UpgradeBanner from "@/components/upgrade-banner";
 import { useGlobalSearch } from "@/lib/api";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -620,6 +621,7 @@ export default function SearchPage() {
           </TabsContent>
         </Tabs>
 
+        <UpgradeBanner context="search" />
         <Footer />
       </div>
     </Layout>

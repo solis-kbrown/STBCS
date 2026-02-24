@@ -1054,7 +1054,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // STIX 2.1 Export - Format threat data as STIX bundle
-  app.get("/api/export/stix", async (req: Request, res: Response) => {
+  app.get("/api/export/stix", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const exportSchema = z.object({
         type: z.enum(["ips", "urls", "cves", "kev", "all"]).default("all"),
