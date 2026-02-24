@@ -451,15 +451,14 @@ Hiring: https://stbcybersecurity.com/support
     try {
       const data = signupSchema.parse(req.body);
       
-      // Check if username exists
-      const existingUser = await storage.getUserByUsername(data.username);
+      const [existingUser, existingEmail] = await Promise.all([
+        storage.getUserByUsername(data.username),
+        storage.getUserByEmail(data.email),
+      ]);
       if (existingUser) {
         res.status(400).json({ error: "Username already taken" });
         return;
       }
-      
-      // Check if email exists
-      const existingEmail = await storage.getUserByEmail(data.email);
       if (existingEmail) {
         res.status(400).json({ error: "Email already registered" });
         return;

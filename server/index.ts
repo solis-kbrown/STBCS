@@ -115,6 +115,33 @@ app.use((req, res, next) => {
   next();
 });
 
+// CSRF Origin validation for state-changing requests (2026 OWASP standard)
+const ALLOWED_ORIGINS = new Set([
+  `https://${PRIMARY_DOMAIN}`,
+  `https://www.${PRIMARY_DOMAIN}`,
+  ...SECONDARY_DOMAINS.map(d => `https://${d}`),
+]);
+app.use((req, res, next) => {
+  if (['GET', 'HEAD', 'OPTIONS'].includes(req.method)) return next();
+  if (req.path === '/api/stripe/webhook') return next();
+  if (req.path.startsWith('/api/v1/')) return next();
+  const origin = req.get('origin');
+  const referer = req.get('referer');
+  if (!IS_PRODUCTION) return next();
+  if (origin && !ALLOWED_ORIGINS.has(origin)) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+  if (!origin && referer) {
+    try {
+      const refOrigin = new URL(referer).origin;
+      if (!ALLOWED_ORIGINS.has(refOrigin)) {
+        return res.status(403).json({ error: "Forbidden" });
+      }
+    } catch { /* invalid referer, allow through */ }
+  }
+  next();
+});
+
 // Enable gzip/brotli compression for all responses
 app.use(compression());
 
