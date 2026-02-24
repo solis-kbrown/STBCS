@@ -445,30 +445,39 @@ export default function LogoGallery() {
   return (
     <div className="min-h-screen bg-background p-6 md:p-8">
       <div className="max-w-6xl mx-auto space-y-10">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <Link href="/">
-              <Button variant="ghost" size="icon" data-testid="button-back-dashboard">
-                <ArrowLeft className="h-5 w-5" />
-              </Button>
-            </Link>
-            <div>
-              <h1 className="text-3xl font-display font-bold text-white" data-testid="text-page-title">Brand Assets</h1>
-              <p className="text-zinc-400 text-sm mt-1">Official STB Cybersecurity logos, icons, and brand materials</p>
-            </div>
+        <div className="flex items-center gap-4 mb-2">
+          <Link href="/">
+            <Button variant="ghost" size="icon" data-testid="button-back-dashboard">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+          </Link>
+          <div className="flex-1">
+            <h1 className="text-3xl font-display font-bold text-white" data-testid="text-page-title">Brand &amp; Theme Center</h1>
+            <p className="text-zinc-400 text-sm mt-1">Customize logos, icon themes, and hero backgrounds</p>
           </div>
-          <div className="flex items-center gap-3">
-            <Link href="/hero-backgrounds">
-              <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="link-hero-backgrounds">
-                <Monitor className="h-4 w-4 mr-2" /> Hero Backgrounds
-              </Button>
-            </Link>
-            <div className="flex items-center gap-2 bg-zinc-900 rounded-lg px-3 py-2 border border-zinc-800" data-testid="visitor-counter">
+          <div className="flex items-center gap-2 bg-zinc-900 rounded-lg px-3 py-2 border border-zinc-800" data-testid="visitor-counter">
             <Eye className="h-4 w-4 text-orange-500" />
             <span className="text-sm text-zinc-300 font-medium" data-testid="text-view-count">{Math.round(pageViews).toLocaleString()}</span>
             <span className="text-xs text-zinc-500">views</span>
           </div>
-          </div>
+        </div>
+
+        <div className="flex items-center gap-2 border-b border-zinc-800 pb-0" data-testid="brand-tabs">
+          <Link href="/logos">
+            <button className="px-4 py-2.5 text-sm font-medium border-b-2 border-orange-500 text-orange-400 bg-orange-500/5 rounded-t-lg" data-testid="tab-logos">
+              <Copyright className="h-4 w-4 inline mr-1.5 -mt-0.5" />Logos
+            </button>
+          </Link>
+          <Link href="/logos#icon-themes">
+            <button className="px-4 py-2.5 text-sm font-medium border-b-2 border-orange-500 text-orange-400 bg-orange-500/5 rounded-t-lg" data-testid="tab-icon-themes">
+              <Paintbrush className="h-4 w-4 inline mr-1.5 -mt-0.5" />Icon Themes
+            </button>
+          </Link>
+          <Link href="/hero-backgrounds">
+            <button className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 rounded-t-lg transition-colors" data-testid="tab-backgrounds">
+              <Monitor className="h-4 w-4 inline mr-1.5 -mt-0.5" />Hero Backgrounds
+            </button>
+          </Link>
         </div>
 
         <div className="rounded-2xl border border-orange-500/30 bg-gradient-to-br from-zinc-900 via-zinc-900/95 to-orange-950/10 p-6 md:p-8" data-testid="section-current-logo">

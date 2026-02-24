@@ -4,7 +4,7 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Check, Monitor, Zap, Layers, Eye, Image } from "lucide-react";
+import { ArrowLeft, Check, Monitor, Zap, Layers, Eye, Image, Copyright, Paintbrush } from "lucide-react";
 import { Link } from "wouter";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -46,15 +46,32 @@ export default function HeroGallery() {
   return (
     <Layout>
       <div className="space-y-8 page-transition">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-white" asChild data-testid="link-back">
-            <Link href="/logos"><ArrowLeft className="h-4 w-4 mr-1" /> Brand Assets</Link>
+        <div className="flex items-center gap-4 mb-2">
+          <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white" asChild data-testid="link-back">
+            <Link href="/"><ArrowLeft className="h-5 w-5" /></Link>
           </Button>
+          <div className="flex-1">
+            <h1 className="text-3xl font-display font-bold text-white" data-testid="text-page-title">Brand &amp; Theme Center</h1>
+            <p className="text-zinc-400 text-sm mt-1">Customize logos, icon themes, and hero backgrounds</p>
+          </div>
         </div>
 
-        <div>
-          <h1 className="text-3xl font-display font-bold text-white mb-2" data-testid="text-page-title">Hero Background Gallery</h1>
-          <p className="text-zinc-400 text-lg">Browse and select the background animation for the main dashboard hero section. Changes apply site-wide.</p>
+        <div className="flex items-center gap-2 border-b border-zinc-800 pb-0" data-testid="brand-tabs">
+          <Link href="/logos">
+            <button className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 rounded-t-lg transition-colors" data-testid="tab-logos">
+              <Copyright className="h-4 w-4 inline mr-1.5 -mt-0.5" />Logos
+            </button>
+          </Link>
+          <Link href="/logos#icon-themes">
+            <button className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 rounded-t-lg transition-colors" data-testid="tab-icon-themes">
+              <Paintbrush className="h-4 w-4 inline mr-1.5 -mt-0.5" />Icon Themes
+            </button>
+          </Link>
+          <Link href="/hero-backgrounds">
+            <button className="px-4 py-2.5 text-sm font-medium border-b-2 border-orange-500 text-orange-400 bg-orange-500/5 rounded-t-lg" data-testid="tab-backgrounds">
+              <Monitor className="h-4 w-4 inline mr-1.5 -mt-0.5" />Hero Backgrounds
+            </button>
+          </Link>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap">
