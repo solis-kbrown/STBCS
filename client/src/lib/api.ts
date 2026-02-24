@@ -1623,3 +1623,87 @@ export function useMarkFindingRead() {
     onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/monitors/darkweb/findings"] }); qc.invalidateQueries({ queryKey: ["/api/monitors/summary"] }); },
   });
 }
+
+// Attack Surface Discovery
+export function useAttackSurfaceScans() {
+  return useQuery<any[]>({
+    queryKey: ["/api/attack-surface/scans"],
+    queryFn: () => fetchApi("/api/attack-surface/scans"),
+    staleTime: 10000,
+    refetchInterval: 15000,
+  });
+}
+
+export function useAttackSurfaceScan(id: string) {
+  return useQuery<{ scan: any; assets: any[] }>({
+    queryKey: ["/api/attack-surface/scans", id],
+    queryFn: () => fetchApi(`/api/attack-surface/scans/${id}`),
+    enabled: !!id,
+    staleTime: 5000,
+    refetchInterval: (query) => query.state.data?.scan?.status === "running" ? 3000 : false,
+  });
+}
+
+export function useStartAttackSurfaceScan() {
+  const qc = useQueryClient();
+  return useMutation<any, Error, { domain: string }>({
+    mutationFn: async (data) => {
+      const res = await fetch("/api/attack-surface/scans", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data), credentials: "include" });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Failed to start scan"); }
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/attack-surface/scans"] }); },
+  });
+}
+
+// Threat Reports
+export function useThreatReports() {
+  return useQuery<any[]>({
+    queryKey: ["/api/reports"],
+    queryFn: () => fetchApi("/api/reports"),
+    staleTime: 10000,
+    refetchInterval: 15000,
+  });
+}
+
+export function useThreatReport(id: string) {
+  return useQuery<any>({
+    queryKey: ["/api/reports", id],
+    queryFn: () => fetchApi(`/api/reports/${id}`),
+    enabled: !!id,
+    staleTime: 5000,
+    refetchInterval: (query) => query.state.data?.status === "generating" || query.state.data?.status === "queued" ? 3000 : false,
+  });
+}
+
+export function useGenerateThreatReport() {
+  const qc = useQueryClient();
+  return useMutation<any, Error, void>({
+    mutationFn: async () => {
+      const res = await fetch("/api/reports/generate", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include" });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Failed to generate report"); }
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/reports"] }); },
+  });
+}
+
+export function useReportSchedule() {
+  return useQuery<any>({
+    queryKey: ["/api/reports/schedule"],
+    queryFn: () => fetchApi("/api/reports/schedule"),
+    staleTime: 30000,
+  });
+}
+
+export function useUpdateReportSchedule() {
+  const qc = useQueryClient();
+  return useMutation<any, Error, { cadence: string; isActive?: boolean }>({
+    mutationFn: async (data) => {
+      const res = await fetch("/api/reports/schedule", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(data), credentials: "include" });
+      if (!res.ok) { const err = await res.json(); throw new Error(err.error || "Failed to update schedule"); }
+      return res.json();
+    },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["/api/reports/schedule"] }); },
+  });
+}

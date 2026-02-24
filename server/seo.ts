@@ -110,6 +110,14 @@ const PAGE_META: Record<string, PageMeta> = {
     description: 'Real-time uptime monitoring, SSL certificate tracking, dark web scanning, watchlists, and threat alerts for Pro and Business subscribers.',
     noindex: true,
   },
+  '/attack-surface': {
+    title: 'Attack Surface Discovery | STB Cybersecurity',
+    description: 'Map your organization\'s external attack surface. Discover subdomains, open ports, email security gaps, SSL issues, exposed services, and known vulnerabilities. Pro feature.',
+  },
+  '/reports': {
+    title: 'Threat Intelligence Reports | STB Cybersecurity',
+    description: 'Generate branded threat intelligence reports with executive summaries, ransomware landscape analysis, critical CVEs, attack surface findings, and actionable recommendations.',
+  },
 };
 
 const MAX_TITLE_LENGTH = 60;

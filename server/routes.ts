@@ -339,6 +339,20 @@ export async function registerRoutes(
     <priority>0.4</priority>
   </url>
 
+  <url>
+    <loc>https://stbcybersecurity.com/attack-surface</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/reports</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
 ${groupEntries}
 </urlset>`;
       res.setHeader("Content-Type", "application/xml; charset=utf-8");
@@ -375,6 +389,8 @@ Allow: /contact
 Allow: /logos
 Allow: /groups
 Allow: /group/
+Allow: /attack-surface
+Allow: /reports
 
 Disallow: /account
 Disallow: /checkout
@@ -4591,6 +4607,374 @@ Hiring: https://stbcybersecurity.com/support
       res.status(500).json({ error: "Failed to mark finding as read" });
     }
   });
+
+  // ===== Attack Surface Discovery (Pro+) =====
+  app.post("/api/attack-surface/scans", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schema = z.object({ domain: z.string().min(3).max(253) });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ error: "Invalid domain" });
+
+      const cleanDomain = parsed.data.domain.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0].toLowerCase();
+      if (!isValidDomain(cleanDomain)) return res.status(400).json({ error: "Invalid domain name" });
+
+      const existingScans = await storage.getAttackSurfaceScans(req.user!.id, 1);
+      if (existingScans.length > 0 && existingScans[0].status === "running") {
+        return res.status(409).json({ error: "A scan is already in progress. Please wait for it to complete." });
+      }
+
+      const scan = await storage.createAttackSurfaceScan({ userId: req.user!.id, domain: cleanDomain });
+      await storage.updateAttackSurfaceScan(scan.id, { status: "running", startedAt: new Date() });
+
+      runAttackSurfaceScan(scan.id, cleanDomain).catch(err => {
+        console.error("[AttackSurface] Scan failed:", err);
+        storage.updateAttackSurfaceScan(scan.id, { status: "failed", lastError: String(err), completedAt: new Date() });
+      });
+
+      res.json({ scan: { ...scan, status: "running" } });
+    } catch (error) {
+      console.error("[AttackSurface] Error starting scan:", error);
+      res.status(500).json({ error: "Failed to start scan" });
+    }
+  });
+
+  app.get("/api/attack-surface/scans", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const scans = await storage.getAttackSurfaceScans(req.user!.id);
+      res.json(scans);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch scans" });
+    }
+  });
+
+  app.get("/api/attack-surface/scans/:id", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const scan = await storage.getAttackSurfaceScanById(asString(req.params.id));
+      if (!scan || scan.userId !== req.user!.id) return res.status(404).json({ error: "Scan not found" });
+      const assets = await storage.getAttackSurfaceAssets(scan.id);
+      res.json({ scan, assets });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch scan" });
+    }
+  });
+
+  async function runAttackSurfaceScan(scanId: string, domain: string) {
+    const assets: { assetType: string; value: string; metadata?: string; severity?: string }[] = [];
+
+    const safeRun = async (label: string, fn: () => Promise<void>) => {
+      try { await fn(); } catch (e) { console.error(`[AttackSurface] ${label} failed:`, e); }
+    };
+
+    await Promise.all([
+      safeRun("Subdomains", async () => {
+        const resp = await fetch(`https://crt.sh/?q=%25.${encodeURIComponent(domain)}&output=json`, { signal: AbortSignal.timeout(15000) });
+        if (resp.ok) {
+          const certs: any[] = await resp.json();
+          const subdomains = new Set<string>();
+          for (const cert of certs) {
+            const names = (cert.name_value || "").split("\n").map((n: string) => n.trim().toLowerCase());
+            names.forEach((n: string) => { if (n.endsWith(domain) && n !== `*.${domain}`) subdomains.add(n); });
+          }
+          subdomains.forEach(sub => {
+            assets.push({ assetType: "subdomain", value: sub, severity: "info" });
+          });
+        }
+      }),
+
+      safeRun("DNS", async () => {
+        const dnsResult = await lookupDomain(domain);
+        if (dnsResult.aRecords) {
+          for (const ip of dnsResult.aRecords) assets.push({ assetType: "dns_a", value: ip, metadata: JSON.stringify({ type: "A" }), severity: "info" });
+        }
+        if (dnsResult.mxRecords) {
+          for (const mx of dnsResult.mxRecords) assets.push({ assetType: "dns_mx", value: typeof mx === 'string' ? mx : mx.exchange || String(mx), severity: "info" });
+        }
+        if (dnsResult.nsRecords) {
+          for (const ns of dnsResult.nsRecords) assets.push({ assetType: "dns_ns", value: String(ns), severity: "info" });
+        }
+        if (dnsResult.txtRecords) {
+          for (const txt of dnsResult.txtRecords) assets.push({ assetType: "dns_txt", value: String(txt), severity: "info" });
+        }
+      }),
+
+      safeRun("OpenPorts", async () => {
+        const domainResult = await lookupDomain(domain);
+        const ip = domainResult.aRecords?.[0];
+        if (ip && !isPrivateIp(ip)) {
+          const shodanData = await lookupShodanInternetDB(ip);
+          if (shodanData) {
+            if (shodanData.ports) {
+              for (const port of shodanData.ports) {
+                const severity = [22, 23, 3389, 445, 3306, 5432].includes(port) ? "high" : 
+                                 [21, 25, 110, 143, 8080].includes(port) ? "medium" : "info";
+                assets.push({ assetType: "open_port", value: String(port), metadata: JSON.stringify({ ip, source: "shodan" }), severity });
+              }
+            }
+            if (shodanData.hostnames) {
+              for (const h of shodanData.hostnames) {
+                if (!assets.some(a => a.assetType === "subdomain" && a.value === h)) {
+                  assets.push({ assetType: "subdomain", value: h, metadata: JSON.stringify({ source: "shodan" }), severity: "info" });
+                }
+              }
+            }
+            if (shodanData.vulns) {
+              for (const vuln of shodanData.vulns) {
+                assets.push({ assetType: "vulnerability", value: vuln, severity: "critical" });
+              }
+            }
+            if (shodanData.tags) {
+              for (const tag of shodanData.tags) {
+                assets.push({ assetType: "tag", value: tag, severity: tag === "compromised" ? "critical" : "info" });
+              }
+            }
+          }
+        }
+      }),
+
+      safeRun("EmailSecurity", async () => {
+        const dns = await import("dns").then(m => m.promises);
+        const checks: { type: string; found: boolean; value?: string }[] = [];
+        try {
+          const txtRecords = await dns.resolveTxt(domain);
+          const spf = txtRecords.flat().find(r => r.startsWith("v=spf1"));
+          checks.push({ type: "SPF", found: !!spf, value: spf });
+          if (!spf) assets.push({ assetType: "email_security", value: "Missing SPF record", severity: "high" });
+        } catch { checks.push({ type: "SPF", found: false }); assets.push({ assetType: "email_security", value: "Missing SPF record", severity: "high" }); }
+        try {
+          const dmarc = await dns.resolveTxt(`_dmarc.${domain}`);
+          const dmarcRecord = dmarc.flat().find(r => r.startsWith("v=DMARC1"));
+          checks.push({ type: "DMARC", found: !!dmarcRecord, value: dmarcRecord });
+          if (!dmarcRecord) assets.push({ assetType: "email_security", value: "Missing DMARC record", severity: "high" });
+          else if (dmarcRecord.includes("p=none")) assets.push({ assetType: "email_security", value: "DMARC policy set to none (not enforced)", severity: "medium" });
+        } catch { checks.push({ type: "DMARC", found: false }); assets.push({ assetType: "email_security", value: "Missing DMARC record", severity: "high" }); }
+        try {
+          await dns.resolveTxt(`default._domainkey.${domain}`);
+          checks.push({ type: "DKIM", found: true });
+        } catch { checks.push({ type: "DKIM", found: false }); assets.push({ assetType: "email_security", value: "DKIM not detected (default selector)", severity: "medium" }); }
+        assets.push({ assetType: "email_summary", value: JSON.stringify(checks), severity: "info" });
+      }),
+
+      safeRun("SSL", async () => {
+        try {
+          const tls = await import("tls");
+          const result = await new Promise<any>((resolve, reject) => {
+            const socket = tls.connect(443, domain, { servername: domain, timeout: 8000 }, () => {
+              const cert = socket.getPeerCertificate();
+              socket.end();
+              resolve(cert);
+            });
+            socket.on("error", reject);
+            socket.setTimeout(8000, () => { socket.destroy(); reject(new Error("timeout")); });
+          });
+          if (result) {
+            const validTo = new Date(result.valid_to);
+            const daysLeft = Math.floor((validTo.getTime() - Date.now()) / 86400000);
+            const severity = daysLeft < 7 ? "critical" : daysLeft < 30 ? "high" : daysLeft < 60 ? "medium" : "info";
+            assets.push({
+              assetType: "ssl_cert",
+              value: `${result.subject?.CN || domain}`,
+              metadata: JSON.stringify({ issuer: result.issuer?.O, validTo: result.valid_to, daysRemaining: daysLeft, serialNumber: result.serialNumber }),
+              severity,
+            });
+          }
+        } catch (e: any) {
+          assets.push({ assetType: "ssl_cert", value: "SSL connection failed", metadata: JSON.stringify({ error: e.message }), severity: "critical" });
+        }
+      }),
+
+      safeRun("TechDetection", async () => {
+        try {
+          const dnsModule = await import("dns");
+          const { promisify } = await import("util");
+          const resolve4 = promisify(dnsModule.resolve4);
+          const ips = await resolve4(domain);
+          const privateRanges = /^(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|0\.|169\.254\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.)/;
+          if (ips.some((ip: string) => privateRanges.test(ip))) throw new Error("private IP blocked");
+          const resp = await fetch(`https://${domain}`, { signal: AbortSignal.timeout(10000), redirect: "follow" });
+          const headers = Object.fromEntries(resp.headers.entries());
+          const techs: string[] = [];
+          if (headers["server"]) techs.push(`Server: ${headers["server"]}`);
+          if (headers["x-powered-by"]) techs.push(`Powered by: ${headers["x-powered-by"]}`);
+          if (headers["x-aspnet-version"]) techs.push(`ASP.NET: ${headers["x-aspnet-version"]}`);
+          if (headers["x-generator"]) techs.push(`Generator: ${headers["x-generator"]}`);
+          const secHeaders = ["strict-transport-security", "content-security-policy", "x-frame-options", "x-content-type-options", "referrer-policy", "permissions-policy"];
+          const missingHeaders = secHeaders.filter(h => !headers[h]);
+          for (const tech of techs) assets.push({ assetType: "technology", value: tech, severity: "info" });
+          for (const missing of missingHeaders) assets.push({ assetType: "missing_header", value: `Missing: ${missing}`, severity: missing === "strict-transport-security" ? "high" : "medium" });
+          if (headers["strict-transport-security"]) assets.push({ assetType: "security_header", value: `HSTS: ${headers["strict-transport-security"]}`, severity: "info" });
+          if (headers["content-security-policy"]) assets.push({ assetType: "security_header", value: "CSP configured", severity: "info" });
+        } catch {}
+      }),
+    ]);
+
+    const criticalCount = assets.filter(a => a.severity === "critical").length;
+    const highCount = assets.filter(a => a.severity === "high").length;
+    const mediumCount = assets.filter(a => a.severity === "medium").length;
+    const summary = JSON.stringify({
+      totalAssets: assets.length,
+      subdomains: assets.filter(a => a.assetType === "subdomain").length,
+      openPorts: assets.filter(a => a.assetType === "open_port").length,
+      vulnerabilities: assets.filter(a => a.assetType === "vulnerability").length,
+      findings: { critical: criticalCount, high: highCount, medium: mediumCount },
+      riskScore: Math.min(100, criticalCount * 25 + highCount * 10 + mediumCount * 3),
+    });
+
+    await storage.addAttackSurfaceAssets(assets.map(a => ({ scanId, ...a })));
+    await storage.updateAttackSurfaceScan(scanId, { status: "complete", completedAt: new Date(), summary });
+  }
+
+  // ===== Threat Reports (Pro+) =====
+  app.post("/api/reports/generate", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const now = new Date();
+      const periodStart = new Date(now.getTime() - 7 * 86400000);
+      const report = await storage.createThreatReport({
+        userId: req.user!.id,
+        title: `Threat Intelligence Report — ${now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}`,
+        periodStart,
+        periodEnd: now,
+      });
+
+      generateThreatReport(report.id, req.user!.id, periodStart, now).catch(err => {
+        console.error("[Reports] Generation failed:", err);
+        storage.updateThreatReport(report.id, { status: "failed", lastError: String(err) });
+      });
+
+      res.json({ report: { ...report, status: "generating" } });
+    } catch (error) {
+      console.error("[Reports] Error:", error);
+      res.status(500).json({ error: "Failed to generate report" });
+    }
+  });
+
+  app.get("/api/reports", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const reports = await storage.getThreatReports(req.user!.id);
+      res.json(reports);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch reports" });
+    }
+  });
+
+  app.get("/api/reports/:id", requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const report = await storage.getThreatReportById(asString(req.params.id));
+      if (!report || report.userId !== req.user!.id) return res.status(404).json({ error: "Report not found" });
+      res.json(report);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch report" });
+    }
+  });
+
+  app.get("/api/reports/schedule", requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schedule = await storage.getReportSchedule(req.user!.id);
+      res.json(schedule || null);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch schedule" });
+    }
+  });
+
+  app.post("/api/reports/schedule", requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schema = z.object({
+        cadence: z.enum(["weekly", "monthly"]),
+        isActive: z.boolean().optional(),
+      });
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) return res.status(400).json({ error: "Invalid schedule data" });
+
+      const schedule = await storage.upsertReportSchedule({
+        userId: req.user!.id,
+        cadence: parsed.data.cadence,
+        isActive: parsed.data.isActive ?? true,
+      });
+      res.json(schedule);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update schedule" });
+    }
+  });
+
+  async function generateThreatReport(reportId: string, userId: string, periodStart: Date, periodEnd: Date) {
+    await storage.updateThreatReport(reportId, { status: "generating" });
+
+    const [stats, trends, ransomware, cves, recentScans, threatActors] = await Promise.all([
+      storage.getDashboardStats(),
+      storage.getThreatTrends(7),
+      storage.getRansomwareIncidents(10),
+      storage.getCves(10),
+      storage.getAttackSurfaceScans(userId, 3),
+      storage.getThreatActors(10),
+    ]);
+
+    let scanSummaries: any[] = [];
+    for (const scan of recentScans) {
+      if (scan.status === "complete" && scan.summary) {
+        try { scanSummaries.push({ domain: scan.domain, ...JSON.parse(scan.summary), scannedAt: scan.completedAt }); } catch {}
+      }
+    }
+
+    const reportData = {
+      generatedAt: new Date().toISOString(),
+      period: { start: periodStart.toISOString(), end: periodEnd.toISOString() },
+      executiveSummary: {
+        totalThreats: stats.activeGroups + stats.criticalCves + stats.activeExploits,
+        activeRansomwareGroups: stats.activeGroups,
+        criticalCves: stats.criticalCves,
+        activeExploits: stats.activeExploits,
+        maliciousIps: stats.maliciousIps,
+        maliciousUrls: stats.maliciousUrls,
+        cisaKev: stats.cisaKevCount,
+      },
+      ransomwareLandscape: {
+        topGroups: trends.topGroups?.slice(0, 5) || [],
+        recentIncidents: ransomware.slice(0, 5).map(r => ({
+          group: r.groupName,
+          victim: r.victim,
+          sector: r.sector,
+          date: r.discoveredAt,
+        })),
+        dailyTrend: trends.ransomwareByDay || [],
+      },
+      vulnerabilities: {
+        recentCritical: cves.filter((c: any) => c.severity === "CRITICAL" || (c.cvssScore && parseFloat(c.cvssScore) >= 9.0)).slice(0, 5).map((c: any) => ({
+          cveId: c.cveId,
+          description: c.description?.substring(0, 200),
+          severity: c.severity,
+          cvss: c.cvssScore,
+        })),
+        cveTrend: trends.cvesByDay || [],
+      },
+      threatActors: threatActors.slice(0, 5).map((a: any) => ({
+        name: a.name,
+        type: a.type,
+        country: a.country,
+        lastActive: a.lastActive,
+      })),
+      attackSurface: scanSummaries,
+      recommendations: generateRecommendations(stats, scanSummaries),
+    };
+
+    await storage.updateThreatReport(reportId, {
+      status: "complete",
+      reportData: JSON.stringify(reportData),
+      generatedAt: new Date(),
+    });
+  }
+
+  function generateRecommendations(stats: any, scanSummaries: any[]): string[] {
+    const recs: string[] = [];
+    if (stats.criticalCves > 0) recs.push(`Review and patch ${stats.criticalCves} critical CVEs identified this period.`);
+    if (stats.activeGroups > 5) recs.push(`${stats.activeGroups} ransomware groups are currently active. Ensure backup and recovery procedures are tested.`);
+    if (stats.activeExploits > 0) recs.push(`${stats.activeExploits} active exploits detected. Prioritize patching affected systems.`);
+    for (const scan of scanSummaries) {
+      if (scan.findings?.critical > 0) recs.push(`${scan.domain}: ${scan.findings.critical} critical findings require immediate attention.`);
+      if (scan.findings?.high > 0) recs.push(`${scan.domain}: ${scan.findings.high} high-severity issues should be addressed this week.`);
+      if (scan.openPorts > 5) recs.push(`${scan.domain}: ${scan.openPorts} open ports detected. Review and close unnecessary services.`);
+    }
+    if (recs.length === 0) recs.push("Continue monitoring threat feeds and maintaining security hygiene.");
+    return recs;
+  }
 
   return httpServer;
 }

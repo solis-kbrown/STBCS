@@ -51,6 +51,8 @@ Preferred communication style: Simple, everyday language.
 - **IOC Search**: Unified Indicator of Compromise search across 40+ feeds.
 - **Cyber Risk Score Calculator**: Free 12-question SMB security assessment.
 - **Monitoring Suite**: Pro/Business feature for uptime, SSL certificate, and dark web monitoring with email/SMS alerting.
+- **Attack Surface Discovery**: Pro feature — domain scanning for subdomains (crt.sh), open ports (Shodan InternetDB), DNS records, email security (SPF/DKIM/DMARC), SSL certificates, technology detection, and security headers with risk scoring.
+- **Threat Intelligence Reports**: Pro feature — on-demand branded reports with executive summary, ransomware landscape, critical CVEs, attack surface findings, and recommendations. Business tier gets scheduled weekly/monthly auto-generation.
 - **ICS-CERT Advisories**: Displays CISA ICS-CERT advisories.
 - **MITRE ATT&CK Mapping**: Threat actor profiles include mapped ATT&CK techniques.
 - **STIX 2.1 Export**: Export threat data as STIX 2.1 bundles.

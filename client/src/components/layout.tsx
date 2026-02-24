@@ -23,7 +23,9 @@ import {
   MonitorCheck,
   Users,
   Info,
-  Send
+  Send,
+  Radar,
+  FileText
 } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -66,6 +68,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/search", labelKey: "nav.search", icon: Scan },
     { href: "/tools", labelKey: "nav.tools", icon: Wrench },
     { href: "/monitors", labelKey: "nav.monitors", icon: MonitorCheck, isPro: true },
+    { href: "/attack-surface", labelKey: "nav.attackSurface", icon: Radar, isPro: true },
+    { href: "/reports", labelKey: "nav.reports", icon: FileText, isPro: true },
     { href: "/messages", labelKey: "nav.messages", icon: MessageSquare, isBusiness: true },
     { href: "/ransomware", labelKey: "nav.ransomware", icon: ShieldOff },
     { href: "/groups", labelKey: "nav.groups", icon: Users },
