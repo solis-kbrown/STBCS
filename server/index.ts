@@ -274,6 +274,15 @@ app.use((req, res, next) => {
     },
     () => {
       log(`serving on port ${port}`);
+      setTimeout(async () => {
+        try {
+          const base = `http://127.0.0.1:${port}`;
+          const urls = ["/api/stats", "/api/trends", "/api/cves", "/api/ransomware",
+            "/api/site-settings/hero-bg", "/api/site-settings/logo-theme", "/api/site-settings/icon-theme"];
+          await Promise.all(urls.map(u => fetch(base + u).catch(() => {})));
+          log("Cache warm-up complete");
+        } catch {}
+      }, 2000);
     },
   );
 })();

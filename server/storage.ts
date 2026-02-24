@@ -965,21 +965,15 @@ export class DatabaseStorage implements IStorage {
     maliciousUrls: number;
     cisaKevCount: number;
   }> {
-    const activeGroupsResult = await db.select({ count: sql<number>`count(distinct ${ransomwareIncidents.groupName})` })
-      .from(ransomwareIncidents);
-    
-    const criticalCvesResult = await db.select({ count: sql<number>`count(*)` })
-      .from(cves)
-      .where(eq(cves.severity, "CRITICAL"));
-    
-    const activeExploitsResult = await db.select({ count: sql<number>`count(*)` })
-      .from(cves)
-      .where(eq(cves.exploitAvailable, true));
-    
-    const totalIncidents = await this.getRansomwareCount();
-    const maliciousIpCount = await this.getMaliciousIpCount();
-    const maliciousUrlCount = await this.getMaliciousUrlCount();
-    const kevCount = await this.getCisaKevCount();
+    const [activeGroupsResult, criticalCvesResult, activeExploitsResult, totalIncidents, maliciousIpCount, maliciousUrlCount, kevCount] = await Promise.all([
+      db.select({ count: sql<number>`count(distinct ${ransomwareIncidents.groupName})` }).from(ransomwareIncidents),
+      db.select({ count: sql<number>`count(*)` }).from(cves).where(eq(cves.severity, "CRITICAL")),
+      db.select({ count: sql<number>`count(*)` }).from(cves).where(eq(cves.exploitAvailable, true)),
+      this.getRansomwareCount(),
+      this.getMaliciousIpCount(),
+      this.getMaliciousUrlCount(),
+      this.getCisaKevCount(),
+    ]);
     
     return {
       activeGroups: Number(activeGroupsResult[0]?.count || 0),
@@ -1001,40 +995,42 @@ export class DatabaseStorage implements IStorage {
     const startDate = new Date();
     startDate.setDate(startDate.getDate() - days);
 
-    const cvesByDayResult = await db.select({
-      date: sql<string>`DATE(${cves.publishedDate})`,
-      count: sql<number>`count(*)`,
-      critical: sql<number>`SUM(CASE WHEN ${cves.severity} = 'CRITICAL' THEN 1 ELSE 0 END)`
-    }).from(cves)
-      .where(gte(cves.publishedDate, startDate))
-      .groupBy(sql`DATE(${cves.publishedDate})`)
-      .orderBy(sql`DATE(${cves.publishedDate})`);
+    const [cvesByDayResult, ransomwareByDayResult, topThreatsResult, topGroupsResult] = await Promise.all([
+      db.select({
+        date: sql<string>`DATE(${cves.publishedDate})`,
+        count: sql<number>`count(*)`,
+        critical: sql<number>`SUM(CASE WHEN ${cves.severity} = 'CRITICAL' THEN 1 ELSE 0 END)`
+      }).from(cves)
+        .where(gte(cves.publishedDate, startDate))
+        .groupBy(sql`DATE(${cves.publishedDate})`)
+        .orderBy(sql`DATE(${cves.publishedDate})`),
 
-    const ransomwareByDayResult = await db.select({
-      date: sql<string>`DATE(${ransomwareIncidents.discoveredAt})`,
-      count: sql<number>`count(*)`
-    }).from(ransomwareIncidents)
-      .where(gte(ransomwareIncidents.discoveredAt, startDate))
-      .groupBy(sql`DATE(${ransomwareIncidents.discoveredAt})`)
-      .orderBy(sql`DATE(${ransomwareIncidents.discoveredAt})`);
+      db.select({
+        date: sql<string>`DATE(${ransomwareIncidents.discoveredAt})`,
+        count: sql<number>`count(*)`
+      }).from(ransomwareIncidents)
+        .where(gte(ransomwareIncidents.discoveredAt, startDate))
+        .groupBy(sql`DATE(${ransomwareIncidents.discoveredAt})`)
+        .orderBy(sql`DATE(${ransomwareIncidents.discoveredAt})`),
 
-    const topThreatsResult = await db.select({
-      type: maliciousIps.threatType,
-      count: sql<number>`count(*)`
-    }).from(maliciousIps)
-      .where(gte(maliciousIps.lastSeen, startDate))
-      .groupBy(maliciousIps.threatType)
-      .orderBy(desc(sql`count(*)`))
-      .limit(10);
+      db.select({
+        type: maliciousIps.threatType,
+        count: sql<number>`count(*)`
+      }).from(maliciousIps)
+        .where(gte(maliciousIps.lastSeen, startDate))
+        .groupBy(maliciousIps.threatType)
+        .orderBy(desc(sql`count(*)`))
+        .limit(10),
 
-    const topGroupsResult = await db.select({
-      name: ransomwareIncidents.groupName,
-      count: sql<number>`count(*)`
-    }).from(ransomwareIncidents)
-      .where(gte(ransomwareIncidents.discoveredAt, startDate))
-      .groupBy(ransomwareIncidents.groupName)
-      .orderBy(desc(sql`count(*)`))
-      .limit(10);
+      db.select({
+        name: ransomwareIncidents.groupName,
+        count: sql<number>`count(*)`
+      }).from(ransomwareIncidents)
+        .where(gte(ransomwareIncidents.discoveredAt, startDate))
+        .groupBy(ransomwareIncidents.groupName)
+        .orderBy(desc(sql`count(*)`))
+        .limit(10),
+    ]);
 
     return {
       cvesByDay: cvesByDayResult.map(r => ({

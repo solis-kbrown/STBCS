@@ -692,8 +692,10 @@ Hiring: https://stbcybersecurity.com/support
       
       const key = `cves:${limit}:${offset}:${search || ''}`;
       if (cachedJson(res, key, TTL.CVE_LIST)) return;
-      const cves = await storage.getCves(limit, offset, search);
-      const total = await storage.getCveCount();
+      const [cves, total] = await Promise.all([
+        storage.getCves(limit, offset, search),
+        storage.getCveCount(),
+      ]);
       const result = { data: cves, total, limit, offset };
       cacheAndSend(res, key, result, TTL.CVE_LIST);
     } catch (error) {
@@ -819,8 +821,10 @@ Hiring: https://stbcybersecurity.com/support
       
       const key = `ransomware:${limit}:${offset}:${group || ''}:${sector || ''}`;
       if (cachedJson(res, key, TTL.RANSOMWARE_LIST)) return;
-      const incidents = await storage.getRansomwareIncidents(limit, offset, group, sector);
-      const total = await storage.getRansomwareCount();
+      const [incidents, total] = await Promise.all([
+        storage.getRansomwareIncidents(limit, offset, group, sector),
+        storage.getRansomwareCount(),
+      ]);
       const result = { data: incidents, total, limit, offset };
       cacheAndSend(res, key, result, TTL.RANSOMWARE_LIST);
     } catch (error) {
@@ -4077,8 +4081,10 @@ Hiring: https://stbcybersecurity.com/support
   // Hero background site setting (DB-persisted)
   app.get("/api/site-settings/hero-bg", generalLimiter, async (_req: Request, res: Response) => {
     try {
+      const key = "settings:hero-bg";
+      if (cachedJson(res, key, 300)) return;
       const result = await db.select().from(siteSettings).where(eq(siteSettings.key, "hero-bg")).limit(1);
-      res.json({ value: result[0]?.value || "threat-map" });
+      cacheAndSend(res, key, { value: result[0]?.value || "threat-map" }, 300);
     } catch {
       res.json({ value: "threat-map" });
     }
@@ -4095,6 +4101,7 @@ Hiring: https://stbcybersecurity.com/support
       await db.insert(siteSettings)
         .values({ key: "hero-bg", value, updatedAt: new Date() })
         .onConflictDoUpdate({ target: siteSettings.key, set: { value, updatedAt: new Date() } });
+      cache.invalidatePrefix("settings:");
       res.json({ value, updated: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to update setting" });
@@ -4121,8 +4128,10 @@ Hiring: https://stbcybersecurity.com/support
 
   app.get("/api/site-settings/logo-theme", generalLimiter, async (_req: Request, res: Response) => {
     try {
+      const key = "settings:logo-theme";
+      if (cachedJson(res, key, 300)) return;
       const result = await db.select().from(siteSettings).where(eq(siteSettings.key, "logo-theme")).limit(1);
-      res.json({ value: result[0]?.value || "default" });
+      cacheAndSend(res, key, { value: result[0]?.value || "default" }, 300);
     } catch {
       res.json({ value: "default" });
     }
@@ -4138,6 +4147,7 @@ Hiring: https://stbcybersecurity.com/support
       await db.insert(siteSettings)
         .values({ key: "logo-theme", value, updatedAt: new Date() })
         .onConflictDoUpdate({ target: siteSettings.key, set: { value, updatedAt: new Date() } });
+      cache.invalidatePrefix("settings:");
       res.json({ value, updated: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to update logo theme" });
@@ -4156,8 +4166,10 @@ Hiring: https://stbcybersecurity.com/support
 
   app.get("/api/site-settings/icon-theme", generalLimiter, async (_req: Request, res: Response) => {
     try {
+      const key = "settings:icon-theme";
+      if (cachedJson(res, key, 300)) return;
       const result = await db.select().from(siteSettings).where(eq(siteSettings.key, "icon-theme")).limit(1);
-      res.json({ value: result[0]?.value || "default" });
+      cacheAndSend(res, key, { value: result[0]?.value || "default" }, 300);
     } catch {
       res.json({ value: "default" });
     }
@@ -4173,6 +4185,7 @@ Hiring: https://stbcybersecurity.com/support
       await db.insert(siteSettings)
         .values({ key: "icon-theme", value, updatedAt: new Date() })
         .onConflictDoUpdate({ target: siteSettings.key, set: { value, updatedAt: new Date() } });
+      cache.invalidatePrefix("settings:");
       res.json({ value, updated: true });
     } catch (error) {
       res.status(500).json({ error: "Failed to update icon theme" });
