@@ -4109,7 +4109,11 @@ Hiring: https://stbcybersecurity.com/support
     "crypto-lock", "firewall-barrier", "terminal-ops", "bio-print", "soc-command",
     "zero-trust", "chip-shield", "orbital-intel", "breach-patch", "darkweb-intel",
     "honeypot-trap", "redblue-team", "wolf-hunter", "eagle-scan", "cobra-strike",
-    "kraken-deep", "bear-circuit",
+    "kraken-deep", "bear-circuit", "cyber-iris", "sentinel-eye", "target-eye",
+    "shield-eye", "data-eye", "hex-vision", "ghost-hacker", "cyber-mask",
+    "ops-desk", "vr-skull", "ai-sentinel", "breach-force", "key-access",
+    "web-spider", "threat-scope", "athena-guard", "cyber-ninja", "holo-lock",
+    "code-blade", "global-guard",
   ];
 
   app.get("/api/site-settings/logo-theme", generalLimiter, async (_req: Request, res: Response) => {
