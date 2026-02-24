@@ -550,6 +550,40 @@ export function HeroBgWaveform() {
   return <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none" style={{ opacity: 0.7 }} aria-hidden="true" />;
 }
 
+function HeroBgImage({ src, alt }: { src: string; alt: string }) {
+  return (
+    <div className="absolute inset-0 w-full h-full" aria-hidden="true">
+      <div className="absolute inset-0 bg-zinc-950" />
+      <img
+        src={src}
+        alt={alt}
+        className="absolute inset-0 w-full h-full object-cover opacity-60"
+        loading="lazy"
+      />
+      <div className="absolute inset-0 bg-gradient-to-r from-zinc-950/80 via-zinc-950/40 to-zinc-950/70" />
+    </div>
+  );
+}
+
+export function HeroBgGlobalNetwork() {
+  return <HeroBgImage src="/images/hero-bg/global-network.png" alt="Global network connectivity" />;
+}
+export function HeroBgDataCenter() {
+  return <HeroBgImage src="/images/hero-bg/data-center.png" alt="Data center connectivity" />;
+}
+export function HeroBgRoutingMap() {
+  return <HeroBgImage src="/images/hero-bg/routing-map.png" alt="Network routing topology" />;
+}
+export function HeroBgCommandCenter() {
+  return <HeroBgImage src="/images/hero-bg/command-center.png" alt="Cyber defense command center" />;
+}
+export function HeroBgThreatLandscape() {
+  return <HeroBgImage src="/images/hero-bg/threat-landscape.png" alt="Digital threat landscape" />;
+}
+export function HeroBgSecureBlueprint() {
+  return <HeroBgImage src="/images/hero-bg/secure-blueprint.png" alt="Secure infrastructure blueprint" />;
+}
+
 export const HERO_BACKGROUNDS = [
   {
     id: "threat-map",
@@ -614,6 +648,48 @@ export const HERO_BACKGROUNDS = [
     tags: ["animated", "signals", "monitoring"],
     component: "HeroBgWaveform",
   },
+  {
+    id: "global-network",
+    name: "Global Network Map",
+    description: "Worldwide cyber connectivity map with glowing nodes and data routes spanning continents. Strategic overview.",
+    tags: ["image", "global", "network"],
+    component: "HeroBgGlobalNetwork",
+  },
+  {
+    id: "data-center",
+    name: "Data Center Connectivity",
+    description: "Server infrastructure with fiber optic connections and data flow visualization. Enterprise scale.",
+    tags: ["image", "infrastructure", "enterprise"],
+    component: "HeroBgDataCenter",
+  },
+  {
+    id: "routing-map",
+    name: "Routing Topology",
+    description: "Network routing paths and autonomous systems with interconnected transit links. Technical depth.",
+    tags: ["image", "routing", "topology"],
+    component: "HeroBgRoutingMap",
+  },
+  {
+    id: "command-center",
+    name: "Cyber Command Center",
+    description: "Security operations center with holographic threat displays and tactical interfaces. Defensive posture.",
+    tags: ["image", "SOC", "tactical"],
+    component: "HeroBgCommandCenter",
+  },
+  {
+    id: "threat-landscape",
+    name: "Digital Threat Landscape",
+    description: "Abstract cyber terrain with threat indicators, vulnerability hotspots, and topographic data mesh.",
+    tags: ["image", "terrain", "threats"],
+    component: "HeroBgThreatLandscape",
+  },
+  {
+    id: "secure-blueprint",
+    name: "Security Blueprint",
+    description: "Infrastructure schematic with firewall barriers, encrypted tunnels, and shield nodes. Architectural.",
+    tags: ["image", "blueprint", "architecture"],
+    component: "HeroBgSecureBlueprint",
+  },
 ] as const;
 
 export type HeroBgId = typeof HERO_BACKGROUNDS[number]["id"];
@@ -628,6 +704,12 @@ export function getHeroBackground(id: string) {
     case "circuit-trace": return <HeroBgCircuit />;
     case "pulse-rings": return <HeroBgPulse />;
     case "waveform": return <HeroBgWaveform />;
+    case "global-network": return <HeroBgGlobalNetwork />;
+    case "data-center": return <HeroBgDataCenter />;
+    case "routing-map": return <HeroBgRoutingMap />;
+    case "command-center": return <HeroBgCommandCenter />;
+    case "threat-landscape": return <HeroBgThreatLandscape />;
+    case "secure-blueprint": return <HeroBgSecureBlueprint />;
     default: return null;
   }
 }
