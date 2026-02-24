@@ -674,6 +674,39 @@ export function HeroBgSoarAutomation() {
   return <HeroBgImage src="/images/hero-bg/soar-automation.png" alt="SOAR automation" />;
 }
 
+const WORLD_MAP_CONTINENTS = [
+  { name: "North America", points: [[5,18],[8,15],[12,13],[15,11],[20,10],[25,12],[28,15],[30,18],[28,22],[30,25],[32,28],[30,32],[28,35],[25,38],[22,42],[18,44],[15,42],[12,38],[10,35],[8,30],[6,25],[5,22]] },
+  { name: "South America", points: [[22,48],[24,46],[27,44],[30,46],[32,50],[34,54],[35,58],[36,62],[35,66],[33,70],[30,74],[28,76],[25,75],[23,72],[21,68],[20,64],[19,60],[20,56],[21,52]] },
+  { name: "Europe", points: [[42,12],[44,10],[47,9],[50,10],[52,12],[54,14],[52,16],[50,18],[48,20],[46,22],[44,24],[42,22],[40,20],[39,18],[40,15]] },
+  { name: "Africa", points: [[40,28],[42,26],[45,24],[48,25],[50,28],[52,30],[54,34],[55,38],[54,42],[53,46],[52,50],[50,54],[48,56],[45,58],[42,56],[40,52],[38,48],[37,44],[36,40],[37,36],[38,32]] },
+  { name: "Asia", points: [[52,8],[56,6],[60,5],[65,6],[70,8],[75,10],[80,12],[82,15],[84,18],[85,22],[83,25],[80,28],[78,30],[75,32],[72,34],[68,35],[65,32],[62,30],[58,28],[55,25],[52,22],[50,18],[51,14]] },
+  { name: "Middle East", points: [[50,22],[52,20],[55,22],[58,24],[56,28],[53,30],[50,28],[48,26]] },
+  { name: "India", points: [[62,28],[65,26],[68,28],[70,32],[68,36],[65,40],[62,38],[60,34],[61,30]] },
+  { name: "Southeast Asia", points: [[75,28],[78,26],[82,28],[85,30],[84,34],[80,36],[76,34],[74,32]] },
+  { name: "Australia", points: [[78,48],[82,46],[86,48],[90,50],[92,52],[90,56],[86,58],[82,58],[78,56],[76,52]] },
+  { name: "Japan", points: [[82,14],[84,12],[86,14],[85,18],[83,20],[81,18]] },
+  { name: "UK/Ireland", points: [[40,12],[42,10],[44,12],[43,15],[41,16],[39,14]] },
+  { name: "Greenland", points: [[28,4],[32,3],[36,4],[38,7],[36,10],[32,11],[28,9],[27,6]] },
+];
+
+function drawWorldMap(ctx: CanvasRenderingContext2D, w: number, h: number, alpha: number = 0.06, fillAlpha: number = 0.02) {
+  WORLD_MAP_CONTINENTS.forEach((continent) => {
+    const pts = continent.points;
+    if (pts.length < 3) return;
+    ctx.beginPath();
+    ctx.moveTo((pts[0][0] / 100) * w, (pts[0][1] / 100) * h);
+    for (let i = 1; i < pts.length; i++) {
+      ctx.lineTo((pts[i][0] / 100) * w, (pts[i][1] / 100) * h);
+    }
+    ctx.closePath();
+    ctx.fillStyle = `rgba(249,115,22,${fillAlpha})`;
+    ctx.fill();
+    ctx.strokeStyle = `rgba(249,115,22,${alpha})`;
+    ctx.lineWidth = 0.8;
+    ctx.stroke();
+  });
+}
+
 export function HeroBgGlobePackets() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animRef = useRef<number>(0);
@@ -716,32 +749,20 @@ export function HeroBgGlobePackets() {
       ctx.clearRect(0, 0, w, h);
       ctx.fillStyle = "rgba(9,9,11,0.3)";
       ctx.fillRect(0, 0, w, h);
-      const cx = w * 0.48, cy = h * 0.52, rx = w * 0.38, ry = h * 0.42;
-      const rot = time * 0.0001;
-      for (let lat = -80; lat <= 80; lat += 20) {
+      drawWorldMap(ctx, w, h, 0.08, 0.03);
+      const latAlpha = 0.025 + Math.sin(time * 0.0005) * 0.01;
+      for (let y = 0; y < h; y += h / 12) {
         ctx.beginPath();
-        const latR = lat * Math.PI / 180;
-        for (let lon = 0; lon <= 360; lon += 3) {
-          const lonR = (lon + rot * 180 / Math.PI) * Math.PI / 180;
-          const px = cx + rx * Math.cos(latR) * Math.cos(lonR) * 0.8;
-          const py = cy - ry * Math.sin(latR) * 0.6 + ry * Math.cos(latR) * Math.sin(lonR) * 0.15;
-          lon === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-        }
-        ctx.strokeStyle = "rgba(249,115,22,0.04)";
-        ctx.lineWidth = 0.5;
+        ctx.moveTo(0, y); ctx.lineTo(w, y);
+        ctx.strokeStyle = `rgba(249,115,22,${latAlpha})`;
+        ctx.lineWidth = 0.3;
         ctx.stroke();
       }
-      for (let lon = 0; lon < 360; lon += 30) {
+      for (let x = 0; x < w; x += w / 18) {
         ctx.beginPath();
-        const lonR = (lon + rot * 180 / Math.PI) * Math.PI / 180;
-        for (let lat = -90; lat <= 90; lat += 3) {
-          const latR = lat * Math.PI / 180;
-          const px = cx + rx * Math.cos(latR) * Math.cos(lonR) * 0.8;
-          const py = cy - ry * Math.sin(latR) * 0.6 + ry * Math.cos(latR) * Math.sin(lonR) * 0.15;
-          lat === -90 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
-        }
-        ctx.strokeStyle = "rgba(249,115,22,0.03)";
-        ctx.lineWidth = 0.5;
+        ctx.moveTo(x, 0); ctx.lineTo(x, h);
+        ctx.strokeStyle = `rgba(249,115,22,${latAlpha * 0.8})`;
+        ctx.lineWidth = 0.3;
         ctx.stroke();
       }
       links.forEach(([i, j]) => {
@@ -851,6 +872,7 @@ export function HeroBgDataFlow() {
     const draw = (time: number) => {
       ctx.fillStyle = "rgba(9,9,11,0.15)";
       ctx.fillRect(0, 0, w, h);
+      drawWorldMap(ctx, w, h, 0.07, 0.025);
       hubs.forEach((hub, idx) => {
         const hx = (hub.x / 100) * w, hy = (hub.y / 100) * h;
         const r = hub.r * (w / 1000);
@@ -954,6 +976,7 @@ export function HeroBgCyberMesh() {
     const draw = (time: number) => {
       ctx.fillStyle = "rgba(9,9,11,0.08)";
       ctx.fillRect(0, 0, w, h);
+      drawWorldMap(ctx, w, h, 0.05, 0.015);
       nodes.forEach((n) => {
         n.x += n.vx; n.y += n.vy;
         if (n.x < 2 || n.x > 98) n.vx *= -1;
@@ -1062,6 +1085,7 @@ export function HeroBgThreatStreams() {
     const draw = (time: number) => {
       ctx.fillStyle = "rgba(9,9,11,0.12)";
       ctx.fillRect(0, 0, w, h);
+      drawWorldMap(ctx, w, h, 0.08, 0.03);
       regions.forEach((r, ri) => {
         r.nodes.forEach((n, ni) => {
           const nx = (n.x / 100) * w, ny = (n.y / 100) * h;
@@ -1182,6 +1206,7 @@ export function HeroBgNetTopology() {
     const draw = (time: number) => {
       ctx.fillStyle = "rgba(9,9,11,0.1)";
       ctx.fillRect(0, 0, w, h);
+      drawWorldMap(ctx, w, h, 0.06, 0.02);
       edges.forEach(([i, j]) => {
         const a = allNodes[i], b = allNodes[j];
         if (!a || !b) return;
