@@ -643,6 +643,36 @@ export function HeroBgHoneypotNet() {
 export function HeroBgIntelFusion() {
   return <HeroBgImage src="/images/hero-bg/intel-fusion.png" alt="Threat intelligence fusion center" />;
 }
+export function HeroBgCyberBattlefield() {
+  return <HeroBgImage src="/images/hero-bg/cyber-battlefield.png" alt="Cyber battlefield" />;
+}
+export function HeroBgSupplyChain() {
+  return <HeroBgImage src="/images/hero-bg/supply-chain.png" alt="Supply chain security" />;
+}
+export function HeroBgSocPanorama() {
+  return <HeroBgImage src="/images/hero-bg/soc-panorama.png" alt="SOC analyst workstation" />;
+}
+export function HeroBgMalwareSandbox() {
+  return <HeroBgImage src="/images/hero-bg/malware-sandbox.png" alt="Malware analysis sandbox" />;
+}
+export function HeroBgIdentityMesh() {
+  return <HeroBgImage src="/images/hero-bg/identity-mesh.png" alt="Digital identity mesh" />;
+}
+export function HeroBgRansomwareContain() {
+  return <HeroBgImage src="/images/hero-bg/ransomware-contain.png" alt="Ransomware containment" />;
+}
+export function HeroBg5gSecurity() {
+  return <HeroBgImage src="/images/hero-bg/5g-security.png" alt="5G network security" />;
+}
+export function HeroBgRiskMatrix() {
+  return <HeroBgImage src="/images/hero-bg/risk-matrix.png" alt="Cyber risk matrix" />;
+}
+export function HeroBgForensicsTrail() {
+  return <HeroBgImage src="/images/hero-bg/forensics-trail.png" alt="Digital forensics investigation" />;
+}
+export function HeroBgSoarAutomation() {
+  return <HeroBgImage src="/images/hero-bg/soar-automation.png" alt="SOAR automation" />;
+}
 
 export const HERO_BACKGROUNDS = [
   {
@@ -890,6 +920,76 @@ export const HERO_BACKGROUNDS = [
     tags: ["image", "CTI", "fusion"],
     component: "HeroBgIntelFusion",
   },
+  {
+    id: "cyber-battlefield",
+    name: "Cyber Battlefield",
+    description: "Opposing forces clashing with defensive shields against attack vectors. Digital warfare frontline.",
+    tags: ["image", "warfare", "tactical"],
+    component: "HeroBgCyberBattlefield",
+  },
+  {
+    id: "supply-chain",
+    name: "Supply Chain Security",
+    description: "Interconnected vendor nodes with trust verification chains and third-party risk indicators.",
+    tags: ["image", "supply-chain", "risk"],
+    component: "HeroBgSupplyChain",
+  },
+  {
+    id: "soc-panorama",
+    name: "SOC Panorama",
+    description: "Security operations center with wall of monitors displaying real-time threat dashboards.",
+    tags: ["image", "SOC", "operations"],
+    component: "HeroBgSocPanorama",
+  },
+  {
+    id: "malware-sandbox",
+    name: "Malware Sandbox",
+    description: "Suspicious specimens contained in quarantine cells with behavioral analysis scanning.",
+    tags: ["image", "malware", "forensics"],
+    component: "HeroBgMalwareSandbox",
+  },
+  {
+    id: "identity-mesh",
+    name: "Identity Access Mesh",
+    description: "Identity tokens and credential nodes with authentication pathways, SSO bridges, and MFA checkpoints.",
+    tags: ["image", "IAM", "identity"],
+    component: "HeroBgIdentityMesh",
+  },
+  {
+    id: "ransomware-contain",
+    name: "Ransomware Containment",
+    description: "Encrypted files isolated behind quarantine barriers with decryption keys and backup restoration.",
+    tags: ["image", "ransomware", "recovery"],
+    component: "HeroBgRansomwareContain",
+  },
+  {
+    id: "5g-security",
+    name: "5G Network Security",
+    description: "Cellular tower mesh with secure communication channels and edge computing nodes.",
+    tags: ["image", "5G", "telecom"],
+    component: "HeroBg5gSecurity",
+  },
+  {
+    id: "risk-matrix",
+    name: "Cyber Risk Matrix",
+    description: "Risk categories mapped as glowing zones with probability/impact axes and coverage boundaries.",
+    tags: ["image", "risk", "insurance"],
+    component: "HeroBgRiskMatrix",
+  },
+  {
+    id: "forensics-trail",
+    name: "Digital Forensics",
+    description: "Evidence trails with artifact markers, timeline reconstruction, and chain of custody links.",
+    tags: ["image", "forensics", "DFIR"],
+    component: "HeroBgForensicsTrail",
+  },
+  {
+    id: "soar-automation",
+    name: "SOAR Automation",
+    description: "AI-driven security orchestration with automated response chains and playbook execution paths.",
+    tags: ["image", "SOAR", "automation"],
+    component: "HeroBgSoarAutomation",
+  },
 ] as const;
 
 export type HeroBgId = typeof HERO_BACKGROUNDS[number]["id"];
@@ -930,6 +1030,16 @@ export function getHeroBackground(id: string) {
     case "kill-chain": return <HeroBgKillChain />;
     case "honeypot-net": return <HeroBgHoneypotNet />;
     case "intel-fusion": return <HeroBgIntelFusion />;
+    case "cyber-battlefield": return <HeroBgCyberBattlefield />;
+    case "supply-chain": return <HeroBgSupplyChain />;
+    case "soc-panorama": return <HeroBgSocPanorama />;
+    case "malware-sandbox": return <HeroBgMalwareSandbox />;
+    case "identity-mesh": return <HeroBgIdentityMesh />;
+    case "ransomware-contain": return <HeroBgRansomwareContain />;
+    case "5g-security": return <HeroBg5gSecurity />;
+    case "risk-matrix": return <HeroBgRiskMatrix />;
+    case "forensics-trail": return <HeroBgForensicsTrail />;
+    case "soar-automation": return <HeroBgSoarAutomation />;
     default: return null;
   }
 }
