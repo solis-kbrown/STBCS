@@ -2518,12 +2518,20 @@ export async function fetchRansomLookBreaches(): Promise<number> {
 // ============================================
 const RANSOMWHERE_API = "https://api.ransomwhe.re";
 
-interface RansomwherePayment {
+interface RansomwhereRecord {
   address: string;
-  amount: number;
+  balance: number;
+  balanceUSD: number;
+  blockchain: string;
   family: string;
-  date: string;
-  source?: string;
+  createdAt: string;
+  updatedAt: string;
+  transactions?: Array<{
+    hash: string;
+    time: number;
+    amount: number;
+    amountUSD: number;
+  }>;
 }
 
 export async function fetchRansomwhere(): Promise<number> {
@@ -2537,42 +2545,58 @@ export async function fetchRansomwhere(): Promise<number> {
     }
     
     const data = await response.json();
-    const payments: RansomwherePayment[] = data.result || data || [];
+    const records: RansomwhereRecord[] = data.result || data || [];
     
-    log.debug(`Retrieved ${payments.length} ransomware payment records`);
+    log.debug(`Retrieved ${records.length} ransomware wallet records`);
     
-    // Update threat actor data with payment info
-    const familyPayments = new Map<string, number>();
+    const familyData = new Map<string, { totalUSD: number; totalBTC: number; wallets: Set<string>; txCount: number }>();
     
-    for (const payment of payments) {
-      if (payment.family) {
-        const current = familyPayments.get(payment.family) || 0;
-        familyPayments.set(payment.family, current + (payment.amount || 0));
-      }
+    for (const record of records) {
+      if (!record.family) continue;
+      
+      const existing = familyData.get(record.family) || { totalUSD: 0, totalBTC: 0, wallets: new Set<string>(), txCount: 0 };
+      existing.totalUSD += record.balanceUSD || 0;
+      existing.totalBTC += (record.balance || 0) / 1e8;
+      if (record.address) existing.wallets.add(record.address);
+      existing.txCount += record.transactions?.length || 0;
+      familyData.set(record.family, existing);
     }
     
-    let count = 0;
-    const families = Array.from(familyPayments.keys());
-    for (const family of families) {
+    let enrichedCount = 0;
+    let actorCount = 0;
+    
+    const families = Array.from(familyData.entries());
+    for (const [family, info] of families) {
       try {
-        const totalBtc = familyPayments.get(family) || 0;
         await storage.upsertThreatActor({
           name: family,
-          description: `Ransomware family with ${totalBtc.toFixed(4)} BTC in tracked payments`,
+          description: `Ransomware family with $${info.totalUSD.toLocaleString('en-US', { maximumFractionDigits: 0 })} USD in tracked payments across ${info.wallets.size} wallets`,
           type: "Ransomware Operator",
           origin: "Unknown",
           lastActive: new Date(),
           active: true,
         });
-        count++;
+        actorCount++;
+        
+        if (info.totalUSD > 0) {
+          const walletsArr = Array.from(info.wallets);
+          const primaryWallet = walletsArr[0] || undefined;
+          const updated = await storage.enrichRansomwarePaymentsByGroup(family, {
+            totalUSD: info.totalUSD,
+            ransomCurrency: "USD (BTC equivalent)",
+            bitcoinWallet: primaryWallet,
+            paymentStatus: info.txCount > 0 ? "confirmed" : "tracked",
+          });
+          enrichedCount += updated;
+        }
       } catch (err) {
         continue;
       }
     }
     
-    log.debug(`Tracked ${count} ransomware families with payment data`);
+    log.debug(`Tracked ${actorCount} ransomware families, enriched ${enrichedCount} incidents with payment data`);
     await storage.updateFeedLastFetched("Ransomwhere");
-    return count;
+    return actorCount;
   } catch (error) {
     log.error("Error:", error);
     return 0;

@@ -98,6 +98,7 @@ export interface IStorage {
   createRansomwareIncident(incident: InsertRansomware): Promise<RansomwareIncident>;
   upsertRansomwareIncident(incident: InsertRansomware): Promise<RansomwareIncident>;
   upsertRansomwareIncidentWithFlag(incident: InsertRansomware): Promise<{ incident: RansomwareIncident; isNew: boolean }>;
+  enrichRansomwarePaymentsByGroup(groupName: string, data: { totalUSD: number; ransomCurrency?: string; bitcoinWallet?: string; paymentStatus?: string }): Promise<number>;
   searchRansomware(query: string, limit?: number): Promise<RansomwareIncident[]>;
   getRansomwareCount(): Promise<number>;
   getActiveGroups(): Promise<{ name: string; count: number }[]>;
@@ -457,6 +458,35 @@ export class DatabaseStorage implements IStorage {
     
     const [created] = await db.insert(ransomwareIncidents).values(incident).returning();
     return { incident: created, isNew: true };
+  }
+
+  async enrichRansomwarePaymentsByGroup(groupName: string, data: { totalUSD: number; ransomCurrency?: string; bitcoinWallet?: string; paymentStatus?: string }): Promise<number> {
+    const normalizedName = groupName.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    const matchingIncidents = await db.select({ id: ransomwareIncidents.id })
+      .from(ransomwareIncidents)
+      .where(and(
+        sql`LOWER(REGEXP_REPLACE(${ransomwareIncidents.groupName}, '[^a-zA-Z0-9]', '', 'g')) = ${normalizedName}`,
+        sql`${ransomwareIncidents.ransomAmount} IS NULL`
+      ));
+    
+    if (matchingIncidents.length === 0) return 0;
+    
+    const perIncidentAmount = data.totalUSD / matchingIncidents.length;
+    const formattedAmount = `$${perIncidentAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+    
+    const ids = matchingIncidents.map(i => i.id);
+    const result = await db.update(ransomwareIncidents)
+      .set({
+        ransomAmount: formattedAmount,
+        ransomCurrency: data.ransomCurrency ?? undefined,
+        bitcoinWallet: data.bitcoinWallet ?? undefined,
+        paymentStatus: data.paymentStatus ?? undefined,
+      })
+      .where(sql`${ransomwareIncidents.id} = ANY(${ids})`)
+      .returning();
+    
+    return result.length;
   }
 
   async searchRansomware(query: string, limit = 50): Promise<RansomwareIncident[]> {

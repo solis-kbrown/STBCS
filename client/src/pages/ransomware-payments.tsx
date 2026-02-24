@@ -262,6 +262,8 @@ export default function RansomwarePayments() {
     );
   }
 
+  const hasPaymentData = paymentIncidents.length > 0;
+
   if (error) {
     return (
       <Layout>
@@ -447,6 +449,22 @@ export default function RansomwarePayments() {
             </CardContent>
           </Card>
         </div>
+
+        {!hasPaymentData && (
+          <Card className="border-orange-500/20 bg-orange-500/5" data-testid="card-no-payment-data">
+            <CardContent className="p-5 flex items-start gap-4">
+              <AlertTriangle className="h-6 w-6 text-orange-400 mt-0.5 flex-shrink-0" aria-hidden="true" />
+              <div>
+                <h3 className="text-white font-semibold mb-1">Payment Data Enrichment In Progress</h3>
+                <p className="text-zinc-400 text-sm leading-relaxed">
+                  We're tracking <span className="text-white font-medium">{rawIncidents.length.toLocaleString()}</span> ransomware incidents.
+                  Payment data (ransom demands, Bitcoin wallets, and payment statuses) is being enriched from the Ransomwhere database.
+                  Charts will populate as payment data is matched to tracked incidents. This process runs automatically every 15 minutes.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card className="border-white/5 bg-card/50">
