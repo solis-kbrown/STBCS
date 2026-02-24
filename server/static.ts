@@ -11,22 +11,29 @@ export function serveStatic(app: Express) {
     );
   }
 
+  const indexPath = path.resolve(distPath, "index.html");
+  const baseHtml = fs.readFileSync(indexPath, "utf-8");
+
   app.use(express.static(distPath, {
     maxAge: '1y',
     immutable: true,
+    etag: true,
+    lastModified: true,
     setHeaders: (res, filePath) => {
       if (filePath.endsWith('.html')) {
         res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');
+      }
+      if (filePath.match(/\.(js|css|woff2?|ttf|eot)$/)) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       }
     },
   }));
 
   app.use("/{*path}", (req, res) => {
-    const indexPath = path.resolve(distPath, "index.html");
-    let html = fs.readFileSync(indexPath, "utf-8");
-    html = injectMetaTags(html, req.originalUrl);
+    const html = injectMetaTags(baseHtml, req.originalUrl);
     res.setHeader("Content-Type", "text/html");
     res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
+    res.setHeader("Vary", "Accept-Encoding");
     res.send(html);
   });
 }
