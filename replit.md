@@ -31,7 +31,9 @@ Preferred communication style: Simple, everyday language.
 - **API Design**: RESTful JSON API (`/api/*`) with Zod validation.
 - **Security**: Rate limiting via `express-rate-limit`, input validation.
 - **Data Scraping**: Server-side scrapers collect threat intelligence data.
-- **Caching**: In-memory response cache with TTL-based expiration.
+- **Caching**: In-memory response cache with TTL-based expiration, startup cache warm-up.
+- **Performance**: Parallelized DB queries (Promise.all) for all list+count endpoints, in-memory index.html caching.
+- **CSRF Protection**: Origin/Referer validation for state-changing requests in production.
 
 ### Data Storage
 - **Database**: PostgreSQL via Drizzle ORM.
