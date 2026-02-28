@@ -93,7 +93,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         </Link>
       </div>
       
-      <div className="flex-1 px-4 py-6 space-y-1">
+      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-1 scrollbar-thin scrollbar-thumb-orange-500/20 scrollbar-track-transparent">
         {navItems.map((item) => {
           const isActive = location === item.href;
           return (
