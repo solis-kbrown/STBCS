@@ -45,6 +45,12 @@ const TelnetClient = lazy(() => import("@/pages/telnet-client"));
 const FileScanner = lazy(() => import("@/pages/file-scanner"));
 const EmailAnalyzer = lazy(() => import("@/pages/email-analyzer"));
 const EncodingTools = lazy(() => import("@/pages/encoding-tools"));
+const SFTPClient = lazy(() => import("@/pages/sftp-client"));
+const SSLChecker = lazy(() => import("@/pages/ssl-checker"));
+const WebFingerprint = lazy(() => import("@/pages/web-fingerprint"));
+const ExchangeChecker = lazy(() => import("@/pages/exchange-checker"));
+const DnsAnalyzer = lazy(() => import("@/pages/dns-analyzer"));
+const HeadersScanner = lazy(() => import("@/pages/headers-scanner"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -100,6 +106,12 @@ function Router() {
         <Route path="/file-scanner" component={FileScanner}/>
         <Route path="/email-analyzer" component={EmailAnalyzer}/>
         <Route path="/encoding-tools" component={EncodingTools}/>
+        <Route path="/sftp-client" component={SFTPClient}/>
+        <Route path="/ssl-checker" component={SSLChecker}/>
+        <Route path="/web-fingerprint" component={WebFingerprint}/>
+        <Route path="/exchange-checker" component={ExchangeChecker}/>
+        <Route path="/dns-analyzer" component={DnsAnalyzer}/>
+        <Route path="/headers-scanner" component={HeadersScanner}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

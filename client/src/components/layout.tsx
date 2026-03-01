@@ -32,7 +32,13 @@ import {
   Globe,
   FileSearch,
   MailSearch,
-  Binary
+  Binary,
+  FolderSync,
+  ScanSearch,
+  Fingerprint,
+  MailCheck,
+  Network,
+  ShieldAlert
 } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -79,10 +85,16 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/reports", labelKey: "nav.reports", icon: FileText, isPro: true },
     { href: "/file-scanner", labelKey: "nav.fileScanner", icon: FileSearch, isPro: true },
     { href: "/email-analyzer", labelKey: "nav.emailAnalyzer", icon: MailSearch, isPro: true },
+    { href: "/ssl-checker", labelKey: "nav.sslChecker", icon: ScanSearch, isPro: true },
+    { href: "/web-fingerprint", labelKey: "nav.webFingerprint", icon: Fingerprint, isPro: true },
+    { href: "/exchange-checker", labelKey: "nav.exchangeChecker", icon: MailCheck, isPro: true },
+    { href: "/dns-analyzer", labelKey: "nav.dnsAnalyzer", icon: Network, isPro: true },
+    { href: "/headers-scanner", labelKey: "nav.headersScanner", icon: ShieldAlert },
     { href: "/encoding-tools", labelKey: "nav.encodingTools", icon: Binary },
     { href: "/telnet-client", labelKey: "nav.telnetClient", icon: Globe, isPro: true },
     { href: "/remote-desktop", labelKey: "nav.remoteDesktop", icon: Monitor, isBusiness: true },
     { href: "/ssh-terminal", labelKey: "nav.sshTerminal", icon: Terminal, isBusiness: true },
+    { href: "/sftp-client", labelKey: "nav.sftpClient", icon: FolderSync, isBusiness: true },
     { href: "/messages", labelKey: "nav.messages", icon: MessageSquare, isBusiness: true },
     { href: "/ransomware", labelKey: "nav.ransomware", icon: ShieldOff },
     { href: "/groups", labelKey: "nav.groups", icon: Users },
@@ -100,10 +112,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const navGroups = [
     { items: navItems.slice(0, 3) },
-    { items: navItems.slice(3, 13) },
-    { items: navItems.slice(13, 18) },
-    { items: navItems.slice(18, 21) },
-    { items: navItems.slice(21) },
+    { items: navItems.slice(3, 19) },
+    { items: navItems.slice(19, 24) },
+    { items: navItems.slice(24, 27) },
+    { items: navItems.slice(27) },
   ];
 
   const SidebarContent = () => (

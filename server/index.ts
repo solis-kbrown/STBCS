@@ -279,6 +279,10 @@ async function initializeApp() {
   setupTelnetWebSocket(httpServer);
   await yieldToEventLoop();
 
+  const { registerSFTPRoutes } = await import("./sftp");
+  registerSFTPRoutes(app);
+  await yieldToEventLoop();
+
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const internalMessage = err.message || "Internal Server Error";

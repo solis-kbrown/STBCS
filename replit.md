@@ -88,6 +88,13 @@ Preferred communication style: Simple, everyday language.
 - **File Scanner**: Upload-based file analysis tool (Pro+ tier) computing MD5/SHA1/SHA256/SHA512 hashes, MIME type detection via magic bytes, Shannon entropy calculation, printable string extraction. Files auto-deleted after analysis. Max 50MB upload.
 - **Email Header Analyzer**: Email header parsing tool (Pro+ tier) that traces routing hops, extracts SPF/DKIM/DMARC authentication results, detects delivery delays between hops, identifies Return-Path/From domain mismatches, and warns about missing authentication.
 - **Encoding/Decoding Tools**: Client-side Base64, URL, Hex, and ROT13 encode/decode utility (Free tier). All operations run in-browser with no server calls.
+- **SFTP Client**: Browser-based SFTP file manager (Business+ tier) using ssh2 SFTP subsystem. File browser with directory navigation, upload/download, delete/rename/mkdir. Tabbed multi-session support (max 3). DNS-based SSRF protection.
+- **SSL/TLS Checker**: Comprehensive SSL analysis tool (Pro+ tier) using Node.js tls module. Certificate chain validation, TLS 1.0-1.3 protocol testing, cipher suite audit, HTTP security headers (HSTS/CSP/X-Frame-Options), OCSP stapling, CAA DNS records, security grading (A+ to F).
+- **Tabbed Sessions**: All remote access tools (SSH, Telnet, RDP, SFTP) support multiple concurrent sessions via tabbed UI with status indicators (connecting/connected/error), close buttons, and "+" to add sessions.
+- **Web Server Fingerprinter**: HTTP fingerprinting tool (Pro+ tier) detecting server software (IIS/Apache/Nginx), CMS platforms (WordPress/Joomla/Drupal), technology stacks, HTTP methods, cookies, redirect chains, and security observations. SSRF-protected.
+- **Exchange Server Checker**: Microsoft Exchange detection tool (Pro+ tier) probing Autodiscover, OWA/ECP, EWS, ActiveSync endpoints. Version fingerprinting with CVE mapping (ProxyLogon, ProxyShell, ProxyNotShell). MX record analysis for Exchange Online vs on-premise.
+- **DNS Security Analyzer**: Comprehensive DNS security analysis (Pro+ tier) checking SPF/DKIM/DMARC records, DNSSEC status, CAA records, MX records with provider detection, NS redundancy. Overall DNS security scoring (A+ to F).
+- **HTTP Security Headers Scanner**: Free-tier security headers analysis checking HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy, CORS headers. A+ to F grading with remediation recommendations. Rate-limited (10 req/min).
 
 ## External Dependencies
 

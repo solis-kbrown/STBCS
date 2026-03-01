@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import {
   Terminal, Lock, Shield, Wifi, WifiOff, Crown, Loader2,
   Eye, EyeOff, AlertTriangle, Server, RefreshCw,
-  Check, Power, KeyRound, FileKey, X, Copy, Upload
+  Check, Power, KeyRound, FileKey, X, Copy, Upload, Plus
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +26,36 @@ interface ConnectionConfig {
   password: string;
   privateKey: string;
   authMethod: AuthMethod;
+}
+
+interface SSHTab {
+  id: string;
+  connectionState: ConnectionState;
+  wsUrl: string;
+  sessionId: string | null;
+  errorMessage: string | null;
+  hostname: string;
+  port: string;
+}
+
+const MAX_TABS = 3;
+
+let tabIdCounter = 0;
+function generateTabId(): string {
+  tabIdCounter++;
+  return `ssh-tab-${Date.now()}-${tabIdCounter}`;
+}
+
+function createNewTab(): SSHTab {
+  return {
+    id: generateTabId(),
+    connectionState: "disconnected",
+    wsUrl: "",
+    sessionId: null,
+    errorMessage: null,
+    hostname: "",
+    port: "22",
+  };
 }
 
 function ConnectionForm({
@@ -267,24 +297,25 @@ function ConnectionForm({
   );
 }
 
-function SSHTerminalViewer({
-  wsUrl,
-  connectionState,
+function SSHTerminalInstance({
+  tab,
+  isVisible,
   onDisconnect,
-  errorMessage,
 }: {
-  wsUrl: string;
-  connectionState: ConnectionState;
+  tab: SSHTab;
+  isVisible: boolean;
   onDisconnect: () => void;
-  errorMessage: string | null;
 }) {
   const termContainerRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const termRef = useRef<any>(null);
   const fitAddonRef = useRef<any>(null);
+  const initDoneRef = useRef(false);
 
   useEffect(() => {
-    if (connectionState !== "connected" || !wsUrl) return;
+    if (tab.connectionState !== "connected" || !tab.wsUrl) return;
+    if (initDoneRef.current) return;
+    initDoneRef.current = true;
 
     let term: any = null;
     let fitAddon: any = null;
@@ -350,7 +381,7 @@ function SSHTerminalViewer({
       term.writeln("\x1b[38;2;249;115;22m◆ STB Cybersecurity — SSH Terminal\x1b[0m");
       term.writeln("\x1b[38;5;245mEstablishing secure connection…\x1b[0m\r\n");
 
-      ws = new WebSocket(wsUrl);
+      ws = new WebSocket(tab.wsUrl);
       wsRef.current = ws;
 
       ws.onopen = () => {
@@ -431,6 +462,7 @@ function SSHTerminalViewer({
 
     return () => {
       disposed = true;
+      initDoneRef.current = false;
       if (pingInterval) clearInterval(pingInterval);
       if (ws) {
         ws.close();
@@ -445,9 +477,17 @@ function SSHTerminalViewer({
         fitAddonRef.current = null;
       }
     };
-  }, [connectionState, wsUrl]);
+  }, [tab.connectionState, tab.wsUrl]);
 
-  if (connectionState === "error") {
+  useEffect(() => {
+    if (isVisible && fitAddonRef.current) {
+      setTimeout(() => {
+        try { fitAddonRef.current.fit(); } catch {}
+      }, 50);
+    }
+  }, [isVisible]);
+
+  if (tab.connectionState === "error") {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
         <div className="p-4 rounded-full bg-red-500/10">
@@ -455,7 +495,7 @@ function SSHTerminalViewer({
         </div>
         <h3 className="text-lg font-semibold text-white">Connection Failed</h3>
         <p className="text-sm text-zinc-400 text-center max-w-md">
-          {errorMessage || "Unable to establish an SSH connection. Verify the target is reachable, credentials are correct, and SSH is enabled on the remote host."}
+          {tab.errorMessage || "Unable to establish an SSH connection. Verify the target is reachable, credentials are correct, and SSH is enabled on the remote host."}
         </p>
         <Button onClick={onDisconnect} variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800" data-testid="button-ssh-retry">
           <RefreshCw className="h-4 w-4 mr-2" /> Try Again
@@ -464,7 +504,7 @@ function SSHTerminalViewer({
     );
   }
 
-  if (connectionState === "connecting") {
+  if (tab.connectionState === "connecting") {
     return (
       <div className="flex flex-col items-center justify-center py-16 space-y-4">
         <div className="relative">
@@ -488,7 +528,7 @@ function SSHTerminalViewer({
           <Badge className="bg-green-500/20 text-green-400 border-green-500/50 text-[10px]">
             <Wifi className="h-3 w-3 mr-1" /> CONNECTED
           </Badge>
-          <span className="text-[10px] text-zinc-500 font-mono">SSH</span>
+          <span className="text-[10px] text-zinc-500 font-mono">SSH • {tab.hostname}:{tab.port}</span>
         </div>
         <div className="flex items-center gap-1">
           <button
@@ -504,9 +544,91 @@ function SSHTerminalViewer({
       <div
         ref={termContainerRef}
         className="w-full bg-[#09090b] border-x border-b border-zinc-800 rounded-b-lg"
-        style={{ minHeight: "500px", height: "calc(100vh - 280px)" }}
+        style={{ minHeight: "500px", height: "calc(100vh - 320px)" }}
         data-testid="container-ssh-terminal"
       />
+    </div>
+  );
+}
+
+function TabBar({
+  tabs,
+  activeTabId,
+  onSelectTab,
+  onCloseTab,
+  onAddTab,
+}: {
+  tabs: SSHTab[];
+  activeTabId: string;
+  onSelectTab: (id: string) => void;
+  onCloseTab: (id: string) => void;
+  onAddTab: () => void;
+}) {
+  return (
+    <div className="flex items-center gap-1 bg-zinc-900/80 border border-zinc-800 rounded-lg p-1" data-testid="container-ssh-tabs">
+      {tabs.map((tab) => {
+        const isActive = tab.id === activeTabId;
+        const label = tab.hostname
+          ? `${tab.hostname}:${tab.port || "22"}`
+          : "New Session";
+
+        let statusDot: React.ReactNode;
+        if (tab.connectionState === "connecting") {
+          statusDot = (
+            <span className="relative flex h-2.5 w-2.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-orange-500" />
+            </span>
+          );
+        } else if (tab.connectionState === "connected") {
+          statusDot = <span className="h-2.5 w-2.5 rounded-full bg-green-500" />;
+        } else if (tab.connectionState === "error") {
+          statusDot = <span className="h-2.5 w-2.5 rounded-full bg-red-500" />;
+        } else {
+          statusDot = <span className="h-2.5 w-2.5 rounded-full bg-zinc-600" />;
+        }
+
+        return (
+          <div
+            key={tab.id}
+            className={`
+              flex items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer text-sm font-medium transition-all
+              ${isActive
+                ? "bg-zinc-800 text-white shadow-sm"
+                : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50"
+              }
+            `}
+            onClick={() => onSelectTab(tab.id)}
+            data-testid={`tab-ssh-session-${tab.id}`}
+          >
+            {statusDot}
+            <span className="font-mono text-xs truncate max-w-[140px]">{label}</span>
+            {tabs.length > 1 && (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onCloseTab(tab.id);
+                }}
+                className="ml-1 p-0.5 rounded hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                title="Close tab"
+                data-testid={`button-close-tab-${tab.id}`}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+        );
+      })}
+      {tabs.length < MAX_TABS && (
+        <button
+          onClick={onAddTab}
+          className="flex items-center justify-center h-7 w-7 rounded-md text-zinc-500 hover:text-orange-400 hover:bg-zinc-800/50 transition-all"
+          title="New SSH session"
+          data-testid="button-add-ssh-tab"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      )}
     </div>
   );
 }
@@ -516,14 +638,22 @@ export default function SSHTerminal() {
   const { user, isAuthenticated, isBusiness } = useAuth();
   const { toast } = useToast();
 
-  const [connectionState, setConnectionState] = useState<ConnectionState>("disconnected");
-  const [wsUrl, setWsUrl] = useState("");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [tabs, setTabs] = useState<SSHTab[]>([createNewTab()]);
+  const [activeTabId, setActiveTabId] = useState(tabs[0].id);
 
-  const handleConnect = async (config: ConnectionConfig) => {
-    setConnectionState("connecting");
-    setErrorMessage(null);
+  const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
+
+  const updateTab = useCallback((tabId: string, updates: Partial<SSHTab>) => {
+    setTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, ...updates } : t)));
+  }, []);
+
+  const handleConnect = async (tabId: string, config: ConnectionConfig) => {
+    updateTab(tabId, {
+      connectionState: "connecting",
+      errorMessage: null,
+      hostname: config.hostname,
+      port: config.port || "22",
+    });
 
     try {
       const res = await fetch("/api/ssh/connect", {
@@ -547,20 +677,24 @@ export default function SSHTerminal() {
       }
 
       const data = await res.json();
-      setSessionId(data.sessionId);
-
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsEndpoint = `${protocol}//${window.location.host}/ws/ssh/${data.sessionId}`;
-      setWsUrl(wsEndpoint);
-      setConnectionState("connected");
+
+      updateTab(tabId, {
+        sessionId: data.sessionId,
+        wsUrl: wsEndpoint,
+        connectionState: "connected",
+      });
 
       toast({
         title: "Connected",
         description: `SSH session established to ${config.hostname}`,
       });
     } catch (err: any) {
-      setConnectionState("error");
-      setErrorMessage(err.message);
+      updateTab(tabId, {
+        connectionState: "error",
+        errorMessage: err.message,
+      });
       toast({
         title: "Connection Failed",
         description: err.message,
@@ -569,20 +703,59 @@ export default function SSHTerminal() {
     }
   };
 
-  const handleDisconnect = async () => {
-    if (sessionId) {
+  const handleDisconnect = async (tabId: string) => {
+    const tab = tabs.find((t) => t.id === tabId);
+    if (tab?.sessionId) {
       try {
-        await fetch(`/api/ssh/disconnect/${sessionId}`, {
+        await fetch(`/api/ssh/disconnect/${tab.sessionId}`, {
           method: "POST",
           credentials: "include",
         });
       } catch {}
     }
-    setConnectionState("disconnected");
-    setWsUrl("");
-    setSessionId(null);
-    setErrorMessage(null);
+    updateTab(tabId, {
+      connectionState: "disconnected",
+      wsUrl: "",
+      sessionId: null,
+      errorMessage: null,
+      hostname: "",
+      port: "22",
+    });
   };
+
+  const handleCloseTab = async (tabId: string) => {
+    const tab = tabs.find((t) => t.id === tabId);
+    if (tab?.sessionId) {
+      try {
+        await fetch(`/api/ssh/disconnect/${tab.sessionId}`, {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch {}
+    }
+
+    setTabs((prev) => {
+      const remaining = prev.filter((t) => t.id !== tabId);
+      if (remaining.length === 0) {
+        const newTab = createNewTab();
+        setActiveTabId(newTab.id);
+        return [newTab];
+      }
+      if (activeTabId === tabId) {
+        setActiveTabId(remaining[remaining.length - 1].id);
+      }
+      return remaining;
+    });
+  };
+
+  const handleAddTab = () => {
+    if (tabs.length >= MAX_TABS) return;
+    const newTab = createNewTab();
+    setTabs((prev) => [...prev, newTab]);
+    setActiveTabId(newTab.id);
+  };
+
+  const connectedCount = tabs.filter((t) => t.connectionState === "connected" || t.connectionState === "connecting").length;
 
   if (!isAuthenticated) {
     return (
@@ -648,94 +821,116 @@ export default function SSHTerminal() {
             <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/50">
               <Crown className="h-3 w-3 mr-1" /> BUSINESS
             </Badge>
-            {connectionState === "connected" && (
+            {connectedCount > 0 && (
               <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
-                <Wifi className="h-3 w-3 mr-1" /> ACTIVE SESSION
+                <Wifi className="h-3 w-3 mr-1" /> {connectedCount} ACTIVE
               </Badge>
             )}
           </div>
         </div>
 
-        {connectionState === "disconnected" ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <Card className="border-white/5 bg-card/50">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-white">
-                    <Terminal className="h-5 w-5 text-orange-400" /> New SSH Connection
-                  </CardTitle>
-                  <CardDescription>
-                    Enter the credentials for the remote server you want to connect to via SSH.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ConnectionForm onConnect={handleConnect} isConnecting={false} />
-                </CardContent>
-              </Card>
-            </div>
+        <TabBar
+          tabs={tabs}
+          activeTabId={activeTabId}
+          onSelectTab={setActiveTabId}
+          onCloseTab={handleCloseTab}
+          onAddTab={handleAddTab}
+        />
 
-            <div className="space-y-4">
-              <Card className="border-white/5 bg-card/50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center gap-2 text-white">
-                    <Shield className="h-4 w-4 text-green-400" /> Security
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">End-to-end encrypted SSH + WSS tunnel</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">Credentials held in memory only — never stored or logged</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">RSA, Ed25519, and ECDSA key authentication supported</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">Uploaded key files are read in-browser and never touch the server filesystem</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">Sessions auto-expire after 30 minutes or 15 minutes idle</p>
-                  </div>
-                </CardContent>
-              </Card>
+        {tabs.map((tab) => {
+          const isVisible = tab.id === activeTabId;
 
-              <Card className="border-white/5 bg-card/50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center gap-2 text-white">
-                    <AlertTriangle className="h-4 w-4 text-amber-400" /> Usage Guidelines
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-start gap-2">
-                    <span className="text-amber-400 text-xs mt-0.5">•</span>
-                    <p className="text-xs text-zinc-400">Maximum 3 concurrent SSH sessions per account</p>
+          if (tab.connectionState === "disconnected") {
+            return (
+              <div key={tab.id} style={{ display: isVisible ? "block" : "none" }}>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <Card className="border-white/5 bg-card/50">
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2 text-white">
+                          <Terminal className="h-5 w-5 text-orange-400" /> New SSH Connection
+                        </CardTitle>
+                        <CardDescription>
+                          Enter the credentials for the remote server you want to connect to via SSH.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ConnectionForm
+                          onConnect={(config) => handleConnect(tab.id, config)}
+                          isConnecting={false}
+                        />
+                      </CardContent>
+                    </Card>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-amber-400 text-xs mt-0.5">•</span>
-                    <p className="text-xs text-zinc-400">Connections to private/internal IP ranges are blocked</p>
+
+                  <div className="space-y-4">
+                    <Card className="border-white/5 bg-card/50">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm flex items-center gap-2 text-white">
+                          <Shield className="h-4 w-4 text-green-400" /> Security
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                          <p className="text-xs text-zinc-400">End-to-end encrypted SSH + WSS tunnel</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                          <p className="text-xs text-zinc-400">Credentials held in memory only — never stored or logged</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                          <p className="text-xs text-zinc-400">RSA, Ed25519, and ECDSA key authentication supported</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                          <p className="text-xs text-zinc-400">Uploaded key files are read in-browser and never touch the server filesystem</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                          <p className="text-xs text-zinc-400">Sessions auto-expire after 30 minutes or 15 minutes idle</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-white/5 bg-card/50">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm flex items-center gap-2 text-white">
+                          <AlertTriangle className="h-4 w-4 text-amber-400" /> Usage Guidelines
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-start gap-2">
+                          <span className="text-amber-400 text-xs mt-0.5">•</span>
+                          <p className="text-xs text-zinc-400">Maximum 3 concurrent SSH sessions per account</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-amber-400 text-xs mt-0.5">•</span>
+                          <p className="text-xs text-zinc-400">Connections to private/internal IP ranges are blocked</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <span className="text-amber-400 text-xs mt-0.5">•</span>
+                          <p className="text-xs text-zinc-400">Intended for incident response and authorized administration only</p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-amber-400 text-xs mt-0.5">•</span>
-                    <p className="text-xs text-zinc-400">Intended for incident response and authorized administration only</p>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={tab.id} style={{ display: isVisible ? "block" : "none" }}>
+              <SSHTerminalInstance
+                tab={tab}
+                isVisible={isVisible}
+                onDisconnect={() => handleDisconnect(tab.id)}
+              />
             </div>
-          </div>
-        ) : (
-          <SSHTerminalViewer
-            wsUrl={wsUrl}
-            connectionState={connectionState}
-            onDisconnect={handleDisconnect}
-            errorMessage={errorMessage}
-          />
-        )}
+          );
+        })}
       </div>
       <Footer />
     </Layout>

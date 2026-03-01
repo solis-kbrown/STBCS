@@ -2277,6 +2277,69 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
+  // Comprehensive SSL Checker (Pro+)
+  app.post("/api/tools/ssl-check-full", requireAuth as any, requirePro as any, proToolsLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schema = z.object({
+        hostname: z.string().min(3).max(253),
+        port: z.coerce.number().int().min(1).max(65535).default(443),
+      });
+
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid parameters", details: parsed.error.issues });
+      }
+
+      const { isValidDomain } = await import("./tools.js");
+      if (!isValidDomain(parsed.data.hostname)) {
+        return res.status(400).json({ error: "Invalid hostname format" });
+      }
+
+      const allowedPorts = [443, 8443, 993, 995, 465, 587];
+      if (!allowedPorts.includes(parsed.data.port)) {
+        return res.status(400).json({ error: `Port not allowed. Supported ports: ${allowedPorts.join(', ')}` });
+      }
+
+      const { performFullSSLCheck } = await import("./ssl-checker.js");
+      const result = await performFullSSLCheck(parsed.data.hostname, parsed.data.port);
+      res.json(result);
+    } catch (error) {
+      console.error("Full SSL check error:", error);
+      res.status(500).json({ error: "Failed to perform comprehensive SSL check" });
+    }
+  });
+
+  // Web Server Fingerprinter (Pro+)
+  app.post("/api/tools/web-fingerprint", requireAuth as any, requirePro as any, proToolsLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schema = z.object({
+        hostname: z.string().min(3).max(253),
+      });
+
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid parameters", details: parsed.error.issues });
+      }
+
+      const { isValidDomain } = await import("./tools.js");
+      if (!isValidDomain(parsed.data.hostname)) {
+        return res.status(400).json({ error: "Invalid hostname format" });
+      }
+
+      const { performWebFingerprint } = await import("./web-fingerprint.js");
+      const result = await performWebFingerprint(parsed.data.hostname);
+
+      if (result.error && result.error.includes('private IP')) {
+        return res.status(400).json({ error: "Target resolves to a private/reserved IP address" });
+      }
+
+      res.json(result);
+    } catch (error) {
+      console.error("Web fingerprint error:", error);
+      res.status(500).json({ error: "Failed to perform web server fingerprinting" });
+    }
+  });
+
   // Hash Analyzer
   app.get("/api/tools/hash-analyze", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {
@@ -2584,6 +2647,104 @@ Hiring: https://stbcybersecurity.com/support
     } catch (error) {
       console.error("Scan usage error:", error);
       res.status(500).json({ error: "Failed to get usage stats" });
+    }
+  });
+
+  // ==========================================
+  // EXCHANGE SERVER CHECKER
+  // ==========================================
+
+  app.post("/api/tools/exchange-check", requireAuth as any, requirePro as any, proToolsLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schema = z.object({
+        hostname: z.string().min(4).max(255),
+      });
+
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid hostname", details: parsed.error.issues });
+      }
+
+      let { hostname } = parsed.data;
+      hostname = hostname.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\/.*$/, "").replace(/:\d+$/, "");
+
+      if (!isValidDomain(hostname)) {
+        return res.status(400).json({ error: "Invalid domain name" });
+      }
+
+      const { checkExchangeServer } = await import("./exchange-checker.js");
+      const result = await checkExchangeServer(hostname);
+      res.json(result);
+    } catch (error: any) {
+      if (error.message === "Target resolves to a private IP address") {
+        return res.status(403).json({ error: "Scanning private/internal IP addresses is not permitted." });
+      }
+      console.error("Exchange check error:", error);
+      res.status(500).json({ error: "Exchange server check failed" });
+    }
+  });
+
+  // ==========================================
+  // HTTP SECURITY HEADERS SCANNER (Free tier)
+  // ==========================================
+
+  app.post("/api/tools/headers-scan", freeToolsLimiter, async (req: Request, res: Response) => {
+    try {
+      const schema = z.object({
+        hostname: z.string().min(3).max(253),
+      });
+
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid hostname format" });
+      }
+
+      const { hostname } = parsed.data;
+      const cleanHostname = hostname.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0].split(':')[0];
+
+      if (!isValidDomain(cleanHostname)) {
+        return res.status(400).json({ error: "Invalid domain name" });
+      }
+
+      const { scanHeaders } = await import("./headers-scanner.js");
+      const result = await scanHeaders(cleanHostname);
+      res.json(result);
+    } catch (error: any) {
+      console.error("Headers scan error:", error);
+      if (error.message?.includes('private') || error.message?.includes('internal')) {
+        return res.status(400).json({ error: error.message });
+      }
+      res.status(500).json({ error: "Failed to scan headers. The target may be unreachable." });
+    }
+  });
+
+  // ==========================================
+  // DNS SECURITY ANALYZER (Pro)
+  // ==========================================
+
+  app.post("/api/tools/dns-security", requireAuth as any, requirePro as any, proToolsLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const schema = z.object({
+        domain: z.string().min(3).max(253),
+      });
+
+      const parsed = schema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: "Invalid domain" });
+      }
+
+      const cleanDomain = parsed.data.domain.replace(/^(https?:\/\/)?(www\.)?/, '').split('/')[0].toLowerCase();
+
+      if (!isValidDomain(cleanDomain)) {
+        return res.status(400).json({ error: "Invalid domain name" });
+      }
+
+      const { analyzeDnsSecurity } = await import("./dns-analyzer.js");
+      const result = await analyzeDnsSecurity(cleanDomain);
+      res.json(result);
+    } catch (error) {
+      console.error("DNS security analysis error:", error);
+      res.status(500).json({ error: "Failed to analyze DNS security" });
     }
   });
 

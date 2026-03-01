@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import {
   Terminal, Lock, Shield, Wifi, WifiOff, Crown, Loader2,
   AlertTriangle, Server, RefreshCw, Check, Power, Globe,
-  Mail, Database, Copy, X
+  Mail, Database, Copy, X, Plus
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -21,6 +21,18 @@ interface ConnectionConfig {
   hostname: string;
   port: string;
 }
+
+interface TelnetTab {
+  id: string;
+  sessionId: string | null;
+  hostname: string;
+  port: string;
+  connectionState: ConnectionState;
+  wsUrl: string;
+  errorMessage: string | null;
+}
+
+const MAX_TABS = 3;
 
 const COMMON_PORTS = [
   { port: "23", label: "Telnet (23)", desc: "Standard Telnet" },
@@ -139,6 +151,7 @@ function TelnetTerminalViewer({
   errorMessage,
   hostname,
   port,
+  isVisible,
 }: {
   wsUrl: string;
   connectionState: ConnectionState;
@@ -146,6 +159,7 @@ function TelnetTerminalViewer({
   errorMessage: string | null;
   hostname: string;
   port: string;
+  isVisible: boolean;
 }) {
   const termContainerRef = useRef<HTMLDivElement>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -299,6 +313,14 @@ function TelnetTerminalViewer({
     };
   }, [connectionState, wsUrl, hostname, port]);
 
+  useEffect(() => {
+    if (isVisible && fitAddonRef.current) {
+      setTimeout(() => {
+        try { fitAddonRef.current.fit(); } catch {}
+      }, 50);
+    }
+  }, [isVisible]);
+
   const sendLine = useCallback((line: string) => {
     const ws = wsRef.current;
     if (ws && ws.readyState === WebSocket.OPEN) {
@@ -349,7 +371,7 @@ function TelnetTerminalViewer({
   }
 
   return (
-    <div className="flex flex-col">
+    <div className={`flex flex-col ${isVisible ? "" : "hidden"}`}>
       <div className="flex items-center justify-between px-3 py-1.5 bg-zinc-900 border border-zinc-800 rounded-t-lg">
         <div className="flex items-center gap-3">
           <Badge className="bg-green-500/20 text-green-400 border-green-500/50 text-[10px]">
@@ -371,7 +393,7 @@ function TelnetTerminalViewer({
       <div
         ref={termContainerRef}
         className="w-full bg-[#09090b] border-x border-zinc-800"
-        style={{ minHeight: "400px", height: "calc(100vh - 340px)" }}
+        style={{ minHeight: "400px", height: "calc(100vh - 380px)" }}
         data-testid="container-telnet-terminal"
       />
       <div className="flex items-center gap-2 px-3 py-2 bg-zinc-900 border border-zinc-800 rounded-b-lg">
@@ -404,20 +426,49 @@ function TelnetTerminalViewer({
   );
 }
 
+function TabStatusDot({ state }: { state: ConnectionState }) {
+  if (state === "connecting") {
+    return <span className="h-2 w-2 rounded-full bg-orange-400 animate-pulse" />;
+  }
+  if (state === "connected") {
+    return <span className="h-2 w-2 rounded-full bg-green-400" />;
+  }
+  if (state === "error") {
+    return <span className="h-2 w-2 rounded-full bg-red-400" />;
+  }
+  return <span className="h-2 w-2 rounded-full bg-zinc-600" />;
+}
+
+let tabCounter = 0;
+function createNewTab(): TelnetTab {
+  tabCounter++;
+  return {
+    id: `tab-${Date.now()}-${tabCounter}`,
+    sessionId: null,
+    hostname: "",
+    port: "",
+    connectionState: "disconnected",
+    wsUrl: "",
+    errorMessage: null,
+  };
+}
+
 export default function TelnetClient() {
   useDocumentTitle("Telnet Client | STB Cybersecurity");
   const { user, isAuthenticated, isPro } = useAuth();
   const { toast } = useToast();
 
-  const [connectionState, setConnectionState] = useState<ConnectionState>("disconnected");
-  const [wsUrl, setWsUrl] = useState("");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
-  const [connectedHost, setConnectedHost] = useState({ hostname: "", port: "" });
+  const [tabs, setTabs] = useState<TelnetTab[]>(() => [createNewTab()]);
+  const [activeTabId, setActiveTabId] = useState<string>(() => tabs[0].id);
 
-  const handleConnect = async (config: ConnectionConfig) => {
-    setConnectionState("connecting");
-    setErrorMessage(null);
+  const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
+
+  const updateTab = (tabId: string, updates: Partial<TelnetTab>) => {
+    setTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, ...updates } : t)));
+  };
+
+  const handleConnect = async (tabId: string, config: ConnectionConfig) => {
+    updateTab(tabId, { connectionState: "connecting", errorMessage: null, hostname: config.hostname, port: config.port });
 
     try {
       const res = await fetch("/api/telnet/connect", {
@@ -433,21 +484,21 @@ export default function TelnetClient() {
       }
 
       const data = await res.json();
-      setSessionId(data.sessionId);
-      setConnectedHost({ hostname: config.hostname, port: config.port });
-
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsEndpoint = `${protocol}//${window.location.host}/ws/telnet/${data.sessionId}`;
-      setWsUrl(wsEndpoint);
-      setConnectionState("connected");
+
+      updateTab(tabId, {
+        sessionId: data.sessionId,
+        wsUrl: wsEndpoint,
+        connectionState: "connected",
+      });
 
       toast({
         title: "Connected",
         description: `Telnet session to ${config.hostname}:${config.port}`,
       });
     } catch (err: any) {
-      setConnectionState("error");
-      setErrorMessage(err.message);
+      updateTab(tabId, { connectionState: "error", errorMessage: err.message });
       toast({
         title: "Connection Failed",
         description: err.message,
@@ -456,21 +507,66 @@ export default function TelnetClient() {
     }
   };
 
-  const handleDisconnect = async () => {
-    if (sessionId) {
+  const handleDisconnect = async (tabId: string) => {
+    const tab = tabs.find((t) => t.id === tabId);
+    if (tab?.sessionId) {
       try {
-        await fetch(`/api/telnet/disconnect/${sessionId}`, {
+        await fetch(`/api/telnet/disconnect/${tab.sessionId}`, {
           method: "POST",
           credentials: "include",
         });
       } catch {}
     }
-    setConnectionState("disconnected");
-    setWsUrl("");
-    setSessionId(null);
-    setErrorMessage(null);
-    setConnectedHost({ hostname: "", port: "" });
+    updateTab(tabId, {
+      connectionState: "disconnected",
+      wsUrl: "",
+      sessionId: null,
+      errorMessage: null,
+      hostname: "",
+      port: "",
+    });
   };
+
+  const handleCloseTab = async (tabId: string) => {
+    const tab = tabs.find((t) => t.id === tabId);
+    if (tab?.sessionId) {
+      try {
+        await fetch(`/api/telnet/disconnect/${tab.sessionId}`, {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch {}
+    }
+
+    setTabs((prev) => {
+      const remaining = prev.filter((t) => t.id !== tabId);
+      if (remaining.length === 0) {
+        const newTab = createNewTab();
+        setActiveTabId(newTab.id);
+        return [newTab];
+      }
+      if (activeTabId === tabId) {
+        setActiveTabId(remaining[remaining.length - 1].id);
+      }
+      return remaining;
+    });
+  };
+
+  const handleAddTab = () => {
+    if (tabs.length >= MAX_TABS) {
+      toast({
+        title: "Tab Limit Reached",
+        description: `Maximum ${MAX_TABS} concurrent Telnet sessions allowed.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    const newTab = createNewTab();
+    setTabs((prev) => [...prev, newTab]);
+    setActiveTabId(newTab.id);
+  };
+
+  const connectedCount = tabs.filter((t) => t.connectionState === "connected" || t.connectionState === "connecting").length;
 
   if (!isAuthenticated) {
     return (
@@ -536,96 +632,154 @@ export default function TelnetClient() {
             <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/50">
               <Crown className="h-3 w-3 mr-1" /> PRO
             </Badge>
-            {connectionState === "connected" && (
+            {connectedCount > 0 && (
               <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
-                <Wifi className="h-3 w-3 mr-1" /> ACTIVE SESSION
+                <Wifi className="h-3 w-3 mr-1" /> {connectedCount} ACTIVE
               </Badge>
             )}
           </div>
         </div>
 
-        {connectionState === "disconnected" ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <Card className="border-white/5 bg-card/50">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-white">
-                    <Globe className="h-5 w-5 text-orange-400" /> New Connection
-                  </CardTitle>
-                  <CardDescription>
-                    Enter the host and port you want to connect to. Commonly used for SMTP testing and banner grabbing.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ConnectionForm onConnect={handleConnect} isConnecting={false} />
-                </CardContent>
-              </Card>
-            </div>
+        <div className="flex items-center gap-1 border-b border-zinc-800 overflow-x-auto scrollbar-none">
+          {tabs.map((tab) => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveTabId(tab.id)}
+              className={`group flex items-center gap-2 px-4 py-2.5 text-sm font-mono border-b-2 transition-all whitespace-nowrap ${
+                activeTabId === tab.id
+                  ? "border-orange-500 text-orange-400 bg-orange-500/5"
+                  : "border-transparent text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50"
+              }`}
+              data-testid={`tab-telnet-${tab.id}`}
+            >
+              <TabStatusDot state={tab.connectionState} />
+              <span className="max-w-[160px] truncate">
+                {tab.hostname && tab.port
+                  ? `${tab.hostname}:${tab.port}`
+                  : "New Session"}
+              </span>
+              {tabs.length > 1 && (
+                <span
+                  role="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleCloseTab(tab.id);
+                  }}
+                  className="ml-1 p-0.5 rounded hover:bg-red-500/20 hover:text-red-400 transition-colors opacity-0 group-hover:opacity-100"
+                  data-testid={`button-close-tab-${tab.id}`}
+                >
+                  <X className="h-3 w-3" />
+                </span>
+              )}
+            </button>
+          ))}
+          {tabs.length < MAX_TABS && (
+            <button
+              onClick={handleAddTab}
+              className="flex items-center gap-1 px-3 py-2.5 text-zinc-600 hover:text-orange-400 transition-colors"
+              title="New session tab"
+              data-testid="button-add-telnet-tab"
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+          )}
+        </div>
 
-            <div className="space-y-4">
-              <Card className="border-white/5 bg-card/50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center gap-2 text-white">
-                    <Mail className="h-4 w-4 text-orange-400" /> SMTP Quick Reference
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <div className="space-y-1.5">
-                    {[
-                      { cmd: "EHLO example.com", desc: "Identify & list extensions" },
-                      { cmd: "MAIL FROM:<user@example.com>", desc: "Set sender" },
-                      { cmd: "RCPT TO:<dest@example.com>", desc: "Set recipient" },
-                      { cmd: "DATA", desc: "Begin message body" },
-                      { cmd: "QUIT", desc: "End session" },
-                      { cmd: "VRFY user", desc: "Verify mailbox" },
-                      { cmd: "STARTTLS", desc: "Upgrade to TLS" },
-                    ].map(({ cmd, desc }) => (
-                      <div key={cmd} className="flex items-center justify-between gap-2 group">
-                        <code className="text-[11px] text-orange-400/80 font-mono">{cmd}</code>
-                        <span className="text-[10px] text-zinc-600 shrink-0">{desc}</span>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
+        {tabs.map((tab) => {
+          const isActive = tab.id === activeTabId;
 
-              <Card className="border-white/5 bg-card/50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center gap-2 text-white">
-                    <Shield className="h-4 w-4 text-green-400" /> Session Info
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">Max 3 concurrent sessions</p>
+          if (tab.connectionState === "disconnected") {
+            return (
+              <div key={tab.id} className={isActive ? "" : "hidden"}>
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                  <div className="lg:col-span-2">
+                    <Card className="border-white/5 bg-card/50">
+                      <CardHeader>
+                        <CardTitle className="text-lg flex items-center gap-2 text-white">
+                          <Globe className="h-5 w-5 text-orange-400" /> New Connection
+                        </CardTitle>
+                        <CardDescription>
+                          Enter the host and port you want to connect to. Commonly used for SMTP testing and banner grabbing.
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <ConnectionForm onConnect={(config) => handleConnect(tab.id, config)} isConnecting={false} />
+                      </CardContent>
+                    </Card>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">15-minute max session / 10-minute idle timeout</p>
+
+                  <div className="space-y-4">
+                    <Card className="border-white/5 bg-card/50">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm flex items-center gap-2 text-white">
+                          <Mail className="h-4 w-4 text-orange-400" /> SMTP Quick Reference
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-2">
+                        <div className="space-y-1.5">
+                          {[
+                            { cmd: "EHLO example.com", desc: "Identify & list extensions" },
+                            { cmd: "MAIL FROM:<user@example.com>", desc: "Set sender" },
+                            { cmd: "RCPT TO:<dest@example.com>", desc: "Set recipient" },
+                            { cmd: "DATA", desc: "Begin message body" },
+                            { cmd: "QUIT", desc: "End session" },
+                            { cmd: "VRFY user", desc: "Verify mailbox" },
+                            { cmd: "STARTTLS", desc: "Upgrade to TLS" },
+                          ].map(({ cmd, desc }) => (
+                            <div key={cmd} className="flex items-center justify-between gap-2 group">
+                              <code className="text-[11px] text-orange-400/80 font-mono">{cmd}</code>
+                              <span className="text-[10px] text-zinc-600 shrink-0">{desc}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="border-white/5 bg-card/50">
+                      <CardHeader className="pb-3">
+                        <CardTitle className="text-sm flex items-center gap-2 text-white">
+                          <Shield className="h-4 w-4 text-green-400" /> Session Info
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="space-y-3">
+                        <div className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                          <p className="text-xs text-zinc-400">Max 3 concurrent sessions</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                          <p className="text-xs text-zinc-400">15-minute max session / 10-minute idle timeout</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                          <p className="text-xs text-zinc-400">Private/internal IP ranges are blocked</p>
+                        </div>
+                        <div className="flex items-start gap-2">
+                          <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
+                          <p className="text-xs text-zinc-400">Telnet is unencrypted — do not transmit credentials</p>
+                        </div>
+                      </CardContent>
+                    </Card>
                   </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">Private/internal IP ranges are blocked</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="h-4 w-4 text-amber-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">Telnet is unencrypted — do not transmit credentials</p>
-                  </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
+            );
+          }
+
+          return (
+            <div key={tab.id} className={isActive ? "" : "hidden"}>
+              <TelnetTerminalViewer
+                wsUrl={tab.wsUrl}
+                connectionState={tab.connectionState}
+                onDisconnect={() => handleDisconnect(tab.id)}
+                errorMessage={tab.errorMessage}
+                hostname={tab.hostname}
+                port={tab.port}
+                isVisible={isActive}
+              />
             </div>
-          </div>
-        ) : (
-          <TelnetTerminalViewer
-            wsUrl={wsUrl}
-            connectionState={connectionState}
-            onDisconnect={handleDisconnect}
-            errorMessage={errorMessage}
-            hostname={connectedHost.hostname}
-            port={connectedHost.port}
-          />
-        )}
+          );
+        })}
       </div>
       <Footer />
     </Layout>

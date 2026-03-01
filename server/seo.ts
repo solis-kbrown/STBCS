@@ -151,6 +151,31 @@ const PAGE_META: Record<string, PageMeta> = {
     title: 'Encoding & Decoding Tools | STB Cybersecurity',
     description: 'Free online encoding and decoding tools for cybersecurity analysts. Base64, URL encoding, Hex, and ROT13 conversion. All operations run client-side for privacy.',
   },
+  '/sftp-client': {
+    title: 'SFTP File Manager | STB Cybersecurity',
+    description: 'Secure, browser-based SFTP client for remote file management. Browse directories, upload/download files, manage permissions over encrypted SSH connections. Business feature.',
+    noindex: true,
+  },
+  '/ssl-checker': {
+    title: 'SSL/TLS Checker | STB Cybersecurity',
+    description: 'Comprehensive SSL/TLS analysis: certificate chain validation, protocol support (TLS 1.0-1.3), cipher suite audit, HTTP security headers, OCSP stapling, and security grading (A+ to F).',
+  },
+  '/web-fingerprint': {
+    title: 'Web Server Fingerprinter | STB Cybersecurity',
+    description: 'Identify web server software, CMS platforms, technology stacks, and security misconfigurations. Detect IIS, Apache, Nginx, WordPress, and more from HTTP response analysis.',
+  },
+  '/exchange-checker': {
+    title: 'Exchange Server Checker | STB Cybersecurity',
+    description: 'Detect exposed Microsoft Exchange servers, OWA/ECP endpoints, ActiveSync, and map known vulnerabilities like ProxyLogon and ProxyShell by detected version.',
+  },
+  '/dns-analyzer': {
+    title: 'DNS Security Analyzer | STB Cybersecurity',
+    description: 'Comprehensive DNS security analysis: SPF, DKIM, DMARC validation, DNSSEC status, MX records, CAA, nameserver redundancy, and overall DNS security scoring.',
+  },
+  '/headers-scanner': {
+    title: 'HTTP Security Headers Scanner | STB Cybersecurity',
+    description: 'Free HTTP security headers analysis. Check HSTS, CSP, X-Frame-Options, Referrer-Policy, Permissions-Policy, and CORS headers with remediation guidance and A+ to F grading.',
+  },
   '/service-status': {
     title: 'Service Status Dashboard | STB Cybersecurity',
     description: 'Real-time operational status of STB Cybersecurity platform services, threat feeds, APIs, and monitoring systems. Current uptime and incident history.',

@@ -11,7 +11,7 @@ import {
   Monitor, Lock, Shield, ShieldAlert, Wifi, WifiOff,
   Maximize, Minimize, Settings, Power, Crown, Loader2,
   Eye, EyeOff, AlertTriangle, Server, Keyboard, Mouse,
-  RefreshCw, Info, X, Copy, Check, MonitorSmartphone
+  RefreshCw, Info, X, Copy, Check, MonitorSmartphone, Plus
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +28,18 @@ interface ConnectionConfig {
   height: string;
   security: string;
 }
+
+interface RDPTab {
+  id: string;
+  label: string;
+  connectionState: ConnectionState;
+  wsUrl: string;
+  sessionId: string | null;
+  errorMessage: string | null;
+  config: ConnectionConfig | null;
+}
+
+const MAX_TABS = 2;
 
 function ConnectionModal({
   onConnect,
@@ -199,11 +211,13 @@ function RDPViewer({
   connectionState,
   onDisconnect,
   errorMessage,
+  isActiveTab,
 }: {
   wsUrl: string;
   connectionState: ConnectionState;
   onDisconnect: () => void;
   errorMessage: string | null;
+  isActiveTab: boolean;
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -274,6 +288,7 @@ function RDPViewer({
     ws.onclose = () => {};
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      if (!isActiveTab) return;
       if (ws.readyState === WebSocket.OPEN) {
         e.preventDefault();
         ws.send(JSON.stringify({ type: "key", keyCode: e.keyCode, down: true, key: e.key }));
@@ -281,6 +296,7 @@ function RDPViewer({
     };
 
     const handleKeyUp = (e: KeyboardEvent) => {
+      if (!isActiveTab) return;
       if (ws.readyState === WebSocket.OPEN) {
         e.preventDefault();
         ws.send(JSON.stringify({ type: "key", keyCode: e.keyCode, down: false, key: e.key }));
@@ -341,7 +357,7 @@ function RDPViewer({
       ws.close();
       wsRef.current = null;
     };
-  }, [connectionState, wsUrl]);
+  }, [connectionState, wsUrl, isActiveTab]);
 
   if (connectionState === "error") {
     return (
@@ -417,19 +433,111 @@ function RDPViewer({
   );
 }
 
+function TabBar({
+  tabs,
+  activeTabId,
+  onSelectTab,
+  onCloseTab,
+  onAddTab,
+  canAddTab,
+}: {
+  tabs: RDPTab[];
+  activeTabId: string;
+  onSelectTab: (id: string) => void;
+  onCloseTab: (id: string) => void;
+  onAddTab: () => void;
+  canAddTab: boolean;
+}) {
+  return (
+    <div className="flex items-center gap-1 bg-zinc-900/80 border border-zinc-800 rounded-lg p-1 mb-4 overflow-x-auto" data-testid="rdp-tab-bar">
+      {tabs.map((tab) => {
+        const isActive = tab.id === activeTabId;
+        const stateColor =
+          tab.connectionState === "connected"
+            ? "bg-green-500"
+            : tab.connectionState === "connecting"
+            ? "bg-orange-500 animate-pulse"
+            : tab.connectionState === "error"
+            ? "bg-red-500"
+            : "bg-zinc-600";
+
+        return (
+          <div
+            key={tab.id}
+            className={`
+              flex items-center gap-2 px-3 py-1.5 rounded-md cursor-pointer text-sm transition-all duration-200 min-w-0 shrink-0
+              ${isActive
+                ? "bg-zinc-800 text-white shadow-sm"
+                : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50"
+              }
+            `}
+            onClick={() => onSelectTab(tab.id)}
+            data-testid={`rdp-tab-${tab.id}`}
+          >
+            <span className={`h-2 w-2 rounded-full shrink-0 ${stateColor}`} />
+            <span className="truncate max-w-[140px] font-medium text-xs">
+              {tab.label}
+            </span>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onCloseTab(tab.id);
+              }}
+              className="p-0.5 rounded hover:bg-zinc-700 transition-colors shrink-0"
+              data-testid={`rdp-tab-close-${tab.id}`}
+            >
+              <X className="h-3 w-3" />
+            </button>
+          </div>
+        );
+      })}
+      {canAddTab && (
+        <button
+          onClick={onAddTab}
+          className="flex items-center gap-1 px-2 py-1.5 rounded-md text-zinc-500 hover:text-orange-400 hover:bg-zinc-800/50 transition-all duration-200 shrink-0"
+          data-testid="rdp-tab-add"
+          title="New session"
+        >
+          <Plus className="h-3.5 w-3.5" />
+        </button>
+      )}
+    </div>
+  );
+}
+
+let tabIdCounter = 0;
+function generateTabId() {
+  tabIdCounter++;
+  return `rdp-tab-${Date.now()}-${tabIdCounter}`;
+}
+
 export default function RemoteDesktop() {
   useDocumentTitle("Remote Desktop | STB Cybersecurity");
   const { user, isAuthenticated, isBusiness } = useAuth();
   const { toast } = useToast();
 
-  const [connectionState, setConnectionState] = useState<ConnectionState>("disconnected");
-  const [wsUrl, setWsUrl] = useState("");
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [tabs, setTabs] = useState<RDPTab[]>(() => {
+    const initialId = generateTabId();
+    return [{
+      id: initialId,
+      label: "New Connection",
+      connectionState: "disconnected",
+      wsUrl: "",
+      sessionId: null,
+      errorMessage: null,
+      config: null,
+    }];
+  });
+  const [activeTabId, setActiveTabId] = useState<string>(tabs[0].id);
 
-  const handleConnect = async (config: ConnectionConfig) => {
-    setConnectionState("connecting");
-    setErrorMessage(null);
+  const activeTab = tabs.find((t) => t.id === activeTabId) || tabs[0];
+
+  const updateTab = (tabId: string, updates: Partial<RDPTab>) => {
+    setTabs((prev) => prev.map((t) => (t.id === tabId ? { ...t, ...updates } : t)));
+  };
+
+  const handleConnect = async (tabId: string, config: ConnectionConfig) => {
+    updateTab(tabId, { connectionState: "connecting", errorMessage: null, config });
 
     try {
       const res = await fetch("/api/rdp/connect", {
@@ -445,20 +553,25 @@ export default function RemoteDesktop() {
       }
 
       const data = await res.json();
-      setSessionId(data.sessionId);
-
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const wsEndpoint = `${protocol}//${window.location.host}/ws/rdp/${data.sessionId}`;
-      setWsUrl(wsEndpoint);
-      setConnectionState("connected");
+
+      updateTab(tabId, {
+        sessionId: data.sessionId,
+        wsUrl: wsEndpoint,
+        connectionState: "connected",
+        label: `${config.hostname}:${config.port}`,
+      });
 
       toast({
         title: "Connected",
         description: `Session established to ${config.hostname}`,
       });
     } catch (err: any) {
-      setConnectionState("error");
-      setErrorMessage(err.message);
+      updateTab(tabId, {
+        connectionState: "error",
+        errorMessage: err.message,
+      });
       toast({
         title: "Connection Failed",
         description: err.message,
@@ -467,19 +580,76 @@ export default function RemoteDesktop() {
     }
   };
 
-  const handleDisconnect = async () => {
-    if (sessionId) {
+  const handleDisconnect = async (tabId: string) => {
+    const tab = tabs.find((t) => t.id === tabId);
+    if (tab?.sessionId) {
       try {
-        await fetch(`/api/rdp/disconnect/${sessionId}`, {
+        await fetch(`/api/rdp/disconnect/${tab.sessionId}`, {
           method: "POST",
           credentials: "include",
         });
       } catch {}
     }
-    setConnectionState("disconnected");
-    setWsUrl("");
-    setSessionId(null);
-    setErrorMessage(null);
+    updateTab(tabId, {
+      connectionState: "disconnected",
+      wsUrl: "",
+      sessionId: null,
+      errorMessage: null,
+      label: "New Connection",
+      config: null,
+    });
+  };
+
+  const handleAddTab = () => {
+    if (tabs.length >= MAX_TABS) return;
+    const newId = generateTabId();
+    setTabs((prev) => [
+      ...prev,
+      {
+        id: newId,
+        label: "New Connection",
+        connectionState: "disconnected",
+        wsUrl: "",
+        sessionId: null,
+        errorMessage: null,
+        config: null,
+      },
+    ]);
+    setActiveTabId(newId);
+  };
+
+  const handleCloseTab = async (tabId: string) => {
+    const tab = tabs.find((t) => t.id === tabId);
+    if (tab?.sessionId) {
+      try {
+        await fetch(`/api/rdp/disconnect/${tab.sessionId}`, {
+          method: "POST",
+          credentials: "include",
+        });
+      } catch {}
+    }
+
+    setTabs((prev) => {
+      const remaining = prev.filter((t) => t.id !== tabId);
+      if (remaining.length === 0) {
+        const newId = generateTabId();
+        const newTab: RDPTab = {
+          id: newId,
+          label: "New Connection",
+          connectionState: "disconnected",
+          wsUrl: "",
+          sessionId: null,
+          errorMessage: null,
+          config: null,
+        };
+        setActiveTabId(newId);
+        return [newTab];
+      }
+      if (activeTabId === tabId) {
+        setActiveTabId(remaining[remaining.length - 1].id);
+      }
+      return remaining;
+    });
   };
 
   if (!isAuthenticated) {
@@ -530,6 +700,8 @@ export default function RemoteDesktop() {
     );
   }
 
+  const hasAnySessions = tabs.some((t) => t.connectionState !== "disconnected");
+
   return (
     <Layout>
       <div className="space-y-6 animate-in fade-in duration-500">
@@ -546,7 +718,7 @@ export default function RemoteDesktop() {
             <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/50">
               <Crown className="h-3 w-3 mr-1" /> BUSINESS
             </Badge>
-            {connectionState === "connected" && (
+            {hasAnySessions && (
               <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
                 <Wifi className="h-3 w-3 mr-1" /> ACTIVE SESSION
               </Badge>
@@ -554,98 +726,127 @@ export default function RemoteDesktop() {
           </div>
         </div>
 
-        {connectionState === "disconnected" ? (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <Card className="border-white/5 bg-card/50">
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2 text-white">
-                    <Monitor className="h-5 w-5 text-orange-400" /> New Connection
-                  </CardTitle>
-                  <CardDescription>
-                    Enter the credentials for the remote machine you want to connect to.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <ConnectionModal onConnect={handleConnect} isConnecting={false} />
-                </CardContent>
-              </Card>
-            </div>
+        {tabs.length > 1 || hasAnySessions ? (
+          <TabBar
+            tabs={tabs}
+            activeTabId={activeTabId}
+            onSelectTab={setActiveTabId}
+            onCloseTab={handleCloseTab}
+            onAddTab={handleAddTab}
+            canAddTab={tabs.length < MAX_TABS}
+          />
+        ) : null}
 
-            <div className="space-y-4">
-              <Card className="border-white/5 bg-card/50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center gap-2 text-white">
-                    <Shield className="h-4 w-4 text-green-400" /> Security
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">End-to-end encrypted WebSocket (WSS) tunnel</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">Credentials held in memory only — never stored or logged</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">NLA, TLS, and standard RDP security modes supported</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">Session automatically terminated on disconnect</p>
-                  </div>
-                </CardContent>
-              </Card>
+        {tabs.map((tab) => (
+          <div key={tab.id} className={tab.id === activeTabId ? "block" : "hidden"}>
+            {tab.connectionState === "disconnected" ? (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2">
+                  <Card className="border-white/5 bg-card/50">
+                    <CardHeader>
+                      <CardTitle className="text-lg flex items-center gap-2 text-white">
+                        <Monitor className="h-5 w-5 text-orange-400" /> New Connection
+                      </CardTitle>
+                      <CardDescription>
+                        Enter the credentials for the remote machine you want to connect to.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ConnectionModal onConnect={(config) => handleConnect(tab.id, config)} isConnecting={false} />
+                    </CardContent>
+                  </Card>
+                </div>
 
-              <Card className="border-white/5 bg-card/50">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm flex items-center gap-2 text-white">
-                    <Info className="h-4 w-4 text-blue-400" /> Requirements
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="flex items-start gap-2">
-                    <MonitorSmartphone className="h-4 w-4 text-zinc-500 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">Remote Desktop must be enabled on the target machine</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Wifi className="h-4 w-4 text-zinc-500 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">Port 3389 (or custom) must be accessible from the internet</p>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <Shield className="h-4 w-4 text-zinc-500 mt-0.5 shrink-0" />
-                    <p className="text-xs text-zinc-400">Valid user credentials for the remote system</p>
-                  </div>
-                </CardContent>
-              </Card>
+                <div className="space-y-4">
+                  <Card className="border-white/5 bg-card/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2 text-white">
+                        <Shield className="h-4 w-4 text-green-400" /> Security
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                        <p className="text-xs text-zinc-400">End-to-end encrypted WebSocket (WSS) tunnel</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                        <p className="text-xs text-zinc-400">Credentials held in memory only — never stored or logged</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                        <p className="text-xs text-zinc-400">NLA, TLS, and standard RDP security modes supported</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Check className="h-4 w-4 text-green-400 mt-0.5 shrink-0" />
+                        <p className="text-xs text-zinc-400">Session automatically terminated on disconnect</p>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-              <Card className="border-orange-500/20 bg-orange-500/5">
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-2">
-                    <AlertTriangle className="h-4 w-4 text-orange-400 mt-0.5 shrink-0" />
-                    <div>
-                      <p className="text-xs font-semibold text-orange-400 mb-1">Important</p>
-                      <p className="text-xs text-zinc-400">
-                        Only connect to systems you own or have explicit authorization to access.
-                        Unauthorized access to computer systems is a federal crime.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
+                  <Card className="border-white/5 bg-card/50">
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-sm flex items-center gap-2 text-white">
+                        <Info className="h-4 w-4 text-blue-400" /> Requirements
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="flex items-start gap-2">
+                        <MonitorSmartphone className="h-4 w-4 text-zinc-500 mt-0.5 shrink-0" />
+                        <p className="text-xs text-zinc-400">Remote Desktop must be enabled on the target machine</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Wifi className="h-4 w-4 text-zinc-500 mt-0.5 shrink-0" />
+                        <p className="text-xs text-zinc-400">Port 3389 (or custom) must be accessible from the internet</p>
+                      </div>
+                      <div className="flex items-start gap-2">
+                        <Shield className="h-4 w-4 text-zinc-500 mt-0.5 shrink-0" />
+                        <p className="text-xs text-zinc-400">Valid user credentials for the remote system</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="border-orange-500/20 bg-orange-500/5">
+                    <CardContent className="p-4">
+                      <div className="flex items-start gap-2">
+                        <AlertTriangle className="h-4 w-4 text-orange-400 mt-0.5 shrink-0" />
+                        <div>
+                          <p className="text-xs font-semibold text-orange-400 mb-1">Important</p>
+                          <p className="text-xs text-zinc-400">
+                            Only connect to systems you own or have explicit authorization to access.
+                            Unauthorized access to computer systems is a federal crime.
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            ) : (
+              <Card className="border-white/5 bg-card/50 overflow-hidden">
+                <RDPViewer
+                  wsUrl={tab.wsUrl}
+                  connectionState={tab.connectionState}
+                  onDisconnect={() => handleDisconnect(tab.id)}
+                  errorMessage={tab.errorMessage}
+                  isActiveTab={tab.id === activeTabId}
+                />
               </Card>
-            </div>
+            )}
           </div>
-        ) : (
-          <Card className="border-white/5 bg-card/50 overflow-hidden">
-            <RDPViewer
-              wsUrl={wsUrl}
-              connectionState={connectionState}
-              onDisconnect={handleDisconnect}
-              errorMessage={errorMessage}
-            />
-          </Card>
+        ))}
+
+        {tabs.length < MAX_TABS && !hasAnySessions && (
+          <div className="flex justify-center">
+            <Button
+              variant="outline"
+              onClick={handleAddTab}
+              className="border-zinc-700 text-zinc-400 hover:text-orange-400 hover:border-orange-500/50"
+              data-testid="button-rdp-add-session"
+            >
+              <Plus className="h-4 w-4 mr-2" /> Add Another Session
+            </Button>
+          </div>
         )}
       </div>
       <Footer />
