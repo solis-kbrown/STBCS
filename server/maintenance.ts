@@ -14,6 +14,30 @@ let errorRateWindow: { count: number; windowStart: number } = { count: 0, window
 let saleEndNotificationSent = false;
 let sessionCleanupFailures = 0;
 
+async function withRetry<T>(fn: () => Promise<T>, label: string, retries = 2): Promise<T> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      const isTransient = error?.message?.includes("Connection terminated") ||
+        error?.message?.includes("connection timeout") ||
+        error?.message?.includes("too many clients");
+      if (isTransient && attempt < retries) {
+        const delay = (attempt + 1) * 3000;
+        log.debug(`${label} transient DB error, retry ${attempt + 1}/${retries} in ${delay}ms`);
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error("unreachable");
+}
+
+function stagger(ms: number): Promise<void> {
+  return new Promise(r => setTimeout(r, ms));
+}
+
 async function getConfig(configKey: string): Promise<string | null> {
   try {
     const result = await db.select().from(systemConfig).where(eq(systemConfig.key, configKey)).limit(1);
@@ -192,7 +216,7 @@ export function reportCriticalError(error: Error, context?: string): void {
 
 async function runCleanupTasks(): Promise<void> {
   try {
-    await storage.cleanupExpiredSessions();
+    await withRetry(() => storage.cleanupExpiredSessions(), "Session cleanup");
     sessionCleanupFailures = 0;
   } catch (error) {
     sessionCleanupFailures++;
@@ -210,7 +234,7 @@ async function runCleanupTasks(): Promise<void> {
 
   if (dayOfWeek === 0 && now - lastWeeklyRun > WEEK_MS - 24 * 60 * 60 * 1000) {
     try {
-      const result = await storage.cleanupOldData(730); // 2 year retention
+      const result = await withRetry(() => storage.cleanupOldData(730), "Weekly cleanup");
       log.info(`Weekly cleanup: ${result.ipsDeleted} IPs, ${result.urlsDeleted} URLs, ${result.newsDeleted} news removed`);
       await setLastRun("weekly_cleanup");
 
@@ -371,9 +395,13 @@ export async function startMaintenanceScheduler(): Promise<void> {
   maintenanceInterval = setInterval(async () => {
     try {
       await runCleanupTasks();
+      await stagger(2000);
       await checkGrandOpeningSale();
+      await stagger(2000);
       await captureDailyStats();
+      await stagger(2000);
       await sendDailyHealthCheck();
+      await stagger(2000);
       await sendWeeklyAdminReport();
     } catch (error) {
       log.error("Scheduler error:", error);

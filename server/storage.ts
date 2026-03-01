@@ -1224,25 +1224,23 @@ export class DatabaseStorage implements IStorage {
   }> {
     const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
 
-    return await db.transaction(async (tx) => {
-      const ipCondition = sql`${maliciousIps.lastSeen} < ${cutoffDate} OR (${maliciousIps.lastSeen} IS NULL AND ${maliciousIps.createdAt} < ${cutoffDate})`;
-      const urlCondition = sql`${maliciousUrls.reportedAt} < ${cutoffDate} OR (${maliciousUrls.reportedAt} IS NULL AND ${maliciousUrls.createdAt} < ${cutoffDate})`;
-      const newsCondition = sql`${newsArticles.publishedAt} < ${cutoffDate}`;
+    const ipCondition = sql`${maliciousIps.lastSeen} < ${cutoffDate} OR (${maliciousIps.lastSeen} IS NULL AND ${maliciousIps.createdAt} < ${cutoffDate})`;
+    const urlCondition = sql`${maliciousUrls.reportedAt} < ${cutoffDate} OR (${maliciousUrls.reportedAt} IS NULL AND ${maliciousUrls.createdAt} < ${cutoffDate})`;
+    const newsCondition = sql`${newsArticles.publishedAt} < ${cutoffDate}`;
 
-      const [ipsCount] = await tx.select({ count: sql<number>`count(*)::int` }).from(maliciousIps).where(ipCondition);
-      const [urlsCount] = await tx.select({ count: sql<number>`count(*)::int` }).from(maliciousUrls).where(urlCondition);
-      const [newsCount] = await tx.select({ count: sql<number>`count(*)::int` }).from(newsArticles).where(newsCondition);
+    const [ipsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(maliciousIps).where(ipCondition);
+    const [urlsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(maliciousUrls).where(urlCondition);
+    const [newsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(newsArticles).where(newsCondition);
 
-      if (ipsCount.count > 0) await tx.delete(maliciousIps).where(ipCondition);
-      if (urlsCount.count > 0) await tx.delete(maliciousUrls).where(urlCondition);
-      if (newsCount.count > 0) await tx.delete(newsArticles).where(newsCondition);
+    if (ipsCount.count > 0) await db.delete(maliciousIps).where(ipCondition);
+    if (urlsCount.count > 0) await db.delete(maliciousUrls).where(urlCondition);
+    if (newsCount.count > 0) await db.delete(newsArticles).where(newsCondition);
 
-      return {
-        ipsDeleted: ipsCount.count,
-        urlsDeleted: urlsCount.count,
-        newsDeleted: newsCount.count,
-      };
-    });
+    return {
+      ipsDeleted: ipsCount.count,
+      urlsDeleted: urlsCount.count,
+      newsDeleted: newsCount.count,
+    };
   }
 
   // Check if IP is in threat database (optimized lookup)
