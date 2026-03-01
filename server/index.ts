@@ -15,6 +15,10 @@ app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: Date.now() });
 });
 
+app.get('/__repl', (_req, res) => {
+  res.status(200).send('ok');
+});
+
 const httpServer = createServer(app);
 
 declare module "http" {
@@ -229,6 +233,21 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  const port = parseInt(process.env.PORT || "5000", 10);
+
+  // Start listening IMMEDIATELY so health checks pass right away
+  httpServer.listen(
+    {
+      port,
+      host: "0.0.0.0",
+      reusePort: true,
+    },
+    () => {
+      log(`serving on port ${port}`);
+    },
+  );
+
+  // Now register routes and static serving (server is already accepting connections)
   const { reportCriticalError } = await import("./maintenance");
 
   await registerRoutes(httpServer, app);
@@ -272,67 +291,57 @@ app.use((req, res, next) => {
     await setupVite(httpServer, app);
   }
 
-  const port = parseInt(process.env.PORT || "5000", 10);
-  httpServer.listen(
-    {
-      port,
-      host: "0.0.0.0",
-      reusePort: true,
-    },
-    () => {
-      log(`serving on port ${port}`);
+  log("Routes and static serving initialized");
 
-      // Defer all heavy startup operations until after health checks can be answered
-      setTimeout(async () => {
-        try {
-          await initStripe();
-        } catch (err) {
-          console.error("Deferred Stripe init failed:", err);
-        }
+  // Defer all heavy startup operations
+  setTimeout(async () => {
+    try {
+      await initStripe();
+    } catch (err) {
+      console.error("Deferred Stripe init failed:", err);
+    }
 
-        try {
-          const { startDataRefreshScheduler } = await import("./scrapers");
-          startDataRefreshScheduler(15);
-        } catch (err) {
-          console.error("Scraper scheduler failed:", err);
-        }
+    try {
+      const { startDataRefreshScheduler } = await import("./scrapers");
+      startDataRefreshScheduler(15);
+    } catch (err) {
+      console.error("Scraper scheduler failed:", err);
+    }
 
-        try {
-          const { startDigestScheduler } = await import("./digest");
-          startDigestScheduler();
-        } catch (err) {
-          console.error("Digest scheduler failed:", err);
-        }
+    try {
+      const { startDigestScheduler } = await import("./digest");
+      startDigestScheduler();
+    } catch (err) {
+      console.error("Digest scheduler failed:", err);
+    }
 
-        try {
-          const { startMaintenanceScheduler } = await import("./maintenance");
-          startMaintenanceScheduler();
-        } catch (err) {
-          console.error("Maintenance scheduler failed:", err);
-        }
+    try {
+      const { startMaintenanceScheduler } = await import("./maintenance");
+      startMaintenanceScheduler();
+    } catch (err) {
+      console.error("Maintenance scheduler failed:", err);
+    }
 
-        try {
-          const { startUptimeScheduler } = await import("./uptimeEngine");
-          startUptimeScheduler(60);
-        } catch (err) {
-          console.error("Uptime scheduler failed:", err);
-        }
+    try {
+      const { startUptimeScheduler } = await import("./uptimeEngine");
+      startUptimeScheduler(60);
+    } catch (err) {
+      console.error("Uptime scheduler failed:", err);
+    }
 
-        try {
-          const { startDarkWebScheduler } = await import("./darkWebEngine");
-          startDarkWebScheduler(360);
-        } catch (err) {
-          console.error("Dark web scheduler failed:", err);
-        }
+    try {
+      const { startDarkWebScheduler } = await import("./darkWebEngine");
+      startDarkWebScheduler(360);
+    } catch (err) {
+      console.error("Dark web scheduler failed:", err);
+    }
 
-        try {
-          const base = `http://127.0.0.1:${port}`;
-          const urls = ["/api/stats", "/api/trends", "/api/cves", "/api/ransomware",
-            "/api/site-settings/hero-bg", "/api/site-settings/logo-theme", "/api/site-settings/icon-theme"];
-          await Promise.all(urls.map(u => fetch(base + u).catch(() => {})));
-          log("Cache warm-up complete");
-        } catch {}
-      }, 100);
-    },
-  );
+    try {
+      const base = `http://127.0.0.1:${port}`;
+      const urls = ["/api/stats", "/api/trends", "/api/cves", "/api/ransomware",
+        "/api/site-settings/hero-bg", "/api/site-settings/logo-theme", "/api/site-settings/icon-theme"];
+      await Promise.all(urls.map(u => fetch(base + u).catch(() => {})));
+      log("Cache warm-up complete");
+    } catch {}
+  }, 500);
 })();
