@@ -269,6 +269,11 @@ async function initializeApp() {
   setupRDPWebSocket(httpServer);
   await yieldToEventLoop();
 
+  const { registerSSHRoutes, setupSSHWebSocket } = await import("./ssh");
+  registerSSHRoutes(app);
+  setupSSHWebSocket(httpServer);
+  await yieldToEventLoop();
+
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const internalMessage = err.message || "Internal Server Error";

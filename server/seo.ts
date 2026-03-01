@@ -127,6 +127,11 @@ const PAGE_META: Record<string, PageMeta> = {
     description: 'Secure, browser-based RDP client for remote server management. Encrypted WebSocket tunnels with zero credential storage. Business and Enterprise feature.',
     noindex: true,
   },
+  '/ssh-terminal': {
+    title: 'SSH Terminal | STB Cybersecurity',
+    description: 'Secure, browser-based SSH terminal for remote server management. Supports password and private key authentication with zero credential storage. Business and Enterprise feature.',
+    noindex: true,
+  },
   '/service-status': {
     title: 'Service Status Dashboard | STB Cybersecurity',
     description: 'Real-time operational status of STB Cybersecurity platform services, threat feeds, APIs, and monitoring systems. Current uptime and incident history.',

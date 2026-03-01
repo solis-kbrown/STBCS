@@ -27,7 +27,8 @@ import {
   Radar,
   FileText,
   ClipboardList,
-  Monitor
+  Monitor,
+  Terminal
 } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -73,6 +74,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/attack-surface", labelKey: "nav.attackSurface", icon: Radar, isPro: true },
     { href: "/reports", labelKey: "nav.reports", icon: FileText, isPro: true },
     { href: "/remote-desktop", labelKey: "nav.remoteDesktop", icon: Monitor, isBusiness: true },
+    { href: "/ssh-terminal", labelKey: "nav.sshTerminal", icon: Terminal, isBusiness: true },
     { href: "/messages", labelKey: "nav.messages", icon: MessageSquare, isBusiness: true },
     { href: "/ransomware", labelKey: "nav.ransomware", icon: ShieldOff },
     { href: "/groups", labelKey: "nav.groups", icon: Users },
@@ -90,10 +92,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
   const navGroups = [
     { items: navItems.slice(0, 3) },
-    { items: navItems.slice(3, 8) },
-    { items: navItems.slice(8, 13) },
-    { items: navItems.slice(13, 16) },
-    { items: navItems.slice(16) },
+    { items: navItems.slice(3, 9) },
+    { items: navItems.slice(9, 14) },
+    { items: navItems.slice(14, 17) },
+    { items: navItems.slice(17) },
   ];
 
   const SidebarContent = () => (
