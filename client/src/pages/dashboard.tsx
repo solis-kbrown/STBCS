@@ -7,7 +7,7 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle, Wrench, Scan, ShieldCheck, Users, Database, Factory, ChevronRight, Search, FileSearch, BarChart3, Radio, TrendingUp, Zap, Eye, Clock } from "lucide-react";
+import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle, Wrench, Scan, ShieldCheck, Users, Database, Factory, ChevronRight, Search, FileSearch, BarChart3, Radio, TrendingUp, Zap, Eye, Clock, MonitorCheck, CheckCircle2, XCircle } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip, BarChart, Bar, Cell, RadialBarChart, RadialBar, PieChart, Pie } from "recharts";
 
 import { useMemo, useEffect, useState } from "react";
@@ -85,6 +85,96 @@ function TypingText({ text, className }: { text: string; className?: string }) {
       {displayed}
       {!done && <span className="animate-pulse text-primary">|</span>}
     </span>
+  );
+}
+
+function InfraStatusWidget() {
+  const { data, isLoading } = useQuery<any[]>({
+    queryKey: ["/api/tools/service-status"],
+    queryFn: async () => {
+      const res = await fetch("/api/tools/service-status");
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    staleTime: 60000,
+    refetchInterval: 120000,
+  });
+
+  if (isLoading) {
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+        {Array(8).fill(0).map((_, i) => (
+          <div key={i} className="h-8 bg-zinc-800 rounded animate-pulse" />
+        ))}
+      </div>
+    );
+  }
+
+  const services = data || [];
+  const stbcs = services.filter((s: any) => s.category === "stbcs");
+  const external = services.filter((s: any) => s.category !== "stbcs");
+  const opCount = services.filter((s: any) => s.status === "operational").length;
+  const degradedCount = services.filter((s: any) => s.status === "degraded").length;
+  const outageCount = services.filter((s: any) => s.status === "outage").length;
+
+  const categoryLabels: Record<string, string> = {
+    cloud: "Cloud", cdn_dns: "CDN/DNS", security: "Security", communication: "Comms",
+    development: "DevOps", hosting: "Hosting", infrastructure: "Infra",
+  };
+
+  const categoryStats = Object.entries(categoryLabels).map(([key, label]) => {
+    const items = external.filter((s: any) => s.category === key);
+    const allOp = items.length > 0 && items.every((s: any) => s.status === "operational");
+    const hasOutage = items.some((s: any) => s.status === "outage");
+    return { key, label, count: items.length, allOp, hasOutage };
+  }).filter(c => c.count > 0);
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center gap-3 mb-1">
+        <div className="flex items-center gap-2">
+          <span className={`w-2 h-2 rounded-full ${outageCount > 0 ? "bg-red-500" : degradedCount > 0 ? "bg-yellow-500" : "bg-green-500"}`} />
+          <span className="text-xs text-zinc-300 font-medium">
+            {outageCount > 0 ? `${outageCount} outage${outageCount > 1 ? "s" : ""}` : degradedCount > 0 ? `${degradedCount} degraded` : "All systems operational"}
+          </span>
+        </div>
+        <span className="text-[10px] text-zinc-600">{opCount}/{services.length} services up</span>
+      </div>
+
+      <div className="space-y-1.5">
+        <div className="text-[10px] text-zinc-500 font-display tracking-wider uppercase">STBCS Services</div>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-1.5">
+          {stbcs.map((s: any) => (
+            <div key={s.name} className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-[11px] border ${
+              s.status === "operational" ? "border-green-500/20 bg-green-500/5 text-green-400" :
+              s.status === "degraded" ? "border-yellow-500/20 bg-yellow-500/5 text-yellow-400" :
+              "border-red-500/20 bg-red-500/5 text-red-400"
+            }`}>
+              <span className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${
+                s.status === "operational" ? "bg-green-500" : s.status === "degraded" ? "bg-yellow-500" : "bg-red-500"
+              }`} />
+              <span className="truncate">{s.name.replace("STBCS ", "")}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div className="space-y-1.5">
+        <div className="text-[10px] text-zinc-500 font-display tracking-wider uppercase">External Infrastructure</div>
+        <div className="grid grid-cols-3 md:grid-cols-7 gap-1.5">
+          {categoryStats.map(cat => (
+            <div key={cat.key} className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-[11px] border ${
+              cat.hasOutage ? "border-red-500/20 bg-red-500/5 text-red-400" :
+              cat.allOp ? "border-green-500/20 bg-green-500/5 text-green-400" :
+              "border-yellow-500/20 bg-yellow-500/5 text-yellow-400"
+            }`}>
+              {cat.allOp ? <CheckCircle2 className="h-3 w-3 flex-shrink-0" /> : cat.hasOutage ? <XCircle className="h-3 w-3 flex-shrink-0" /> : <AlertTriangle className="h-3 w-3 flex-shrink-0" />}
+              <span className="truncate">{cat.label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -562,6 +652,25 @@ export default function Dashboard() {
               </Card>
             </div>
           </div>
+        </AnimatedSection>
+
+        <AnimatedSection animation="fade-up">
+          <Card className="bg-zinc-900/50 border-zinc-800">
+            <CardContent className="py-5">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-sm font-display font-bold text-white tracking-wider uppercase flex items-center gap-2">
+                  <MonitorCheck className="h-4 w-4 text-orange-400" />
+                  Infrastructure Status
+                </h3>
+                <a href="/service-status">
+                  <Button variant="ghost" size="sm" className="text-orange-400 hover:text-orange-300 text-xs h-7 px-2">
+                    View All <ChevronRight className="h-3 w-3 ml-1" />
+                  </Button>
+                </a>
+              </div>
+              <InfraStatusWidget />
+            </CardContent>
+          </Card>
         </AnimatedSection>
 
         <AnimatedSection animation="fade-up">

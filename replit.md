@@ -46,7 +46,7 @@ Preferred communication style: Simple, everyday language.
 - **Feedback & Bug Reports**: Public feedback system at `/feedback` — any user (even unauthenticated) can report bugs, site issues, feature requests, recommendations, or security concerns. Rate-limited. Admin dashboard for review/status tracking.
 - **Security & Compliance**: Robust security headers, secure cookies, API logging, rate limiting, consent flows (CCPA/CPRA, COPPA, CAN-SPAM), legal pages. KB anti-cheat: self-vote prevention, transaction-wrapped voting, SQL injection hardened (inArray), content length limits (200/50K/5K chars), tag limits (10 tags, 50 chars each), reputation cap (10,000), admin-only delete for posts/comments.
 - **Interactive Playbooks**: 5 incident response guides.
-- **Service Status Dashboard**: Monitors major cloud services.
+- **Service Status Dashboard**: Monitors 37+ services across 8 categories — STBCS services (Platform, API, Feeds, Monitoring, KB), cloud providers (AWS, Azure, GCP, DigitalOcean, Oracle, IBM), CDN/DNS (Cloudflare, Fastly, Akamai), security (CrowdStrike, Okta, SentinelOne, Datadog, Splunk, PagerDuty, Let's Encrypt), communication (Slack, Twilio, M365, Google Workspace, Zoom), development (GitHub, Atlassian, HashiCorp, Docker Hub, npm), hosting (Vercel, Netlify, Render), and infrastructure (Stripe, Equinix). Live status checks via Statuspage.io APIs with 60s auto-refresh. Dashboard widget shows compact infrastructure health at a glance. Embedded in monitors page as "Service Status" tab.
 - **Dark Web Intelligence**: Integration with deepdarkCTI.
 
 ## External Dependencies

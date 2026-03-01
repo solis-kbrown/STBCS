@@ -23,6 +23,7 @@ import {
   useUptimeChecks, useDarkWebMonitors, useCreateDarkWebMonitor, useDeleteDarkWebMonitor,
   useDarkWebFindings, useMarkFindingRead, useUptimeIncidents
 } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -773,6 +774,94 @@ function FreeTierGate() {
   );
 }
 
+function ServiceStatusEmbed() {
+  const { data, isLoading } = useQuery<any[]>({
+    queryKey: ["/api/tools/service-status"],
+    queryFn: async () => {
+      const res = await fetch("/api/tools/service-status");
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    staleTime: 60000,
+    refetchInterval: 60000,
+  });
+
+  if (isLoading) return (
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+      {Array(9).fill(0).map((_, i) => <Skeleton key={i} className="h-16 rounded-lg" />)}
+    </div>
+  );
+
+  const services = data || [];
+  const categories: Record<string, { label: string; color: string }> = {
+    stbcs: { label: "STB Cybersecurity", color: "text-orange-400" },
+    cloud: { label: "Cloud Providers", color: "text-blue-400" },
+    cdn_dns: { label: "CDN & DNS", color: "text-green-400" },
+    security: { label: "Security", color: "text-red-400" },
+    communication: { label: "Communication", color: "text-purple-400" },
+    development: { label: "Development", color: "text-cyan-400" },
+    hosting: { label: "Hosting", color: "text-yellow-400" },
+    infrastructure: { label: "Infrastructure", color: "text-emerald-400" },
+  };
+
+  const grouped = Object.entries(categories).reduce<Record<string, any[]>>((acc, [key]) => {
+    const items = services.filter((s: any) => s.category === key);
+    if (items.length > 0) acc[key] = items;
+    return acc;
+  }, {});
+
+  const opCount = services.filter((s: any) => s.status === "operational").length;
+  const issueCount = services.length - opCount;
+
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-bold text-white">Infrastructure Status</h3>
+          <p className="text-sm text-zinc-500">Real-time monitoring of {services.length} services — {opCount} operational{issueCount > 0 ? `, ${issueCount} with issues` : ""}</p>
+        </div>
+        <a href="/service-status">
+          <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="link-full-status-page">
+            <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Full Status Page
+          </Button>
+        </a>
+      </div>
+
+      {Object.entries(grouped).map(([cat, items]) => {
+        const catInfo = categories[cat];
+        if (!catInfo) return null;
+        const allOp = items.every((s: any) => s.status === "operational");
+        return (
+          <div key={cat}>
+            <div className="flex items-center justify-between mb-2">
+              <h4 className={`text-xs font-display font-bold tracking-wider uppercase ${catInfo.color}`}>{catInfo.label}</h4>
+              {allOp && <Badge variant="outline" className="text-[9px] border-green-500/30 text-green-400"><Check className="h-2.5 w-2.5 mr-1" />All Up</Badge>}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
+              {items.map((s: any) => (
+                <div
+                  key={s.name}
+                  className={`flex items-center gap-2 px-3 py-2 rounded border text-xs ${
+                    s.status === "operational" ? "border-green-500/15 bg-green-500/5" :
+                    s.status === "degraded" ? "border-yellow-500/15 bg-yellow-500/5" :
+                    s.status === "outage" ? "border-red-500/15 bg-red-500/5" :
+                    "border-zinc-700/30 bg-zinc-800/30"
+                  }`}
+                >
+                  <span className={`w-2 h-2 rounded-full flex-shrink-0 ${
+                    s.status === "operational" ? "bg-green-500" : s.status === "degraded" ? "bg-yellow-500" : s.status === "outage" ? "bg-red-500" : "bg-zinc-500"
+                  }`} />
+                  <span className={cat === "stbcs" ? "text-orange-400 font-medium" : "text-zinc-300"}>{s.name.replace("STBCS ", "")}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function MonitorsContent() {
   return (
     <div className="space-y-6">
@@ -788,10 +877,14 @@ function MonitorsContent() {
           <TabsTrigger value="incidents" className="flex items-center gap-2 data-[state=active]:bg-red-500/20 data-[state=active]:text-red-400" data-testid="tab-incidents">
             <AlertTriangle className="h-4 w-4" /> Incidents
           </TabsTrigger>
+          <TabsTrigger value="status" className="flex items-center gap-2 data-[state=active]:bg-green-500/20 data-[state=active]:text-green-400" data-testid="tab-service-status">
+            <Globe className="h-4 w-4" /> Service Status
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="uptime" className="mt-4"><UptimeTab /></TabsContent>
         <TabsContent value="darkweb" className="mt-4"><DarkWebTab /></TabsContent>
         <TabsContent value="incidents" className="mt-4"><IncidentsTab /></TabsContent>
+        <TabsContent value="status" className="mt-4"><ServiceStatusEmbed /></TabsContent>
       </Tabs>
     </div>
   );
