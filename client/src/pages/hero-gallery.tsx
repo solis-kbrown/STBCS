@@ -48,7 +48,7 @@ export default function HeroGallery() {
       <div className="space-y-8 page-transition">
         <div className="flex items-center gap-4 mb-2">
           <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white" asChild data-testid="link-back">
-            <Link href="/"><ArrowLeft className="h-5 w-5" /></Link>
+            <Link href="/brand-kit"><ArrowLeft className="h-5 w-5" /></Link>
           </Button>
           <div className="flex-1">
             <h1 className="text-3xl font-display font-bold text-white" data-testid="text-page-title">Brand &amp; Theme Center</h1>

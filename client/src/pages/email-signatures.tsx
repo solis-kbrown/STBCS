@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import { Link } from "wouter";
 import { Shield, Copy, Check, ChevronLeft, ChevronRight, Globe, Phone, Mail, MapPin, Lock, Zap, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -502,6 +503,11 @@ export default function EmailSignatures() {
   return (
     <div className="min-h-screen bg-zinc-950 p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
+        <div className="mb-4">
+          <Link href="/brand-kit" className="text-zinc-400 hover:text-orange-400 transition-colors text-sm" data-testid="link-back-brand-kit">
+            ← Back to Brand Kit
+          </Link>
+        </div>
         <div className="text-center mb-8">
           <div className="flex items-center justify-center gap-3 mb-3">
             <Shield className="h-8 w-8 text-orange-500" />

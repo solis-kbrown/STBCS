@@ -446,8 +446,8 @@ export default function LogoGallery() {
     <div className="min-h-screen bg-background p-6 md:p-8">
       <div className="max-w-6xl mx-auto space-y-10">
         <div className="flex items-center gap-4 mb-2">
-          <Link href="/">
-            <Button variant="ghost" size="icon" data-testid="button-back-dashboard">
+          <Link href="/brand-kit">
+            <Button variant="ghost" size="icon" data-testid="button-back-brand-kit">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>

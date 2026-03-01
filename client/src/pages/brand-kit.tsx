@@ -1,6 +1,6 @@
 import { Link } from "wouter";
 import Layout from "@/components/layout";
-import { Shield, Mail, FileText, CreditCard, Receipt, Share2, Monitor, Video, FileSearch } from "lucide-react";
+import { Shield, Mail, FileText, CreditCard, Receipt, Share2, Monitor, Video, FileSearch, Palette, Image, Paintbrush, ExternalLink } from "lucide-react";
 
 const categories = [
   {
@@ -61,6 +61,30 @@ const categories = [
   },
 ];
 
+const linkedPages = [
+  {
+    href: "/logos",
+    title: "Logo Themes",
+    count: "20+",
+    description: "Switchable logo themes, icon variants, and logo voting — apply site-wide",
+    icon: Palette,
+  },
+  {
+    href: "/hero-backgrounds",
+    title: "Hero Backgrounds",
+    count: "10+",
+    description: "Animated dashboard hero backgrounds — threat maps, radar, matrix, and more",
+    icon: Image,
+  },
+  {
+    href: "/style-preview",
+    title: "Icon & Style Preview",
+    count: "50+",
+    description: "Browse all icon styles, color palettes, and UI component design tokens",
+    icon: Paintbrush,
+  },
+];
+
 export default function BrandKit() {
   return (
     <Layout>
@@ -109,6 +133,44 @@ export default function BrandKit() {
                 </div>
               </Link>
             ))}
+          </div>
+
+          <div className="mt-12">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-px flex-1 bg-zinc-800" />
+              <h2 className="text-zinc-400 text-sm font-semibold uppercase tracking-wider">Visual Customization</h2>
+              <div className="h-px flex-1 bg-zinc-800" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {linkedPages.map((page) => (
+                <Link key={page.href} href={page.href}>
+                  <div
+                    data-testid={`card-linked-${page.href.slice(1)}`}
+                    className="group relative rounded-xl border border-zinc-800/60 bg-zinc-900/50 p-6 cursor-pointer transition-all duration-300 hover:border-orange-500/40 hover:bg-[#18181b]"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="flex-shrink-0 rounded-lg bg-zinc-800/50 p-3 group-hover:bg-orange-500/10 transition-colors">
+                        <page.icon className="h-6 w-6 text-orange-400" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-zinc-300 font-semibold text-sm truncate">
+                            {page.title}
+                          </h3>
+                          <span className="flex-shrink-0 rounded-full bg-zinc-800 text-zinc-400 text-xs font-medium px-2 py-0.5">
+                            {page.count}
+                          </span>
+                          <ExternalLink className="h-3 w-3 text-zinc-600 ml-auto" />
+                        </div>
+                        <p className="text-zinc-500 text-xs leading-relaxed">
+                          {page.description}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>

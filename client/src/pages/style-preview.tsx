@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "wouter";
 import Layout from "@/components/layout";
 import { 
   LayoutDashboard, Search, Wrench, Bell, Skull, ShieldAlert, Globe, Newspaper, Heart,
@@ -183,6 +184,11 @@ export default function StylePreviewPage() {
     <Layout>
       <div className="min-h-screen bg-background p-6">
         <div className="max-w-7xl mx-auto space-y-8">
+          <div className="flex items-center gap-3 mb-2">
+            <Link href="/brand-kit" className="text-zinc-400 hover:text-orange-400 transition-colors text-sm">
+              ← Back to Brand Kit
+            </Link>
+          </div>
           <div className="text-center space-y-2">
             <h1 className="text-3xl font-display font-bold text-primary">Navigation Style Preview</h1>
             <p className="text-muted-foreground">Review different icon and styling options for your sidebar navigation</p>
