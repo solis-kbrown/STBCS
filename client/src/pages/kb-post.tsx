@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import {
   ChevronUp, MessageSquare, Clock, Edit, Trash2, ArrowLeft,
   Crown, Star, Award, Shield, Pin, Reply, Send, BookOpen,
-  Eye, Bookmark, BookmarkCheck, ArrowUpDown, Tag, Link2
+  Eye, Bookmark, BookmarkCheck, ArrowUpDown, Tag, Link2, Sparkles
 } from "lucide-react";
 
 function TierBadge({ tier, isTrusted, isAdmin }: { tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }) {
@@ -70,7 +70,7 @@ const COMMENT_SORTS = [
   { value: "best", label: "Best" },
 ];
 
-function Comment({ comment, depth, postId, user, onReply }: { comment: any; depth: number; postId: number; user: any; onReply: (parentId: number) => void }) {
+function Comment({ comment, depth, postId, user, onReply, topContributorSet, risingStarSet }: { comment: any; depth: number; postId: number; user: any; onReply: (parentId: number) => void; topContributorSet: Set<string>; risingStarSet: Set<string> }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -104,6 +104,16 @@ function Comment({ comment, depth, postId, user, onReply }: { comment: any; dept
         <div className="flex items-center gap-2 mb-2">
           <Link href={`/user/${comment.author?.username}`}><span className="text-sm font-medium text-zinc-300 hover:text-orange-400 transition-colors cursor-pointer">{comment.author?.username || "Unknown"}</span></Link>
           {comment.author && <TierBadge tier={comment.author.tier} isTrusted={comment.author.isTrusted} isAdmin={comment.author.isAdmin} />}
+          {comment.author?.username && topContributorSet.has(comment.author.username) && (
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-400 text-[10px] font-medium" title="Top Contributor">
+              <Crown className="h-2.5 w-2.5" />Top
+            </span>
+          )}
+          {comment.author?.username && !topContributorSet.has(comment.author.username) && risingStarSet.has(comment.author.username) && (
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-medium" title="Rising Star">
+              <Sparkles className="h-2.5 w-2.5" />Rising
+            </span>
+          )}
           <span className="text-xs text-zinc-600">·</span>
           <span className="text-xs text-zinc-500">{timeAgo(comment.createdAt)}</span>
         </div>
@@ -130,7 +140,7 @@ function Comment({ comment, depth, postId, user, onReply }: { comment: any; dept
         </div>
       </div>
       {comment.children?.map((child: any) => (
-        <Comment key={child.id} comment={child} depth={depth + 1} postId={postId} user={user} onReply={onReply} />
+        <Comment key={child.id} comment={child} depth={depth + 1} postId={postId} user={user} onReply={onReply} topContributorSet={topContributorSet} risingStarSet={risingStarSet} />
       ))}
     </div>
   );
@@ -181,6 +191,22 @@ export default function KbPost() {
     enabled: isAuthenticated && !!post?.id,
   });
   const isBookmarked = bookmarkData?.bookmarkedPostIds?.includes(post?.id);
+
+  const { data: leaderboard } = useQuery({
+    queryKey: ["/api/kb/leaderboard"],
+    queryFn: async () => {
+      const res = await fetch("/api/kb/leaderboard");
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+
+  const topContributorSet = new Set(
+    (leaderboard || []).slice(0, 5).map((u: any) => u.username)
+  );
+  const risingStarSet = new Set(
+    (leaderboard || []).filter((u: any) => u.reputation >= 10 && u.reputation < 100).map((u: any) => u.username)
+  );
 
   const bookmarkMutation = useMutation({
     mutationFn: async () => {
@@ -340,6 +366,16 @@ export default function KbPost() {
               <span className="flex items-center gap-1">
                 By <Link href={`/user/${post.author?.username}`}><strong className="text-zinc-300 hover:text-orange-400 transition-colors cursor-pointer">{post.author?.username || "Unknown"}</strong></Link>
                 {post.author && <TierBadge tier={post.author.tier} isTrusted={post.author.isTrusted} isAdmin={post.author.isAdmin} />}
+                {post.author?.username && topContributorSet.has(post.author.username) && (
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-400 text-[10px] font-medium" title="Top Contributor" data-testid="badge-top-contributor">
+                    <Crown className="h-2.5 w-2.5" />Top Contributor
+                  </span>
+                )}
+                {post.author?.username && !topContributorSet.has(post.author.username) && risingStarSet.has(post.author.username) && (
+                  <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-medium" title="Rising Star" data-testid="badge-rising-star">
+                    <Sparkles className="h-2.5 w-2.5" />Rising Star
+                  </span>
+                )}
               </span>
               <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{timeAgo(post.createdAt)}</span>
               <span className="flex items-center gap-1"><MessageSquare className="h-3.5 w-3.5" />{post.commentCount || 0} comments</span>
@@ -462,7 +498,7 @@ export default function KbPost() {
                   <p className="text-sm text-zinc-500 py-4">No comments yet. Be the first to share your thoughts!</p>
                 )}
                 {threadedComments.map((c: any) => (
-                  <Comment key={c.id} comment={c} depth={0} postId={post.id} user={user} onReply={setReplyTo} />
+                  <Comment key={c.id} comment={c} depth={0} postId={post.id} user={user} onReply={setReplyTo} topContributorSet={topContributorSet} risingStarSet={risingStarSet} />
                 ))}
               </div>
             </div>

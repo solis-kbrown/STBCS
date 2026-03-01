@@ -159,6 +159,13 @@ export default function KnowledgeBase() {
 
   const isPaid = isAuthenticated && user?.tier !== "free";
 
+  const topContributorSet = new Set(
+    (leaderboard || []).slice(0, 5).map((u: any) => u.username)
+  );
+  const risingStarSet = new Set(
+    (leaderboard || []).filter((u: any) => u.reputation >= 10 && u.reputation < 100).map((u: any) => u.username)
+  );
+
   return (
     <Layout>
       <div className="min-h-screen">
@@ -345,6 +352,16 @@ export default function KnowledgeBase() {
                               {post.author?.username || "Unknown"}
                             </Link>
                             {post.author && <TierBadge tier={post.author.tier} isTrusted={post.author.isTrusted} isAdmin={post.author.isAdmin} />}
+                            {post.author?.username && topContributorSet.has(post.author.username) && (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-400 text-[10px] font-medium" title="Top Contributor" data-testid={`badge-top-contributor-${post.id}`}>
+                                <Crown className="h-2.5 w-2.5" />Top
+                              </span>
+                            )}
+                            {post.author?.username && !topContributorSet.has(post.author.username) && risingStarSet.has(post.author.username) && (
+                              <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-emerald-500/15 text-emerald-400 text-[10px] font-medium" title="Rising Star" data-testid={`badge-rising-star-${post.id}`}>
+                                <Sparkles className="h-2.5 w-2.5" />Rising
+                              </span>
+                            )}
                           </span>
                           <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeAgo(post.createdAt)}</span>
                           <span className="flex items-center gap-1"><MessageSquare className="h-3 w-3" />{post.commentCount || 0}</span>
