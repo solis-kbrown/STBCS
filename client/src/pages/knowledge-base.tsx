@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import Layout from "@/components/layout";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,9 @@ import {
   BookOpen, Search, Plus, ChevronUp, MessageSquare,
   Shield, Bug, Lightbulb, AlertTriangle, FileText,
   Crown, Star, Award, TrendingUp, Pin, Clock,
-  Filter, ChevronLeft, ChevronRight, Users, Sparkles
+  Filter, ChevronLeft, ChevronRight, Users, Sparkles,
+  Eye, Bookmark, BookmarkCheck, ArrowUpDown, Tag, Flame,
+  ThumbsUp, MessagesSquare, BarChart3
 } from "lucide-react";
 
 const POST_TYPES = [
@@ -21,6 +23,14 @@ const POST_TYPES = [
   { value: "bug_report", label: "Bug Reports", icon: Bug },
   { value: "feature_request", label: "Feature Requests", icon: Lightbulb },
   { value: "general_idea", label: "General Ideas", icon: Sparkles },
+];
+
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest", icon: Clock },
+  { value: "trending", label: "Trending", icon: Flame },
+  { value: "popular", label: "Most Voted", icon: ThumbsUp },
+  { value: "discussed", label: "Most Discussed", icon: MessagesSquare },
+  { value: "views", label: "Most Viewed", icon: Eye },
 ];
 
 function TierBadge({ tier, isTrusted, isAdmin }: { tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }) {
@@ -56,22 +66,60 @@ export default function KnowledgeBase() {
   useDocumentTitle("Knowledge Base | STB Cybersecurity");
   const { user, isAuthenticated } = useAuth();
   const [, setLocation] = useLocation();
+  const queryClient = useQueryClient();
   const [activeType, setActiveType] = useState("");
+  const [activeTag, setActiveTag] = useState("");
+  const [activeSort, setActiveSort] = useState("newest");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);
+  const [showBookmarks, setShowBookmarks] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: ["/api/kb/posts", activeType, searchQuery, page],
+    queryKey: showBookmarks
+      ? ["/api/kb/bookmarks", page]
+      : ["/api/kb/posts", activeType, activeTag, searchQuery, activeSort, page],
     queryFn: async () => {
+      if (showBookmarks) {
+        const res = await fetch(`/api/kb/bookmarks?page=${page}&limit=20`);
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.json();
+      }
       const params = new URLSearchParams();
       if (activeType) params.set("type", activeType);
+      if (activeTag) params.set("tag", activeTag);
       if (searchQuery) params.set("search", searchQuery);
+      if (activeSort && activeSort !== "newest") params.set("sort", activeSort);
       params.set("page", String(page));
       params.set("limit", "20");
       const res = await fetch(`/api/kb/posts?${params}`);
       if (!res.ok) throw new Error("Failed to fetch");
       return res.json();
+    },
+  });
+
+  const postIds = data?.posts?.map((p: any) => p.id) || [];
+  const { data: bookmarkData } = useQuery({
+    queryKey: ["/api/kb/bookmarks/check", postIds.join(",")],
+    queryFn: async () => {
+      if (!isAuthenticated || postIds.length === 0) return { bookmarkedPostIds: [] };
+      const res = await fetch(`/api/kb/bookmarks/check?postIds=${postIds.join(",")}`);
+      if (!res.ok) return { bookmarkedPostIds: [] };
+      return res.json();
+    },
+    enabled: isAuthenticated && postIds.length > 0,
+  });
+  const bookmarkedSet = new Set(bookmarkData?.bookmarkedPostIds || []);
+
+  const bookmarkMutation = useMutation({
+    mutationFn: async (postId: number) => {
+      const res = await fetch(`/api/kb/posts/${postId}/bookmark`, { method: "POST" });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kb/bookmarks/check"] });
+      if (showBookmarks) queryClient.invalidateQueries({ queryKey: ["/api/kb/bookmarks"] });
     },
   });
 
@@ -84,8 +132,28 @@ export default function KnowledgeBase() {
     },
   });
 
+  const { data: popularTags } = useQuery({
+    queryKey: ["/api/kb/tags/popular"],
+    queryFn: async () => {
+      const res = await fetch("/api/kb/tags/popular");
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+
   const handleSearch = () => {
     setSearchQuery(searchInput.trim());
+    setActiveTag("");
+    setShowBookmarks(false);
+    setPage(1);
+  };
+
+  const handleTagClick = (tag: string) => {
+    setActiveTag(tag);
+    setActiveType("");
+    setSearchQuery("");
+    setSearchInput("");
+    setShowBookmarks(false);
     setPage(1);
   };
 
@@ -139,14 +207,14 @@ export default function KnowledgeBase() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-          <div className="flex flex-wrap gap-2 mb-8">
+          <div className="flex flex-wrap gap-2 mb-4">
             {POST_TYPES.map((t) => {
               const Icon = t.icon;
-              const isActive = activeType === t.value;
+              const isActive = !showBookmarks && activeType === t.value && !activeTag;
               return (
                 <button
                   key={t.value}
-                  onClick={() => { setActiveType(t.value); setPage(1); }}
+                  onClick={() => { setActiveType(t.value); setActiveTag(""); setShowBookmarks(false); setPage(1); }}
                   data-testid={`button-filter-${t.value || "all"}`}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     isActive
@@ -158,7 +226,60 @@ export default function KnowledgeBase() {
                 </button>
               );
             })}
+            {isPaid && (
+              <button
+                onClick={() => { setShowBookmarks(!showBookmarks); setActiveTag(""); setPage(1); }}
+                data-testid="button-filter-bookmarks"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  showBookmarks
+                    ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
+                    : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-zinc-800 hover:text-zinc-200"
+                }`}
+              >
+                <BookmarkCheck className="h-4 w-4" />My Bookmarks
+              </button>
+            )}
           </div>
+
+          {activeTag && (
+            <div className="flex items-center gap-2 mb-4">
+              <Tag className="h-4 w-4 text-orange-400" />
+              <span className="text-sm text-zinc-400">Filtered by tag:</span>
+              <Badge className="bg-orange-500/15 text-orange-400 border-orange-500/30">{activeTag}</Badge>
+              <button
+                onClick={() => { setActiveTag(""); setPage(1); }}
+                className="text-xs text-zinc-500 hover:text-zinc-300 underline"
+                data-testid="button-clear-tag"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+
+          {!showBookmarks && (
+            <div className="flex items-center gap-2 mb-6">
+              <ArrowUpDown className="h-4 w-4 text-zinc-500" />
+              <div className="flex gap-1">
+                {SORT_OPTIONS.map((s) => {
+                  const Icon = s.icon;
+                  return (
+                    <button
+                      key={s.value}
+                      onClick={() => { setActiveSort(s.value); setPage(1); }}
+                      data-testid={`button-sort-${s.value}`}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                        activeSort === s.value
+                          ? "bg-zinc-700 text-white"
+                          : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50"
+                      }`}
+                    >
+                      <Icon className="h-3 w-3" />{s.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
             <div className="lg:col-span-3 space-y-4">
@@ -175,49 +296,75 @@ export default function KnowledgeBase() {
               ) : data?.posts?.length === 0 ? (
                 <div className="text-center py-16 rounded-xl border border-zinc-800 bg-zinc-900/50">
                   <BookOpen className="h-12 w-12 text-zinc-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-zinc-400">No posts found</h3>
+                  <h3 className="text-lg font-medium text-zinc-400">
+                    {showBookmarks ? "No bookmarks yet" : "No posts found"}
+                  </h3>
                   <p className="text-zinc-500 text-sm mt-2">
-                    {searchQuery ? "Try a different search term" : "Be the first to contribute!"}
+                    {showBookmarks ? "Bookmark articles to save them for later" : searchQuery ? "Try a different search term" : "Be the first to contribute!"}
                   </p>
                 </div>
               ) : (
                 data?.posts?.map((post: any) => (
-                  <Link key={post.id} href={`/knowledge-base/${post.slug}`}>
-                    <div
-                      data-testid={`card-post-${post.id}`}
-                      className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 hover:border-orange-500/30 hover:bg-zinc-900/80 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="flex flex-col items-center gap-1 pt-1 min-w-[48px]">
-                          <ChevronUp className="h-5 w-5 text-zinc-600 group-hover:text-orange-400 transition-colors" />
-                          <span className="text-sm font-bold text-zinc-300" data-testid={`text-votes-${post.id}`}>{post.voteCount || 0}</span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-2 flex-wrap">
-                            {post.isPinned && <Pin className="h-3.5 w-3.5 text-orange-400" />}
-                            <TypeBadge type={post.type} />
-                            {post.tags?.map((tag: string) => (
-                              <Badge key={tag} variant="outline" className="text-[10px] border-zinc-700 text-zinc-500">{tag}</Badge>
-                            ))}
-                          </div>
-                          <h3 className="text-lg font-semibold text-white group-hover:text-orange-400 transition-colors truncate" data-testid={`text-title-${post.id}`}>
-                            {post.title}
-                          </h3>
-                          <p className="text-sm text-zinc-500 mt-1 line-clamp-2">
-                            {post.content?.replace(/[#*`>\-\[\]()!]/g, "").slice(0, 200)}
-                          </p>
-                          <div className="flex items-center gap-4 mt-3 text-xs text-zinc-500">
-                            <span className="flex items-center gap-1">
-                              {post.author?.username || "Unknown"}
-                              {post.author && <TierBadge tier={post.author.tier} isTrusted={post.author.isTrusted} isAdmin={post.author.isAdmin} />}
-                            </span>
-                            <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeAgo(post.createdAt)}</span>
-                            <span className="flex items-center gap-1"><MessageSquare className="h-3 w-3" />{post.commentCount || 0}</span>
-                          </div>
-                        </div>
+                  <div
+                    key={post.id}
+                    data-testid={`card-post-${post.id}`}
+                    className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 hover:border-orange-500/30 hover:bg-zinc-900/80 transition-all group"
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="flex flex-col items-center gap-1 pt-1 min-w-[48px]">
+                        <ChevronUp className="h-5 w-5 text-zinc-600 group-hover:text-orange-400 transition-colors" />
+                        <span className="text-sm font-bold text-zinc-300" data-testid={`text-votes-${post.id}`}>{post.voteCount || 0}</span>
                       </div>
+                      <Link href={`/knowledge-base/${post.slug}`} className="flex-1 min-w-0 cursor-pointer">
+                        <div className="flex items-center gap-2 mb-2 flex-wrap">
+                          {post.isPinned && <Pin className="h-3.5 w-3.5 text-orange-400" />}
+                          <TypeBadge type={post.type} />
+                          {post.tags?.slice(0, 5).map((tag: string) => (
+                            <Badge
+                              key={tag}
+                              variant="outline"
+                              className="text-[10px] border-zinc-700 text-zinc-500 hover:border-orange-500/30 hover:text-orange-400 cursor-pointer"
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleTagClick(tag); }}
+                            >
+                              {tag}
+                            </Badge>
+                          ))}
+                          {post.tags?.length > 5 && (
+                            <span className="text-[10px] text-zinc-600">+{post.tags.length - 5}</span>
+                          )}
+                        </div>
+                        <h3 className="text-lg font-semibold text-white group-hover:text-orange-400 transition-colors truncate" data-testid={`text-title-${post.id}`}>
+                          {post.title}
+                        </h3>
+                        <p className="text-sm text-zinc-500 mt-1 line-clamp-2">
+                          {post.content?.replace(/[#*`>\-\[\]()!]/g, "").slice(0, 200)}
+                        </p>
+                        <div className="flex items-center gap-4 mt-3 text-xs text-zinc-500">
+                          <span className="flex items-center gap-1">
+                            {post.author?.username || "Unknown"}
+                            {post.author && <TierBadge tier={post.author.tier} isTrusted={post.author.isTrusted} isAdmin={post.author.isAdmin} />}
+                          </span>
+                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeAgo(post.createdAt)}</span>
+                          <span className="flex items-center gap-1"><MessageSquare className="h-3 w-3" />{post.commentCount || 0}</span>
+                          <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{post.viewCount || 0}</span>
+                        </div>
+                      </Link>
+                      {isPaid && (
+                        <button
+                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); bookmarkMutation.mutate(post.id); }}
+                          data-testid={`button-bookmark-${post.id}`}
+                          className="p-2 rounded-lg hover:bg-zinc-800 transition-colors shrink-0"
+                          title={bookmarkedSet.has(post.id) ? "Remove bookmark" : "Bookmark"}
+                        >
+                          {bookmarkedSet.has(post.id) ? (
+                            <BookmarkCheck className="h-4 w-4 text-orange-400" />
+                          ) : (
+                            <Bookmark className="h-4 w-4 text-zinc-600 hover:text-orange-400" />
+                          )}
+                        </button>
+                      )}
                     </div>
-                  </Link>
+                  </div>
                 ))
               )}
 
@@ -249,6 +396,31 @@ export default function KnowledgeBase() {
             </div>
 
             <div className="space-y-6">
+              {popularTags && popularTags.length > 0 && (
+                <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
+                  <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-4">
+                    <Tag className="h-4 w-4 text-orange-400" />Popular Tags
+                  </h3>
+                  <div className="flex flex-wrap gap-1.5">
+                    {popularTags.map((t: any) => (
+                      <button
+                        key={t.tag}
+                        onClick={() => handleTagClick(t.tag)}
+                        data-testid={`button-tag-${t.tag}`}
+                        className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
+                          activeTag === t.tag
+                            ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
+                            : "bg-zinc-800/70 text-zinc-400 border border-zinc-700/50 hover:border-orange-500/30 hover:text-orange-400"
+                        }`}
+                      >
+                        {t.tag}
+                        <span className="text-zinc-600 text-[10px]">{t.count}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
                 <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-4">
                   <TrendingUp className="h-4 w-4 text-orange-400" />Top Contributors
@@ -277,7 +449,7 @@ export default function KnowledgeBase() {
                 </h3>
                 <div className="space-y-2 text-xs text-zinc-400">
                   <p><strong className="text-zinc-300">Free:</strong> Read official articles</p>
-                  <p><strong className="text-zinc-300">Paid Members:</strong> Post, comment, vote (moderated)</p>
+                  <p><strong className="text-zinc-300">Paid Members:</strong> Post, comment, vote, bookmark</p>
                   <p><strong className="text-zinc-300">Trusted:</strong> Posts go live instantly</p>
                   <p><strong className="text-zinc-300">Earn Trust:</strong> Get 50+ upvotes to auto-promote</p>
                 </div>

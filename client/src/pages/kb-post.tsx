@@ -10,7 +10,8 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { useToast } from "@/hooks/use-toast";
 import {
   ChevronUp, MessageSquare, Clock, Edit, Trash2, ArrowLeft,
-  Crown, Star, Award, Shield, Pin, Reply, Send, BookOpen
+  Crown, Star, Award, Shield, Pin, Reply, Send, BookOpen,
+  Eye, Bookmark, BookmarkCheck, ArrowUpDown, Tag, Link2
 } from "lucide-react";
 
 function TierBadge({ tier, isTrusted, isAdmin }: { tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }) {
@@ -63,6 +64,12 @@ function renderMarkdown(content: string) {
   return html;
 }
 
+const COMMENT_SORTS = [
+  { value: "oldest", label: "Oldest First" },
+  { value: "newest", label: "Newest First" },
+  { value: "best", label: "Best" },
+];
+
 function Comment({ comment, depth, postId, user, onReply }: { comment: any; depth: number; postId: number; user: any; onReply: (parentId: number) => void }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -73,7 +80,7 @@ function Comment({ comment, depth, postId, user, onReply }: { comment: any; dept
       if (!res.ok) throw new Error((await res.json()).error);
       return res.json();
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: [`/api/kb/posts/${postId}/comments`] }); },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["/api/kb/comments", postId] }); },
     onError: (err: Error) => { toast({ title: "Error", description: err.message, variant: "destructive" }); },
   });
 
@@ -84,7 +91,7 @@ function Comment({ comment, depth, postId, user, onReply }: { comment: any; dept
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/kb/posts/${postId}/comments`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/kb/comments", postId] });
       toast({ title: "Comment deleted" });
     },
   });
@@ -137,6 +144,7 @@ export default function KbPost() {
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState("");
   const [replyTo, setReplyTo] = useState<number | null>(null);
+  const [commentSort, setCommentSort] = useState("oldest");
   const slug = params?.slug || "";
 
   const { data: post, isLoading } = useQuery({
@@ -152,14 +160,52 @@ export default function KbPost() {
   useDocumentTitle(post ? `${post.title} | Knowledge Base` : "Knowledge Base");
 
   const { data: comments } = useQuery({
-    queryKey: [`/api/kb/posts/${post?.id}/comments`],
+    queryKey: ["/api/kb/comments", post?.id, commentSort],
     queryFn: async () => {
-      const res = await fetch(`/api/kb/posts/${post.id}/comments`);
+      const params = new URLSearchParams();
+      if (commentSort !== "oldest") params.set("sort", commentSort);
+      const res = await fetch(`/api/kb/posts/${post.id}/comments?${params}`);
       if (!res.ok) throw new Error("Failed");
       return res.json();
     },
     enabled: !!post?.id,
   });
+
+  const { data: bookmarkData } = useQuery({
+    queryKey: ["/api/kb/bookmarks/check", post?.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/kb/bookmarks/check?postIds=${post.id}`);
+      if (!res.ok) return { bookmarkedPostIds: [] };
+      return res.json();
+    },
+    enabled: isAuthenticated && !!post?.id,
+  });
+  const isBookmarked = bookmarkData?.bookmarkedPostIds?.includes(post?.id);
+
+  const bookmarkMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/kb/posts/${post.id}/bookmark`, { method: "POST" });
+      if (!res.ok) throw new Error((await res.json()).error);
+      return res.json();
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kb/bookmarks/check"] });
+      toast({ title: data.bookmarked ? "Bookmarked" : "Bookmark removed" });
+    },
+    onError: (err: Error) => { toast({ title: "Error", description: err.message, variant: "destructive" }); },
+  });
+
+  const firstTag = post?.tags?.[0];
+  const { data: relatedData } = useQuery({
+    queryKey: ["/api/kb/related", firstTag, post?.id],
+    queryFn: async () => {
+      const res = await fetch(`/api/kb/posts?tag=${encodeURIComponent(firstTag)}&limit=6`);
+      if (!res.ok) return { posts: [] };
+      return res.json();
+    },
+    enabled: !!firstTag && !!post?.id,
+  });
+  const relatedPosts = (relatedData?.posts || []).filter((p: any) => p.id !== post?.id).slice(0, 5);
 
   const voteMutation = useMutation({
     mutationFn: async () => {
@@ -185,7 +231,7 @@ export default function KbPost() {
     onSuccess: () => {
       setCommentText("");
       setReplyTo(null);
-      queryClient.invalidateQueries({ queryKey: [`/api/kb/posts/${post.id}/comments`] });
+      queryClient.invalidateQueries({ queryKey: ["/api/kb/comments", post.id] });
       queryClient.invalidateQueries({ queryKey: [`/api/kb/posts/${slug}`] });
       toast({ title: "Comment posted" });
     },
@@ -280,31 +326,50 @@ export default function KbPost() {
               {post.status === "pending_review" && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-xs">Pending Review</Badge>}
               {post.status === "rejected" && <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">Rejected</Badge>}
               {post.tags?.map((tag: string) => (
-                <Badge key={tag} variant="outline" className="text-xs border-zinc-700 text-zinc-500">{tag}</Badge>
+                <Link key={tag} href={`/knowledge-base?tag=${encodeURIComponent(tag)}`}>
+                  <Badge variant="outline" className="text-xs border-zinc-700 text-zinc-500 hover:border-orange-500/30 hover:text-orange-400 cursor-pointer">
+                    <Tag className="h-3 w-3 mr-1" />{tag}
+                  </Badge>
+                </Link>
               ))}
             </div>
 
             <h1 className="text-2xl font-bold text-white mb-4" data-testid="text-post-title">{post.title}</h1>
 
-            <div className="flex items-center gap-3 mb-6 text-sm text-zinc-500">
+            <div className="flex items-center gap-3 mb-4 text-sm text-zinc-500 flex-wrap">
               <span className="flex items-center gap-1">
                 By <strong className="text-zinc-300">{post.author?.username || "Unknown"}</strong>
                 {post.author && <TierBadge tier={post.author.tier} isTrusted={post.author.isTrusted} isAdmin={post.author.isAdmin} />}
               </span>
               <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{timeAgo(post.createdAt)}</span>
               <span className="flex items-center gap-1"><MessageSquare className="h-3.5 w-3.5" />{post.commentCount || 0} comments</span>
+              <span className="flex items-center gap-1"><Eye className="h-3.5 w-3.5" />{post.viewCount || 0} views</span>
             </div>
 
-            {canEdit && (
-              <div className="flex gap-2 mb-6">
-                <Button variant="outline" size="sm" onClick={() => setLocation(`/knowledge-base/${post.slug}/edit`)} className="border-zinc-700 text-zinc-400" data-testid="button-edit-post">
-                  <Edit className="h-4 w-4 mr-1" />Edit
+            <div className="flex items-center gap-2 mb-6">
+              {isPaid && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => bookmarkMutation.mutate()}
+                  className={`${isBookmarked ? "border-orange-500/30 text-orange-400 bg-orange-500/5" : "border-zinc-700 text-zinc-400"} hover:bg-orange-500/10`}
+                  data-testid="button-bookmark-post"
+                >
+                  {isBookmarked ? <BookmarkCheck className="h-4 w-4 mr-1" /> : <Bookmark className="h-4 w-4 mr-1" />}
+                  {isBookmarked ? "Bookmarked" : "Bookmark"}
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => { if (confirm("Delete this post?")) deleteMutation.mutate(); }} className="border-red-500/30 text-red-400 hover:bg-red-500/10" data-testid="button-delete-post">
-                  <Trash2 className="h-4 w-4 mr-1" />Delete
-                </Button>
-              </div>
-            )}
+              )}
+              {canEdit && (
+                <>
+                  <Button variant="outline" size="sm" onClick={() => setLocation(`/knowledge-base/${post.slug}/edit`)} className="border-zinc-700 text-zinc-400" data-testid="button-edit-post">
+                    <Edit className="h-4 w-4 mr-1" />Edit
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => { if (confirm("Delete this post?")) deleteMutation.mutate(); }} className="border-red-500/30 text-red-400 hover:bg-red-500/10" data-testid="button-delete-post">
+                    <Trash2 className="h-4 w-4 mr-1" />Delete
+                  </Button>
+                </>
+              )}
+            </div>
 
             <div
               className="prose prose-invert max-w-none"
@@ -312,11 +377,57 @@ export default function KbPost() {
               dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}
             />
 
+            {relatedPosts.length > 0 && (
+              <div className="mt-12 border-t border-zinc-800 pt-8">
+                <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                  <Link2 className="h-5 w-5 text-orange-400" />Related Posts
+                </h3>
+                <div className="grid gap-3">
+                  {relatedPosts.map((rp: any) => (
+                    <Link key={rp.id} href={`/knowledge-base/${rp.slug}`}>
+                      <div className="flex items-center gap-3 p-3 rounded-lg border border-zinc-800 bg-zinc-900/50 hover:border-orange-500/30 hover:bg-zinc-900/80 transition-all cursor-pointer" data-testid={`related-post-${rp.id}`}>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-zinc-300 truncate">{rp.title}</p>
+                          <div className="flex items-center gap-2 mt-1 text-xs text-zinc-500">
+                            <TypeBadge type={rp.type} />
+                            <span className="flex items-center gap-1"><ChevronUp className="h-3 w-3" />{rp.voteCount || 0}</span>
+                            <span className="flex items-center gap-1"><MessageSquare className="h-3 w-3" />{rp.commentCount || 0}</span>
+                            <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{rp.viewCount || 0}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="mt-12 border-t border-zinc-800 pt-8">
-              <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-orange-400" />
-                Comments ({post.commentCount || 0})
-              </h3>
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-orange-400" />
+                  Comments ({post.commentCount || 0})
+                </h3>
+                {(post.commentCount || 0) > 1 && (
+                  <div className="flex items-center gap-1">
+                    <ArrowUpDown className="h-3.5 w-3.5 text-zinc-500" />
+                    {COMMENT_SORTS.map((s) => (
+                      <button
+                        key={s.value}
+                        onClick={() => setCommentSort(s.value)}
+                        data-testid={`button-comment-sort-${s.value}`}
+                        className={`px-2.5 py-1 rounded text-xs font-medium transition-all ${
+                          commentSort === s.value
+                            ? "bg-zinc-700 text-white"
+                            : "text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50"
+                        }`}
+                      >
+                        {s.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {isPaid && (
                 <div className="mb-8 rounded-lg border border-zinc-800 bg-zinc-900/50 p-4">

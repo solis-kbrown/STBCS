@@ -1157,6 +1157,7 @@ export const kbPosts = pgTable("kb_posts", {
   status: text("status").notNull().default("pending_review"),
   voteCount: integer("vote_count").default(0),
   commentCount: integer("comment_count").default(0),
+  viewCount: integer("view_count").default(0),
   isPinned: boolean("is_pinned").default(false),
   tags: text("tags").array(),
   createdAt: timestamp("created_at").defaultNow(),
@@ -1167,6 +1168,7 @@ export const kbPosts = pgTable("kb_posts", {
   index("kb_posts_status_idx").on(table.status),
   index("kb_posts_slug_idx").on(table.slug),
   index("kb_posts_created_idx").on(table.createdAt),
+  index("kb_posts_views_idx").on(table.viewCount),
 ]);
 
 export const kbComments = pgTable("kb_comments", {
@@ -1194,10 +1196,21 @@ export const kbVotes = pgTable("kb_votes", {
   uniqueIndex("kb_votes_user_comment_idx").on(table.userId, table.commentId),
 ]);
 
+export const kbBookmarks = pgTable("kb_bookmarks", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  postId: integer("post_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("kb_bookmarks_user_post_idx").on(table.userId, table.postId),
+  index("kb_bookmarks_user_idx").on(table.userId),
+]);
+
 export const insertKbPostSchema = createInsertSchema(kbPosts).omit({
   id: true,
   voteCount: true,
   commentCount: true,
+  viewCount: true,
   createdAt: true,
   updatedAt: true,
 });
@@ -1219,6 +1232,7 @@ export type KbComment = typeof kbComments.$inferSelect;
 export type InsertKbComment = z.infer<typeof insertKbCommentSchema>;
 export type KbVote = typeof kbVotes.$inferSelect;
 export type InsertKbVote = z.infer<typeof insertKbVoteSchema>;
+export type KbBookmark = typeof kbBookmarks.$inferSelect;
 
 export const KB_RANKS = [
   { name: "Recruit", minPoints: 0, color: "text-zinc-400" },

@@ -5229,8 +5229,10 @@ Hiring: https://stbcybersecurity.com/support
       const isAdmin = authReq.user?.isAdmin;
       const status = isAdmin && req.query.status ? asString(req.query.status as string) : "published";
 
+      const sort = asString(req.query.sort as string) || undefined;
+
       const [posts, total] = await Promise.all([
-        storage.getKbPosts({ type, status, search, tag, authorId, limit, offset }),
+        storage.getKbPosts({ type, status, search, tag, authorId, sort, limit, offset }),
         storage.getKbPostCount({ type, status, search, tag, authorId }),
       ]);
 
@@ -5262,6 +5264,8 @@ Hiring: https://stbcybersecurity.com/support
         res.status(404).json({ error: "Post not found" });
         return;
       }
+
+      storage.incrementKbPostViews(post.id).catch(() => {});
 
       const author = await storage.getUser(post.authorId);
       res.json({
@@ -5396,7 +5400,8 @@ Hiring: https://stbcybersecurity.com/support
   app.get("/api/kb/posts/:id/comments", kbLimiter, async (req: Request, res: Response) => {
     try {
       const postId = parseInt(req.params.id);
-      const comments = await storage.getKbCommentsByPost(postId);
+      const sort = asString(req.query.sort as string) || undefined;
+      const comments = await storage.getKbCommentsByPost(postId, sort);
 
       const authorIds = [...new Set(comments.map(c => c.authorId))];
       const authors: Record<string, { username: string; tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }> = {};
@@ -5561,6 +5566,68 @@ Hiring: https://stbcybersecurity.com/support
       })));
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch leaderboard" });
+    }
+  });
+
+  app.post("/api/kb/posts/:id/bookmark", requireAuth as any, kbWriteLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      if (user.tier === "free") { res.status(403).json({ error: "Paid membership required" }); return; }
+      const postId = parseInt(req.params.id);
+      const post = await storage.getKbPostById(postId);
+      if (!post) { res.status(404).json({ error: "Post not found" }); return; }
+      const result = await storage.toggleKbBookmark(user.id, postId);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to toggle bookmark" });
+    }
+  });
+
+  app.get("/api/kb/bookmarks", requireAuth as any, kbLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      const page = parseInt(asString(req.query.page as string) || "1");
+      const limit = Math.min(parseInt(asString(req.query.limit as string) || "20"), 50);
+      const offset = (page - 1) * limit;
+      const [posts, total] = await Promise.all([
+        storage.getKbBookmarks(user.id, limit, offset),
+        storage.getKbBookmarkCount(user.id),
+      ]);
+      const authorIds = [...new Set(posts.map(p => p.authorId))];
+      const authors: Record<string, { username: string; tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }> = {};
+      for (const aid of authorIds) {
+        const u = await storage.getUser(aid);
+        if (u) authors[aid] = { username: u.username, tier: u.tier, isTrusted: u.isTrusted, isAdmin: u.isAdmin };
+      }
+      res.json({
+        posts: posts.map(p => ({ ...p, author: authors[p.authorId] || null })),
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bookmarks" });
+    }
+  });
+
+  app.get("/api/kb/bookmarks/check", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      const postIdsParam = asString(req.query.postIds as string);
+      const postIds = postIdsParam ? postIdsParam.split(",").map(Number).filter(n => !isNaN(n)) : [];
+      const bookmarked = await storage.isKbBookmarked(user.id, postIds);
+      res.json({ bookmarkedPostIds: bookmarked });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check bookmarks" });
+    }
+  });
+
+  app.get("/api/kb/tags/popular", kbLimiter, async (_req: Request, res: Response) => {
+    try {
+      const tags = await storage.getPopularKbTags(30);
+      res.json(tags);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch popular tags" });
     }
   });
 

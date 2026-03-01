@@ -33,7 +33,7 @@ import {
   type ReportSchedule, type InsertReportSchedule,
   type KbPost, type InsertKbPost,
   type KbComment, type InsertKbComment,
-  type KbVote,
+  type KbVote, type KbBookmark,
   type FeedbackSubmission, type InsertFeedback,
   KB_POINTS,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
@@ -43,7 +43,7 @@ import {
   apiKeys, apiKeyUsage, addOns, userAddOns, monitorAlertLog,
   uptimeMonitors, uptimeChecks, uptimeIncidents, darkWebMonitors, darkWebFindings,
   dailyThreatStats, attackSurfaceScans, attackSurfaceAssets, threatReports, reportSchedules,
-  kbPosts, kbComments, kbVotes, feedbackSubmissions
+  kbPosts, kbComments, kbVotes, kbBookmarks, feedbackSubmissions
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte, asc, count, ne, inArray } from "drizzle-orm";
@@ -321,7 +321,7 @@ export interface IStorage {
   createKbPost(post: InsertKbPost): Promise<KbPost>;
   getKbPostBySlug(slug: string): Promise<KbPost | undefined>;
   getKbPostById(id: number): Promise<KbPost | undefined>;
-  getKbPosts(options: { type?: string; status?: string; search?: string; tag?: string; authorId?: string; limit?: number; offset?: number }): Promise<KbPost[]>;
+  getKbPosts(options: { type?: string; status?: string; search?: string; tag?: string; authorId?: string; sort?: string; limit?: number; offset?: number }): Promise<KbPost[]>;
   getKbPostCount(options: { type?: string; status?: string; search?: string; tag?: string; authorId?: string }): Promise<number>;
   updateKbPost(id: number, updates: Partial<InsertKbPost>): Promise<KbPost>;
   deleteKbPost(id: number): Promise<void>;
@@ -330,13 +330,23 @@ export interface IStorage {
 
   // Knowledge Base Comments
   createKbComment(comment: InsertKbComment): Promise<KbComment>;
-  getKbCommentsByPost(postId: number): Promise<KbComment[]>;
+  getKbCommentsByPost(postId: number, sort?: string): Promise<KbComment[]>;
   deleteKbComment(id: number): Promise<void>;
 
   // Knowledge Base Votes
   toggleKbPostVote(userId: string, postId: number): Promise<{ voted: boolean; newCount: number }>;
   toggleKbCommentVote(userId: string, commentId: number): Promise<{ voted: boolean; newCount: number }>;
   getKbUserVotes(userId: string, postIds?: number[], commentIds?: number[]): Promise<{ postVotes: number[]; commentVotes: number[] }>;
+
+  // Knowledge Base Bookmarks
+  toggleKbBookmark(userId: string, postId: number): Promise<{ bookmarked: boolean }>;
+  getKbBookmarks(userId: string, limit?: number, offset?: number): Promise<KbPost[]>;
+  getKbBookmarkCount(userId: string): Promise<number>;
+  isKbBookmarked(userId: string, postIds: number[]): Promise<number[]>;
+
+  // Knowledge Base Discovery
+  incrementKbPostViews(id: number): Promise<void>;
+  getPopularKbTags(limit?: number): Promise<{ tag: string; count: number }[]>;
 
   // Knowledge Base User Management
   setUserAdmin(userId: string, isAdmin: boolean): Promise<void>;
@@ -2396,7 +2406,7 @@ export class DatabaseStorage implements IStorage {
     return post;
   }
 
-  async getKbPosts(options: { type?: string; status?: string; search?: string; tag?: string; authorId?: string; limit?: number; offset?: number }): Promise<KbPost[]> {
+  async getKbPosts(options: { type?: string; status?: string; search?: string; tag?: string; authorId?: string; sort?: string; limit?: number; offset?: number }): Promise<KbPost[]> {
     const conditions = [];
     if (options.status) conditions.push(eq(kbPosts.status, options.status));
     if (options.type) conditions.push(eq(kbPosts.type, options.type));
@@ -2411,9 +2421,28 @@ export class DatabaseStorage implements IStorage {
       conditions.push(sql`${options.tag} = ANY(${kbPosts.tags})`);
     }
     const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+    let orderClauses;
+    switch (options.sort) {
+      case "popular":
+        orderClauses = [desc(kbPosts.isPinned), desc(kbPosts.voteCount), desc(kbPosts.createdAt)];
+        break;
+      case "discussed":
+        orderClauses = [desc(kbPosts.isPinned), desc(kbPosts.commentCount), desc(kbPosts.createdAt)];
+        break;
+      case "views":
+        orderClauses = [desc(kbPosts.isPinned), desc(kbPosts.viewCount), desc(kbPosts.createdAt)];
+        break;
+      case "trending":
+        orderClauses = [desc(kbPosts.isPinned), desc(sql`(COALESCE(${kbPosts.voteCount},0) * 2 + COALESCE(${kbPosts.commentCount},0) * 3 + COALESCE(${kbPosts.viewCount},0) * 0.1) / GREATEST(EXTRACT(EPOCH FROM (NOW() - ${kbPosts.createdAt})) / 86400.0, 1) ^ 0.5`), desc(kbPosts.createdAt)];
+        break;
+      default:
+        orderClauses = [desc(kbPosts.isPinned), desc(kbPosts.createdAt)];
+    }
+
     return db.select().from(kbPosts)
       .where(where)
-      .orderBy(desc(kbPosts.isPinned), desc(kbPosts.createdAt))
+      .orderBy(...orderClauses)
       .limit(options.limit || 20)
       .offset(options.offset || 0);
   }
@@ -2480,10 +2509,21 @@ export class DatabaseStorage implements IStorage {
     });
   }
 
-  async getKbCommentsByPost(postId: number): Promise<KbComment[]> {
+  async getKbCommentsByPost(postId: number, sort?: string): Promise<KbComment[]> {
+    let orderClause;
+    switch (sort) {
+      case "newest":
+        orderClause = [desc(kbComments.createdAt)];
+        break;
+      case "best":
+        orderClause = [desc(kbComments.voteCount), asc(kbComments.createdAt)];
+        break;
+      default:
+        orderClause = [asc(kbComments.createdAt)];
+    }
     return db.select().from(kbComments)
       .where(eq(kbComments.postId, postId))
-      .orderBy(asc(kbComments.createdAt));
+      .orderBy(...orderClause);
   }
 
   async deleteKbComment(id: number): Promise<void> {
@@ -2651,6 +2691,66 @@ export class DatabaseStorage implements IStorage {
         .set({ kbReputation: sql`GREATEST(${users.kbReputation} + ${points}, 0)` })
         .where(eq(users.id, userId));
     }
+  }
+
+  async incrementKbPostViews(id: number): Promise<void> {
+    await db.update(kbPosts)
+      .set({ viewCount: sql`COALESCE(${kbPosts.viewCount}, 0) + 1` })
+      .where(eq(kbPosts.id, id));
+  }
+
+  async toggleKbBookmark(userId: string, postId: number): Promise<{ bookmarked: boolean }> {
+    const [existing] = await db.select().from(kbBookmarks)
+      .where(and(eq(kbBookmarks.userId, userId), eq(kbBookmarks.postId, postId)));
+    if (existing) {
+      await db.delete(kbBookmarks).where(eq(kbBookmarks.id, existing.id));
+      return { bookmarked: false };
+    }
+    await db.insert(kbBookmarks).values({ userId, postId });
+    return { bookmarked: true };
+  }
+
+  async getKbBookmarks(userId: string, limit = 20, offset = 0): Promise<KbPost[]> {
+    const bookmarks = await db.select({ postId: kbBookmarks.postId })
+      .from(kbBookmarks)
+      .where(eq(kbBookmarks.userId, userId))
+      .orderBy(desc(kbBookmarks.createdAt))
+      .limit(limit).offset(offset);
+    if (bookmarks.length === 0) return [];
+    const postIds = bookmarks.map(b => b.postId);
+    const posts = await db.select().from(kbPosts)
+      .where(inArray(kbPosts.id, postIds));
+    const postMap = new Map(posts.map(p => [p.id, p]));
+    return postIds.map(id => postMap.get(id)).filter(Boolean) as KbPost[];
+  }
+
+  async getKbBookmarkCount(userId: string): Promise<number> {
+    const [result] = await db.select({ count: sql<number>`count(*)::int` })
+      .from(kbBookmarks)
+      .where(eq(kbBookmarks.userId, userId));
+    return result.count;
+  }
+
+  async isKbBookmarked(userId: string, postIds: number[]): Promise<number[]> {
+    if (postIds.length === 0) return [];
+    const safeIds = postIds.map(Number).filter(n => Number.isFinite(n));
+    if (safeIds.length === 0) return [];
+    const bookmarks = await db.select({ postId: kbBookmarks.postId })
+      .from(kbBookmarks)
+      .where(and(eq(kbBookmarks.userId, userId), inArray(kbBookmarks.postId, safeIds)));
+    return bookmarks.map(b => b.postId);
+  }
+
+  async getPopularKbTags(limit = 30): Promise<{ tag: string; count: number }[]> {
+    const result = await db.execute(sql`
+      SELECT tag, COUNT(*)::int as count
+      FROM kb_posts, UNNEST(tags) AS tag
+      WHERE status = 'published' AND tag IS NOT NULL AND tag != ''
+      GROUP BY tag
+      ORDER BY count DESC
+      LIMIT ${limit}
+    `);
+    return (result.rows as any[]).map(r => ({ tag: r.tag, count: r.count }));
   }
 
   async createFeedback(feedback: InsertFeedback): Promise<FeedbackSubmission> {
