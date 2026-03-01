@@ -1,0 +1,20 @@
+"Act as an expert full-stack developer and security engineer. I need to design and build a secure, web-based RDP (Remote Desktop Protocol) application. This application will serve as an extension of my existing platform, STB Cybersecurity (stbcybersecurity.com), and must be strictly gated for paid members only.
+​Please generate the project structure and foundational code based on the following requirements:
+​1. Core Architecture & Tech Stack:
+​Backend: Node.js with Express.
+​RDP Bridge: Utilize a robust library (such as node-rdpjs combined with socket.io) or integrate an Apache Guacamole API structure to translate the RDP protocol into a WebSocket stream.
+​Frontend: React (or plain HTML5/JS if lighter) using an HTML5 Canvas to render the remote desktop stream.
+​Communication: WebSockets (WSS) for real-time, low-latency rendering and input transmission (mouse/keyboard).
+​2. Authentication & Paywall Integration:
+​The app must restrict access to verified, paid users of STB Cybersecurity.
+​Set up an authentication bridge (e.g., OAuth2, JWT verification, or a secure REST API endpoint) that allows this Replit app to query the existing stbcybersecurity.com database or membership system (like MemberPress, Stripe, or a custom backend) to verify active subscription status before rendering the RDP client.
+​Include a login redirect flow: unauthenticated or free-tier users should be redirected back to the main site's upgrade page.
+​3. Security Requirements:
+​Enforce strict HTTPS/WSS.
+​RDP credentials (IP, username, password) entered by the user must be kept strictly in memory for the duration of the session and never logged, cached, or stored in a database.
+​Implement rate limiting on the authentication endpoints to prevent brute-force attacks.
+​4. UI/UX:
+​A clean, modern, dark-mode dashboard that aligns with a professional cybersecurity aesthetic.
+​A connection modal asking for the Target IP/Hostname, Username, and Password.
+​A full-screen toggle for the active RDP session.
+​Ask me any clarifying questions about my existing authentication setup before writing the code, and then outline the step-by-step implementation plan."
