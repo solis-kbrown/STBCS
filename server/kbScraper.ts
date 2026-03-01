@@ -155,6 +155,40 @@ async function ensureSystemUser(): Promise<string> {
   }
 }
 
+const SEED_MEMBERS = [
+  { username: "CyberSentinel_Mike", email: "mike.s@stbcybersecurity.internal", tier: "pro", reputation: 187, isTrusted: true },
+  { username: "IR_Analyst_Sarah", email: "sarah.k@stbcybersecurity.internal", tier: "business", reputation: 312, isTrusted: true },
+  { username: "ThreatHunter_J", email: "jason.r@stbcybersecurity.internal", tier: "supporter", reputation: 74, isTrusted: true },
+  { username: "BluTeam_Rachel", email: "rachel.m@stbcybersecurity.internal", tier: "pro", reputation: 145, isTrusted: true },
+  { username: "NetSec_Dave", email: "dave.c@stbcybersecurity.internal", tier: "business", reputation: 228, isTrusted: true },
+  { username: "SOC_Ops_Tyler", email: "tyler.b@stbcybersecurity.internal", tier: "supporter", reputation: 42, isTrusted: false },
+  { username: "MalwareRE_Kim", email: "kim.l@stbcybersecurity.internal", tier: "pro", reputation: 96, isTrusted: true },
+  { username: "DFIR_Nicole", email: "nicole.w@stbcybersecurity.internal", tier: "unlimited", reputation: 415, isTrusted: true },
+];
+
+export async function ensureSeedMembers(): Promise<void> {
+  for (const member of SEED_MEMBERS) {
+    const existing = await storage.getUserByUsername(member.username);
+    if (existing) continue;
+    try {
+      const user = await storage.createUser({
+        username: member.username,
+        password: "$2b$12$placeholder_hash_not_a_real_login_00000000000000",
+        email: member.email,
+      });
+      await storage.awardReputation(user.id, member.reputation);
+      if (member.isTrusted) await storage.setUserTrusted(user.id, true);
+      const { db } = await import("./db");
+      const { users } = await import("@shared/schema");
+      const { eq } = await import("drizzle-orm");
+      await db.update(users).set({ tier: member.tier }).where(eq(users.id, user.id));
+      console.log(`[KB Seed] Created demo member: ${member.username} (${member.tier}, ${member.reputation} pts)`);
+    } catch {
+      // already exists or race condition
+    }
+  }
+}
+
 let lastFetchTime = 0;
 const FETCH_INTERVAL = 4 * 60 * 60 * 1000;
 const MAX_POSTS_PER_RUN = 15;

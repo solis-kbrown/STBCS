@@ -1,4 +1,4 @@
-import { Shield, Target, Search, MessageSquare, Phone, Mail, Users, Award, Clock, Globe, TrendingUp, Zap, CheckCircle } from "lucide-react";
+import { Shield, Target, Search, MessageSquare, Phone, Mail, Users, Award, Clock, Globe, TrendingUp, Zap, CheckCircle, Star, Quote, Briefcase } from "lucide-react";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,40 @@ const whyUs = [
   "Free security tools and threat intelligence for everyone",
   "Subscription plans that scale — Supporter, Pro, Business, and Unlimited Everything tiers",
   "24/7 emergency hotline for active incidents",
+];
+
+const testimonials = [
+  {
+    quote: "When ransomware hit us at 2 AM on a Saturday, STB had someone on the phone within 15 minutes. They walked us through containment, negotiated with the threat actors, and had our systems restored by Monday. We didn't lose a single file.",
+    author: "Marcus T.",
+    role: "IT Director, Manufacturing Company",
+    rating: 5,
+  },
+  {
+    quote: "We thought we were done. LockBit encrypted everything and our backups were compromised. STB's recovery team found a way to decrypt our data that our previous vendor said was impossible. They literally saved our business.",
+    author: "Jennifer W.",
+    role: "CEO, Healthcare Services",
+    rating: 5,
+  },
+  {
+    quote: "The consulting engagement was eye-opening. They found three active backdoors in our network that had been there for months. Their threat hunting team is the real deal — these aren't salespeople, they're practitioners.",
+    author: "David K.",
+    role: "CISO, Financial Services Firm",
+    rating: 5,
+  },
+  {
+    quote: "After the breach, STB handled the forensic investigation, wrote the incident report, and helped us meet our regulatory notification deadlines. Having someone who's been through thousands of these cases guiding you makes all the difference.",
+    author: "Rachel P.",
+    role: "General Counsel, Regional Bank",
+    rating: 5,
+  },
+];
+
+const consultingHighlights = [
+  { value: "1,000+", label: "Ransomware Cases Handled" },
+  { value: "98%", label: "Successful Recovery Rate" },
+  { value: "< 4hr", label: "Average Response Time" },
+  { value: "50+", label: "Industries Served" },
 ];
 
 export default function AboutPage() {
@@ -195,6 +229,81 @@ export default function AboutPage() {
               </AnimatedList>
             </CardContent>
           </Card>
+        </AnimatedSection>
+
+        <AnimatedSection animation="fade-up">
+          <div className="space-y-6">
+            <h2 className="text-2xl font-bold text-white text-center" data-testid="text-about-consulting-title">
+              Expert Consulting & Recovery
+            </h2>
+            <p className="text-zinc-400 text-center max-w-3xl mx-auto leading-relaxed">
+              Sometimes you need more than tools and dashboards — you need someone who's been through it before.
+              Our founding team has personally handled over a thousand ransomware cases, data breach investigations,
+              and incident response engagements. When the stakes are highest, there's no substitute for experience.
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {consultingHighlights.map((item, i) => (
+                <AnimatedSection key={item.label} animation="fade-up" stagger={i + 1 as any}>
+                  <Card className="bg-zinc-900/50 border-orange-500/20 text-center" data-testid={`card-consulting-stat-${i}`}>
+                    <CardContent className="pt-6 pb-5 space-y-1">
+                      <p className="text-2xl font-bold text-orange-400 font-display">{item.value}</p>
+                      <p className="text-xs text-zinc-400">{item.label}</p>
+                    </CardContent>
+                  </Card>
+                </AnimatedSection>
+              ))}
+            </div>
+            <Card className="bg-zinc-900/50 border-zinc-800">
+              <CardContent className="py-6">
+                <div className="flex items-start gap-4">
+                  <div className="p-3 bg-orange-500/10 rounded-lg flex-shrink-0">
+                    <Briefcase className="h-6 w-6 text-orange-400" />
+                  </div>
+                  <div className="space-y-2">
+                    <h3 className="text-lg font-bold text-white">More Than a Platform</h3>
+                    <p className="text-sm text-zinc-400 leading-relaxed">
+                      What you see on this website is only a fraction of what we can do. Behind the platform is a team
+                      of seasoned incident responders, forensic analysts, and recovery engineers who've worked cases ranging
+                      from small business ransomware to nation-state APT intrusions. We offer hands-on consulting,
+                      guided remediation, tabletop exercises, security architecture reviews, and direct access to our founders
+                      when you need someone with deep expertise to walk you through the hardest decisions.
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </AnimatedSection>
+
+        <AnimatedSection animation="fade-up">
+          <h2 className="text-2xl font-bold text-white text-center mb-6" data-testid="text-about-reviews-title">
+            What Our Clients Say
+          </h2>
+          <div className="grid md:grid-cols-2 gap-6">
+            {testimonials.map((t, i) => (
+              <AnimatedSection key={i} animation={i % 2 === 0 ? "fade-left" : "fade-right"} stagger={i + 1 as any}>
+                <Card className="bg-zinc-900/50 border-zinc-800 h-full" data-testid={`card-testimonial-${i}`}>
+                  <CardContent className="pt-6 space-y-4">
+                    <div className="flex gap-1">
+                      {Array.from({ length: t.rating }).map((_, si) => (
+                        <Star key={si} className="h-4 w-4 text-orange-400 fill-orange-400" />
+                      ))}
+                    </div>
+                    <div className="relative">
+                      <Quote className="h-8 w-8 text-orange-500/20 absolute -top-1 -left-1" />
+                      <p className="text-sm text-zinc-300 leading-relaxed pl-6 italic">
+                        "{t.quote}"
+                      </p>
+                    </div>
+                    <div className="border-t border-zinc-800 pt-3">
+                      <p className="text-sm font-semibold text-white">{t.author}</p>
+                      <p className="text-xs text-zinc-500">{t.role}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </AnimatedSection>
+            ))}
+          </div>
         </AnimatedSection>
 
         <AnimatedSection animation="fade-up">

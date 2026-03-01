@@ -378,8 +378,9 @@ async function initializeApp() {
     }
 
     try {
-      const { startKbScraper } = await import("./kbScraper");
+      const { startKbScraper, ensureSeedMembers } = await import("./kbScraper");
       startKbScraper();
+      ensureSeedMembers().catch(err => console.error("Seed members failed:", err));
     } catch (err) {
       console.error("KB scraper failed:", err);
     }

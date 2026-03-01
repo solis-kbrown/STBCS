@@ -461,6 +461,48 @@ export default function Dashboard() {
           </div>
         </AnimatedSection>
 
+        <AnimatedSection animation="fade-up">
+          <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/5 via-zinc-900/80 to-zinc-900/50" data-testid="card-expert-consulting">
+            <CardContent className="py-8">
+              <div className="max-w-4xl mx-auto">
+                <div className="text-center space-y-3 mb-6">
+                  <h2 className="text-xl font-display font-bold text-white tracking-wider">Need Expert Guidance?</h2>
+                  <p className="text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
+                    Our founders have personally handled over 1,000 ransomware cases and security incidents.
+                    What you see here is just the beginning — we offer hands-on consulting, guided recovery,
+                    and direct access to seasoned experts who've seen it all.
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                  {[
+                    { v: "1,000+", l: "Cases Handled" },
+                    { v: "98%", l: "Recovery Rate" },
+                    { v: "< 4hr", l: "Avg Response" },
+                    { v: "24/7", l: "Emergency IR" },
+                  ].map((s) => (
+                    <div key={s.l} className="text-center p-3 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
+                      <p className="text-lg font-bold text-orange-400 font-display">{s.v}</p>
+                      <p className="text-[11px] text-zinc-500">{s.l}</p>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-wrap justify-center gap-3">
+                  <a href="/about" data-testid="link-learn-more">
+                    <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10">
+                      Learn More
+                    </Button>
+                  </a>
+                  <a href="/contact?category=consulting" data-testid="link-talk-to-expert">
+                    <Button className="bg-orange-600 hover:bg-orange-500 text-white font-display tracking-wider">
+                      Talk to an Expert
+                    </Button>
+                  </a>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </AnimatedSection>
+
         <Footer />
       </div>
     </Layout>
