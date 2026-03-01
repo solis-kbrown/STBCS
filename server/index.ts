@@ -10,6 +10,11 @@ import { WebhookHandlers } from "./webhookHandlers";
 const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
+
+app.get('/health', (_req, res) => {
+  res.status(200).json({ status: 'ok', timestamp: Date.now() });
+});
+
 const httpServer = createServer(app);
 
 declare module "http" {
@@ -65,8 +70,7 @@ async function initStripe() {
   }
 }
 
-// Initialize Stripe on startup
-initStripe();
+// Stripe initialization deferred to after server starts listening
 
 // Domain canonicalization - redirect www and secondary domains to primary domain
 const PRIMARY_DOMAIN = process.env.CUSTOM_DOMAIN || 'stbcybersecurity.com';
@@ -225,35 +229,16 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  const { reportCriticalError } = await import("./maintenance");
+
   await registerRoutes(httpServer, app);
-
-  // Start the data scraper scheduler (fetches every 15 minutes from 45+ sources)
-  const { startDataRefreshScheduler } = await import("./scrapers");
-  startDataRefreshScheduler(15);
-
-  // Start the digest scheduler (daily at 8am UTC, weekly on Mondays at 9am UTC)
-  const { startDigestScheduler } = await import("./digest");
-  startDigestScheduler();
-
-  // Start maintenance scheduler (cleanup, error reporting, sale expiration)
-  const { startMaintenanceScheduler, reportCriticalError } = await import("./maintenance");
-  startMaintenanceScheduler();
-
-  // Start uptime monitoring engine (checks every 60s)
-  const { startUptimeScheduler } = await import("./uptimeEngine");
-  startUptimeScheduler(60);
-
-  // Start dark web monitoring engine (scans every 6 hours)
-  const { startDarkWebScheduler } = await import("./darkWebEngine");
-  startDarkWebScheduler(360);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const internalMessage = err.message || "Internal Server Error";
 
     console.error("Internal Server Error:", err);
-    
-    // Report critical server errors to admin
+
     if (status >= 500) {
       reportCriticalError(err instanceof Error ? err : new Error(internalMessage), "Express Error Handler");
     }
@@ -262,14 +247,10 @@ app.use((req, res, next) => {
       return next(err);
     }
 
-    // Never leak internal error details to clients
     const safeMessage = status >= 500 ? "An internal error occurred. Please try again later." : internalMessage;
     return res.status(status).json({ error: safeMessage });
   });
 
-  // importantly only setup vite in development and after
-  // setting up all the other routes so the catch-all route
-  // doesn't interfere with the other routes
   if (process.env.NODE_ENV === "production") {
     serveStatic(app);
   } else {
@@ -291,10 +272,6 @@ app.use((req, res, next) => {
     await setupVite(httpServer, app);
   }
 
-  // ALWAYS serve the app on the port specified in the environment variable PORT
-  // Other ports are firewalled. Default to 5000 if not specified.
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
   const port = parseInt(process.env.PORT || "5000", 10);
   httpServer.listen(
     {
@@ -304,7 +281,50 @@ app.use((req, res, next) => {
     },
     () => {
       log(`serving on port ${port}`);
+
+      // Defer all heavy startup operations until after health checks can be answered
       setTimeout(async () => {
+        try {
+          await initStripe();
+        } catch (err) {
+          console.error("Deferred Stripe init failed:", err);
+        }
+
+        try {
+          const { startDataRefreshScheduler } = await import("./scrapers");
+          startDataRefreshScheduler(15);
+        } catch (err) {
+          console.error("Scraper scheduler failed:", err);
+        }
+
+        try {
+          const { startDigestScheduler } = await import("./digest");
+          startDigestScheduler();
+        } catch (err) {
+          console.error("Digest scheduler failed:", err);
+        }
+
+        try {
+          const { startMaintenanceScheduler } = await import("./maintenance");
+          startMaintenanceScheduler();
+        } catch (err) {
+          console.error("Maintenance scheduler failed:", err);
+        }
+
+        try {
+          const { startUptimeScheduler } = await import("./uptimeEngine");
+          startUptimeScheduler(60);
+        } catch (err) {
+          console.error("Uptime scheduler failed:", err);
+        }
+
+        try {
+          const { startDarkWebScheduler } = await import("./darkWebEngine");
+          startDarkWebScheduler(360);
+        } catch (err) {
+          console.error("Dark web scheduler failed:", err);
+        }
+
         try {
           const base = `http://127.0.0.1:${port}`;
           const urls = ["/api/stats", "/api/trends", "/api/cves", "/api/ransomware",
@@ -312,7 +332,7 @@ app.use((req, res, next) => {
           await Promise.all(urls.map(u => fetch(base + u).catch(() => {})));
           log("Cache warm-up complete");
         } catch {}
-      }, 2000);
+      }, 100);
     },
   );
 })();
