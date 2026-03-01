@@ -119,6 +119,17 @@
       radial-gradient(ellipse 60% 50% at 100% 100%, hsl(var(--secondary) / 0.03) 0%, transparent 60%);
     background-attachment: fixed;
   }
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+    background-size: 256px 256px;
+  }
   h1 {
     @apply font-display tracking-wider font-bold;
     letter-spacing: 0.08em;
@@ -201,12 +212,12 @@
   0%, 100% { border-color: hsl(var(--primary) / 0.1); }
   50% { border-color: hsl(var(--primary) / 0.3); }
 }
-@keyframes borderRotate {
+@keyframes sidebarGradientSlide {
   0% { background-position: 0% 50%; }
   100% { background-position: 200% 50%; }
 }
 .sidebar-upgrade-glow .absolute {
-  animation: borderRotate 3s linear infinite;
+  animation: sidebarGradientSlide 3s linear infinite;
   background-size: 200% 100%;
 }
 
@@ -277,9 +288,20 @@
 .animate-fade-in.stagger-4 { animation-delay: 180ms; }
 .animate-fade-in.stagger-5 { animation-delay: 240ms; }
 
+/* --- Micro-interaction utilities --- */
+.hover-elevate {
+  @apply transition-all duration-200 ease-out;
+}
+.hover-elevate:hover {
+  @apply -translate-y-px;
+}
+.active-elevate-2:active {
+  @apply translate-y-px scale-[0.98];
+}
+
 /* --- Card Hover Effects --- */
 .card-hover {
-  @apply transition-all duration-300 ease-out;
+  @apply transition-all duration-300 ease-out cursor-pointer;
 }
 .card-hover:hover {
   @apply -translate-y-1;
@@ -288,7 +310,7 @@
 
 /* Enhanced interactive card with glow */
 .card-interactive {
-  @apply transition-all duration-300 ease-out;
+  @apply transition-all duration-300 ease-out cursor-pointer;
   border: 1px solid hsl(var(--border) / 0.5);
   background-image: linear-gradient(
     to bottom,
@@ -451,23 +473,6 @@
   box-shadow: 0 0 12px 2px hsl(var(--primary) / 0.15);
 }
 
-/* --- Shimmer Skeleton Loading --- */
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-.skeleton-shimmer {
-  background: linear-gradient(
-    90deg,
-    hsl(var(--muted) / 0.3) 25%,
-    hsl(var(--muted) / 0.6) 50%,
-    hsl(var(--muted) / 0.3) 75%
-  );
-  background-size: 200% 100%;
-  animation: shimmer 1.8s ease-in-out infinite;
-  border-radius: var(--radius);
-}
-
 /* --- Stat Card Gradient Icon Background --- */
 .stat-icon-bg {
   position: relative;
@@ -546,7 +551,8 @@
   .glow-pulse,
   .border-glow,
   .upgrade-banner-border,
-  .status-pulse {
+  .status-pulse,
+  .sidebar-upgrade-glow .absolute {
     animation: none !important;
   }
   .hero-scan-line::after {

@@ -179,7 +179,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
         <div className="relative rounded-lg p-[1px] overflow-hidden sidebar-upgrade-glow">
-          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-orange-500/40 via-amber-500/40 to-orange-500/40 animate-[borderRotate_3s_linear_infinite]" style={{ backgroundSize: '200% 100%' }} />
+          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-orange-500/40 via-amber-500/40 to-orange-500/40" />
           <div className="relative bg-zinc-900/90 rounded-lg p-4">
             <h4 className="font-display text-sm font-bold text-orange-400 mb-1">PRO ACCOUNT</h4>
             <p className="text-xs text-zinc-500 mb-3">Upgrade for unlimited tools, real-time API access, and custom alerts.</p>

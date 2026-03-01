@@ -9,13 +9,18 @@ STB Cybersecurity provides professional cybersecurity services and real-time thr
 Preferred communication style: Simple, everyday language.
 - Export/download features (CSV, JSON, STIX) are Pro/Business tier only — always gate behind auth check on both frontend and backend.
 
-### Visual Theme: Stealth Mode
+### Visual Theme: Stealth Mode / Tactical Operations Center
 - **Accent Color**: Orange (#f97316 / orange-500)
 - **Secondary**: Red (#ef4444)
-- **Navigation Style**: Border-left-2 active state with orange accents
-- **Icons**: Cyber-themed Lucide icons
-- **Background**: Dark minimal (zinc-900/950)
+- **Navigation Style**: Active pill indicator (3px orange bar) with glow, grouped nav sections with gradient dividers
+- **Icons**: Cyber-themed Lucide icons with stat-icon-bg gradient overlays
+- **Background**: Dark minimal (zinc-900/950) with ambient gradient mesh + noise texture overlay
 - **Text**: Zinc-500 inactive, orange-400 active/accent
+- **Cards**: `card-interactive` with glass gradient, hover glow, `-translate-y-1` lift; `glass-panel` for glassmorphism
+- **Animations**: `hero-scan-line` (dashboard), `skeleton-shimmer` (loading), `upgrade-banner-border` (conic gradient spin), `sidebarGradientSlide`, `statusPulse`, `borderGlow`; all respect `prefers-reduced-motion`
+- **Utilities**: `.section-divider`, `.hover-elevate`, `.active-elevate-2`, `.stat-icon-bg.icon-{color}`, `.chart-card`
+- **Typography**: Orbitron display, Inter body, JetBrains Mono code; h1 0.08em tracking, h2 0.05em tracking
+- **Focus**: Custom `:focus-visible` ring (primary/60%, 2px offset)
 
 ## System Architecture
 
