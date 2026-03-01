@@ -28,10 +28,11 @@ Preferred communication style: Simple, everyday language.
 - **Performance**: Parallelized DB queries, in-memory `index.html` caching.
 
 ### Data Storage
-- **Database**: PostgreSQL via Drizzle ORM with an optimized connection pool.
+- **Database**: PostgreSQL via Drizzle ORM with an optimized connection pool (max 20, idle 20s, connection timeout 20s, statement timeout 60s).
 - **Schema**: Defined for CVEs, ransomware, threat actors, and user data.
 - **Integrity**: Unique constraints and atomic upserts (`onConflictDoUpdate`) for race-condition-free writes.
 - **Transactions**: Multi-step operations use `db.transaction()` for atomicity.
+- **Startup**: Staggered service initialization in `server/index.ts` — Stripe (+3s), Digest/Maintenance (+5s), KB Scraper (+8s), Threat Scrapers (+13s, +15s internal delay), Uptime Engine (+18s, +15s internal delay), Dark Web (+23s, +30s internal delay), Cache warm-up (+26s, sequential). Prevents DB pool exhaustion on deploy.
 
 ### Key Design Patterns
 - Shared Types, Storage Abstraction, API Hooks (for React Query), Path Aliases (`@/`, `@shared/`).

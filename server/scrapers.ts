@@ -4523,10 +4523,10 @@ export function startDataRefreshScheduler(intervalMinutes = 15): void {
     }
   };
   
-  // Initial fetch
-  fetchAndInvalidate().catch(console.error);
+  setTimeout(() => {
+    fetchAndInvalidate().catch(console.error);
+  }, 15000);
   
-  // Schedule recurring fetches
   refreshInterval = setInterval(() => {
     fetchAndInvalidate().catch(console.error);
   }, intervalMinutes * 60 * 1000);

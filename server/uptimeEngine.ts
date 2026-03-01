@@ -391,7 +391,9 @@ export async function runUptimeEngine(): Promise<{ checked: number; alerts: numb
 export function startUptimeScheduler(intervalSeconds = 60): void {
   log.info(`Starting uptime monitor scheduler (every ${intervalSeconds}s)`);
 
-  runUptimeEngine().catch(err => log.error(`Initial uptime run failed: ${err.message}`));
+  setTimeout(() => {
+    runUptimeEngine().catch(err => log.error(`Initial uptime run failed: ${err.message}`));
+  }, 15000);
 
   checkInterval = setInterval(() => {
     runUptimeEngine().catch(err => log.error(`Uptime run failed: ${err.message}`));

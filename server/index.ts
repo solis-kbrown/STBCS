@@ -78,6 +78,86 @@ async function yieldToEventLoop() {
   return new Promise<void>(resolve => setImmediate(resolve));
 }
 
+function delay(ms: number) {
+  return new Promise<void>(resolve => setTimeout(resolve, ms));
+}
+
+async function staggeredStartup(port: number) {
+  await delay(3000);
+
+  try {
+    await initStripe();
+  } catch (err) {
+    console.error("Deferred Stripe init failed:", err);
+  }
+
+  await delay(2000);
+
+  try {
+    const { startDigestScheduler } = await import("./digest");
+    startDigestScheduler();
+  } catch (err) {
+    console.error("Digest scheduler failed:", err);
+  }
+
+  try {
+    const { startMaintenanceScheduler } = await import("./maintenance");
+    startMaintenanceScheduler();
+  } catch (err) {
+    console.error("Maintenance scheduler failed:", err);
+  }
+
+  await delay(3000);
+
+  try {
+    const { startKbScraper, ensureSeedMembers } = await import("./kbScraper");
+    startKbScraper();
+    await ensureSeedMembers().catch(err => console.error("Seed members failed:", err));
+  } catch (err) {
+    console.error("KB scraper failed:", err);
+  }
+
+  await delay(5000);
+
+  try {
+    const { startDataRefreshScheduler } = await import("./scrapers");
+    startDataRefreshScheduler(15);
+  } catch (err) {
+    console.error("Scraper scheduler failed:", err);
+  }
+
+  await delay(5000);
+
+  try {
+    const { startUptimeScheduler } = await import("./uptimeEngine");
+    startUptimeScheduler(60);
+  } catch (err) {
+    console.error("Uptime scheduler failed:", err);
+  }
+
+  await delay(5000);
+
+  try {
+    const { startDarkWebScheduler } = await import("./darkWebEngine");
+    startDarkWebScheduler(360);
+  } catch (err) {
+    console.error("Dark web scheduler failed:", err);
+  }
+
+  await delay(3000);
+
+  try {
+    const base = `http://127.0.0.1:${port}`;
+    const urls = ["/api/stats", "/api/trends", "/api/cves", "/api/ransomware",
+      "/api/site-settings/hero-bg", "/api/site-settings/logo-theme", "/api/site-settings/icon-theme"];
+    for (const u of urls) {
+      await fetch(base + u).catch(() => {});
+      await delay(500);
+    }
+    log("Cache warm-up complete");
+  } catch {}
+}
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
@@ -335,64 +415,7 @@ async function initializeApp() {
   appReady = true;
   log("Routes and static serving initialized");
 
-  setTimeout(async () => {
-    try {
-      await initStripe();
-    } catch (err) {
-      console.error("Deferred Stripe init failed:", err);
-    }
-
-    try {
-      const { startDataRefreshScheduler } = await import("./scrapers");
-      startDataRefreshScheduler(15);
-    } catch (err) {
-      console.error("Scraper scheduler failed:", err);
-    }
-
-    try {
-      const { startDigestScheduler } = await import("./digest");
-      startDigestScheduler();
-    } catch (err) {
-      console.error("Digest scheduler failed:", err);
-    }
-
-    try {
-      const { startMaintenanceScheduler } = await import("./maintenance");
-      startMaintenanceScheduler();
-    } catch (err) {
-      console.error("Maintenance scheduler failed:", err);
-    }
-
-    try {
-      const { startUptimeScheduler } = await import("./uptimeEngine");
-      startUptimeScheduler(60);
-    } catch (err) {
-      console.error("Uptime scheduler failed:", err);
-    }
-
-    try {
-      const { startDarkWebScheduler } = await import("./darkWebEngine");
-      startDarkWebScheduler(360);
-    } catch (err) {
-      console.error("Dark web scheduler failed:", err);
-    }
-
-    try {
-      const { startKbScraper, ensureSeedMembers } = await import("./kbScraper");
-      startKbScraper();
-      ensureSeedMembers().catch(err => console.error("Seed members failed:", err));
-    } catch (err) {
-      console.error("KB scraper failed:", err);
-    }
-
-    try {
-      const base = `http://127.0.0.1:${port}`;
-      const urls = ["/api/stats", "/api/trends", "/api/cves", "/api/ransomware",
-        "/api/site-settings/hero-bg", "/api/site-settings/logo-theme", "/api/site-settings/icon-theme"];
-      await Promise.all(urls.map(u => fetch(base + u).catch(() => {})));
-      log("Cache warm-up complete");
-    } catch {}
-  }, 3000);
+  staggeredStartup(port).catch(err => console.error("Staggered startup error:", err));
 }
 
 async function initStripe() {

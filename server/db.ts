@@ -21,4 +21,13 @@ pool.on('error', (err) => {
   console.error('Unexpected database pool error:', err.message);
 });
 
+pool.connect()
+  .then(client => {
+    client.release();
+    console.log('Database pool connection verified');
+  })
+  .catch(err => {
+    console.error('Database pool initial connection failed:', err.message);
+  });
+
 export const db = drizzle(pool, { schema });
