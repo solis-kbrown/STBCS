@@ -188,6 +188,14 @@ const PAGE_META: Record<string, PageMeta> = {
     title: 'Feedback & Bug Reports | STB Cybersecurity',
     description: 'Report bugs, request features, submit feedback, or flag security concerns. Help improve the STBCS platform. No account required.',
   },
+  '/pricing': {
+    title: 'Plans & Pricing | STB Cybersecurity',
+    description: 'Compare STBCS subscription tiers — Supporter, Pro, Business, and Unlimited Everything. 70+ features, real-time threat intel, monitoring, and 24/7 incident response for SMBs.',
+  },
+  '/brand-kit': {
+    title: 'Brand Kit & Asset Hub | STB Cybersecurity',
+    description: 'Professional brand assets for STB Cybersecurity — email signatures, letterheads, business cards, invoices, social media banners, presentations, and more. 107 styles across 10 categories.',
+  },
 };
 
 const MAX_TITLE_LENGTH = 60;

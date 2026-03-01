@@ -359,6 +359,20 @@ export async function registerRoutes(
   </url>
 
   <url>
+    <loc>https://stbcybersecurity.com/pricing</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.9</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/brand-kit</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
+  <url>
     <loc>https://stbcybersecurity.com/feedback</loc>
     <lastmod>${today}</lastmod>
     <changefreq>monthly</changefreq>
@@ -403,6 +417,10 @@ Allow: /groups
 Allow: /group/
 Allow: /attack-surface
 Allow: /reports
+Allow: /knowledge-base
+Allow: /pricing
+Allow: /brand-kit
+Allow: /feedback
 
 Disallow: /account
 Disallow: /checkout
