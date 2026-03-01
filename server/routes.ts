@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import cookieParser from "cookie-parser";
 import { storage } from "./storage";
 import { visitorTrackingMiddleware } from "./visitors";
-import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema, toSlug, contentViews, logoVotes, siteSettings, users, sessions } from "@shared/schema";
+import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema, toSlug, contentViews, logoVotes, siteSettings, users, sessions, insertKbPostSchema, insertKbCommentSchema } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql as dsql } from "drizzle-orm";
 import { z } from "zod";
@@ -5139,6 +5139,344 @@ Hiring: https://stbcybersecurity.com/support
       generatedAt: new Date(),
     });
   }
+
+  // ===================== KNOWLEDGE BASE ROUTES =====================
+
+  const kbLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 30,
+    message: { error: "Too many requests" },
+  });
+
+  const kbWriteLimiter = rateLimit({
+    windowMs: 60 * 1000,
+    max: 10,
+    message: { error: "Too many requests" },
+  });
+
+  app.get("/api/kb/posts", kbLimiter, async (req: Request, res: Response) => {
+    try {
+      const type = asString(req.query.type as string) || undefined;
+      const search = asString(req.query.search as string) || undefined;
+      const tag = asString(req.query.tag as string) || undefined;
+      const authorId = asString(req.query.authorId as string) || undefined;
+      const page = parseInt(asString(req.query.page as string) || "1");
+      const limit = Math.min(parseInt(asString(req.query.limit as string) || "20"), 50);
+      const offset = (page - 1) * limit;
+
+      const authReq = req as AuthenticatedRequest;
+      const isAdmin = authReq.user?.isAdmin;
+      const status = isAdmin && req.query.status ? asString(req.query.status as string) : "published";
+
+      const [posts, total] = await Promise.all([
+        storage.getKbPosts({ type, status, search, tag, authorId, limit, offset }),
+        storage.getKbPostCount({ type, status, search, tag, authorId }),
+      ]);
+
+      const authorIds = [...new Set(posts.map(p => p.authorId))];
+      const authors: Record<string, { username: string; tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }> = {};
+      for (const aid of authorIds) {
+        const u = await storage.getUser(aid);
+        if (u) authors[aid] = { username: u.username, tier: u.tier, isTrusted: u.isTrusted, isAdmin: u.isAdmin };
+      }
+
+      res.json({
+        posts: posts.map(p => ({ ...p, author: authors[p.authorId] || null })),
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch posts" });
+    }
+  });
+
+  app.get("/api/kb/posts/:slug", kbLimiter, async (req: Request, res: Response) => {
+    try {
+      const post = await storage.getKbPostBySlug(req.params.slug);
+      if (!post) { res.status(404).json({ error: "Post not found" }); return; }
+
+      const authReq = req as AuthenticatedRequest;
+      if (post.status !== "published" && !authReq.user?.isAdmin && post.authorId !== authReq.user?.id) {
+        res.status(404).json({ error: "Post not found" });
+        return;
+      }
+
+      const author = await storage.getUser(post.authorId);
+      res.json({
+        ...post,
+        author: author ? { username: author.username, tier: author.tier, isTrusted: author.isTrusted, isAdmin: author.isAdmin } : null,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch post" });
+    }
+  });
+
+  app.post("/api/kb/posts", requireAuth as any, kbWriteLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      if (user.tier === "free") { res.status(403).json({ error: "Paid membership required to create posts" }); return; }
+
+      const { title, content, type, tags } = req.body;
+      if (!title || !content) { res.status(400).json({ error: "Title and content are required" }); return; }
+
+      const validTypes = ["official_kb", "bug_report", "feature_request", "threat_intel", "general_idea"];
+      const postType = validTypes.includes(type) ? type : "general_idea";
+
+      if (postType === "official_kb" && !user.isAdmin) {
+        res.status(403).json({ error: "Only admins can create official KB articles" });
+        return;
+      }
+
+      const baseSlug = toSlug(title);
+      let slug = baseSlug;
+      let counter = 0;
+      while (await storage.getKbPostBySlug(slug)) {
+        counter++;
+        slug = `${baseSlug}-${counter}`;
+      }
+
+      const bypassModeration = user.isAdmin || user.isTrusted;
+      const status = bypassModeration ? "published" : "pending_review";
+
+      const post = await storage.createKbPost({
+        authorId: user.id,
+        title,
+        slug,
+        content,
+        type: postType,
+        status,
+        isPinned: false,
+        tags: Array.isArray(tags) ? tags : [],
+      });
+
+      res.status(201).json(post);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create post" });
+    }
+  });
+
+  app.put("/api/kb/posts/:id", requireAuth as any, kbWriteLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const post = await storage.getKbPostById(postId);
+      if (!post) { res.status(404).json({ error: "Post not found" }); return; }
+
+      const user = req.user!;
+      if (post.authorId !== user.id && !user.isAdmin) {
+        res.status(403).json({ error: "Not authorized" });
+        return;
+      }
+
+      const { title, content, type, tags, isPinned } = req.body;
+      const validTypes = ["official_kb", "bug_report", "feature_request", "threat_intel", "general_idea"];
+      const updates: any = {};
+      if (title !== undefined) updates.title = title;
+      if (content !== undefined) updates.content = content;
+      if (type !== undefined && validTypes.includes(type)) {
+        if (type === "official_kb" && !user.isAdmin) {
+          res.status(403).json({ error: "Only admins can set official KB type" });
+          return;
+        }
+        updates.type = type;
+      }
+      if (tags !== undefined) updates.tags = Array.isArray(tags) ? tags.slice(0, 10) : [];
+      if (isPinned !== undefined && user.isAdmin) updates.isPinned = isPinned;
+
+      const updated = await storage.updateKbPost(postId, updates);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update post" });
+    }
+  });
+
+  app.delete("/api/kb/posts/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      const postId = parseInt(req.params.id);
+      const post = await storage.getKbPostById(postId);
+      if (!post) { res.status(404).json({ error: "Post not found" }); return; }
+      if (!user.isAdmin && post.authorId !== user.id) {
+        res.status(403).json({ error: "Not authorized" });
+        return;
+      }
+      await storage.deleteKbPost(postId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete post" });
+    }
+  });
+
+  app.post("/api/kb/posts/:id/vote", requireAuth as any, kbWriteLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      if (user.tier === "free") { res.status(403).json({ error: "Paid membership required to vote" }); return; }
+      const postId = parseInt(req.params.id);
+      const result = await storage.toggleKbPostVote(user.id, postId);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to vote" });
+    }
+  });
+
+  app.get("/api/kb/posts/:id/comments", kbLimiter, async (req: Request, res: Response) => {
+    try {
+      const postId = parseInt(req.params.id);
+      const comments = await storage.getKbCommentsByPost(postId);
+
+      const authorIds = [...new Set(comments.map(c => c.authorId))];
+      const authors: Record<string, { username: string; tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }> = {};
+      for (const aid of authorIds) {
+        const u = await storage.getUser(aid);
+        if (u) authors[aid] = { username: u.username, tier: u.tier, isTrusted: u.isTrusted, isAdmin: u.isAdmin };
+      }
+
+      res.json(comments.map(c => ({ ...c, author: authors[c.authorId] || null })));
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch comments" });
+    }
+  });
+
+  app.post("/api/kb/posts/:id/comments", requireAuth as any, kbWriteLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      if (user.tier === "free") { res.status(403).json({ error: "Paid membership required to comment" }); return; }
+
+      const postId = parseInt(req.params.id);
+      const { content, parentId } = req.body;
+      if (!content || content.trim().length < 1) { res.status(400).json({ error: "Content is required" }); return; }
+
+      const comment = await storage.createKbComment({
+        postId,
+        authorId: user.id,
+        parentId: parentId || null,
+        content: content.trim(),
+      });
+      res.status(201).json(comment);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to create comment" });
+    }
+  });
+
+  app.delete("/api/kb/comments/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      const commentId = parseInt(req.params.id);
+      if (!user.isAdmin) { res.status(403).json({ error: "Not authorized" }); return; }
+      await storage.deleteKbComment(commentId);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to delete comment" });
+    }
+  });
+
+  app.post("/api/kb/comments/:id/vote", requireAuth as any, kbWriteLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      if (user.tier === "free") { res.status(403).json({ error: "Paid membership required to vote" }); return; }
+      const commentId = parseInt(req.params.id);
+      const result = await storage.toggleKbCommentVote(user.id, commentId);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to vote" });
+    }
+  });
+
+  app.get("/api/kb/votes", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      const postIdsParam = asString(req.query.postIds as string);
+      const commentIdsParam = asString(req.query.commentIds as string);
+      const postIds = postIdsParam ? postIdsParam.split(",").map(Number).filter(n => !isNaN(n)) : [];
+      const commentIds = commentIdsParam ? commentIdsParam.split(",").map(Number).filter(n => !isNaN(n)) : [];
+      const result = await storage.getKbUserVotes(user.id, postIds, commentIds);
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch votes" });
+    }
+  });
+
+  app.post("/api/kb/admin/posts/:id/approve", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user?.isAdmin) { res.status(403).json({ error: "Admin access required" }); return; }
+      const postId = parseInt(req.params.id);
+      const updated = await storage.updateKbPost(postId, { status: "published" });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to approve post" });
+    }
+  });
+
+  app.post("/api/kb/admin/posts/:id/reject", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user?.isAdmin) { res.status(403).json({ error: "Admin access required" }); return; }
+      const postId = parseInt(req.params.id);
+      const updated = await storage.updateKbPost(postId, { status: "rejected" });
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to reject post" });
+    }
+  });
+
+  app.get("/api/kb/admin/pending", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user?.isAdmin) { res.status(403).json({ error: "Admin access required" }); return; }
+      const page = parseInt(asString(req.query.page as string) || "1");
+      const limit = 20;
+      const offset = (page - 1) * limit;
+      const [posts, total] = await Promise.all([
+        storage.getPendingKbPosts(limit, offset),
+        storage.getPendingKbPostCount(),
+      ]);
+
+      const authorIds = [...new Set(posts.map(p => p.authorId))];
+      const authors: Record<string, { username: string; tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }> = {};
+      for (const aid of authorIds) {
+        const u = await storage.getUser(aid);
+        if (u) authors[aid] = { username: u.username, tier: u.tier, isTrusted: u.isTrusted, isAdmin: u.isAdmin };
+      }
+
+      res.json({
+        posts: posts.map(p => ({ ...p, author: authors[p.authorId] || null })),
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch pending posts" });
+    }
+  });
+
+  app.post("/api/kb/admin/users/:id/promote", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user?.isAdmin) { res.status(403).json({ error: "Admin access required" }); return; }
+      await storage.setUserTrusted(req.params.id, true);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to promote user" });
+    }
+  });
+
+  app.post("/api/kb/admin/users/:id/demote", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user?.isAdmin) { res.status(403).json({ error: "Admin access required" }); return; }
+      await storage.setUserTrusted(req.params.id, false);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to demote user" });
+    }
+  });
+
+  app.get("/api/kb/leaderboard", kbLimiter, async (_req: Request, res: Response) => {
+    try {
+      const leaderboard = await storage.getKbLeaderboard(20);
+      res.json(leaderboard);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch leaderboard" });
+    }
+  });
+
+  // ===================== END KNOWLEDGE BASE ROUTES =====================
 
   function generateRecommendations(stats: any, scanSummaries: any[]): string[] {
     const recs: string[] = [];

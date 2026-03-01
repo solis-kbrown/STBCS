@@ -31,16 +31,20 @@ import {
   type AttackSurfaceAsset, type InsertAttackSurfaceAsset,
   type ThreatReport, type InsertThreatReport,
   type ReportSchedule, type InsertReportSchedule,
+  type KbPost, type InsertKbPost,
+  type KbComment, type InsertKbComment,
+  type KbVote,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
   userNotifications, watchlistItems, breachIncidents, cisaIcsAdvisories, newsletterSubscriptions,
   smsMessages, exploitSubmissions, liveChatSessions, contentViews, siteVisitors, dailyVisitorCounts,
   apiKeys, apiKeyUsage, addOns, userAddOns, monitorAlertLog,
   uptimeMonitors, uptimeChecks, uptimeIncidents, darkWebMonitors, darkWebFindings,
-  dailyThreatStats, attackSurfaceScans, attackSurfaceAssets, threatReports, reportSchedules
+  dailyThreatStats, attackSurfaceScans, attackSurfaceAssets, threatReports, reportSchedules,
+  kbPosts, kbComments, kbVotes
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, ilike, or, sql, and, gte } from "drizzle-orm";
+import { eq, desc, ilike, or, sql, and, gte, asc, count, ne } from "drizzle-orm";
 
 export interface GroupStats {
   totalVictims: number;
@@ -309,6 +313,33 @@ export interface IStorage {
   upsertReportSchedule(data: InsertReportSchedule): Promise<ReportSchedule>;
   getDueReportSchedules(): Promise<ReportSchedule[]>;
   updateReportSchedule(id: string, updates: Partial<ReportSchedule>): Promise<void>;
+
+  // Knowledge Base Posts
+  createKbPost(post: InsertKbPost): Promise<KbPost>;
+  getKbPostBySlug(slug: string): Promise<KbPost | undefined>;
+  getKbPostById(id: number): Promise<KbPost | undefined>;
+  getKbPosts(options: { type?: string; status?: string; search?: string; tag?: string; authorId?: string; limit?: number; offset?: number }): Promise<KbPost[]>;
+  getKbPostCount(options: { type?: string; status?: string; search?: string; tag?: string; authorId?: string }): Promise<number>;
+  updateKbPost(id: number, updates: Partial<InsertKbPost>): Promise<KbPost>;
+  deleteKbPost(id: number): Promise<void>;
+  getPendingKbPosts(limit?: number, offset?: number): Promise<KbPost[]>;
+  getPendingKbPostCount(): Promise<number>;
+
+  // Knowledge Base Comments
+  createKbComment(comment: InsertKbComment): Promise<KbComment>;
+  getKbCommentsByPost(postId: number): Promise<KbComment[]>;
+  deleteKbComment(id: number): Promise<void>;
+
+  // Knowledge Base Votes
+  toggleKbPostVote(userId: string, postId: number): Promise<{ voted: boolean; newCount: number }>;
+  toggleKbCommentVote(userId: string, commentId: number): Promise<{ voted: boolean; newCount: number }>;
+  getKbUserVotes(userId: string, postIds?: number[], commentIds?: number[]): Promise<{ postVotes: number[]; commentVotes: number[] }>;
+
+  // Knowledge Base User Management
+  setUserAdmin(userId: string, isAdmin: boolean): Promise<void>;
+  setUserTrusted(userId: string, isTrusted: boolean): Promise<void>;
+  getKbLeaderboard(limit?: number): Promise<{ userId: string; username: string; reputation: number; isTrusted: boolean; isAdmin: boolean; tier: string | null }[]>;
+  checkAutoPromotion(userId: string): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2335,6 +2366,234 @@ export class DatabaseStorage implements IStorage {
 
   async updateReportSchedule(id: string, updates: Partial<ReportSchedule>): Promise<void> {
     await db.update(reportSchedules).set(updates).where(eq(reportSchedules.id, id));
+  }
+
+  async createKbPost(post: InsertKbPost): Promise<KbPost> {
+    const [created] = await db.insert(kbPosts).values(post).returning();
+    return created;
+  }
+
+  async getKbPostBySlug(slug: string): Promise<KbPost | undefined> {
+    const [post] = await db.select().from(kbPosts).where(eq(kbPosts.slug, slug));
+    return post;
+  }
+
+  async getKbPostById(id: number): Promise<KbPost | undefined> {
+    const [post] = await db.select().from(kbPosts).where(eq(kbPosts.id, id));
+    return post;
+  }
+
+  async getKbPosts(options: { type?: string; status?: string; search?: string; tag?: string; authorId?: string; limit?: number; offset?: number }): Promise<KbPost[]> {
+    const conditions = [];
+    if (options.status) conditions.push(eq(kbPosts.status, options.status));
+    if (options.type) conditions.push(eq(kbPosts.type, options.type));
+    if (options.authorId) conditions.push(eq(kbPosts.authorId, options.authorId));
+    if (options.search) {
+      conditions.push(or(
+        ilike(kbPosts.title, `%${options.search}%`),
+        ilike(kbPosts.content, `%${options.search}%`)
+      ));
+    }
+    if (options.tag) {
+      conditions.push(sql`${options.tag} = ANY(${kbPosts.tags})`);
+    }
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+    return db.select().from(kbPosts)
+      .where(where)
+      .orderBy(desc(kbPosts.isPinned), desc(kbPosts.createdAt))
+      .limit(options.limit || 20)
+      .offset(options.offset || 0);
+  }
+
+  async getKbPostCount(options: { type?: string; status?: string; search?: string; tag?: string; authorId?: string }): Promise<number> {
+    const conditions = [];
+    if (options.status) conditions.push(eq(kbPosts.status, options.status));
+    if (options.type) conditions.push(eq(kbPosts.type, options.type));
+    if (options.authorId) conditions.push(eq(kbPosts.authorId, options.authorId));
+    if (options.search) {
+      conditions.push(or(
+        ilike(kbPosts.title, `%${options.search}%`),
+        ilike(kbPosts.content, `%${options.search}%`)
+      ));
+    }
+    if (options.tag) {
+      conditions.push(sql`${options.tag} = ANY(${kbPosts.tags})`);
+    }
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
+    const [result] = await db.select({ count: sql<number>`count(*)::int` }).from(kbPosts).where(where);
+    return result.count;
+  }
+
+  async updateKbPost(id: number, updates: Partial<InsertKbPost>): Promise<KbPost> {
+    const [updated] = await db.update(kbPosts)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(kbPosts.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteKbPost(id: number): Promise<void> {
+    await db.transaction(async (tx) => {
+      await tx.delete(kbVotes).where(eq(kbVotes.postId, id));
+      const comments = await tx.select({ id: kbComments.id }).from(kbComments).where(eq(kbComments.postId, id));
+      for (const c of comments) {
+        await tx.delete(kbVotes).where(eq(kbVotes.commentId, c.id));
+      }
+      await tx.delete(kbComments).where(eq(kbComments.postId, id));
+      await tx.delete(kbPosts).where(eq(kbPosts.id, id));
+    });
+  }
+
+  async getPendingKbPosts(limit = 50, offset = 0): Promise<KbPost[]> {
+    return db.select().from(kbPosts)
+      .where(eq(kbPosts.status, "pending_review"))
+      .orderBy(asc(kbPosts.createdAt))
+      .limit(limit).offset(offset);
+  }
+
+  async getPendingKbPostCount(): Promise<number> {
+    const [result] = await db.select({ count: sql<number>`count(*)::int` }).from(kbPosts)
+      .where(eq(kbPosts.status, "pending_review"));
+    return result.count;
+  }
+
+  async createKbComment(comment: InsertKbComment): Promise<KbComment> {
+    const [created] = await db.insert(kbComments).values(comment).returning();
+    await db.update(kbPosts)
+      .set({ commentCount: sql`${kbPosts.commentCount} + 1` })
+      .where(eq(kbPosts.id, comment.postId));
+    return created;
+  }
+
+  async getKbCommentsByPost(postId: number): Promise<KbComment[]> {
+    return db.select().from(kbComments)
+      .where(eq(kbComments.postId, postId))
+      .orderBy(asc(kbComments.createdAt));
+  }
+
+  async deleteKbComment(id: number): Promise<void> {
+    const [comment] = await db.select().from(kbComments).where(eq(kbComments.id, id));
+    if (!comment) return;
+    await db.transaction(async (tx) => {
+      const children = await tx.select({ id: kbComments.id }).from(kbComments).where(eq(kbComments.parentId, id));
+      const totalDeleted = 1 + children.length;
+      for (const child of children) {
+        await tx.delete(kbVotes).where(eq(kbVotes.commentId, child.id));
+      }
+      await tx.delete(kbVotes).where(eq(kbVotes.commentId, id));
+      await tx.delete(kbComments).where(eq(kbComments.parentId, id));
+      await tx.delete(kbComments).where(eq(kbComments.id, id));
+      await tx.update(kbPosts)
+        .set({ commentCount: sql`GREATEST(${kbPosts.commentCount} - ${totalDeleted}, 0)` })
+        .where(eq(kbPosts.id, comment.postId));
+    });
+  }
+
+  async toggleKbPostVote(userId: string, postId: number): Promise<{ voted: boolean; newCount: number }> {
+    const [existing] = await db.select().from(kbVotes)
+      .where(and(eq(kbVotes.userId, userId), eq(kbVotes.postId, postId)));
+    if (existing) {
+      await db.delete(kbVotes).where(eq(kbVotes.id, existing.id));
+      const [post] = await db.update(kbPosts)
+        .set({ voteCount: sql`GREATEST(${kbPosts.voteCount} - 1, 0)` })
+        .where(eq(kbPosts.id, postId)).returning();
+      const authorPost = await this.getKbPostById(postId);
+      if (authorPost) {
+        await db.update(users)
+          .set({ kbReputation: sql`GREATEST(${users.kbReputation} - 1, 0)` })
+          .where(eq(users.id, authorPost.authorId));
+      }
+      return { voted: false, newCount: post.voteCount || 0 };
+    } else {
+      await db.insert(kbVotes).values({ userId, postId });
+      const [post] = await db.update(kbPosts)
+        .set({ voteCount: sql`${kbPosts.voteCount} + 1` })
+        .where(eq(kbPosts.id, postId)).returning();
+      const authorPost = await this.getKbPostById(postId);
+      if (authorPost) {
+        await db.update(users)
+          .set({ kbReputation: sql`${users.kbReputation} + 1` })
+          .where(eq(users.id, authorPost.authorId));
+        await this.checkAutoPromotion(authorPost.authorId);
+      }
+      return { voted: true, newCount: post.voteCount || 0 };
+    }
+  }
+
+  async toggleKbCommentVote(userId: string, commentId: number): Promise<{ voted: boolean; newCount: number }> {
+    const [existing] = await db.select().from(kbVotes)
+      .where(and(eq(kbVotes.userId, userId), eq(kbVotes.commentId, commentId)));
+    if (existing) {
+      await db.delete(kbVotes).where(eq(kbVotes.id, existing.id));
+      const [comment] = await db.update(kbComments)
+        .set({ voteCount: sql`GREATEST(${kbComments.voteCount} - 1, 0)` })
+        .where(eq(kbComments.id, commentId)).returning();
+      return { voted: false, newCount: comment.voteCount || 0 };
+    } else {
+      await db.insert(kbVotes).values({ userId, commentId });
+      const [comment] = await db.update(kbComments)
+        .set({ voteCount: sql`${kbComments.voteCount} + 1` })
+        .where(eq(kbComments.id, commentId)).returning();
+      return { voted: true, newCount: comment.voteCount || 0 };
+    }
+  }
+
+  async getKbUserVotes(userId: string, postIds?: number[], commentIds?: number[]): Promise<{ postVotes: number[]; commentVotes: number[] }> {
+    const postVotes: number[] = [];
+    const commentVotes: number[] = [];
+    if (postIds && postIds.length > 0) {
+      const votes = await db.select().from(kbVotes)
+        .where(and(eq(kbVotes.userId, userId), sql`${kbVotes.postId} = ANY(ARRAY[${sql.raw(postIds.join(","))}]::int[])`));
+      for (const v of votes) { if (v.postId) postVotes.push(v.postId); }
+    }
+    if (commentIds && commentIds.length > 0) {
+      const votes = await db.select().from(kbVotes)
+        .where(and(eq(kbVotes.userId, userId), sql`${kbVotes.commentId} = ANY(ARRAY[${sql.raw(commentIds.join(","))}]::int[])`));
+      for (const v of votes) { if (v.commentId) commentVotes.push(v.commentId); }
+    }
+    return { postVotes, commentVotes };
+  }
+
+  async setUserAdmin(userId: string, isAdmin: boolean): Promise<void> {
+    await db.update(users).set({ isAdmin }).where(eq(users.id, userId));
+  }
+
+  async setUserTrusted(userId: string, isTrusted: boolean): Promise<void> {
+    await db.update(users).set({ isTrusted }).where(eq(users.id, userId));
+  }
+
+  async getKbLeaderboard(limit = 20): Promise<{ userId: string; username: string; reputation: number; isTrusted: boolean; isAdmin: boolean; tier: string | null }[]> {
+    const results = await db.select({
+      userId: users.id,
+      username: users.username,
+      reputation: users.kbReputation,
+      isTrusted: users.isTrusted,
+      isAdmin: users.isAdmin,
+      tier: users.tier,
+    }).from(users)
+      .where(sql`${users.kbReputation} > 0`)
+      .orderBy(desc(users.kbReputation))
+      .limit(limit);
+    return results.map(r => ({
+      userId: r.userId,
+      username: r.username,
+      reputation: r.reputation || 0,
+      isTrusted: r.isTrusted || false,
+      isAdmin: r.isAdmin || false,
+      tier: r.tier,
+    }));
+  }
+
+  async checkAutoPromotion(userId: string): Promise<boolean> {
+    const [user] = await db.select().from(users).where(eq(users.id, userId));
+    if (!user || user.isTrusted || user.isAdmin) return false;
+    if (user.tier === "free") return false;
+    const threshold = 50;
+    if ((user.kbReputation || 0) >= threshold) {
+      await db.update(users).set({ isTrusted: true }).where(eq(users.id, userId));
+      return true;
+    }
+    return false;
   }
 }
 

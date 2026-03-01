@@ -51,6 +51,10 @@ const WebFingerprint = lazy(() => import("@/pages/web-fingerprint"));
 const ExchangeChecker = lazy(() => import("@/pages/exchange-checker"));
 const DnsAnalyzer = lazy(() => import("@/pages/dns-analyzer"));
 const HeadersScanner = lazy(() => import("@/pages/headers-scanner"));
+const KnowledgeBase = lazy(() => import("@/pages/knowledge-base"));
+const KbPost = lazy(() => import("@/pages/kb-post"));
+const KbEditor = lazy(() => import("@/pages/kb-editor"));
+const KbAdmin = lazy(() => import("@/pages/kb-admin"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -112,6 +116,11 @@ function Router() {
         <Route path="/exchange-checker" component={ExchangeChecker}/>
         <Route path="/dns-analyzer" component={DnsAnalyzer}/>
         <Route path="/headers-scanner" component={HeadersScanner}/>
+        <Route path="/knowledge-base" component={KnowledgeBase}/>
+        <Route path="/knowledge-base/new" component={KbEditor}/>
+        <Route path="/knowledge-base/admin" component={KbAdmin}/>
+        <Route path="/knowledge-base/:slug/edit" component={KbEditor}/>
+        <Route path="/knowledge-base/:slug" component={KbPost}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

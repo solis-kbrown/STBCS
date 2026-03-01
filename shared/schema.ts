@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, real, boolean, index, uniqueIndex, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, real, boolean, index, uniqueIndex, integer, serial } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -31,6 +31,9 @@ export const users = pgTable("users", {
   stripeSubscriptionId: text("stripe_subscription_id"),
   emailVerified: boolean("email_verified").default(false),
   smsAlertsEnabled: boolean("sms_alerts_enabled").default(false),
+  isAdmin: boolean("is_admin").default(false),
+  isTrusted: boolean("is_trusted").default(false),
+  kbReputation: integer("kb_reputation").default(0),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("users_email_idx").on(table.email),
@@ -1143,3 +1146,76 @@ export type ThreatReport = typeof threatReports.$inferSelect;
 export type InsertThreatReport = z.infer<typeof insertThreatReportSchema>;
 export type ReportSchedule = typeof reportSchedules.$inferSelect;
 export type InsertReportSchedule = z.infer<typeof insertReportScheduleSchema>;
+
+export const kbPosts = pgTable("kb_posts", {
+  id: serial("id").primaryKey(),
+  authorId: varchar("author_id").notNull(),
+  title: text("title").notNull(),
+  slug: text("slug").notNull().unique(),
+  content: text("content").notNull(),
+  type: text("type").notNull().default("general_idea"),
+  status: text("status").notNull().default("pending_review"),
+  voteCount: integer("vote_count").default(0),
+  commentCount: integer("comment_count").default(0),
+  isPinned: boolean("is_pinned").default(false),
+  tags: text("tags").array(),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("kb_posts_author_idx").on(table.authorId),
+  index("kb_posts_type_idx").on(table.type),
+  index("kb_posts_status_idx").on(table.status),
+  index("kb_posts_slug_idx").on(table.slug),
+  index("kb_posts_created_idx").on(table.createdAt),
+]);
+
+export const kbComments = pgTable("kb_comments", {
+  id: serial("id").primaryKey(),
+  postId: integer("post_id").notNull(),
+  authorId: varchar("author_id").notNull(),
+  parentId: integer("parent_id"),
+  content: text("content").notNull(),
+  voteCount: integer("vote_count").default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("kb_comments_post_idx").on(table.postId),
+  index("kb_comments_author_idx").on(table.authorId),
+  index("kb_comments_parent_idx").on(table.parentId),
+]);
+
+export const kbVotes = pgTable("kb_votes", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull(),
+  postId: integer("post_id"),
+  commentId: integer("comment_id"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  uniqueIndex("kb_votes_user_post_idx").on(table.userId, table.postId),
+  uniqueIndex("kb_votes_user_comment_idx").on(table.userId, table.commentId),
+]);
+
+export const insertKbPostSchema = createInsertSchema(kbPosts).omit({
+  id: true,
+  voteCount: true,
+  commentCount: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertKbCommentSchema = createInsertSchema(kbComments).omit({
+  id: true,
+  voteCount: true,
+  createdAt: true,
+});
+
+export const insertKbVoteSchema = createInsertSchema(kbVotes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type KbPost = typeof kbPosts.$inferSelect;
+export type InsertKbPost = z.infer<typeof insertKbPostSchema>;
+export type KbComment = typeof kbComments.$inferSelect;
+export type InsertKbComment = z.infer<typeof insertKbCommentSchema>;
+export type KbVote = typeof kbVotes.$inferSelect;
+export type InsertKbVote = z.infer<typeof insertKbVoteSchema>;

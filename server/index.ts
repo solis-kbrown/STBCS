@@ -378,6 +378,13 @@ async function initializeApp() {
     }
 
     try {
+      const { startKbScraper } = await import("./kbScraper");
+      startKbScraper();
+    } catch (err) {
+      console.error("KB scraper failed:", err);
+    }
+
+    try {
       const base = `http://127.0.0.1:${port}`;
       const urls = ["/api/stats", "/api/trends", "/api/cves", "/api/ransomware",
         "/api/site-settings/hero-bg", "/api/site-settings/logo-theme", "/api/site-settings/icon-theme"];

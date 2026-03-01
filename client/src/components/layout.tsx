@@ -38,7 +38,8 @@ import {
   Fingerprint,
   MailCheck,
   Network,
-  ShieldAlert
+  ShieldAlert,
+  BookOpen
 } from "lucide-react";
 import { useState, useEffect, useRef, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -111,6 +112,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/ssh-terminal", labelKey: "nav.sshTerminal", icon: Terminal, isBusiness: true },
     { href: "/sftp-client", labelKey: "nav.sftpClient", icon: FolderSync, isBusiness: true },
     { href: "/messages", labelKey: "nav.messages", icon: MessageSquare, isBusiness: true },
+    { href: "/knowledge-base", labelKey: "nav.knowledgeBase", icon: BookOpen },
     { href: "/ransomware", labelKey: "nav.ransomware", icon: ShieldOff },
     { href: "/groups", labelKey: "nav.groups", icon: Users },
     { href: "/exploits", labelKey: "nav.exploits", icon: Bug },
@@ -128,9 +130,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const navGroups = [
     { items: navItems.slice(0, 3) },
     { items: navItems.slice(3, 19) },
-    { items: navItems.slice(19, 24) },
-    { items: navItems.slice(24, 27) },
-    { items: navItems.slice(27) },
+    { items: navItems.slice(19, 26) },
+    { items: navItems.slice(26, 29) },
+    { items: navItems.slice(29) },
   ];
 
   const SidebarContent = () => (
