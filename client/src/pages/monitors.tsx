@@ -24,6 +24,7 @@ import {
   useDarkWebFindings, useMarkFindingRead, useUptimeIncidents
 } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis, ResponsiveContainer, Tooltip as RechartsTooltip } from "recharts";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "wouter";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -296,6 +297,70 @@ function UptimeMonitorCard({ monitor, onSelect }: { monitor: any; onSelect: (id:
   );
 }
 
+function ResponseTimeChart({ checks }: { checks: any[] }) {
+  const chartData = checks.slice(0, 100).reverse().map((check: any) => ({
+    time: new Date(check.checkedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    responseTime: check.responseTime || 0,
+    status: check.status,
+  }));
+
+  if (chartData.length === 0) return <div className="text-sm text-zinc-500 text-center py-8">No response time data yet</div>;
+
+  return (
+    <ResponsiveContainer width="100%" height={200}>
+      <AreaChart data={chartData} margin={{ top: 5, right: 5, left: 0, bottom: 0 }}>
+        <defs>
+          <linearGradient id="responseGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
+            <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+          </linearGradient>
+        </defs>
+        <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+        <XAxis dataKey="time" tick={{ fontSize: 10, fill: '#71717a' }} interval="preserveStartEnd" tickCount={6} />
+        <YAxis tick={{ fontSize: 10, fill: '#71717a' }} tickFormatter={(v) => `${v}ms`} width={55} />
+        <RechartsTooltip
+          contentStyle={{ backgroundColor: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', fontSize: '12px' }}
+          labelStyle={{ color: '#a1a1aa' }}
+          formatter={(value: number) => [`${value}ms`, 'Response Time']}
+        />
+        <Area type="monotone" dataKey="responseTime" stroke="#f97316" fill="url(#responseGrad)" strokeWidth={2} dot={false} activeDot={{ r: 4, fill: '#f97316' }} />
+      </AreaChart>
+    </ResponsiveContainer>
+  );
+}
+
+function StatsPeriodCard({ label, stats }: { label: string; stats: any }) {
+  if (!stats) return null;
+  const uptimePct = stats.totalChecks > 0 ? ((stats.upChecks / stats.totalChecks) * 100).toFixed(1) : "0";
+  return (
+    <Card className="border-white/5 bg-card/50">
+      <CardContent className="p-4">
+        <div className="text-xs text-zinc-500 font-display tracking-wider uppercase mb-3">{label}</div>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <div className="text-lg font-bold text-white">{uptimePct}%</div>
+            <div className="text-[10px] text-zinc-500">Uptime</div>
+          </div>
+          <div>
+            <div className="text-lg font-bold text-white">{stats.avgResponseTime}<span className="text-xs text-zinc-500">ms</span></div>
+            <div className="text-[10px] text-zinc-500">Avg Response</div>
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-green-400">{stats.upChecks}<span className="text-zinc-500 font-normal">/{stats.totalChecks}</span></div>
+            <div className="text-[10px] text-zinc-500">Checks Up</div>
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-white">
+              {stats.minResponseTime || 0}<span className="text-zinc-500 text-xs">–</span>{stats.maxResponseTime || 0}<span className="text-xs text-zinc-500">ms</span>
+            </div>
+            <div className="text-[10px] text-zinc-500">Min–Max</div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function MonitorDetail({ monitorId, onBack }: { monitorId: string; onBack: () => void }) {
   const { data: monitors } = useUptimeMonitors();
   const { data: checksData, isLoading } = useUptimeChecks(monitorId);
@@ -304,126 +369,147 @@ function MonitorDetail({ monitorId, onBack }: { monitorId: string; onBack: () =>
 
   if (!monitor) return null;
 
+  const sslDaysLeft = monitor.sslExpiresAt ? Math.ceil((new Date(monitor.sslExpiresAt).getTime() - Date.now()) / 86400000) : null;
+
   return (
     <div className="space-y-4">
       <Button variant="ghost" onClick={onBack} className="text-zinc-400 hover:text-white mb-2">
         <ChevronRight className="h-4 w-4 rotate-180 mr-1" /> Back to Monitors
       </Button>
 
-      <div className="flex items-center gap-3">
-        <StatusDot state={monitor.currentState || "unknown"} />
-        <div>
-          <h3 className="text-xl font-bold text-white">{monitor.name}</h3>
-          <a href={monitor.url.startsWith("http") ? monitor.url : `https://${monitor.url}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
-            {monitor.url} <ExternalLink className="h-3 w-3" />
-          </a>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <StatusDot state={monitor.currentState || "unknown"} />
+          <div>
+            <h3 className="text-xl font-bold text-white">{monitor.name}</h3>
+            <a href={monitor.url.startsWith("http") ? monitor.url : `https://${monitor.url}`} target="_blank" rel="noopener noreferrer" className="text-sm text-primary hover:underline flex items-center gap-1">
+              {monitor.url} <ExternalLink className="h-3 w-3" />
+            </a>
+          </div>
         </div>
+        <Badge className={monitor.currentState === "up" ? "bg-green-500/20 text-green-400" : monitor.currentState === "degraded" ? "bg-yellow-500/20 text-yellow-400" : "bg-red-500/20 text-red-400"}>
+          {(monitor.currentState || "unknown").toUpperCase()}
+        </Badge>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-6 gap-3">
         {[
-          { label: "Status", value: (monitor.currentState || "unknown").toUpperCase(), color: monitor.currentState === "up" ? "text-green-400" : "text-red-400" },
-          { label: "Uptime", value: `${(monitor.uptimePercent || 100).toFixed(2)}%`, color: "text-white" },
-          { label: "Avg Response", value: checksData?.stats24h ? `${checksData.stats24h.avgResponseTime}ms` : "-", color: "text-white" },
+          { label: "Uptime", value: `${(monitor.uptimePercent || 100).toFixed(2)}%`, color: (monitor.uptimePercent || 100) > 99 ? "text-green-400" : (monitor.uptimePercent || 100) > 95 ? "text-yellow-400" : "text-red-400" },
+          { label: "Avg Response", value: checksData?.stats24h ? `${checksData.stats24h.avgResponseTime}ms` : "-", color: "text-orange-400" },
           { label: "Total Checks", value: monitor.totalChecks || 0, color: "text-white" },
           { label: "Protocol", value: (monitor.protocol || "https").toUpperCase(), color: "text-zinc-400" },
+          { label: "Interval", value: `${Math.round((monitor.checkInterval || 300) / 60)}m`, color: "text-zinc-400" },
+          { label: "SSL", value: sslDaysLeft !== null ? `${sslDaysLeft}d` : "N/A", color: sslDaysLeft !== null && sslDaysLeft <= 14 ? "text-red-400" : "text-green-400" },
         ].map((s, i) => (
           <Card key={i} className="border-white/5 bg-card/50">
             <CardContent className="p-3 text-center">
-              <div className="text-xs text-zinc-500">{s.label}</div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wider">{s.label}</div>
               <div className={`text-lg font-bold ${s.color}`}>{s.value}</div>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      {checksData?.stats24h && checksData?.stats7d && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="border-white/5 bg-card/50">
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Last 24 Hours</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-3 gap-2 text-sm">
-              <div><span className="text-zinc-500">Checks:</span> <span className="text-white">{checksData.stats24h.totalChecks}</span></div>
-              <div><span className="text-zinc-500">Up:</span> <span className="text-green-400">{checksData.stats24h.upChecks}</span></div>
-              <div><span className="text-zinc-500">Avg:</span> <span className="text-white">{checksData.stats24h.avgResponseTime}ms</span></div>
-            </CardContent>
-          </Card>
-          <Card className="border-white/5 bg-card/50">
-            <CardHeader className="pb-2"><CardTitle className="text-sm">Last 7 Days</CardTitle></CardHeader>
-            <CardContent className="grid grid-cols-3 gap-2 text-sm">
-              <div><span className="text-zinc-500">Checks:</span> <span className="text-white">{checksData.stats7d.totalChecks}</span></div>
-              <div><span className="text-zinc-500">Up:</span> <span className="text-green-400">{checksData.stats7d.upChecks}</span></div>
-              <div><span className="text-zinc-500">Avg:</span> <span className="text-white">{checksData.stats7d.avgResponseTime}ms</span></div>
-            </CardContent>
-          </Card>
-        </div>
+      {isLoading ? (
+        <Skeleton className="h-56 rounded-lg" />
+      ) : (
+        <Card className="border-white/5 bg-card/50" data-testid="card-response-time-chart">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-sm flex items-center gap-2">
+              <TrendingUp className="h-4 w-4 text-orange-400" /> Response Time Trend
+            </CardTitle>
+            <CardDescription className="text-xs">Last {(checksData?.checks || []).length} checks</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ResponseTimeChart checks={checksData?.checks || []} />
+          </CardContent>
+        </Card>
       )}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+        <StatsPeriodCard label="Last 24 Hours" stats={checksData?.stats24h} />
+        <StatsPeriodCard label="Last 7 Days" stats={checksData?.stats7d} />
+        <StatsPeriodCard label="Last 30 Days" stats={checksData?.stats30d} />
+      </div>
 
       {monitor.sslExpiresAt && (
         <Card className="border-white/5 bg-card/50">
-          <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Lock className="h-4 w-4" /> SSL Certificate</CardTitle></CardHeader>
-          <CardContent className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-            <div><span className="text-zinc-500">Issuer:</span> <span className="text-white">{monitor.sslIssuer || "Unknown"}</span></div>
-            <div><span className="text-zinc-500">Expires:</span> <span className="text-white">{new Date(monitor.sslExpiresAt).toLocaleDateString()}</span></div>
-            <div>
-              <span className="text-zinc-500">Days Left:</span>{" "}
-              <span className={Math.ceil((new Date(monitor.sslExpiresAt).getTime() - Date.now()) / 86400000) <= 14 ? "text-red-400 font-bold" : "text-green-400"}>
-                {Math.ceil((new Date(monitor.sslExpiresAt).getTime() - Date.now()) / 86400000)}
-              </span>
-            </div>
-            <div><span className="text-zinc-500">HTTP:</span> <span className="text-white">{monitor.httpVersion || "Unknown"}</span></div>
-          </CardContent>
-        </Card>
-      )}
-
-      {isLoading ? (
-        <Skeleton className="h-32" />
-      ) : (
-        <Card className="border-white/5 bg-card/50">
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Response Time History</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="text-sm flex items-center gap-2"><Lock className="h-4 w-4 text-orange-400" /> SSL Certificate</CardTitle></CardHeader>
           <CardContent>
-            <div className="flex items-end gap-0.5 h-24 overflow-hidden">
-              {(checksData?.checks || []).slice(0, 100).reverse().map((check: any, i: number) => {
-                const maxMs = Math.max(...(checksData?.checks || []).slice(0, 100).map((c: any) => c.responseTime || 0), 1);
-                const height = ((check.responseTime || 0) / maxMs) * 100;
-                return (
-                  <div
-                    key={i}
-                    className={`flex-1 min-w-[2px] max-w-[6px] rounded-t transition-all ${
-                      check.status === "up" ? "bg-green-500/70" :
-                      check.status === "degraded" ? "bg-yellow-500/70" : "bg-red-500/70"
-                    }`}
-                    style={{ height: `${Math.max(height, 4)}%` }}
-                    title={`${check.responseTime}ms - ${new Date(check.checkedAt).toLocaleString()}`}
-                  />
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {incidentsData?.incidents && incidentsData.incidents.length > 0 && (
-        <Card className="border-white/5 bg-card/50">
-          <CardHeader className="pb-2"><CardTitle className="text-sm">Incident History</CardTitle></CardHeader>
-          <CardContent className="space-y-2">
-            {incidentsData.incidents.map((inc: any) => (
-              <div key={inc.id} className="flex items-center gap-3 p-2 rounded bg-zinc-900/50 text-sm">
-                <Badge className={inc.status === "ongoing" ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"}>
-                  {inc.status}
-                </Badge>
-                <div className="flex-1 min-w-0">
-                  <div className="text-white truncate">{inc.title}</div>
-                  <div className="text-xs text-zinc-500">{inc.description}</div>
-                </div>
-                <div className="text-xs text-zinc-500 whitespace-nowrap">
-                  {timeAgo(inc.startedAt)}
-                  {inc.duration ? ` (${formatDuration(inc.duration)})` : ""}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Issuer</div>
+                <div className="text-white font-medium">{monitor.sslIssuer || "Unknown"}</div>
+              </div>
+              <div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Expires</div>
+                <div className="text-white font-medium">{new Date(monitor.sslExpiresAt).toLocaleDateString()}</div>
+              </div>
+              <div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">Days Remaining</div>
+                <div className={`font-bold text-lg ${sslDaysLeft !== null && sslDaysLeft <= 14 ? "text-red-400" : sslDaysLeft !== null && sslDaysLeft <= 30 ? "text-yellow-400" : "text-green-400"}`}>
+                  {sslDaysLeft}
                 </div>
               </div>
-            ))}
+              <div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wider mb-1">HTTP Version</div>
+                <div className="text-white font-medium">{monitor.httpVersion || "Unknown"}</div>
+              </div>
+            </div>
           </CardContent>
         </Card>
       )}
+
+      <Card className="border-white/5 bg-card/50">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm flex items-center gap-2">
+            <AlertTriangle className="h-4 w-4 text-red-400" /> Incident History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {(!incidentsData?.incidents || incidentsData.incidents.length === 0) ? (
+            <div className="text-center py-6">
+              <ShieldCheck className="h-8 w-8 text-green-500/50 mx-auto mb-2" />
+              <p className="text-sm text-zinc-500">No incidents recorded — service has been stable</p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {incidentsData.incidents.map((inc: any) => (
+                <div key={inc.id} className="flex items-center gap-3 p-3 rounded-lg bg-zinc-900/50 border border-white/5 text-sm">
+                  {inc.type === "ssl_expiry" ? <Lock className="h-4 w-4 text-yellow-400 flex-shrink-0" /> : <WifiOff className="h-4 w-4 text-red-400 flex-shrink-0" />}
+                  <Badge className={`text-[10px] ${inc.status === "ongoing" ? "bg-red-500/20 text-red-400 border-red-500/30" : "bg-green-500/20 text-green-400 border-green-500/30"}`}>
+                    {inc.status}
+                  </Badge>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-white font-medium truncate">{inc.title}</div>
+                    {inc.description && <div className="text-xs text-zinc-500 truncate">{inc.description}</div>}
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <div className="text-xs text-zinc-400">{timeAgo(inc.startedAt)}</div>
+                    {inc.duration && <div className="text-[10px] text-zinc-600">Duration: {formatDuration(inc.duration)}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      <Card className="border-white/5 bg-card/50">
+        <CardHeader className="pb-2"><CardTitle className="text-sm">Check History (Sparkline)</CardTitle></CardHeader>
+        <CardContent>
+          <UptimeBar checks={checksData?.checks || []} />
+          <div className="flex items-center justify-between mt-2 text-[10px] text-zinc-600">
+            <span>Oldest</span>
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-green-500 rounded-sm" />Up</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-yellow-500 rounded-sm" />Degraded</span>
+              <span className="flex items-center gap-1"><span className="w-2 h-2 bg-red-500 rounded-sm" />Down</span>
+            </div>
+            <span>Newest</span>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
@@ -688,26 +774,105 @@ function DarkWebTab() {
 
 function IncidentsTab() {
   const { data, isLoading } = useUptimeIncidents();
+  const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+
   if (isLoading) return <Skeleton className="h-48" />;
-  const incidents = data?.incidents || [];
+  const allIncidents = data?.incidents || [];
+
+  const filtered = allIncidents.filter((inc: any) => {
+    if (typeFilter !== "all" && inc.type !== typeFilter) return false;
+    if (statusFilter !== "all" && inc.status !== statusFilter) return false;
+    return true;
+  });
+
+  const ongoingCount = allIncidents.filter((i: any) => i.status === "ongoing").length;
+  const resolvedCount = allIncidents.filter((i: any) => i.status === "resolved").length;
+  const sslCount = allIncidents.filter((i: any) => i.type === "ssl_expiry").length;
+  const downtimeCount = allIncidents.filter((i: any) => i.type !== "ssl_expiry").length;
+
+  const totalDowntime = allIncidents.reduce((sum: number, i: any) => sum + (i.duration || 0), 0);
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="text-lg font-bold text-white">Incident History</h3>
-        <p className="text-sm text-zinc-500">Complete log of all downtime events, SSL issues, and service degradation</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div>
+          <h3 className="text-lg font-bold text-white" data-testid="text-incident-title">Incident History</h3>
+          <p className="text-sm text-zinc-500">Complete log of all downtime events, SSL issues, and service degradation</p>
+        </div>
+        {allIncidents.length > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <Select value={typeFilter} onValueChange={setTypeFilter}>
+              <SelectTrigger className="w-[130px] h-8 text-xs bg-zinc-800 border-zinc-700" data-testid="select-incident-type"><SelectValue placeholder="Type" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
+                <SelectItem value="down">Downtime</SelectItem>
+                <SelectItem value="ssl_expiry">SSL Issues</SelectItem>
+                <SelectItem value="degraded">Degraded</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[130px] h-8 text-xs bg-zinc-800 border-zinc-700" data-testid="select-incident-status"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Status</SelectItem>
+                <SelectItem value="ongoing">Ongoing</SelectItem>
+                <SelectItem value="resolved">Resolved</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
-      {incidents.length === 0 ? (
+
+      {allIncidents.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <Card className="border-white/5 bg-card/50" data-testid="stat-incidents-total">
+            <CardContent className="p-3 text-center">
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Total</div>
+              <div className="text-lg font-bold text-white">{allIncidents.length}</div>
+            </CardContent>
+          </Card>
+          <Card className={`border-white/5 bg-card/50 ${ongoingCount > 0 ? "border-red-500/30" : ""}`} data-testid="stat-incidents-ongoing">
+            <CardContent className="p-3 text-center">
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Ongoing</div>
+              <div className={`text-lg font-bold ${ongoingCount > 0 ? "text-red-400" : "text-green-400"}`}>{ongoingCount}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-white/5 bg-card/50" data-testid="stat-incidents-resolved">
+            <CardContent className="p-3 text-center">
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Resolved</div>
+              <div className="text-lg font-bold text-green-400">{resolvedCount}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-white/5 bg-card/50" data-testid="stat-incidents-ssl">
+            <CardContent className="p-3 text-center">
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wider">SSL Issues</div>
+              <div className="text-lg font-bold text-yellow-400">{sslCount}</div>
+            </CardContent>
+          </Card>
+          <Card className="border-white/5 bg-card/50" data-testid="stat-incidents-downtime">
+            <CardContent className="p-3 text-center">
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wider">Total Downtime</div>
+              <div className="text-lg font-bold text-white">{formatDuration(totalDowntime)}</div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
+      {filtered.length === 0 ? (
         <Card className="border-white/5 bg-card/50">
           <CardContent className="p-8 text-center">
             <ShieldCheck className="h-12 w-12 text-green-500/50 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-white mb-2">No incidents recorded</h3>
-            <p className="text-zinc-500">All monitored services are running smoothly.</p>
+            <h3 className="text-lg font-semibold text-white mb-2">
+              {allIncidents.length === 0 ? "No incidents recorded" : "No matching incidents"}
+            </h3>
+            <p className="text-zinc-500">
+              {allIncidents.length === 0 ? "All monitored services are running smoothly." : "Try adjusting your filters."}
+            </p>
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-2">
-          {incidents.map((inc: any) => (
+          {filtered.map((inc: any) => (
             <Card key={inc.id} className={`border-white/5 bg-card/50 ${inc.status === "ongoing" ? "border-red-500/30" : ""}`}>
               <CardContent className="p-4 flex items-center gap-4">
                 <div className={`p-2 rounded-lg ${inc.status === "ongoing" ? "bg-red-500/20" : "bg-green-500/20"}`}>
@@ -718,13 +883,14 @@ function IncidentsTab() {
                   <div className="flex items-center gap-2">
                     <span className="text-white font-medium">{inc.title}</span>
                     <Badge className={inc.status === "ongoing" ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"}>{inc.status}</Badge>
+                    <Badge variant="outline" className="text-[9px] border-zinc-700 text-zinc-400">{inc.type === "ssl_expiry" ? "SSL" : inc.type || "Downtime"}</Badge>
                   </div>
-                  <div className="text-xs text-zinc-500 mt-1">{inc.description}</div>
+                  {inc.description && <div className="text-xs text-zinc-500 mt-1">{inc.description}</div>}
                 </div>
                 <div className="text-right text-xs text-zinc-500 shrink-0">
                   <div>Started: {new Date(inc.startedAt).toLocaleString()}</div>
                   {inc.resolvedAt && <div>Resolved: {new Date(inc.resolvedAt).toLocaleString()}</div>}
-                  {inc.duration && <div>Duration: {formatDuration(inc.duration)}</div>}
+                  {inc.duration && <div className="text-orange-400/70">Duration: {formatDuration(inc.duration)}</div>}
                 </div>
               </CardContent>
             </Card>

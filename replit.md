@@ -39,7 +39,7 @@ Preferred communication style: Simple, everyday language.
 ### Features
 - **Threat Intelligence Aggregation**: 15-minute refresh cycles from diverse sources.
 - **Security Tools**: IP/Domain WHOIS, Port Scanner, Threat Database Check, Password Strength, Subnet Calculator, Email Header Analyzer, Encoding/Decoding, File Scanner, SSL/TLS Checker, Web Server Fingerprinter, Exchange Server Checker, DNS Security Analyzer, HTTP Security Headers Scanner.
-- **Pro/Business Features**: Monitoring Suite (uptime, SSL, dark web), Attack Surface Discovery, Threat Intelligence Reports (on-demand/scheduled), Remote Desktop, SSH Terminal, Telnet Client, SFTP Client.
+- **Pro/Business Features**: Monitoring Suite (uptime with Recharts response time area charts and 24h/7d/30d stats, SSL certificate tracking, dark web scanning), Incidents tab with type/status filtering and summary stats (total, ongoing, resolved, SSL, total downtime), Attack Surface Discovery, Threat Intelligence Reports (on-demand/scheduled), Remote Desktop, SSH Terminal, Telnet Client, SFTP Client.
 - **Core Security Capabilities**: IOC Search, Cyber Risk Score Calculator, ICS-CERT Advisories, MITRE ATT&CK Mapping, STIX 2.1 Export, Groups Directory.
 - **User & Subscription Management**: Authentication, subscription tiers (Supporter, Pro, Business, Unlimited Everything), API Key System, Monitor Alert Engine.
 - **Communication & Support**: Newsletter, Quo Phone System integration, email notifications, Contact Page, About Page, Live Chat Widget, Knowledge Base & Community Hub (with RBAC, content scraping, moderation, gamification ranks).

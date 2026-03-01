@@ -4663,7 +4663,8 @@ Hiring: https://stbcybersecurity.com/support
       const checks = await storage.getUptimeChecks(id, limit);
       const stats24h = await storage.getUptimeCheckStats(id, 24);
       const stats7d = await storage.getUptimeCheckStats(id, 168);
-      res.json({ checks, stats24h, stats7d });
+      const stats30d = await storage.getUptimeCheckStats(id, 720);
+      res.json({ checks, stats24h, stats7d, stats30d });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch checks" });
     }

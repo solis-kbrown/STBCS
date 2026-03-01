@@ -1575,7 +1575,7 @@ export function useDeleteUptimeMonitor() {
 }
 
 export function useUptimeChecks(monitorId: string) {
-  return useQuery<{ checks: any[]; stats24h: any; stats7d: any }>({
+  return useQuery<{ checks: any[]; stats24h: any; stats7d: any; stats30d: any }>({
     queryKey: ["/api/monitors/uptime", monitorId, "checks"],
     queryFn: () => fetchApi(`/api/monitors/uptime/${monitorId}/checks?limit=200`),
     enabled: !!monitorId,
