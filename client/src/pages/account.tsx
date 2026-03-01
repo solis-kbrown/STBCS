@@ -285,7 +285,7 @@ export default function AccountPage() {
                 <p className="text-zinc-400 text-sm">You're currently on the free tier.</p>
                 <Button
                   className="bg-orange-500 hover:bg-orange-600 text-white"
-                  onClick={() => setLocation("/support")}
+                  onClick={() => setLocation("/pricing")}
                   data-testid="button-upgrade"
                 >
                   <Crown className="h-4 w-4 mr-2" />
@@ -442,7 +442,7 @@ export default function AccountPage() {
               <Button
                 variant="outline"
                 className="justify-start border-zinc-700 text-zinc-300 hover:bg-zinc-800"
-                onClick={() => setLocation("/support")}
+                onClick={() => setLocation("/pricing")}
                 data-testid="button-go-support"
               >
                 <CreditCard className="h-4 w-4 mr-2 text-orange-400" />

@@ -603,7 +603,7 @@ export default function SSLChecker() {
               </p>
             </div>
             <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold" asChild>
-              <a href="/support#pricing" data-testid="link-ssl-upgrade">
+              <a href="/pricing" data-testid="link-ssl-upgrade">
                 <Crown className="h-4 w-4 mr-2" /> Upgrade to Pro
               </a>
             </Button>

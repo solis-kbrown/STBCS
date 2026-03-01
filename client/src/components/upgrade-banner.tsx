@@ -81,7 +81,7 @@ export default function UpgradeBanner({ context = "general" }: UpgradeBannerProp
             </div>
             <div className="flex flex-col gap-2 shrink-0">
               <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-6 shadow-[0_0_20px_rgba(249,115,22,0.25)] hover:shadow-[0_0_28px_rgba(249,115,22,0.35)] transition-shadow duration-300" asChild data-testid="button-upgrade-banner">
-                <a href="/support#pricing">
+                <a href="/pricing">
                   <Crown className="h-4 w-4 mr-2" /> View Pro Plans
                 </a>
               </Button>

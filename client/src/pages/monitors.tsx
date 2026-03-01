@@ -932,7 +932,7 @@ function FreeTierGate() {
             </div>
           </div>
           <Button className="bg-primary w-full" asChild data-testid="button-upgrade-monitors">
-            <a href="/checkout">Upgrade Now</a>
+            <a href="/pricing">Upgrade Now</a>
           </Button>
         </CardContent>
       </Card>

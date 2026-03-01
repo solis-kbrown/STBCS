@@ -363,7 +363,7 @@ export default function Messages() {
                 Two-way SMS messaging is an exclusive feature for Business subscribers. Upgrade to our Business plan to unlock direct client communication.
               </p>
               <Button className="bg-orange-500 hover:bg-orange-600" asChild>
-                <a href="/support#pricing">Upgrade to Business</a>
+                <a href="/pricing">Upgrade to Business</a>
               </Button>
             </CardContent>
           </Card>

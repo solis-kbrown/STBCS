@@ -1068,7 +1068,7 @@ export default function SFTPClient() {
               </p>
             </div>
             <Button className="bg-gradient-to-r from-purple-500 to-violet-500 hover:from-purple-600 hover:to-violet-600 text-white font-semibold" asChild>
-              <a href="/support#pricing" data-testid="link-sftp-upgrade">
+              <a href="/pricing" data-testid="link-sftp-upgrade">
                 <Crown className="h-4 w-4 mr-2" /> Upgrade to Business
               </a>
             </Button>

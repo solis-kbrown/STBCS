@@ -794,7 +794,7 @@ export default function SSHTerminal() {
               </p>
             </div>
             <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold" asChild>
-              <a href="/support#pricing" data-testid="link-ssh-upgrade">
+              <a href="/pricing" data-testid="link-ssh-upgrade">
                 <Crown className="h-4 w-4 mr-2" /> Upgrade to Business
               </a>
             </Button>

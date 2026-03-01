@@ -332,7 +332,7 @@ export default function Reports() {
               <Crown className="h-12 w-12 text-orange-400 mx-auto mb-4" />
               <h2 className="text-xl font-bold text-zinc-200 mb-2">Pro Feature</h2>
               <p className="text-zinc-400 mb-6">Automated Threat Intelligence Reports are available for Pro and Business subscribers. Get comprehensive, branded security reports for your organization.</p>
-              <Button className="bg-orange-500 hover:bg-orange-600" onClick={() => setLocation("/checkout")} data-testid="button-upgrade">
+              <Button className="bg-orange-500 hover:bg-orange-600" onClick={() => setLocation("/pricing")} data-testid="button-upgrade">
                 Upgrade to Pro
               </Button>
             </CardContent>

@@ -246,7 +246,7 @@ export default function Footer() {
                 <li><a href="/risk-score" className="link-underline inline-flex items-center gap-1 hover:text-primary transition-all duration-200" data-testid="link-footer-risk">Cyber Risk Score</a></li>
                 <li><a href="/monitors" className="link-underline inline-flex items-center gap-1 hover:text-primary transition-all duration-200" data-testid="link-footer-monitors">Monitoring & Alerts</a></li>
                 <li><a href="/api-docs" className="link-underline inline-flex items-center gap-1 hover:text-primary transition-all duration-200" data-testid="link-footer-api">API Documentation</a></li>
-                <li><a href="/support" className="link-underline inline-flex items-center gap-1 hover:text-primary transition-all duration-200" data-testid="link-footer-pricing">Plans & Pricing</a></li>
+                <li><a href="/pricing" className="link-underline inline-flex items-center gap-1 hover:text-primary transition-all duration-200" data-testid="link-footer-pricing">Plans & Pricing</a></li>
               </ul>
             </div>
 
@@ -406,7 +406,7 @@ export default function Footer() {
               <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
                 <a href="/about" className="link-underline hover:text-primary transition-colors duration-200">About</a>
                 <a href="/contact" className="link-underline hover:text-primary transition-colors duration-200">Contact</a>
-                <a href="/support" className="link-underline hover:text-primary transition-colors duration-200">Pricing</a>
+                <a href="/pricing" className="link-underline hover:text-primary transition-colors duration-200">Pricing</a>
                 <a href="/api-docs" className="link-underline hover:text-primary transition-colors duration-200">API</a>
                 <span className="text-zinc-700">|</span>
                 <a href="/privacy" className="link-underline hover:text-primary transition-colors duration-200">Privacy Policy</a>

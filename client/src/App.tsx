@@ -39,6 +39,7 @@ const AttackSurface = lazy(() => import("@/pages/attack-surface"));
 const Reports = lazy(() => import("@/pages/reports"));
 const ServiceStatus = lazy(() => import("@/pages/service-status"));
 const Playbooks = lazy(() => import("@/pages/playbooks"));
+const PricingPage = lazy(() => import("@/pages/pricing"));
 const RemoteDesktop = lazy(() => import("@/pages/remote-desktop"));
 const SSHTerminal = lazy(() => import("@/pages/ssh-terminal"));
 const TelnetClient = lazy(() => import("@/pages/telnet-client"));
@@ -104,6 +105,7 @@ function Router() {
         <Route path="/attack-surface" component={AttackSurface}/>
         <Route path="/reports" component={Reports}/>
         <Route path="/service-status" component={ServiceStatus}/>
+        <Route path="/pricing" component={PricingPage}/>
         <Route path="/playbooks" component={Playbooks}/>
         <Route path="/remote-desktop" component={RemoteDesktop}/>
         <Route path="/ssh-terminal" component={SSHTerminal}/>

@@ -1967,7 +1967,7 @@ export default function ToolsPage() {
                   </a>
                 </Button>
                 <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold" asChild>
-                  <a href="/support#pricing">
+                  <a href="/pricing">
                     <Crown className="h-4 w-4 mr-2" /> Upgrade to Pro
                   </a>
                 </Button>
