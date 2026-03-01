@@ -551,7 +551,7 @@ export default function Dashboard() {
           </div>
         </AnimatedSection>
 
-        <AnimatedSection animation="fade-up">
+        <AnimatedSection animation="fade-up" className="-mt-4">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <Card className="lg:col-span-2 bg-zinc-900/50 border-zinc-800">
               <CardHeader className="pb-2">
