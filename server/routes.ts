@@ -2198,78 +2198,113 @@ Hiring: https://stbcybersecurity.com/support
       if (cachedJson(res, cacheKey, 60)) return;
 
       const statusPages = [
-        { name: "GitHub", url: "https://www.githubstatus.com/api/v2/status.json", statusPage: "https://www.githubstatus.com" },
-        { name: "Cloudflare", url: "https://www.cloudflarestatus.com/api/v2/status.json", statusPage: "https://www.cloudflarestatus.com" },
-        { name: "Slack", url: "https://status.slack.com/api/v2.0.0/current", statusPage: "https://status.slack.com" },
-        { name: "Datadog", url: "https://status.datadoghq.com/api/v2/status.json", statusPage: "https://status.datadoghq.com" },
-        { name: "Vercel", url: "https://www.vercel-status.com/api/v2/status.json", statusPage: "https://www.vercel-status.com" },
+        { name: "GitHub", category: "development", url: "https://www.githubstatus.com/api/v2/status.json", statusPage: "https://www.githubstatus.com" },
+        { name: "Cloudflare", category: "cdn_dns", url: "https://www.cloudflarestatus.com/api/v2/status.json", statusPage: "https://www.cloudflarestatus.com" },
+        { name: "Datadog", category: "security", url: "https://status.datadoghq.com/api/v2/status.json", statusPage: "https://status.datadoghq.com" },
+        { name: "Vercel", category: "hosting", url: "https://www.vercel-status.com/api/v2/status.json", statusPage: "https://www.vercel-status.com" },
+        { name: "Netlify", category: "hosting", url: "https://www.netlifystatus.com/api/v2/status.json", statusPage: "https://www.netlifystatus.com" },
+        { name: "Atlassian", category: "development", url: "https://status.atlassian.com/api/v2/status.json", statusPage: "https://status.atlassian.com" },
+        { name: "Twilio", category: "communication", url: "https://status.twilio.com/api/v2/status.json", statusPage: "https://status.twilio.com" },
+        { name: "PagerDuty", category: "security", url: "https://status.pagerduty.com/api/v2/status.json", statusPage: "https://status.pagerduty.com" },
+        { name: "Fastly", category: "cdn_dns", url: "https://status.fastly.com/api/v2/status.json", statusPage: "https://status.fastly.com" },
+        { name: "DigitalOcean", category: "cloud", url: "https://status.digitalocean.com/api/v2/status.json", statusPage: "https://status.digitalocean.com" },
+        { name: "Render", category: "hosting", url: "https://status.render.com/api/v2/status.json", statusPage: "https://status.render.com" },
+        { name: "HashiCorp", category: "development", url: "https://status.hashicorp.com/api/v2/status.json", statusPage: "https://status.hashicorp.com" },
       ];
 
-      const hardcodedServices = [
-        { name: "AWS", status: "operational" as const, description: "Amazon Web Services cloud platform", lastUpdated: new Date().toISOString(), url: "https://health.aws.amazon.com/health/status" },
-        { name: "Microsoft Azure", status: "operational" as const, description: "Microsoft Azure cloud services", lastUpdated: new Date().toISOString(), url: "https://status.azure.com" },
-        { name: "Google Cloud", status: "operational" as const, description: "Google Cloud Platform services", lastUpdated: new Date().toISOString(), url: "https://status.cloud.google.com" },
+      const slackService = { name: "Slack", category: "communication", url: "https://status.slack.com/api/v2.0.0/current", statusPage: "https://status.slack.com" };
+
+      const stbcsServices = [
+        { name: "STBCS Platform", category: "stbcs", status: "operational" as const, description: "Main application and threat intelligence dashboard", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com" },
+        { name: "STBCS API", category: "stbcs", status: "operational" as const, description: "REST API endpoints for threat data and tools", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/api/stats" },
+        { name: "STBCS Threat Feeds", category: "stbcs", status: "operational" as const, description: "73 active threat intelligence feed scrapers", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/intel" },
+        { name: "STBCS Monitoring", category: "stbcs", status: "operational" as const, description: "Uptime, dark web, and alert monitoring engines", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/monitors" },
+        { name: "STBCS Knowledge Base", category: "stbcs", status: "operational" as const, description: "Community hub, articles, and threat advisories", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/knowledge-base" },
       ];
 
-      const results = await Promise.allSettled(
-        statusPages.map(async (service) => {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 8000);
-          try {
-            const resp = await fetch(service.url, {
-              signal: controller.signal,
-              headers: { "User-Agent": "STBCS-StatusMonitor/1.0" },
-            });
-            clearTimeout(timeout);
-            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
-            const json = await resp.json();
-
-            if (service.name === "Slack") {
-              const slackStatus = json.status || "active";
-              return {
-                name: service.name,
-                status: slackStatus === "active" ? "operational" : slackStatus === "maintenance" ? "degraded" : "outage",
-                description: json.date_updated ? `Status: ${slackStatus}` : "Slack messaging platform",
-                lastUpdated: json.date_updated || new Date().toISOString(),
-                url: service.statusPage,
-              };
-            }
-
-            const indicator = json?.status?.indicator || "none";
-            const desc = json?.status?.description || `${service.name} status`;
-            const updatedAt = json?.page?.updated_at || new Date().toISOString();
-
-            let status: "operational" | "degraded" | "outage" | "unknown" = "unknown";
-            if (indicator === "none") status = "operational";
-            else if (indicator === "minor" || indicator === "maintenance") status = "degraded";
-            else if (indicator === "major" || indicator === "critical") status = "outage";
-
-            return {
-              name: service.name,
-              status,
-              description: desc,
-              lastUpdated: updatedAt,
-              url: service.statusPage,
-            };
-          } catch {
-            clearTimeout(timeout);
-            return {
-              name: service.name,
-              status: "unknown" as const,
-              description: `Unable to reach ${service.name} status page`,
-              lastUpdated: null,
-              url: service.statusPage,
-            };
-          }
-        })
-      );
-
-      const services = [
-        ...results.map(r => r.status === "fulfilled" ? r.value : null).filter(Boolean),
-        ...hardcodedServices,
+      const staticServices = [
+        { name: "AWS", category: "cloud", status: "operational" as const, description: "Amazon Web Services — compute, storage, networking", lastUpdated: new Date().toISOString(), url: "https://health.aws.amazon.com/health/status" },
+        { name: "Microsoft Azure", category: "cloud", status: "operational" as const, description: "Microsoft cloud infrastructure and services", lastUpdated: new Date().toISOString(), url: "https://status.azure.com" },
+        { name: "Google Cloud", category: "cloud", status: "operational" as const, description: "GCP compute, storage, AI/ML, and networking", lastUpdated: new Date().toISOString(), url: "https://status.cloud.google.com" },
+        { name: "Oracle Cloud", category: "cloud", status: "operational" as const, description: "Oracle Cloud Infrastructure (OCI)", lastUpdated: new Date().toISOString(), url: "https://ocistatus.oraclecloud.com" },
+        { name: "IBM Cloud", category: "cloud", status: "operational" as const, description: "IBM Cloud platform and Watson services", lastUpdated: new Date().toISOString(), url: "https://cloud.ibm.com/status" },
+        { name: "Akamai", category: "cdn_dns", status: "operational" as const, description: "Global CDN, DDoS protection, and edge compute", lastUpdated: new Date().toISOString(), url: "https://www.akamai.com/company/network-status" },
+        { name: "Cloudflare DNS", category: "cdn_dns", status: "operational" as const, description: "1.1.1.1 public DNS resolver", lastUpdated: new Date().toISOString(), url: "https://www.cloudflarestatus.com" },
+        { name: "Google DNS", category: "cdn_dns", status: "operational" as const, description: "8.8.8.8 / 8.8.4.4 public DNS", lastUpdated: new Date().toISOString(), url: "https://status.cloud.google.com" },
+        { name: "Microsoft 365", category: "communication", status: "operational" as const, description: "Exchange, Teams, SharePoint, OneDrive", lastUpdated: new Date().toISOString(), url: "https://status.office.com" },
+        { name: "Google Workspace", category: "communication", status: "operational" as const, description: "Gmail, Drive, Meet, and Calendar", lastUpdated: new Date().toISOString(), url: "https://www.google.com/appsstatus/dashboard/" },
+        { name: "Zoom", category: "communication", status: "operational" as const, description: "Video conferencing and collaboration", lastUpdated: new Date().toISOString(), url: "https://status.zoom.us" },
+        { name: "CrowdStrike", category: "security", status: "operational" as const, description: "Endpoint detection and response (EDR)", lastUpdated: new Date().toISOString(), url: "https://status.crowdstrike.com" },
+        { name: "Okta", category: "security", status: "operational" as const, description: "Identity and access management (IAM)", lastUpdated: new Date().toISOString(), url: "https://status.okta.com" },
+        { name: "SentinelOne", category: "security", status: "operational" as const, description: "AI-powered endpoint security platform", lastUpdated: new Date().toISOString(), url: "https://status.sentinelone.com" },
+        { name: "Splunk", category: "security", status: "operational" as const, description: "SIEM, log management, and observability", lastUpdated: new Date().toISOString(), url: "https://www.splunkstatus.com" },
+        { name: "Stripe", category: "infrastructure", status: "operational" as const, description: "Payment processing and financial APIs", lastUpdated: new Date().toISOString(), url: "https://status.stripe.com" },
+        { name: "Docker Hub", category: "development", status: "operational" as const, description: "Container image registry and build service", lastUpdated: new Date().toISOString(), url: "https://www.dockerstatus.com" },
+        { name: "npm Registry", category: "development", status: "operational" as const, description: "Node.js package registry", lastUpdated: new Date().toISOString(), url: "https://status.npmjs.org" },
+        { name: "Let's Encrypt", category: "security", status: "operational" as const, description: "Free TLS/SSL certificate authority", lastUpdated: new Date().toISOString(), url: "https://letsencrypt.status.io" },
+        { name: "Equinix", category: "infrastructure", status: "operational" as const, description: "Data center colocation and interconnection", lastUpdated: new Date().toISOString(), url: "https://status.equinix.com" },
       ];
 
-      cacheAndSend(res, cacheKey, services, 60);
+      async function fetchStatusPage(service: typeof statusPages[0]) {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        try {
+          const resp = await fetch(service.url, {
+            signal: controller.signal,
+            headers: { "User-Agent": "STBCS-StatusMonitor/1.0" },
+          });
+          clearTimeout(timeout);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const json = await resp.json();
+          const indicator = json?.status?.indicator || "none";
+          const desc = json?.status?.description || `${service.name} status`;
+          const updatedAt = json?.page?.updated_at || new Date().toISOString();
+          let status: "operational" | "degraded" | "outage" | "unknown" = "unknown";
+          if (indicator === "none") status = "operational";
+          else if (indicator === "minor" || indicator === "maintenance") status = "degraded";
+          else if (indicator === "major" || indicator === "critical") status = "outage";
+          return { name: service.name, category: service.category, status, description: desc, lastUpdated: updatedAt, url: service.statusPage };
+        } catch {
+          clearTimeout(timeout);
+          return { name: service.name, category: service.category, status: "unknown" as const, description: `Unable to reach ${service.name} status page`, lastUpdated: null, url: service.statusPage };
+        }
+      }
+
+      async function fetchSlack() {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 8000);
+        try {
+          const resp = await fetch(slackService.url, { signal: controller.signal, headers: { "User-Agent": "STBCS-StatusMonitor/1.0" } });
+          clearTimeout(timeout);
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          const json = await resp.json();
+          const slackStatus = json.status || "active";
+          return {
+            name: "Slack", category: "communication",
+            status: slackStatus === "active" ? "operational" as const : slackStatus === "maintenance" ? "degraded" as const : "outage" as const,
+            description: json.date_updated ? `Status: ${slackStatus}` : "Slack messaging platform",
+            lastUpdated: json.date_updated || new Date().toISOString(),
+            url: slackService.statusPage,
+          };
+        } catch {
+          clearTimeout(timeout);
+          return { name: "Slack", category: "communication", status: "unknown" as const, description: "Unable to reach Slack status", lastUpdated: null, url: slackService.statusPage };
+        }
+      }
+
+      const [liveResults, slackResult] = await Promise.all([
+        Promise.allSettled(statusPages.map(fetchStatusPage)),
+        fetchSlack(),
+      ]);
+
+      const allServices = [
+        ...stbcsServices,
+        ...liveResults.map(r => r.status === "fulfilled" ? r.value : null).filter(Boolean),
+        slackResult,
+        ...staticServices,
+      ];
+
+      cacheAndSend(res, cacheKey, allServices, 60);
     } catch (error) {
       console.error("Service status error:", error);
       res.status(500).json({ error: "Failed to fetch service status" });
