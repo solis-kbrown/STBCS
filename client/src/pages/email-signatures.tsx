@@ -245,6 +245,205 @@ function sig6(f: SigFields) {
 </table>`;
 }
 
+function sig7(f: SigFields) {
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:520px;">
+  <tr>
+    <td style="padding:3px;background:linear-gradient(135deg,#f97316,#ea580c,#c2410c,#f97316);border-radius:14px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%" style="background:#111113;border-radius:12px;overflow:hidden;">
+        <tr>
+          <td style="padding:18px 22px;">
+            <table cellpadding="0" cellspacing="0" border="0" width="100%">
+              <tr>
+                <td style="vertical-align:top;width:70px;">
+                  <div style="width:64px;height:64px;background:linear-gradient(135deg,#f97316 0%,#ea580c 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;line-height:64px;">
+                    <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="display:inline-block;border-radius:8px;" />
+                  </div>
+                </td>
+                <td style="padding-left:14px;vertical-align:top;">
+                  <div style="font-size:10px;color:#f97316;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding-bottom:4px;">&#9632; CLASSIFIED PERSONNEL</div>
+                  <div style="font-size:18px;font-weight:800;color:#ffffff;padding-bottom:2px;">${f.name}</div>
+                  <div style="font-size:12px;color:#f97316;padding-bottom:6px;font-weight:600;">${f.title}</div>
+                  <div style="font-size:13px;font-weight:700;color:#d4d4d8;letter-spacing:1.5px;padding-bottom:10px;">STB CYBERSECURITY</div>
+                </td>
+              </tr>
+            </table>
+            <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-top:1px solid #27272a;">
+              <tr>
+                <td style="padding-top:10px;">
+                  <table cellpadding="0" cellspacing="0" border="0">
+                    <tr>
+                      <td style="font-size:11px;color:#71717a;padding-right:6px;">&#9993;</td>
+                      <td style="font-size:11px;padding-bottom:3px;"><a href="mailto:${f.email}" style="color:#a1a1aa;text-decoration:none;">${f.email}</a></td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:11px;color:#71717a;padding-right:6px;">&#9742;</td>
+                      <td style="font-size:11px;color:#a1a1aa;padding-bottom:3px;">${f.phone}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:11px;color:#71717a;padding-right:6px;">&#128205;</td>
+                      <td style="font-size:11px;color:#a1a1aa;padding-bottom:3px;">${f.location}</td>
+                    </tr>
+                    <tr>
+                      <td style="font-size:11px;color:#71717a;padding-right:6px;">&#127760;</td>
+                      <td style="font-size:11px;"><a href="${SITE_URL}" style="color:#f97316;text-decoration:none;font-weight:600;">stbcybersecurity.com</a></td>
+                    </tr>
+                  </table>
+                </td>
+              </tr>
+            </table>
+            <div style="margin-top:10px;padding-top:8px;border-top:1px solid #27272a;">
+              <div style="font-size:9px;color:#52525b;letter-spacing:2px;text-transform:uppercase;">&#128274; AUTHORIZED SECURITY CLEARANCE &bull; CYBER DEFENSE DIVISION</div>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>`;
+}
+
+function sig8(f: SigFields) {
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:560px;overflow:hidden;border-radius:10px;border:1px solid #27272a;">
+  <tr>
+    <td style="background:#0c0c0e;padding:14px 20px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="vertical-align:middle;">
+            <img src="${LOGO_URL}" alt="STBCS" width="36" height="36" style="display:inline-block;border-radius:8px;vertical-align:middle;" />
+          </td>
+          <td style="padding-left:12px;vertical-align:middle;">
+            <div style="font-size:16px;font-weight:800;color:#ffffff;letter-spacing:2px;">STB CYBERSECURITY</div>
+            <div style="font-size:9px;color:#52525b;letter-spacing:3px;text-transform:uppercase;">SECURITY OPERATIONS CENTER</div>
+          </td>
+          <td style="text-align:right;vertical-align:middle;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;margin-right:6px;vertical-align:middle;"></span>
+            <span style="font-size:10px;color:#22c55e;font-weight:600;vertical-align:middle;">ONLINE</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="background:#18181b;padding:14px 20px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="vertical-align:top;width:50%;">
+            <div style="font-size:16px;font-weight:700;color:#ffffff;padding-bottom:2px;">${f.name}</div>
+            <div style="font-size:11px;color:#f97316;padding-bottom:6px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">${f.title}</div>
+            <div style="font-size:11px;color:#71717a;padding-bottom:2px;">&#128205; ${f.location}</div>
+          </td>
+          <td style="vertical-align:top;width:50%;padding-left:16px;border-left:1px solid #27272a;">
+            <div style="font-size:11px;color:#a1a1aa;padding-bottom:4px;">&#9993; <a href="mailto:${f.email}" style="color:#d4d4d8;text-decoration:none;">${f.email}</a></div>
+            <div style="font-size:11px;color:#a1a1aa;padding-bottom:4px;">&#9742; ${f.phone}</div>
+            <div style="font-size:11px;">&#127760; <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;font-weight:600;">stbcybersecurity.com</a></div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="background:#0c0c0e;padding:8px 20px;">
+      <div style="font-size:9px;color:#3f3f46;letter-spacing:1px;">24/7 THREAT MONITORING &bull; INCIDENT RESPONSE &bull; DIGITAL FORENSICS &bull; VULNERABILITY MANAGEMENT</div>
+    </td>
+  </tr>
+</table>`;
+}
+
+function sig9(f: SigFields) {
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:540px;">
+  <tr>
+    <td style="background:linear-gradient(135deg,#7f1d1d,#991b1b,#b91c1c);padding:4px 20px;border-radius:8px 8px 0 0;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="font-size:11px;font-weight:800;color:#fbbf24;letter-spacing:4px;text-transform:uppercase;">&#9888; OFFENSIVE SECURITY</td>
+          <td style="text-align:right;">
+            <img src="${LOGO_URL}" alt="STBCS" width="28" height="28" style="display:inline-block;border-radius:6px;opacity:0.9;" />
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="background:#18181b;padding:16px 20px;">
+      <div style="font-size:22px;font-weight:900;color:#ffffff;text-transform:uppercase;letter-spacing:2px;padding-bottom:2px;">${f.name}</div>
+      <div style="font-size:13px;color:#f97316;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;padding-bottom:4px;">${f.title}</div>
+      <div style="font-size:15px;font-weight:800;color:#ef4444;letter-spacing:2px;padding-bottom:12px;">STB CYBERSECURITY</div>
+      <div style="width:100%;height:3px;background:linear-gradient(90deg,#ef4444,#f97316,#ef4444);margin-bottom:12px;"></div>
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="font-size:12px;color:#fbbf24;font-weight:700;padding-right:8px;text-transform:uppercase;">E /</td>
+          <td style="font-size:12px;padding-bottom:3px;"><a href="mailto:${f.email}" style="color:#d4d4d8;text-decoration:none;">${f.email}</a></td>
+        </tr>
+        <tr>
+          <td style="font-size:12px;color:#fbbf24;font-weight:700;padding-right:8px;text-transform:uppercase;">P /</td>
+          <td style="font-size:12px;color:#d4d4d8;padding-bottom:3px;">${f.phone}</td>
+        </tr>
+        <tr>
+          <td style="font-size:12px;color:#fbbf24;font-weight:700;padding-right:8px;text-transform:uppercase;">L /</td>
+          <td style="font-size:12px;color:#d4d4d8;padding-bottom:3px;">${f.location}</td>
+        </tr>
+        <tr>
+          <td style="font-size:12px;color:#fbbf24;font-weight:700;padding-right:8px;text-transform:uppercase;">W /</td>
+          <td style="font-size:12px;"><a href="${SITE_URL}" style="color:#f97316;text-decoration:none;font-weight:700;">stbcybersecurity.com</a></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="background:linear-gradient(135deg,#7f1d1d,#991b1b);padding:8px 20px;border-radius:0 0 8px 8px;">
+      <div style="font-size:9px;color:#fca5a5;letter-spacing:2px;font-weight:700;text-transform:uppercase;">&#9733; PENETRATION TESTING &bull; RED TEAM OPS &bull; EXPLOIT DEVELOPMENT &bull; ADVERSARY SIMULATION</div>
+    </td>
+  </tr>
+</table>`;
+}
+
+function sig10(f: SigFields) {
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:540px;background:#ffffff;border-radius:10px;overflow:hidden;border:1px solid #e4e4e7;">
+  <tr>
+    <td style="padding:18px 22px;border-bottom:2px solid #f97316;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="vertical-align:middle;">
+            <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:inline-block;border-radius:10px;vertical-align:middle;" />
+          </td>
+          <td style="padding-left:12px;vertical-align:middle;">
+            <div style="font-size:17px;font-weight:700;color:#18181b;letter-spacing:1px;">STB Cybersecurity</div>
+            <div style="font-size:10px;color:#71717a;letter-spacing:1px;">Securing the Digital Frontier</div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:16px 22px;">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr><td style="font-size:17px;font-weight:700;color:#18181b;padding-bottom:2px;">${f.name}</td></tr>
+        <tr><td style="font-size:12px;color:#f97316;padding-bottom:10px;font-weight:500;">${f.title}</td></tr>
+      </table>
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="font-size:12px;color:#52525b;padding-bottom:3px;">&#9993; <a href="mailto:${f.email}" style="color:#18181b;text-decoration:none;">${f.email}</a></td>
+        </tr>
+        <tr>
+          <td style="font-size:12px;color:#52525b;padding-bottom:3px;">&#9742; ${f.phone}</td>
+        </tr>
+        <tr>
+          <td style="font-size:12px;color:#52525b;padding-bottom:3px;">&#128205; ${f.location}</td>
+        </tr>
+        <tr>
+          <td style="font-size:12px;">&#127760; <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;font-weight:600;">www.stbcybersecurity.com</a></td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:10px 22px;background:#fafafa;border-top:1px solid #e4e4e7;">
+      <div style="font-size:10px;color:#a1a1aa;">Threat Intelligence &bull; Security Monitoring &bull; Incident Response &bull; Consulting</div>
+    </td>
+  </tr>
+</table>`;
+}
+
 const signatures = [
   { id: 1, name: "Executive Classic", desc: "Clean vertical divider with orange accent — professional and authoritative", render: sig1 },
   { id: 2, name: "Command Center", desc: "Orange gradient header card — bold, branded, modern", render: sig2 },
@@ -252,6 +451,10 @@ const signatures = [
   { id: 4, name: "Intelligence Brief", desc: "Circular badge with structured fields — formal intelligence aesthetic", render: sig4 },
   { id: 5, name: "Operations Panel", desc: "Dark panel with labeled sections — sleek ops-center feel", render: sig5 },
   { id: 6, name: "Terminal Hacker", desc: "Monospace terminal theme — the cybersec classic for tech-forward teams", render: sig6 },
+  { id: 7, name: "Cyber Shield", desc: "Shield-shaped badge with gradient border — classified top-secret styling", render: sig7 },
+  { id: 8, name: "SOC Operator", desc: "Two-row dark banner layout with status indicator — security operations center feel", render: sig8 },
+  { id: 9, name: "Red Team", desc: "Aggressive red/orange styling with angular dividers — offensive security aesthetic", render: sig9 },
+  { id: 10, name: "Corporate Clean", desc: "Light-mode professional design with subtle orange accents — ideal for non-tech recipients", render: sig10 },
 ];
 
 export default function EmailSignatures() {

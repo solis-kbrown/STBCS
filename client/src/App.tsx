@@ -58,6 +58,14 @@ const KbEditor = lazy(() => import("@/pages/kb-editor"));
 const KbAdmin = lazy(() => import("@/pages/kb-admin"));
 const Feedback = lazy(() => import("@/pages/feedback"));
 const EmailSignatures = lazy(() => import("@/pages/email-signatures"));
+const BrandKit = lazy(() => import("@/pages/brand-kit"));
+const BrandLetterheads = lazy(() => import("@/pages/brand-kit/letterheads"));
+const BrandBusinessCards = lazy(() => import("@/pages/brand-kit/business-cards"));
+const BrandInvoices = lazy(() => import("@/pages/brand-kit/invoices"));
+const BrandSocialMedia = lazy(() => import("@/pages/brand-kit/social-media"));
+const BrandPresentations = lazy(() => import("@/pages/brand-kit/presentations"));
+const BrandBackgrounds = lazy(() => import("@/pages/brand-kit/backgrounds"));
+const BrandReportCovers = lazy(() => import("@/pages/brand-kit/report-covers"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -127,6 +135,15 @@ function Router() {
         <Route path="/knowledge-base/:slug" component={KbPost}/>
         <Route path="/feedback" component={Feedback}/>
         <Route path="/email-signatures" component={EmailSignatures}/>
+        <Route path="/brand-kit" component={BrandKit}/>
+        <Route path="/brand-kit/email-signatures" component={EmailSignatures}/>
+        <Route path="/brand-kit/letterheads" component={BrandLetterheads}/>
+        <Route path="/brand-kit/business-cards" component={BrandBusinessCards}/>
+        <Route path="/brand-kit/invoices" component={BrandInvoices}/>
+        <Route path="/brand-kit/social-media" component={BrandSocialMedia}/>
+        <Route path="/brand-kit/presentations" component={BrandPresentations}/>
+        <Route path="/brand-kit/backgrounds" component={BrandBackgrounds}/>
+        <Route path="/brand-kit/report-covers" component={BrandReportCovers}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

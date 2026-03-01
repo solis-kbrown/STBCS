@@ -40,7 +40,8 @@ import {
   Network,
   ShieldAlert,
   BookOpen,
-  MessageSquareText
+  MessageSquareText,
+  Palette
 } from "lucide-react";
 import { useState, useEffect, useRef, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -114,6 +115,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/sftp-client", labelKey: "nav.sftpClient", icon: FolderSync, isBusiness: true },
     { href: "/messages", labelKey: "nav.messages", icon: MessageSquare, isBusiness: true },
     { href: "/knowledge-base", labelKey: "nav.knowledgeBase", icon: BookOpen },
+    { href: "/brand-kit", labelKey: "nav.brandKit", icon: Palette },
     { href: "/feedback", labelKey: "nav.feedback", icon: MessageSquareText },
     { href: "/ransomware", labelKey: "nav.ransomware", icon: ShieldOff },
     { href: "/groups", labelKey: "nav.groups", icon: Users },
