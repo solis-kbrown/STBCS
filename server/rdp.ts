@@ -1,16 +1,19 @@
-import type { Server as HTTPServer } from "http";
+import type { Server as HTTPServer, IncomingMessage } from "http";
 import { WebSocketServer, WebSocket } from "ws";
 import type { Express, Request, Response } from "express";
 import crypto from "crypto";
 import { requireAuth, requireBusiness, type AuthenticatedRequest } from "./auth";
 import rateLimit from "express-rate-limit";
 import net from "net";
+import dns from "dns/promises";
 import { log } from "./index";
+import { storage } from "./storage";
 
 interface RDPSession {
   id: string;
   userId: string;
   hostname: string;
+  resolvedIP: string;
   port: number;
   width: number;
   height: number;
@@ -18,6 +21,83 @@ interface RDPSession {
   createdAt: number;
   tcpSocket: net.Socket | null;
   wsClient: WebSocket | null;
+}
+
+const ipRegex = /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
+const hostnameRegex = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
+
+function isPrivateIP(ip: string): boolean {
+  if (/^127\./.test(ip)) return true;
+  if (/^10\./.test(ip)) return true;
+  if (/^172\.(1[6-9]|2\d|3[01])\./.test(ip)) return true;
+  if (/^192\.168\./.test(ip)) return true;
+  if (/^0\./.test(ip)) return true;
+  if (/^169\.254\./.test(ip)) return true;
+  if (/^100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\./.test(ip)) return true;
+  if (ip === "::1" || ip === "::") return true;
+  if (/^fe80:/i.test(ip)) return true;
+  if (/^fc00:/i.test(ip)) return true;
+  if (/^fd/i.test(ip)) return true;
+  if (/^::ffff:(127\.|10\.|172\.(1[6-9]|2\d|3[01])\.|192\.168\.|0\.|169\.254\.)/i.test(ip)) return true;
+  return false;
+}
+
+async function resolveAndValidateHost(hostname: string): Promise<string> {
+  if (ipRegex.test(hostname)) {
+    if (isPrivateIP(hostname)) {
+      throw new Error("Cannot connect to private/reserved IP addresses");
+    }
+    return hostname;
+  }
+
+  let resolvedIP: string | null = null;
+
+  try {
+    const addresses = await dns.resolve4(hostname);
+    if (addresses && addresses.length > 0) {
+      for (const addr of addresses) {
+        if (isPrivateIP(addr)) {
+          throw new Error("Cannot connect to private/reserved IP addresses");
+        }
+      }
+      resolvedIP = addresses[0];
+    }
+  } catch (err: any) {
+    if (err.message?.includes("private") || err.message?.includes("reserved")) {
+      throw err;
+    }
+  }
+
+  if (!resolvedIP) {
+    try {
+      const addresses6 = await dns.resolve6(hostname);
+      if (addresses6 && addresses6.length > 0) {
+        for (const addr of addresses6) {
+          if (isPrivateIP(addr)) {
+            throw new Error("Cannot connect to private/reserved IP addresses");
+          }
+        }
+        resolvedIP = addresses6[0];
+      }
+    } catch (err6: any) {
+      if (err6.message?.includes("private") || err6.message?.includes("reserved")) {
+        throw err6;
+      }
+    }
+  }
+
+  if (!resolvedIP) {
+    throw new Error("Host not found. Check the hostname or IP address.");
+  }
+
+  return resolvedIP;
+}
+
+function parseCookieSession(req: IncomingMessage): string | null {
+  const cookie = req.headers.cookie;
+  if (!cookie) return null;
+  const match = cookie.match(/(?:^|;\s*)session_token=([^;]+)/);
+  return match ? decodeURIComponent(match[1]) : null;
 }
 
 const activeSessions = new Map<string, RDPSession>();
@@ -74,28 +154,15 @@ export function registerRDPRoutes(app: Express) {
         return res.status(400).json({ error: "Invalid port number" });
       }
 
-      const ipRegex = /^(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)$/;
-      const hostnameRegex = /^[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?(\.[a-zA-Z0-9]([a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?)*$/;
+      if (cleanHostname.length > 253) {
+        return res.status(400).json({ error: "Hostname too long" });
+      }
+
       if (!ipRegex.test(cleanHostname) && !hostnameRegex.test(cleanHostname)) {
         return res.status(400).json({ error: "Invalid hostname or IP address" });
       }
 
-      const privateIpRanges = [
-        /^127\./,
-        /^10\./,
-        /^172\.(1[6-9]|2\d|3[01])\./,
-        /^192\.168\./,
-        /^0\./,
-        /^169\.254\./,
-      ];
-
-      if (ipRegex.test(cleanHostname)) {
-        for (const range of privateIpRanges) {
-          if (range.test(cleanHostname)) {
-            return res.status(400).json({ error: "Cannot connect to private/reserved IP addresses" });
-          }
-        }
-      }
+      const resolvedIP = await resolveAndValidateHost(cleanHostname);
 
       const userId = req.user!.id;
       let userSessionCount = 0;
@@ -112,6 +179,7 @@ export function registerRDPRoutes(app: Express) {
         id: sessionId,
         userId,
         hostname: cleanHostname,
+        resolvedIP,
         port: cleanPort,
         width: cleanWidth,
         height: cleanHeight,
@@ -172,7 +240,7 @@ export function registerRDPRoutes(app: Express) {
 export function setupRDPWebSocket(httpServer: HTTPServer) {
   const wss = new WebSocketServer({ noServer: true });
 
-  httpServer.on("upgrade", (req, socket, head) => {
+  httpServer.on("upgrade", async (req, socket, head) => {
     const url = req.url || "";
     if (!url.startsWith("/ws/rdp/")) return;
 
@@ -181,6 +249,32 @@ export function setupRDPWebSocket(httpServer: HTTPServer) {
 
     if (!session) {
       socket.write("HTTP/1.1 404 Not Found\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+
+    const token = parseCookieSession(req);
+    if (!token) {
+      socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+      socket.destroy();
+      return;
+    }
+
+    try {
+      const dbSession = await storage.getSessionByToken(token);
+      if (!dbSession || new Date(dbSession.expiresAt) < new Date()) {
+        socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+        socket.destroy();
+        return;
+      }
+      const user = await storage.getUser(dbSession.userId);
+      if (!user || String(user.id) !== String(session.userId)) {
+        socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
+        socket.destroy();
+        return;
+      }
+    } catch (err) {
+      socket.write("HTTP/1.1 500 Internal Server Error\r\n\r\n");
       socket.destroy();
       return;
     }
@@ -203,7 +297,7 @@ function handleRDPConnection(ws: WebSocket, session: RDPSession) {
   }));
 
   const tcpSocket = net.createConnection({
-    host: session.hostname,
+    host: session.resolvedIP,
     port: session.port,
     timeout: 10000,
   });

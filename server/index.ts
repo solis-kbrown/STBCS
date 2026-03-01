@@ -274,6 +274,11 @@ async function initializeApp() {
   setupSSHWebSocket(httpServer);
   await yieldToEventLoop();
 
+  const { registerTelnetRoutes, setupTelnetWebSocket } = await import("./telnet");
+  registerTelnetRoutes(app);
+  setupTelnetWebSocket(httpServer);
+  await yieldToEventLoop();
+
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
     const internalMessage = err.message || "Internal Server Error";

@@ -41,6 +41,7 @@ const ServiceStatus = lazy(() => import("@/pages/service-status"));
 const Playbooks = lazy(() => import("@/pages/playbooks"));
 const RemoteDesktop = lazy(() => import("@/pages/remote-desktop"));
 const SSHTerminal = lazy(() => import("@/pages/ssh-terminal"));
+const TelnetClient = lazy(() => import("@/pages/telnet-client"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -92,6 +93,7 @@ function Router() {
         <Route path="/playbooks" component={Playbooks}/>
         <Route path="/remote-desktop" component={RemoteDesktop}/>
         <Route path="/ssh-terminal" component={SSHTerminal}/>
+        <Route path="/telnet-client" component={TelnetClient}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

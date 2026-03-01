@@ -14,6 +14,7 @@ interface SSHSession {
   id: string;
   userId: string;
   hostname: string;
+  resolvedIP: string;
   port: number;
   username: string;
   createdAt: number;
@@ -116,20 +117,25 @@ async function resolveAndValidateHost(hostname: string): Promise<string> {
     return hostname;
   }
 
+  let resolvedIP: string | null = null;
+
   try {
     const addresses = await dns.resolve4(hostname);
-    if (!addresses || addresses.length === 0) {
-      throw new Error("Host not found");
-    }
-    for (const addr of addresses) {
-      if (isPrivateIP(addr)) {
-        throw new Error("Cannot connect to private/reserved IP addresses");
+    if (addresses && addresses.length > 0) {
+      for (const addr of addresses) {
+        if (isPrivateIP(addr)) {
+          throw new Error("Cannot connect to private/reserved IP addresses");
+        }
       }
+      resolvedIP = addresses[0];
     }
   } catch (err: any) {
     if (err.message?.includes("private") || err.message?.includes("reserved")) {
       throw err;
     }
+  }
+
+  if (!resolvedIP) {
     try {
       const addresses6 = await dns.resolve6(hostname);
       if (addresses6 && addresses6.length > 0) {
@@ -138,16 +144,20 @@ async function resolveAndValidateHost(hostname: string): Promise<string> {
             throw new Error("Cannot connect to private/reserved IP addresses");
           }
         }
+        resolvedIP = addresses6[0];
       }
     } catch (err6: any) {
       if (err6.message?.includes("private") || err6.message?.includes("reserved")) {
         throw err6;
       }
-      throw new Error("Host not found. Check the hostname or IP address.");
     }
   }
 
-  return hostname;
+  if (!resolvedIP) {
+    throw new Error("Host not found. Check the hostname or IP address.");
+  }
+
+  return resolvedIP;
 }
 
 function parseCookieSession(req: IncomingMessage): string | null {
@@ -196,7 +206,7 @@ export function registerSSHRoutes(app: Express) {
         return res.status(400).json({ error: "Invalid hostname or IP address" });
       }
 
-      await resolveAndValidateHost(cleanHostname);
+      const resolvedIP = await resolveAndValidateHost(cleanHostname);
 
       const userId = req.user!.id;
       let userSessionCount = 0;
@@ -213,6 +223,7 @@ export function registerSSHRoutes(app: Express) {
         id: sessionId,
         userId,
         hostname: cleanHostname,
+        resolvedIP,
         port: cleanPort,
         username: String(username),
         createdAt: Date.now(),
@@ -246,7 +257,7 @@ export function registerSSHRoutes(app: Express) {
         });
 
         const connectConfig: any = {
-          host: cleanHostname,
+          host: resolvedIP,
           port: cleanPort,
           username: String(username),
           readyTimeout: 15000,

@@ -132,6 +132,11 @@ const PAGE_META: Record<string, PageMeta> = {
     description: 'Secure, browser-based SSH terminal for remote server management. Supports password and private key authentication with zero credential storage. Business and Enterprise feature.',
     noindex: true,
   },
+  '/telnet-client': {
+    title: 'Telnet Client | STB Cybersecurity',
+    description: 'Browser-based Telnet client for SMTP testing, banner grabbing, and network diagnostics. Quick-connect ports for common services. Pro feature.',
+    noindex: true,
+  },
   '/service-status': {
     title: 'Service Status Dashboard | STB Cybersecurity',
     description: 'Real-time operational status of STB Cybersecurity platform services, threat feeds, APIs, and monitoring systems. Current uptime and incident history.',
