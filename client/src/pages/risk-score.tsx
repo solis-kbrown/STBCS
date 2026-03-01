@@ -427,7 +427,7 @@ export default function RiskScore() {
                 Get a free consultation to address your specific vulnerabilities.
               </p>
               <Button className="bg-orange-500 hover:bg-orange-600 text-white" asChild>
-                <a href="/services">View Our Services</a>
+                <a href="/contact">View Our Services</a>
               </Button>
             </CardContent>
           </Card>
