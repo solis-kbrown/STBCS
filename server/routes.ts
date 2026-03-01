@@ -1246,6 +1246,14 @@ Hiring: https://stbcybersecurity.com/support
   // Admin: Storage statistics
   app.get("/api/admin/stats", strictLimiter, async (req: Request, res: Response) => {
     try {
+      const adminKey = process.env.ADMIN_STATS_KEY;
+      if (!adminKey || adminKey.length < 16) {
+        return res.status(503).json({ error: "Admin endpoint not configured" });
+      }
+      const headerKey = req.headers["x-admin-key"];
+      if (!headerKey || typeof headerKey !== 'string' || headerKey !== adminKey) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const stats = await storage.getStorageStats();
       res.json(stats);
     } catch (error) {
@@ -1257,6 +1265,14 @@ Hiring: https://stbcybersecurity.com/support
   // Admin: Data cleanup (trigger old data removal)
   app.post("/api/admin/cleanup", strictLimiter, async (req: Request, res: Response) => {
     try {
+      const adminKey = process.env.ADMIN_STATS_KEY;
+      if (!adminKey || adminKey.length < 16) {
+        return res.status(503).json({ error: "Admin endpoint not configured" });
+      }
+      const headerKey = req.headers["x-admin-key"];
+      if (!headerKey || typeof headerKey !== 'string' || headerKey !== adminKey) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
       const result = await storage.cleanupOldData(730); // 2 year retention
       res.json({ success: true, ...result });
     } catch (error) {
