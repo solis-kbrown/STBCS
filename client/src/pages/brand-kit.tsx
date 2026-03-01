@@ -1,63 +1,77 @@
 import { Link } from "wouter";
 import Layout from "@/components/layout";
-import { Shield, Mail, FileText, CreditCard, Receipt, Share2, Monitor, Video, FileSearch, Palette, Image, Paintbrush, ExternalLink } from "lucide-react";
+import { Shield, Mail, FileText, CreditCard, Receipt, Share2, Monitor, Video, FileSearch, Palette, Image, Paintbrush, ExternalLink, Projector, Award } from "lucide-react";
 
 const categories = [
   {
     slug: "email-signatures",
     title: "Email Signatures",
-    count: 10,
+    count: 15,
     description: "Professional email signature templates with tactical cybersecurity styling",
     icon: Mail,
   },
   {
     slug: "letterheads",
     title: "PDF Letterheads",
-    count: 8,
+    count: 12,
     description: "Branded letterhead designs for official documents and correspondence",
     icon: FileText,
   },
   {
     slug: "business-cards",
     title: "Business Cards",
-    count: 8,
+    count: 12,
     description: "Front and back business card designs with dark tactical aesthetics",
     icon: CreditCard,
   },
   {
     slug: "invoices",
     title: "Invoice Templates",
-    count: 6,
+    count: 10,
     description: "Professional invoice and quote templates for billing and proposals",
     icon: Receipt,
   },
   {
     slug: "social-media",
     title: "Social Media Banners",
-    count: 8,
-    description: "Platform-optimized banners for Twitter, LinkedIn, YouTube, and Facebook",
+    count: 12,
+    description: "Platform-optimized banners for Twitter, LinkedIn, YouTube, Facebook, Instagram, Discord, and more",
     icon: Share2,
   },
   {
     slug: "presentations",
     title: "Presentation Headers",
-    count: 6,
+    count: 10,
     description: "Title slide designs for keynotes, briefings, and technical presentations",
     icon: Monitor,
   },
   {
     slug: "backgrounds",
     title: "Meeting Backgrounds",
-    count: 6,
+    count: 10,
     description: "Virtual backgrounds for Zoom, Teams, and video conferencing",
     icon: Video,
   },
   {
     slug: "report-covers",
     title: "Report Covers",
-    count: 6,
+    count: 10,
     description: "Cover page designs for security assessments, audits, and incident reports",
     icon: FileSearch,
+  },
+  {
+    slug: "pitch-decks",
+    title: "Pitch Deck Covers",
+    count: 8,
+    description: "Proposal and pitch deck cover designs for client presentations and partnerships",
+    icon: Projector,
+  },
+  {
+    slug: "certificates",
+    title: "Certificate Templates",
+    count: 8,
+    description: "Awards, badges, and certification templates for training and achievements",
+    icon: Award,
   },
 ];
 

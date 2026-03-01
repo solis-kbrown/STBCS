@@ -187,6 +187,100 @@ function banner8(f: BannerFields) {
 </div>`;
 }
 
+function banner9(f: BannerFields) {
+  return `<div style="width:100%;aspect-ratio:9/16;background:linear-gradient(180deg,#09090b 0%,#0c0c0e 50%,#18181b 100%);position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+  <div style="position:absolute;top:0;left:50%;transform:translateX(-50%);width:2px;height:25%;background:linear-gradient(180deg,#f97316,transparent);"></div>
+  <div style="position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:2px;height:25%;background:linear-gradient(0deg,#f97316,transparent);"></div>
+  <div style="position:absolute;top:15%;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(249,115,22,0.3),transparent);"></div>
+  <div style="position:absolute;bottom:15%;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(249,115,22,0.3),transparent);"></div>
+  <div style="position:absolute;left:8%;top:20%;bottom:20%;width:1px;background:linear-gradient(180deg,transparent,rgba(249,115,22,0.15),transparent);"></div>
+  <div style="position:absolute;right:8%;top:20%;bottom:20%;width:1px;background:linear-gradient(180deg,transparent,rgba(249,115,22,0.15),transparent);"></div>
+  <img src="${LOGO_URL}" alt="STBCS" width="80" height="80" style="border-radius:16px;margin-bottom:24px;border:2px solid #f97316;box-shadow:0 0 30px rgba(249,115,22,0.3);" />
+  <div style="font-size:28px;font-weight:900;color:#ffffff;letter-spacing:5px;text-transform:uppercase;text-align:center;padding:0 10%;">${f.companyName}</div>
+  <div style="width:50px;height:3px;background:#f97316;margin:16px auto;border-radius:2px;box-shadow:0 0 10px rgba(249,115,22,0.5);"></div>
+  <div style="font-size:14px;color:#f97316;letter-spacing:3px;text-transform:uppercase;text-align:center;padding:0 15%;">${f.tagline}</div>
+  <div style="font-size:11px;color:#71717a;margin-top:16px;letter-spacing:2px;text-align:center;">${f.subtitle}</div>
+  <div style="position:absolute;bottom:8%;font-size:10px;color:#52525b;letter-spacing:2px;">${f.website}</div>
+  <div style="position:absolute;top:6%;left:6%;width:20px;height:20px;border-left:2px solid #f97316;border-top:2px solid #f97316;"></div>
+  <div style="position:absolute;top:6%;right:6%;width:20px;height:20px;border-right:2px solid #f97316;border-top:2px solid #f97316;"></div>
+  <div style="position:absolute;bottom:6%;left:6%;width:20px;height:20px;border-left:2px solid #f97316;border-bottom:2px solid #f97316;"></div>
+  <div style="position:absolute;bottom:6%;right:6%;width:20px;height:20px;border-right:2px solid #f97316;border-bottom:2px solid #f97316;"></div>
+</div>`;
+}
+
+function banner10(f: BannerFields) {
+  return `<div style="width:100%;aspect-ratio:960/540;background:linear-gradient(135deg,#1a0a2e 0%,#16082b 30%,#1a0a0a 70%,#18100a 100%);position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="position:absolute;inset:0;background-image:radial-gradient(circle,rgba(139,92,246,0.06) 1px,transparent 1px);background-size:24px 24px;"></div>
+  <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#8b5cf6,#f97316);"></div>
+  <div style="position:absolute;top:12px;left:12px;background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.25);border-radius:6px;padding:6px 12px;">
+    <div style="font-size:8px;color:#8b5cf6;text-transform:uppercase;letter-spacing:2px;font-weight:700;"># general</div>
+  </div>
+  <div style="position:absolute;top:12px;left:120px;background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.15);border-radius:6px;padding:6px 12px;">
+    <div style="font-size:8px;color:#a78bfa;text-transform:uppercase;letter-spacing:2px;"># threat-intel</div>
+  </div>
+  <div style="position:absolute;top:12px;right:12px;background:rgba(249,115,22,0.15);border:1px solid rgba(249,115,22,0.25);border-radius:6px;padding:6px 12px;">
+    <div style="font-size:8px;color:#f97316;text-transform:uppercase;letter-spacing:2px;">LIVE</div>
+  </div>
+  <img src="${LOGO_URL}" alt="STBCS" width="70" height="70" style="border-radius:50%;margin-bottom:16px;border:3px solid #8b5cf6;box-shadow:0 0 20px rgba(139,92,246,0.3);" />
+  <div style="font-size:24px;font-weight:900;color:#ffffff;letter-spacing:4px;text-transform:uppercase;">${f.companyName}</div>
+  <div style="font-size:13px;color:#f97316;margin-top:8px;letter-spacing:2px;font-weight:600;">JOIN OUR THREAT INTEL COMMUNITY</div>
+  <div style="font-size:11px;color:#a78bfa;margin-top:6px;letter-spacing:1px;">${f.tagline}</div>
+  <div style="position:absolute;bottom:16px;display:flex;gap:16px;">
+    <div style="font-size:9px;color:#71717a;letter-spacing:1px;">500+ Members</div>
+    <div style="font-size:9px;color:#71717a;">•</div>
+    <div style="font-size:9px;color:#71717a;letter-spacing:1px;">24/7 Active</div>
+    <div style="font-size:9px;color:#71717a;">•</div>
+    <div style="font-size:9px;color:#71717a;letter-spacing:1px;">${f.website}</div>
+  </div>
+</div>`;
+}
+
+function banner11(f: BannerFields) {
+  return `<div style="width:100%;aspect-ratio:1920/1080;background:#09090b;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+  <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(249,115,22,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(249,115,22,0.03) 1px,transparent 1px);background-size:60px 60px;"></div>
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(249,115,22,0.05) 0%,transparent 70%);"></div>
+  <div style="position:absolute;top:20px;right:20px;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);border-radius:4px;padding:4px 10px;">
+    <div style="font-size:10px;color:#ef4444;font-weight:700;letter-spacing:2px;">OFFLINE</div>
+  </div>
+  <img src="${LOGO_URL}" alt="STBCS" width="90" height="90" style="border-radius:18px;margin-bottom:20px;border:2px solid rgba(249,115,22,0.4);opacity:0.9;" />
+  <div style="font-size:32px;font-weight:900;color:#ffffff;letter-spacing:6px;text-transform:uppercase;">${f.companyName}</div>
+  <div style="font-size:16px;color:#f97316;margin-top:12px;letter-spacing:4px;text-transform:uppercase;">SECURING THE PERIMETER</div>
+  <div style="width:80px;height:2px;background:linear-gradient(90deg,transparent,#f97316,transparent);margin:16px auto;"></div>
+  <div style="font-size:12px;color:#a1a1aa;letter-spacing:2px;">${f.tagline}</div>
+  <div style="position:absolute;bottom:60px;display:flex;gap:24px;align-items:center;">
+    <div style="text-align:center;">
+      <div style="font-size:8px;color:#71717a;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">Schedule</div>
+      <div style="font-size:10px;color:#a1a1aa;">MON — FRI</div>
+      <div style="font-size:10px;color:#a1a1aa;">9AM — 5PM EST</div>
+    </div>
+    <div style="width:1px;height:30px;background:#27272a;"></div>
+    <div style="text-align:center;">
+      <div style="font-size:8px;color:#71717a;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">Follow Us</div>
+      <div style="font-size:10px;color:#f97316;">${f.website}</div>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#f97316,transparent);"></div>
+</div>`;
+}
+
+function banner12(f: BannerFields) {
+  return `<div style="width:100%;aspect-ratio:600/200;background:#09090b;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;">
+  <div style="position:absolute;top:0;left:0;right:0;height:4px;background:#f97316;"></div>
+  <div style="display:flex;align-items:center;padding-left:30px;position:relative;z-index:1;flex:1;">
+    <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="border-radius:10px;margin-right:18px;border:1px solid rgba(249,115,22,0.3);" />
+    <div>
+      <div style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:3px;text-transform:uppercase;">${f.companyName}</div>
+      <div style="font-size:11px;color:#f97316;margin-top:2px;letter-spacing:1px;">${f.tagline}</div>
+    </div>
+  </div>
+  <div style="position:absolute;right:30px;top:50%;transform:translateY(-50%);text-align:right;z-index:1;">
+    <div style="font-size:10px;color:#a1a1aa;letter-spacing:1px;">${f.subtitle}</div>
+    <div style="font-size:9px;color:#71717a;margin-top:4px;">${f.website}</div>
+  </div>
+  <div style="position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,#f97316,rgba(249,115,22,0.3),transparent);"></div>
+</div>`;
+}
+
 const banners = [
   { id: 1, name: "Twitter Dark Shield", platform: "Twitter / X", dimensions: "1500 × 500", ratio: "1500/500", desc: "Dark background with large shield logo center, orange accent lines", render: banner1 },
   { id: 2, name: "Twitter Gradient Wave", platform: "Twitter / X", dimensions: "1500 × 500", ratio: "1500/500", desc: "Orange-to-dark gradient wave with text left-aligned, logo right", render: banner2 },
@@ -196,6 +290,10 @@ const banners = [
   { id: 6, name: "YouTube Matrix", platform: "YouTube", dimensions: "2560 × 1440", ratio: "2560/1440", desc: "Falling code rain effect with logo overlay, dark green tint", render: banner6 },
   { id: 7, name: "Facebook Brand Bar", platform: "Facebook", dimensions: "820 × 312", ratio: "820/312", desc: "Bold orange bar across center with white text, dark top/bottom", render: banner7 },
   { id: 8, name: "Facebook Tactical", platform: "Facebook", dimensions: "820 × 312", ratio: "820/312", desc: "Tactical map aesthetic with grid lines, orange markers, logo", render: banner8 },
+  { id: 9, name: "Instagram Story", platform: "Instagram", dimensions: "1080 × 1920", ratio: "9/16", desc: "Vertical dark design with neon orange accent lines, story-optimized layout", render: banner9 },
+  { id: 10, name: "Discord Server", platform: "Discord", dimensions: "960 × 540", ratio: "960/540", desc: "Gaming/community aesthetic with purple-to-orange gradient, channel-like elements", render: banner10 },
+  { id: 11, name: "Twitch Offline", platform: "Twitch", dimensions: "1920 × 1080", ratio: "1920/1080", desc: "Stream offline screen with schedule placeholder and social links", render: banner11 },
+  { id: 12, name: "Email Header", platform: "Email", dimensions: "600 × 200", ratio: "600/200", desc: "Newsletter header banner with clean branding and orange accent bar", render: banner12 },
 ];
 
 export default function SocialMedia() {

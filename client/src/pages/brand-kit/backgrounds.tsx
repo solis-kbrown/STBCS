@@ -108,6 +108,103 @@ function bg6() {
 </div>`;
 }
 
+function bg7() {
+  return `<div style="width:100%;aspect-ratio:16/9;background:linear-gradient(180deg,#05060a 0%,#0a0c12 60%,#0c0e14 100%);position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="position:absolute;inset:0;opacity:0.06;background-image:repeating-linear-gradient(0deg,transparent,transparent 30px,#3b82f6 30px,#3b82f6 31px),repeating-linear-gradient(90deg,transparent,transparent 30px,#3b82f6 30px,#3b82f6 31px);"></div>
+  <div style="position:absolute;bottom:0;left:0;right:0;height:40%;display:flex;align-items:flex-end;justify-content:center;gap:4px;padding:0 30px;">
+    ${[...Array(25)].map((_, i) => {
+      const h = 15 + Math.abs(12 - i) * 3 + (i % 3) * 8;
+      const hasLight = i % 2 === 0;
+      return `<div style="width:3.4%;height:${h}%;background:#0e1018;border:1px solid #1a1d28;border-bottom:none;position:relative;">
+        ${hasLight ? `<div style="position:absolute;top:${20 + (i % 4) * 15}%;left:30%;width:3px;height:3px;background:#f97316;border-radius:50%;box-shadow:0 0 6px #f97316;"></div>
+        <div style="position:absolute;top:${50 + (i % 3) * 10}%;right:25%;width:2px;height:2px;background:#f97316;opacity:0.6;border-radius:50%;"></div>` : `<div style="position:absolute;top:${30 + (i % 5) * 12}%;left:25%;width:4px;height:3px;background:#1a1d28;"></div>`}
+      </div>`;
+    }).join('')}
+  </div>
+  <div style="position:absolute;top:15%;left:50%;transform:translateX(-50%);width:60px;height:60px;border-radius:50%;border:1px solid rgba(249,115,22,0.1);box-shadow:0 0 40px rgba(249,115,22,0.05);"></div>
+  <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;opacity:0.25;">
+    <img src="${LOGO_URL}" alt="" width="14" height="14" style="border-radius:3px;" />
+    <span style="font-size:7px;color:#52525b;letter-spacing:3px;">STB CYBERSECURITY</span>
+  </div>
+</div>`;
+}
+
+function bg8() {
+  const nodes = [
+    {x:20,y:25},{x:45,y:15},{x:70,y:30},{x:30,y:55},{x:55,y:50},{x:80,y:55},
+    {x:15,y:75},{x:40,y:80},{x:65,y:70},{x:85,y:80},{x:50,y:35},{x:35,y:40}
+  ];
+  const connections = [
+    [0,1],[1,2],[0,3],[1,4],[2,5],[3,4],[4,5],[3,6],[4,7],[5,9],[6,7],[7,8],[8,9],[1,10],[10,4],[0,11],[11,4],[3,7]
+  ];
+  return `<div style="width:100%;aspect-ratio:16/9;background:#08090c;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <svg viewBox="0 0 100 100" style="position:absolute;inset:0;width:100%;height:100%;" preserveAspectRatio="none">
+    ${connections.map(([a,b]) => `<line x1="${nodes[a].x}" y1="${nodes[a].y}" x2="${nodes[b].x}" y2="${nodes[b].y}" stroke="#f97316" stroke-width="0.15" opacity="0.3"/>`).join('')}
+    ${nodes.map((n,i) => `<circle cx="${n.x}" cy="${n.y}" r="${i % 3 === 0 ? 1.2 : 0.8}" fill="#f97316" opacity="${0.4 + (i % 3) * 0.2}"><animate attributeName="opacity" values="${0.3 + (i%3)*0.1};${0.6 + (i%2)*0.2};${0.3 + (i%3)*0.1}" dur="${2 + i % 3}s" repeatCount="indefinite"/></circle>
+    <circle cx="${n.x}" cy="${n.y}" r="${i % 3 === 0 ? 2.5 : 1.8}" fill="none" stroke="#f97316" stroke-width="0.1" opacity="0.15"/>`).join('')}
+  </svg>
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(249,115,22,0.06),transparent 60%);"></div>
+  <div style="position:absolute;bottom:14px;right:20px;opacity:0.2;">
+    <img src="${LOGO_URL}" alt="" width="18" height="18" style="border-radius:4px;" />
+  </div>
+</div>`;
+}
+
+function bg9() {
+  const codeSnippets = [
+    ['$ nmap -sV 10.0.0.1', 'PORT   STATE SERVICE', '22/tcp open  ssh', '80/tcp open  http', '443/tcp open  https'],
+    ['root@kali:~#', 'hashcat -m 1000', 'Status: Running', 'Speed: 1.2 GH/s', 'Recovered: 3/12'],
+    ['[ALERT] Intrusion', 'src: 192.168.1.42', 'dst: 10.0.0.5:443', 'payload: 0x4141', 'action: BLOCKED'],
+    ['$ wireshark -i eth0', 'Capturing on eth0', 'Packets: 14,293', 'Display: TCP only', 'Filter applied']
+  ];
+  return `<div style="width:100%;aspect-ratio:16/9;background:#0a0b0e;position:relative;overflow:hidden;font-family:'Courier New',Consolas,monospace;">
+  ${codeSnippets.map((lines, i) => {
+    const left = 5 + i * 24;
+    const top = 8 + (i % 2) * 35;
+    const color = i % 2 === 0 ? '#22c55e' : '#f97316';
+    return `<div style="position:absolute;left:${left}%;top:${top}%;width:22%;background:rgba(10,12,16,0.9);border:1px solid ${color}33;border-radius:4px;overflow:hidden;">
+      <div style="background:${color}15;padding:3px 6px;font-size:6px;color:${color};opacity:0.7;border-bottom:1px solid ${color}22;">terminal-${i + 1}</div>
+      <div style="padding:4px 6px;">
+        ${lines.map(l => `<div style="font-size:5.5px;color:${color};opacity:${0.5 + Math.random() * 0.4};line-height:1.6;white-space:nowrap;overflow:hidden;">${l}</div>`).join('')}
+      </div>
+    </div>`;
+  }).join('')}
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,0.6) 100%);"></div>
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.06;">
+    <img src="${LOGO_URL}" alt="" width="80" height="80" style="border-radius:16px;" />
+  </div>
+</div>`;
+}
+
+function bg10() {
+  return `<div style="width:100%;aspect-ratio:16/9;background:#060810;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <div style="position:absolute;inset:0;">
+    ${[...Array(60)].map((_, i) => `<div style="position:absolute;left:${Math.random() * 100}%;top:${Math.random() * 100}%;width:${1 + Math.random() * 2}px;height:${1 + Math.random() * 2}px;background:#ffffff;border-radius:50%;opacity:${0.1 + Math.random() * 0.5};"></div>`).join('')}
+  </div>
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:50%;height:70%;border:1px solid #1a1d28;border-radius:8px;background:rgba(8,10,16,0.8);">
+    <div style="position:absolute;top:8%;left:5%;right:5%;height:35%;border:1px solid #1e2030;border-radius:6px;background:linear-gradient(180deg,#0c0e18,#080a12);overflow:hidden;">
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60%;height:60%;border:1px solid rgba(59,130,246,0.15);border-radius:50%;"></div>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:30%;height:30%;border:1px solid rgba(59,130,246,0.1);border-radius:50%;"></div>
+      <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:4px;height:4px;background:#3b82f6;border-radius:50%;box-shadow:0 0 8px #3b82f6;"></div>
+    </div>
+  </div>
+  <div style="position:absolute;left:3%;top:20%;width:8%;height:60%;display:flex;flex-direction:column;gap:4px;">
+    ${[...Array(6)].map((_, i) => `<div style="flex:1;border:1px solid #1a1d28;border-radius:3px;background:#0a0c14;display:flex;align-items:center;justify-content:center;">
+      <div style="width:4px;height:4px;border-radius:50%;background:${i % 3 === 0 ? '#f97316' : i % 3 === 1 ? '#22c55e' : '#3b82f6'};opacity:0.5;"></div>
+    </div>`).join('')}
+  </div>
+  <div style="position:absolute;right:3%;top:20%;width:8%;height:60%;display:flex;flex-direction:column;gap:4px;">
+    ${[...Array(6)].map((_, i) => `<div style="flex:1;border:1px solid #1a1d28;border-radius:3px;background:#0a0c14;display:flex;align-items:center;justify-content:center;">
+      <div style="width:4px;height:4px;border-radius:50%;background:${i % 3 === 0 ? '#22c55e' : i % 3 === 1 ? '#f97316' : '#3b82f6'};opacity:0.5;"></div>
+    </div>`).join('')}
+  </div>
+  <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;opacity:0.2;">
+    <img src="${LOGO_URL}" alt="" width="14" height="14" style="border-radius:3px;" />
+    <span style="font-size:7px;color:#52525b;letter-spacing:3px;">STB CYBERSECURITY</span>
+  </div>
+</div>`;
+}
+
 const backgrounds = [
   { id: 1, name: "SOC Center", desc: "Multiple monitor panels with data visualizations, dark room glow", render: bg1 },
   { id: 2, name: "Server Room", desc: "Rack silhouettes with blinking status LEDs, cool blue/orange lighting", render: bg2 },
@@ -115,6 +212,10 @@ const backgrounds = [
   { id: 4, name: "Command Center", desc: "Large central display with radar/map, side panels, tactical feel", render: bg4 },
   { id: 5, name: "Matrix", desc: "Falling green characters on black, subtle STBCS watermark", render: bg5 },
   { id: 6, name: "Shield Wall", desc: "Repeating shield logo pattern on dark bg, subtle depth/shadow", render: bg6 },
+  { id: 7, name: "Cyber City", desc: "Futuristic cityscape silhouette, neon orange lights, dark sky, grid overlay", render: bg7 },
+  { id: 8, name: "Neural Network", desc: "Connected nodes/neurons pattern, pulsing glow effects, brain-inspired", render: bg8 },
+  { id: 9, name: "Hacker Den", desc: "Floating terminal windows with code snippets, green/orange on dark", render: bg9 },
+  { id: 10, name: "Space Station", desc: "Sci-fi interior, viewport with stars, control panels, futuristic", render: bg10 },
 ];
 
 export default function Backgrounds() {

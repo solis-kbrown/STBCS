@@ -123,6 +123,110 @@ function slide6(f: PresentationFields) {
 </div>`;
 }
 
+function slide7(f: PresentationFields) {
+  return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;justify-content:center;padding:40px 50px;">
+  <div style="position:absolute;inset:0;opacity:0.07;background-image:repeating-linear-gradient(0deg,transparent,transparent 40px,#27272a 40px,#27272a 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,#27272a 40px,#27272a 41px);"></div>
+  <div style="position:absolute;top:16px;left:20px;display:flex;align-items:center;gap:8px;">
+    <img src="${LOGO_URL}" alt="STBCS" width="24" height="24" style="border-radius:4px;" />
+    <span style="font-size:10px;color:#52525b;letter-spacing:2px;font-weight:600;">${f.company.toUpperCase()}</span>
+  </div>
+  <div style="position:absolute;top:14px;right:20px;display:flex;gap:10px;">
+    <div style="background:#18181b;border:1px solid #27272a;border-radius:6px;padding:6px 12px;text-align:center;min-width:70px;">
+      <div style="font-size:18px;font-weight:900;color:#f97316;">47</div>
+      <div style="font-size:7px;color:#52525b;text-transform:uppercase;letter-spacing:1px;">Critical</div>
+    </div>
+    <div style="background:#18181b;border:1px solid #27272a;border-radius:6px;padding:6px 12px;text-align:center;min-width:70px;">
+      <div style="font-size:18px;font-weight:900;color:#eab308;">183</div>
+      <div style="font-size:7px;color:#52525b;text-transform:uppercase;letter-spacing:1px;">Warnings</div>
+    </div>
+    <div style="background:#18181b;border:1px solid #27272a;border-radius:6px;padding:6px 12px;text-align:center;min-width:70px;">
+      <div style="font-size:18px;font-weight:900;color:#22c55e;">1.2K</div>
+      <div style="font-size:7px;color:#52525b;text-transform:uppercase;letter-spacing:1px;">Events</div>
+    </div>
+  </div>
+  <div style="position:relative;margin-top:10px;">
+    <div style="font-size:9px;color:#f97316;text-transform:uppercase;letter-spacing:3px;font-weight:700;margin-bottom:8px;">THREAT DASHBOARD</div>
+    <div style="font-size:28px;font-weight:900;color:#ffffff;line-height:1.2;max-width:70%;">${f.presentationTitle}</div>
+    <div style="font-size:13px;color:#a1a1aa;margin-top:8px;max-width:60%;">${f.subtitle}</div>
+  </div>
+  <div style="position:absolute;bottom:30px;left:50px;display:flex;gap:20px;font-size:11px;">
+    <span style="color:#71717a;">${f.presenter}</span>
+    <span style="color:#52525b;">${f.date}</span>
+  </div>
+  <div style="position:absolute;bottom:20px;right:20px;display:flex;gap:6px;align-items:flex-end;">
+    ${[35, 55, 40, 70, 50, 80, 60, 45, 75, 55, 65, 85].map(h => `<div style="width:8px;height:${h}px;background:linear-gradient(180deg,#f97316,#18181b);border-radius:2px 2px 0 0;opacity:0.4;"></div>`).join('')}
+  </div>
+  <div style="position:absolute;bottom:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#f97316,#ea580c,#f97316);"></div>
+</div>`;
+}
+
+function slide8(f: PresentationFields) {
+  return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px;">
+  <div style="position:absolute;inset:0;background:conic-gradient(from 0deg at 50% 50%,rgba(249,115,22,0.03),rgba(168,85,247,0.03),rgba(59,130,246,0.03),rgba(34,197,94,0.03),rgba(249,115,22,0.03));"></div>
+  <div style="position:absolute;inset:8px;border:1px solid transparent;border-image:linear-gradient(135deg,rgba(249,115,22,0.4),rgba(168,85,247,0.3),rgba(59,130,246,0.3),rgba(34,197,94,0.3),rgba(249,115,22,0.4)) 1;"></div>
+  <div style="position:absolute;inset:14px;border:1px solid transparent;border-image:linear-gradient(225deg,rgba(249,115,22,0.2),rgba(168,85,247,0.15),rgba(59,130,246,0.15),rgba(34,197,94,0.15),rgba(249,115,22,0.2)) 1;"></div>
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(249,115,22,0.04),transparent 70%);"></div>
+  <div style="background:rgba(12,12,14,0.85);backdrop-filter:blur(8px);border:1px solid rgba(249,115,22,0.15);border-radius:16px;padding:40px 60px;text-align:center;position:relative;max-width:80%;">
+    <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="margin:0 auto 20px;border-radius:12px;display:block;" />
+    <div style="font-size:30px;font-weight:900;color:#ffffff;line-height:1.2;">${f.presentationTitle}</div>
+    <div style="font-size:13px;color:#a1a1aa;margin-top:10px;">${f.subtitle}</div>
+    <div style="margin-top:20px;font-size:12px;color:#71717a;">${f.presenter} &bull; ${f.company} &bull; ${f.date}</div>
+  </div>
+</div>`;
+}
+
+function slide9(f: PresentationFields) {
+  return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;padding:0;">
+  <div style="background:linear-gradient(90deg,#18181b,#1c1917);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #f97316;">
+    <div style="display:flex;align-items:center;gap:8px;">
+      <img src="${LOGO_URL}" alt="STBCS" width="20" height="20" style="border-radius:4px;" />
+      <span style="font-size:10px;color:#f97316;font-weight:700;letter-spacing:3px;text-transform:uppercase;">WAR ROOM</span>
+    </div>
+    <div style="display:flex;gap:12px;font-size:9px;color:#52525b;">
+      <span>DEFCON 2</span>
+      <span style="color:#ef4444;">● ACTIVE THREAT</span>
+      <span>${f.date}</span>
+    </div>
+  </div>
+  <div style="flex:1;display:flex;">
+    <div style="width:140px;background:#18181b;border-right:1px solid #27272a;padding:12px 10px;display:flex;flex-direction:column;gap:8px;">
+      ${['INTEL FEED', 'THREAT MAP', 'ASSETS', 'COMMS', 'REPORTS'].map((label, i) => `<div style="background:${i === 0 ? 'rgba(249,115,22,0.15)' : '#0c0c0e'};border:1px solid ${i === 0 ? 'rgba(249,115,22,0.3)' : '#27272a'};border-radius:4px;padding:6px 8px;font-size:8px;color:${i === 0 ? '#f97316' : '#52525b'};letter-spacing:1px;text-transform:uppercase;">${label}</div>`).join('')}
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:30px 40px;">
+      <div style="font-size:9px;color:#f97316;text-transform:uppercase;letter-spacing:4px;font-weight:700;margin-bottom:6px;">SITUATION REPORT</div>
+      <div style="font-size:26px;font-weight:900;color:#ffffff;line-height:1.2;">${f.presentationTitle}</div>
+      <div style="font-size:12px;color:#a1a1aa;margin-top:8px;max-width:80%;">${f.subtitle}</div>
+      <div style="margin-top:20px;display:flex;gap:16px;">
+        ${[{label:'THREAT LEVEL',value:'HIGH',color:'#ef4444'},{label:'RESPONSE',value:'ACTIVE',color:'#22c55e'},{label:'CLASSIFICATION',value:'SECRET',color:'#f97316'}].map(s => `<div style="background:#18181b;border:1px solid #27272a;border-radius:4px;padding:6px 10px;"><div style="font-size:7px;color:#52525b;letter-spacing:1px;text-transform:uppercase;">${s.label}</div><div style="font-size:11px;font-weight:700;color:${s.color};margin-top:2px;">${s.value}</div></div>`).join('')}
+      </div>
+      <div style="margin-top:16px;font-size:10px;color:#52525b;">${f.presenter} &mdash; ${f.company}</div>
+    </div>
+  </div>
+</div>`;
+}
+
+function slide10(f: PresentationFields) {
+  return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;justify-content:flex-end;padding:50px 60px;">
+  <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 60%,rgba(249,115,22,0.08),transparent 50%),radial-gradient(ellipse at 70% 40%,rgba(249,115,22,0.03),transparent 50%);"></div>
+  <div style="position:absolute;inset:0;background:linear-gradient(180deg,#0c0c0e 0%,transparent 30%,transparent 70%,#0c0c0e 100%);"></div>
+  <div style="position:absolute;top:0;left:0;right:0;height:60%;background:linear-gradient(180deg,rgba(12,12,14,0.3),rgba(12,12,14,0.95));"></div>
+  <div style="position:absolute;top:20px;right:24px;display:flex;align-items:center;gap:6px;">
+    <img src="${LOGO_URL}" alt="STBCS" width="20" height="20" style="border-radius:4px;opacity:0.6;" />
+    <span style="font-size:9px;color:#3f3f46;letter-spacing:2px;">${f.company.toUpperCase()}</span>
+  </div>
+  <div style="position:relative;">
+    <div style="font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:4px;margin-bottom:10px;font-style:italic;">A Cyber Noir Production</div>
+    <div style="font-size:36px;font-weight:900;color:#ffffff;line-height:1.1;max-width:75%;text-shadow:0 0 40px rgba(249,115,22,0.3),0 0 80px rgba(249,115,22,0.1);">${f.presentationTitle}</div>
+    <div style="font-size:14px;color:#71717a;margin-top:10px;max-width:60%;font-style:italic;">${f.subtitle}</div>
+    <div style="margin-top:24px;display:flex;gap:20px;font-size:11px;">
+      <span style="color:#a1a1aa;">${f.presenter}</span>
+      <span style="color:#52525b;">${f.date}</span>
+    </div>
+  </div>
+  <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#f97316 50%,transparent);"></div>
+</div>`;
+}
+
 const slides = [
   { id: 1, name: "Keynote Dark", desc: "Full dark bg, circuit pattern, orange accent bar bottom", render: slide1 },
   { id: 2, name: "Tactical Briefing", desc: "Military briefing style with CLASSIFIED watermark", render: slide2 },
@@ -130,6 +234,10 @@ const slides = [
   { id: 4, name: "Minimal", desc: "Clean dark with single orange line, title left-aligned", render: slide4 },
   { id: 5, name: "Gradient", desc: "Orange-to-dark diagonal gradient with white text", render: slide5 },
   { id: 6, name: "Technical", desc: "Blueprint/schematic aesthetic with grid lines", render: slide6 },
+  { id: 7, name: "Threat Dashboard", desc: "Mock dashboard layout with threat counters and chart outlines", render: slide7 },
+  { id: 8, name: "Holographic", desc: "Iridescent gradient border effect, futuristic glass panel feel", render: slide8 },
+  { id: 9, name: "War Room", desc: "Military situation room with status panels and tactical feel", render: slide9 },
+  { id: 10, name: "Cyber Noir", desc: "Film noir inspired with dramatic shadows and spotlight effect", render: slide10 },
 ];
 
 export default function Presentations() {

@@ -302,6 +302,212 @@ function cover6(f: ReportFields) {
 </div>`;
 }
 
+function cover7(f: ReportFields) {
+  const clr = classificationColor(f.classificationLevel);
+  return `<div style="width:100%;aspect-ratio:210/297;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;padding:40px;">
+  <div style="position:absolute;inset:0;opacity:0.03;">
+    ${[...Array(20)].map((_, i) => `<div style="position:absolute;left:0;right:0;top:${5 * i}%;height:1px;background:#f97316;"></div>`).join('')}
+  </div>
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;">
+    <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="border-radius:8px;" />
+    <div>
+      <div style="font-size:14px;font-weight:800;color:#ffffff;letter-spacing:2px;">STB CYBERSECURITY</div>
+      <div style="font-size:9px;color:#52525b;letter-spacing:2px;">VULNERABILITY MANAGEMENT</div>
+    </div>
+  </div>
+  <div style="background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;margin-bottom:20px;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+      <div style="width:10px;height:10px;border-radius:50%;background:#22c55e;box-shadow:0 0 6px #22c55e;"></div>
+      <span style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:2px;">SCAN COMPLETE</span>
+    </div>
+    <div style="height:6px;background:#27272a;border-radius:3px;overflow:hidden;margin-bottom:8px;">
+      <div style="height:100%;width:100%;background:linear-gradient(90deg,#22c55e,#f97316);border-radius:3px;"></div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:8px;color:#52525b;">
+      <span>0%</span><span>100% Complete</span>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:20px;">
+    ${[
+      {label:'Critical',count:'12',color:'#dc2626'},
+      {label:'High',count:'28',color:'#ef4444'},
+      {label:'Medium',count:'45',color:'#f97316'},
+      {label:'Low',count:'67',color:'#eab308'},
+      {label:'Info',count:'134',color:'#3b82f6'}
+    ].map(s => `<div style="flex:1;background:#18181b;border:1px solid #27272a;border-top:3px solid ${s.color};border-radius:0 0 6px 6px;padding:10px;text-align:center;">
+      <div style="font-size:16px;font-weight:900;color:${s.color};">${s.count}</div>
+      <div style="font-size:7px;color:#52525b;text-transform:uppercase;letter-spacing:1px;margin-top:2px;">${s.label}</div>
+    </div>`).join('')}
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+    <div style="font-size:10px;color:#f97316;text-transform:uppercase;letter-spacing:3px;font-weight:700;margin-bottom:10px;">VULNERABILITY SCAN RESULTS</div>
+    <div style="font-size:26px;font-weight:900;color:#ffffff;line-height:1.2;margin-bottom:12px;">${f.reportTitle}</div>
+    <div style="font-size:13px;color:#a1a1aa;margin-bottom:24px;">Scan Report — ${f.clientName}</div>
+    <div style="background:#18181b;border:1px solid #27272a;border-radius:8px;padding:16px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11px;">
+        <div><span style="color:#52525b;">Report #:</span> <span style="color:#d4d4d8;">${f.reportNumber}</span></div>
+        <div><span style="color:#52525b;">Date:</span> <span style="color:#d4d4d8;">${f.reportDate}</span></div>
+        <div><span style="color:#52525b;">Classification:</span> <span style="color:${clr};font-weight:700;">${f.classificationLevel}</span></div>
+        <div><span style="color:#52525b;">Version:</span> <span style="color:#d4d4d8;">${f.version}</span></div>
+      </div>
+    </div>
+  </div>
+  <div style="border-top:1px solid #27272a;padding-top:16px;font-size:10px;color:#52525b;display:flex;justify-content:space-between;">
+    <span>${f.preparedBy}</span>
+    <span>${SITE_URL}</span>
+  </div>
+</div>`;
+}
+
+function cover8(f: ReportFields) {
+  return `<div style="width:100%;aspect-ratio:210/297;background:linear-gradient(160deg,#0c0c0e 0%,#141418 50%,#0c0c0e 100%);position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;padding:50px;">
+  <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#f97316,transparent);"></div>
+  <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#f97316,transparent);"></div>
+  <div style="position:absolute;top:0;left:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,#f97316,transparent);"></div>
+  <div style="position:absolute;top:0;right:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,#f97316,transparent);"></div>
+  <div style="display:flex;align-items:center;justify-content:center;margin-bottom:40px;">
+    <img src="${LOGO_URL}" alt="STBCS" width="56" height="56" style="border-radius:12px;box-shadow:0 0 30px rgba(249,115,22,0.15);" />
+  </div>
+  <div style="text-align:center;margin-bottom:16px;">
+    <div style="font-size:10px;color:#f97316;letter-spacing:6px;text-transform:uppercase;font-weight:600;">STB CYBERSECURITY</div>
+  </div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;">
+    <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,#f97316,transparent);margin-bottom:24px;"></div>
+    <div style="font-size:11px;color:#71717a;text-transform:uppercase;letter-spacing:4px;margin-bottom:16px;">Executive Summary</div>
+    <div style="font-size:28px;font-weight:300;color:#ffffff;line-height:1.3;margin-bottom:16px;letter-spacing:1px;">${f.reportTitle}</div>
+    <div style="font-size:13px;color:#a1a1aa;margin-bottom:20px;">${f.clientName}</div>
+    <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,#f97316,transparent);margin-bottom:24px;"></div>
+    <div style="display:inline-block;border:1px solid #f9731640;color:#f97316;font-size:8px;font-weight:700;padding:4px 14px;border-radius:3px;letter-spacing:3px;text-transform:uppercase;">FOR EXECUTIVE REVIEW ONLY</div>
+  </div>
+  <div style="text-align:center;font-size:10px;color:#52525b;margin-bottom:16px;">
+    <div style="margin-bottom:4px;">${f.reportNumber} &bull; v${f.version}</div>
+    <div>${f.reportDate}</div>
+  </div>
+  <div style="border-top:1px solid #27272a;padding-top:16px;font-size:10px;color:#52525b;display:flex;justify-content:space-between;">
+    <span>${f.preparedBy}</span>
+    <span>${SITE_URL}</span>
+  </div>
+</div>`;
+}
+
+function cover9(f: ReportFields) {
+  const clr = classificationColor(f.classificationLevel);
+  return `<div style="width:100%;aspect-ratio:210/297;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;">
+  <div style="background:linear-gradient(135deg,#dc2626,#f97316);padding:30px 40px;position:relative;">
+    <div style="position:absolute;top:15px;right:15px;">
+      ${[...Array(3)].map((_, i) => `<div style="width:${60 - i * 18}px;height:${60 - i * 18}px;border:1px solid rgba(255,255,255,${0.15 - i * 0.04});border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);"></div>`).join('')}
+      <div style="width:6px;height:6px;background:#ffffff;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
+      <img src="${LOGO_URL}" alt="STBCS" width="32" height="32" style="border-radius:6px;" />
+      <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:2px;">STB CYBERSECURITY</span>
+    </div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:3px;margin-bottom:6px;">RED TEAM ASSESSMENT</div>
+    <div style="font-size:24px;font-weight:900;color:#ffffff;line-height:1.2;">${f.reportTitle}</div>
+  </div>
+  <div style="flex:1;padding:30px 40px;display:flex;flex-direction:column;justify-content:center;">
+    <div style="display:flex;gap:8px;margin-bottom:20px;">
+      <div style="border:2px solid #ef4444;border-radius:50%;width:60px;height:60px;display:flex;align-items:center;justify-content:center;transform:rotate(-10deg);">
+        <div style="font-size:7px;font-weight:900;color:#ef4444;text-align:center;letter-spacing:1px;line-height:1.3;">AUTHORIZED<br/>ADVERSARY<br/>SIMULATION</div>
+      </div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;">
+        <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">Breach Points Identified</div>
+        <div style="display:flex;gap:4px;">
+          ${[...Array(5)].map((_, i) => `<div style="width:12px;height:12px;border-radius:50%;background:${i < 3 ? '#ef4444' : '#27272a'};border:1px solid ${i < 3 ? '#ef4444' : '#3f3f46'};"></div>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11px;">
+      <div style="background:#18181b;border:1px solid #27272a;border-left:3px solid #ef4444;border-radius:0 6px 6px 0;padding:12px;">
+        <div style="color:#52525b;font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Client</div>
+        <div style="color:#d4d4d8;">${f.clientName}</div>
+      </div>
+      <div style="background:#18181b;border:1px solid #27272a;border-left:3px solid #f97316;border-radius:0 6px 6px 0;padding:12px;">
+        <div style="color:#52525b;font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Report #</div>
+        <div style="color:#d4d4d8;">${f.reportNumber}</div>
+      </div>
+      <div style="background:#18181b;border:1px solid #27272a;border-radius:6px;padding:12px;">
+        <div style="color:#52525b;font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Date</div>
+        <div style="color:#d4d4d8;">${f.reportDate}</div>
+      </div>
+      <div style="background:#18181b;border:1px solid #27272a;border-radius:6px;padding:12px;">
+        <div style="color:#52525b;font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Classification</div>
+        <div style="color:${clr};font-weight:700;">${f.classificationLevel.toUpperCase()}</div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:16px 40px;border-top:1px solid #27272a;font-size:10px;color:#52525b;display:flex;justify-content:space-between;">
+    <span>${f.preparedBy} — v${f.version}</span>
+    <span>${SITE_URL}</span>
+  </div>
+</div>`;
+}
+
+function cover10(f: ReportFields) {
+  const clr = classificationColor(f.classificationLevel);
+  return `<div style="width:100%;aspect-ratio:210/297;background:#0c0e14;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;">
+  <div style="background:linear-gradient(135deg,#1e3a5f,#0c4a6e);padding:30px 40px;position:relative;">
+    <div style="position:absolute;inset:0;opacity:0.1;">
+      ${[...Array(8)].map((_, i) => `<div style="position:absolute;left:${10 + i * 12}%;top:20%;width:30px;height:60%;border:1px solid #38bdf8;border-radius:4px;opacity:${0.2 + (i % 3) * 0.1};"></div>`).join('')}
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;position:relative;">
+      <img src="${LOGO_URL}" alt="STBCS" width="32" height="32" style="border-radius:6px;" />
+      <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:2px;">STB CYBERSECURITY</span>
+    </div>
+    <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:3px;margin-bottom:6px;position:relative;">BLUE TEAM DEFENSE</div>
+    <div style="font-size:24px;font-weight:900;color:#ffffff;line-height:1.2;position:relative;">${f.reportTitle}</div>
+  </div>
+  <div style="flex:1;padding:30px 40px;display:flex;flex-direction:column;justify-content:center;">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+      <div style="width:50px;height:50px;border:2px solid #38bdf8;border-radius:8px;display:flex;align-items:center;justify-content:center;position:relative;">
+        <div style="width:30px;height:30px;border:2px solid #f97316;border-radius:6px;display:flex;align-items:center;justify-content:center;">
+          <div style="width:10px;height:10px;background:#22c55e;border-radius:50%;box-shadow:0 0 8px #22c55e;"></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:9px;color:#38bdf8;text-transform:uppercase;letter-spacing:2px;font-weight:700;">DEFENSE POSTURE ASSESSMENT</div>
+        <div style="font-size:10px;color:#52525b;margin-top:2px;">Perimeter Secured &bull; Monitoring Active</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:6px;margin-bottom:20px;">
+      ${[
+        {label:'Firewall',status:'Active',color:'#22c55e'},
+        {label:'IDS/IPS',status:'Active',color:'#22c55e'},
+        {label:'SIEM',status:'Active',color:'#22c55e'},
+        {label:'EDR',status:'Active',color:'#22c55e'},
+        {label:'WAF',status:'Warning',color:'#f97316'}
+      ].map(s => `<div style="flex:1;background:#111827;border:1px solid #1e293b;border-radius:6px;padding:8px;text-align:center;">
+        <div style="width:6px;height:6px;border-radius:50%;background:${s.color};margin:0 auto 4px;box-shadow:0 0 4px ${s.color};"></div>
+        <div style="font-size:7px;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;">${s.label}</div>
+        <div style="font-size:6px;color:${s.color};margin-top:1px;">${s.status}</div>
+      </div>`).join('')}
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:11px;">
+      <div style="background:#111827;border:1px solid #1e293b;border-left:3px solid #38bdf8;border-radius:0 6px 6px 0;padding:12px;">
+        <div style="color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Client</div>
+        <div style="color:#e2e8f0;">${f.clientName}</div>
+      </div>
+      <div style="background:#111827;border:1px solid #1e293b;border-left:3px solid #f97316;border-radius:0 6px 6px 0;padding:12px;">
+        <div style="color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Report #</div>
+        <div style="color:#e2e8f0;">${f.reportNumber}</div>
+      </div>
+      <div style="background:#111827;border:1px solid #1e293b;border-radius:6px;padding:12px;">
+        <div style="color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Date</div>
+        <div style="color:#e2e8f0;">${f.reportDate}</div>
+      </div>
+      <div style="background:#111827;border:1px solid #1e293b;border-radius:6px;padding:12px;">
+        <div style="color:#64748b;font-size:9px;text-transform:uppercase;letter-spacing:1px;margin-bottom:3px;">Classification</div>
+        <div style="color:${clr};font-weight:700;">${f.classificationLevel.toUpperCase()}</div>
+      </div>
+    </div>
+  </div>
+  <div style="padding:16px 40px;border-top:1px solid #1e293b;font-size:10px;color:#64748b;display:flex;justify-content:space-between;">
+    <span>${f.preparedBy} — v${f.version}</span>
+    <span>${SITE_URL}</span>
+  </div>
+</div>`;
+}
+
 const covers = [
   { id: 1, name: "Security Assessment", desc: "Dark cover with shield, orange title bar, classification badge", render: cover1 },
   { id: 2, name: "Penetration Test", desc: "Red/orange theme, target crosshair motif, AUTHORIZED stamp", render: cover2 },
@@ -309,6 +515,10 @@ const covers = [
   { id: 4, name: "Compliance Audit", desc: "Professional/formal, checklist motif, compliance status indicators", render: cover4 },
   { id: 5, name: "Incident Report", desc: "Urgent styling, severity indicator, timeline reference", render: cover5 },
   { id: 6, name: "Risk Analysis", desc: "Heat map gradient header, risk matrix reference", render: cover6 },
+  { id: 7, name: "Vulnerability Scan", desc: "Scanner aesthetic, progress bar, severity breakdown chart", render: cover7 },
+  { id: 8, name: "Executive Summary", desc: "Premium elegant format, gold/orange accents, executive review badge", render: cover8 },
+  { id: 9, name: "Red Team Report", desc: "Aggressive red/orange attack theme, crosshair motifs, adversary stamp", render: cover9 },
+  { id: 10, name: "Blue Team Defense", desc: "Defensive blue/cyan theme, shield wall motif, defense posture", render: cover10 },
 ];
 
 export default function ReportCovers() {

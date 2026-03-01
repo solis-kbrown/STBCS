@@ -292,6 +292,142 @@ function lh8(f: LetterheadFields) {
 </div>`;
 }
 
+function lh9(f: LetterheadFields) {
+  return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:595px;min-height:842px;background:#ffffff;color:#1a1a1a;position:relative;display:flex;flex-direction:column;">
+  <div style="position:absolute;left:0;top:0;bottom:0;width:48px;overflow:hidden;opacity:0.07;font-family:'Courier New',Consolas,monospace;font-size:11px;line-height:1.4;color:#18181b;padding:10px 6px;word-break:break-all;">01001001011011100111010001100101011011000110110001101001011001110110010101101110011000110110010100100000010100100110010101110000011011110111001001110100001000000101001101010100010000100100001101010011001000000101001101100101011000110111010101110010011010010111010001111001001000000100110101101111011011100110100101110100011011110111001001101001011011100110011100100000001001100010000001010100011010000111001001100101011000010111010000100000010000010110111001100001011011000111100101110011011010010111001100100000001001100010000001001001011011100110001101101001011001000110010101101110011101000010000001010010011001010111001101110000011011110110111001110011011001010010000001010011011001010111001001110110011010010110001101100101011100110010000000100110001000000101000001100101011011100110010101110100011100100110000101110100011010010110111101101110</div>
+  <div style="padding:40px 50px 20px 60px;display:flex;justify-content:space-between;align-items:flex-start;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="border-radius:8px;" />
+      <div>
+        <div style="font-size:18px;font-weight:800;color:#18181b;letter-spacing:2px;">${f.companyName.toUpperCase()}</div>
+        <div style="font-size:9px;color:#71717a;letter-spacing:1px;">DIGITAL INTELLIGENCE DIVISION</div>
+      </div>
+    </div>
+    <div style="text-align:right;font-size:10px;color:#a1a1aa;">
+      <div>${f.phone}</div>
+      <div>${f.email}</div>
+    </div>
+  </div>
+  <div style="height:2px;background:linear-gradient(90deg,#18181b 60%,#f97316 60%,#f97316);margin:0 50px 0 60px;"></div>
+  <div style="flex:1;padding:30px 50px 30px 60px;">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#a1a1aa;margin-bottom:20px;">
+      <span>Date: ${f.date}</span>
+      <span>Ref: ${f.referenceNumber}</span>
+    </div>
+    <div style="font-size:16px;font-weight:700;color:#18181b;margin-bottom:20px;">${f.documentTitle}</div>
+    <div style="font-size:12px;color:#52525b;line-height:1.8;">
+      <p>[Document content goes here]</p>
+      <p style="margin-top:12px;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+    </div>
+  </div>
+  <div style="padding:14px 50px 14px 60px;border-top:1px solid #e4e4e7;font-size:9px;color:#a1a1aa;text-align:center;">
+    ${f.address}, ${f.city} &bull; ${f.phone} &bull; ${f.email} &bull; <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;">${f.website}</a>
+  </div>
+</div>`;
+}
+
+function lh10(f: LetterheadFields) {
+  return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:595px;min-height:842px;background:#ffffff;color:#1a1a1a;position:relative;display:flex;flex-direction:column;">
+  <div style="background:#18181b;padding:30px 40px;position:relative;overflow:hidden;">
+    <div style="position:absolute;top:-20px;left:-10px;display:flex;flex-wrap:wrap;width:120%;opacity:0.12;">
+      ${Array.from({length:48}, (_,i) => `<div style="width:40px;height:36px;background:transparent;border:1px solid #f97316;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);margin:-5px 2px;${i === 14 ? 'opacity:1;' : ''}"></div>`).join('')}
+    </div>
+    <div style="position:relative;z-index:1;display:flex;align-items:center;gap:14px;">
+      <div style="width:52px;height:46px;display:flex;align-items:center;justify-content:center;border:2px solid #f97316;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);">
+        <img src="${LOGO_URL}" alt="STBCS" width="30" height="30" style="border-radius:4px;" />
+      </div>
+      <div>
+        <div style="font-size:20px;font-weight:900;color:#ffffff;letter-spacing:3px;">${f.companyName.toUpperCase()}</div>
+        <div style="font-size:9px;color:#f97316;letter-spacing:2px;">HONEYCOMB SECURE NETWORK</div>
+      </div>
+    </div>
+  </div>
+  <div style="height:4px;background:linear-gradient(90deg,#f97316,#ea580c,#f97316);"></div>
+  <div style="flex:1;padding:30px 50px;">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#a1a1aa;margin-bottom:20px;">
+      <span>Date: ${f.date}</span>
+      <span>Ref: ${f.referenceNumber}</span>
+    </div>
+    <div style="font-size:16px;font-weight:700;color:#18181b;margin-bottom:20px;">${f.documentTitle}</div>
+    <div style="font-size:12px;color:#52525b;line-height:1.8;">
+      <p>[Document content goes here]</p>
+      <p style="margin-top:12px;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+    </div>
+  </div>
+  <div style="padding:14px 50px;border-top:1px solid #e4e4e7;font-size:9px;color:#a1a1aa;text-align:center;">
+    ${f.address}, ${f.city} &bull; ${f.phone} &bull; ${f.email} &bull; <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;">${f.website}</a>
+  </div>
+</div>`;
+}
+
+function lh11(f: LetterheadFields) {
+  return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:595px;min-height:842px;background:#ffffff;color:#1a1a1a;position:relative;display:flex;flex-direction:column;overflow:hidden;">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%) rotate(-35deg);font-size:72px;font-weight:900;color:rgba(249,115,22,0.04);letter-spacing:16px;white-space:nowrap;pointer-events:none;user-select:none;">FIREWALL PROTECTED</div>
+  <div style="height:6px;background:repeating-linear-gradient(90deg,#f97316 0px,#f97316 30px,#ea580c 30px,#ea580c 32px,transparent 32px,transparent 40px);"></div>
+  <div style="padding:30px 50px 20px;display:flex;justify-content:space-between;align-items:center;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <img src="${LOGO_URL}" alt="STBCS" width="36" height="36" style="border-radius:6px;" />
+      <div>
+        <div style="font-size:16px;font-weight:800;color:#18181b;letter-spacing:2px;">${f.companyName.toUpperCase()}</div>
+        <div style="font-size:9px;color:#f97316;letter-spacing:1px;">FIREWALL PROTECTED COMMUNICATIONS</div>
+      </div>
+    </div>
+    <div style="background:#18181b;color:#f97316;font-size:8px;font-weight:700;padding:4px 10px;border-radius:2px;letter-spacing:1px;">SECURED</div>
+  </div>
+  <div style="height:2px;background:#18181b;margin:0 50px;"></div>
+  <div style="flex:1;padding:30px 50px;position:relative;z-index:1;">
+    <div style="display:flex;justify-content:space-between;font-size:10px;color:#a1a1aa;margin-bottom:20px;">
+      <span>Date: ${f.date}</span>
+      <span>Ref: ${f.referenceNumber}</span>
+    </div>
+    <div style="font-size:16px;font-weight:700;color:#18181b;margin-bottom:20px;">${f.documentTitle}</div>
+    <div style="font-size:12px;color:#52525b;line-height:1.8;">
+      <p>[Document content goes here]</p>
+      <p style="margin-top:12px;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+    </div>
+  </div>
+  <div style="height:6px;background:repeating-linear-gradient(90deg,#f97316 0px,#f97316 30px,#ea580c 30px,#ea580c 32px,transparent 32px,transparent 40px);"></div>
+  <div style="padding:14px 50px;font-size:9px;color:#a1a1aa;text-align:center;">
+    ${f.address}, ${f.city} &bull; ${f.phone} &bull; ${f.email} &bull; <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;">${f.website}</a>
+  </div>
+</div>`;
+}
+
+function lh12(f: LetterheadFields) {
+  return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:595px;min-height:842px;background:#0c0c0e;color:#e4e4e7;position:relative;display:flex;flex-direction:column;">
+  <div style="padding:36px 50px 20px;display:flex;justify-content:space-between;align-items:center;">
+    <div style="display:flex;align-items:center;gap:12px;">
+      <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="border-radius:8px;" />
+      <div>
+        <div style="font-size:20px;font-weight:900;color:#ffffff;letter-spacing:3px;">${f.companyName.toUpperCase()}</div>
+        <div style="font-size:9px;color:#71717a;letter-spacing:2px;">DIGITAL-ONLY SECURE DOCUMENT</div>
+      </div>
+    </div>
+    <div style="text-align:right;font-size:10px;color:#52525b;">
+      <div>${f.website}</div>
+    </div>
+  </div>
+  <div style="height:3px;background:linear-gradient(90deg,#f97316,#ea580c,transparent);margin:0 50px;"></div>
+  <div style="padding:16px 50px;display:flex;gap:30px;font-size:10px;color:#71717a;">
+    <span>Date: <span style="color:#a1a1aa;">${f.date}</span></span>
+    <span>Ref: <span style="color:#a1a1aa;">${f.referenceNumber}</span></span>
+  </div>
+  <div style="height:1px;background:#27272a;margin:0 50px;"></div>
+  <div style="flex:1;padding:30px 50px;">
+    <div style="font-size:16px;font-weight:700;color:#ffffff;margin-bottom:20px;">${f.documentTitle}</div>
+    <div style="font-size:12px;color:#a1a1aa;line-height:1.8;">
+      <p>[Document content goes here]</p>
+      <p style="margin-top:12px;">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+    </div>
+  </div>
+  <div style="height:3px;background:linear-gradient(90deg,transparent,#f97316,#ea580c);margin:0 50px;"></div>
+  <div style="padding:14px 50px;font-size:9px;color:#52525b;display:flex;justify-content:space-between;">
+    <span>${f.address}, ${f.city}</span>
+    <span>${f.phone} &bull; ${f.email} &bull; <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;">${f.website}</a></span>
+  </div>
+</div>`;
+}
+
 const letterheads = [
   { id: 1, name: "Executive", desc: "Centered logo with orange horizontal rule — clean and authoritative", render: lh1 },
   { id: 2, name: "Tactical Ops", desc: "Dark sidebar with vertical company text — modern operational style", render: lh2 },
@@ -301,6 +437,10 @@ const letterheads = [
   { id: 6, name: "Technical Brief", desc: "Engineering grid background with structured header table — detailed and precise", render: lh6 },
   { id: 7, name: "Consulting", desc: "Elegant layout with subtle watermark — professional consulting feel", render: lh7 },
   { id: 8, name: "Incident Report", desc: "Structured header with severity and classification fields — security operations", render: lh8 },
+  { id: 9, name: "Binary Stream", desc: "Binary digits running down the left margin — subtle tech feel with clean body", render: lh9 },
+  { id: 10, name: "Honeycomb", desc: "Hexagonal honeycomb pattern header with orange accents — geometric and modern", render: lh10 },
+  { id: 11, name: "Firewall", desc: "FIREWALL PROTECTED watermark with orange line pattern header — bold and secure", render: lh11 },
+  { id: 12, name: "Dark Mode", desc: "Full dark background for digital-only documents — modern with orange dividers", render: lh12 },
 ];
 
 export default function Letterheads() {

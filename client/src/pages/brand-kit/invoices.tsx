@@ -567,6 +567,446 @@ function inv6(f: InvoiceFields) {
 </div>`;
 }
 
+function inv7(f: InvoiceFields) {
+  return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:680px;background:#09090b;color:#e4e4e7;padding:0;border:2px solid #27272a;overflow:hidden;">
+  <div style="background:#18181b;padding:8px 36px;border-bottom:3px solid #ef4444;text-align:center;">
+    <span style="font-family:'Courier New',Consolas,monospace;font-size:13px;font-weight:900;color:#ef4444;letter-spacing:6px;">&#9608; TOP SECRET &#9608; CLASSIFIED &#9608; TOP SECRET &#9608;</span>
+  </div>
+  <div style="background:#0c0c0e;padding:24px 36px;border-bottom:1px solid #27272a;">
+    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+      <tr>
+        <td style="vertical-align:middle;">
+          <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:block;border-radius:8px;border:2px solid #52525b;" />
+          <div style="font-size:16px;font-weight:800;color:#ffffff;margin-top:8px;">${f.companyName}</div>
+          <div style="font-size:10px;color:#52525b;letter-spacing:3px;text-transform:uppercase;">CLASSIFIED BILLING DIVISION</div>
+        </td>
+        <td style="text-align:right;vertical-align:top;">
+          <div style="display:inline-block;padding:8px 20px;border:2px solid #ef4444;border-radius:4px;">
+            <div style="font-size:20px;font-weight:900;color:#ef4444;letter-spacing:3px;">CLASSIFIED</div>
+            <div style="font-size:9px;color:#71717a;letter-spacing:2px;text-align:center;margin-top:2px;">BILLING DOCUMENT</div>
+          </div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div style="padding:24px 36px;">
+    <div style="padding:16px;background:#18181b;border:1px solid #27272a;border-radius:4px;margin-bottom:20px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="width:25%;padding-right:12px;">
+            <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:1px;">Document ID</div>
+            <div style="font-family:'Courier New',Consolas,monospace;font-size:12px;color:#f97316;font-weight:700;margin-top:2px;">${f.invoiceNumber}</div>
+          </td>
+          <td style="width:25%;padding-right:12px;">
+            <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:1px;">Issue Date</div>
+            <div style="font-family:'Courier New',Consolas,monospace;font-size:12px;color:#e4e4e7;margin-top:2px;">${f.invoiceDate}</div>
+          </td>
+          <td style="width:25%;padding-right:12px;">
+            <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:1px;">Due Date</div>
+            <div style="font-family:'Courier New',Consolas,monospace;font-size:12px;color:#e4e4e7;margin-top:2px;">${f.dueDate}</div>
+          </td>
+          <td style="width:25%;">
+            <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:1px;">Classification</div>
+            <div style="font-size:12px;color:#ef4444;font-weight:800;margin-top:2px;">TOP SECRET</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:20px;">
+      <tr>
+        <td style="vertical-align:top;width:50%;">
+          <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">Originator</div>
+          <div style="font-size:13px;color:#ffffff;font-weight:700;">${f.companyName}</div>
+          <div style="font-size:11px;color:#71717a;">${f.companyAddress}</div>
+          <div style="font-size:11px;color:#f97316;">${f.companyEmail}</div>
+        </td>
+        <td style="vertical-align:top;width:50%;">
+          <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">Recipient — Eyes Only</div>
+          <div style="font-size:13px;color:#ffffff;font-weight:700;">${f.clientName}</div>
+          <div style="font-size:12px;color:#a1a1aa;">${f.clientCompany}</div>
+          <div style="font-size:11px;color:#71717a;">${f.clientAddress}</div>
+        </td>
+      </tr>
+    </table>
+    ${lineItemsTable("dark")}
+    <div style="margin-top:20px;padding:12px 16px;background:#18181b;border-left:3px solid #ef4444;border-radius:4px;">
+      <div style="font-size:9px;color:#ef4444;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;font-weight:700;">Handling Instructions</div>
+      <div style="font-size:12px;color:#71717a;">${f.paymentTerms} — ${f.notes}</div>
+    </div>
+  </div>
+  <div style="background:#18181b;padding:8px 36px;border-top:3px solid #ef4444;text-align:center;">
+    <span style="font-family:'Courier New',Consolas,monospace;font-size:11px;color:#52525b;letter-spacing:4px;">AUTHORIZED PERSONNEL ONLY | ${f.companyName} | <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;">stbcybersecurity.com</a></span>
+  </div>
+</div>`;
+}
+
+function inv8(f: InvoiceFields) {
+  return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:680px;background:#09090b;color:#e4e4e7;padding:0;border:2px solid #7f1d1d;border-radius:12px;overflow:hidden;">
+  <div style="background:linear-gradient(135deg,#991b1b,#7f1d1d);padding:20px 36px;">
+    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+      <tr>
+        <td style="vertical-align:middle;">
+          <div style="font-size:10px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:4px;">&#9888; EMERGENCY RESPONSE</div>
+          <div style="font-size:22px;font-weight:900;color:#ffffff;margin-top:4px;">PRIORITY BILLING</div>
+        </td>
+        <td style="text-align:right;vertical-align:middle;">
+          <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:inline-block;border-radius:10px;border:2px solid rgba(255,255,255,0.3);" />
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div style="background:#7f1d1d;padding:10px 36px;">
+    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+      <tr>
+        <td style="width:25%;">
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">Severity</div>
+          <div style="font-size:13px;color:#fca5a5;font-weight:800;">CRITICAL</div>
+        </td>
+        <td style="width:25%;">
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">Incident ID</div>
+          <div style="font-size:13px;color:#ffffff;font-weight:600;">${f.invoiceNumber}</div>
+        </td>
+        <td style="width:25%;">
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">Response Date</div>
+          <div style="font-size:13px;color:#ffffff;">${f.invoiceDate}</div>
+        </td>
+        <td style="width:25%;">
+          <div style="font-size:9px;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:1px;">Payment Due</div>
+          <div style="font-size:13px;color:#fca5a5;font-weight:600;">${f.dueDate}</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div style="padding:24px 36px;">
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:20px;">
+      <tr>
+        <td style="vertical-align:top;width:50%;">
+          <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">Response Team</div>
+          <div style="font-size:14px;color:#ffffff;font-weight:700;">${f.companyName}</div>
+          <div style="font-size:11px;color:#71717a;">${f.companyAddress}</div>
+          <div style="font-size:11px;color:#f97316;">${f.companyEmail}</div>
+        </td>
+        <td style="vertical-align:top;width:50%;">
+          <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">Affected Organization</div>
+          <div style="font-size:14px;color:#ffffff;font-weight:700;">${f.clientName}</div>
+          <div style="font-size:12px;color:#a1a1aa;">${f.clientCompany}</div>
+          <div style="font-size:11px;color:#71717a;">${f.clientAddress}</div>
+        </td>
+      </tr>
+    </table>
+    <div style="font-size:10px;color:#ef4444;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;font-weight:700;">Response Timeline</div>
+    <div style="padding:12px 16px;background:#18181b;border-left:3px solid #ef4444;border-radius:4px;margin-bottom:8px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="width:120px;font-size:11px;color:#ef4444;font-weight:700;">T+0:00</td>
+          <td style="font-size:12px;color:#e4e4e7;">Incident detected — Emergency response team activated</td>
+        </tr>
+      </table>
+    </div>
+    <div style="padding:12px 16px;background:#18181b;border-left:3px solid #f97316;border-radius:4px;margin-bottom:8px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="width:120px;font-size:11px;color:#f97316;font-weight:700;">T+2:30</td>
+          <td style="font-size:12px;color:#e4e4e7;">Threat contained — Forensic analysis initiated</td>
+        </tr>
+      </table>
+    </div>
+    <div style="padding:12px 16px;background:#18181b;border-left:3px solid #eab308;border-radius:4px;margin-bottom:8px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="width:120px;font-size:11px;color:#eab308;font-weight:700;">T+8:00</td>
+          <td style="font-size:12px;color:#e4e4e7;">Systems restored — Monitoring enhanced</td>
+        </tr>
+      </table>
+    </div>
+    <div style="padding:12px 16px;background:#18181b;border-left:3px solid #22c55e;border-radius:4px;margin-bottom:16px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="width:120px;font-size:11px;color:#22c55e;font-weight:700;">T+24:00</td>
+          <td style="font-size:12px;color:#e4e4e7;">Incident closed — Post-mortem report delivered</td>
+        </tr>
+      </table>
+    </div>
+    ${lineItemsTable("dark")}
+    <div style="margin-top:20px;padding:12px 16px;background:#18181b;border-left:3px solid #f97316;border-radius:4px;">
+      <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Urgent Payment Terms</div>
+      <div style="font-size:12px;color:#71717a;">${f.paymentTerms} — ${f.notes}</div>
+    </div>
+  </div>
+  <div style="padding:16px 36px;background:#0c0c0e;border-top:2px solid #7f1d1d;">
+    <div style="font-size:10px;color:#3f3f46;text-align:center;">${f.companyName} | Incident Response Division | <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;">stbcybersecurity.com</a></div>
+  </div>
+</div>`;
+}
+
+function inv9(f: InvoiceFields) {
+  return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:680px;background:#ffffff;color:#18181b;padding:40px;border:1px solid #e4e4e7;border-radius:12px;">
+  <table cellpadding="0" cellspacing="0" border="0" width="100%">
+    <tr>
+      <td style="vertical-align:middle;">
+        <table cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td style="vertical-align:middle;"><img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="display:block;border-radius:8px;" /></td>
+            <td style="padding-left:10px;vertical-align:middle;">
+              <div style="font-size:15px;font-weight:800;color:#18181b;">${f.companyName}</div>
+              <div style="font-size:10px;color:#f97316;text-transform:uppercase;letter-spacing:2px;">SUBSCRIPTION SERVICES</div>
+            </td>
+          </tr>
+        </table>
+      </td>
+      <td style="text-align:right;vertical-align:top;">
+        <div style="display:inline-block;padding:6px 16px;background:linear-gradient(135deg,#f97316,#ea580c);color:#ffffff;font-size:12px;font-weight:800;letter-spacing:2px;border-radius:20px;">SUBSCRIPTION INVOICE</div>
+        <div style="font-size:11px;color:#71717a;margin-top:6px;">${f.invoiceNumber}</div>
+      </td>
+    </tr>
+  </table>
+  <div style="height:1px;background:#e4e4e7;margin:20px 0;"></div>
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:20px;">
+    <tr>
+      <td style="vertical-align:top;width:50%;">
+        <div style="font-size:10px;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Subscriber</div>
+        <div style="font-size:14px;font-weight:700;color:#18181b;">${f.clientName}</div>
+        <div style="font-size:12px;color:#52525b;">${f.clientCompany}</div>
+        <div style="font-size:11px;color:#71717a;">${f.clientAddress}</div>
+      </td>
+      <td style="vertical-align:top;text-align:right;">
+        <div style="font-size:10px;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Billing Period</div>
+        <div style="font-size:12px;color:#18181b;font-weight:600;">${f.invoiceDate} — ${f.dueDate}</div>
+        <div style="font-size:11px;color:#f97316;margin-top:4px;font-weight:600;">Next Billing: ${f.dueDate}</div>
+      </td>
+    </tr>
+  </table>
+  <div style="padding:16px;background:#f4f4f5;border-radius:8px;margin-bottom:20px;">
+    <div style="font-size:10px;color:#71717a;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;font-weight:700;">Active Plan</div>
+    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+      <tr>
+        <td style="width:33%;padding:12px;background:#ffffff;border:2px solid #f97316;border-radius:8px;text-align:center;vertical-align:top;">
+          <div style="font-size:9px;color:#f97316;text-transform:uppercase;letter-spacing:1px;font-weight:800;">&#9733; CURRENT PLAN</div>
+          <div style="font-size:14px;font-weight:800;color:#18181b;margin-top:4px;">Professional</div>
+          <div style="font-size:20px;font-weight:900;color:#f97316;margin-top:4px;">$2,499<span style="font-size:11px;color:#71717a;">/mo</span></div>
+        </td>
+        <td style="width:8px;"></td>
+        <td style="width:33%;padding:12px;background:#ffffff;border:1px solid #e4e4e7;border-radius:8px;text-align:center;vertical-align:top;">
+          <div style="font-size:9px;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;">Starter</div>
+          <div style="font-size:14px;font-weight:700;color:#71717a;margin-top:4px;">Basic</div>
+          <div style="font-size:20px;font-weight:900;color:#71717a;margin-top:4px;">$799<span style="font-size:11px;color:#a1a1aa;">/mo</span></div>
+        </td>
+        <td style="width:8px;"></td>
+        <td style="width:33%;padding:12px;background:#ffffff;border:1px solid #e4e4e7;border-radius:8px;text-align:center;vertical-align:top;">
+          <div style="font-size:9px;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;">Enterprise</div>
+          <div style="font-size:14px;font-weight:700;color:#71717a;margin-top:4px;">Custom</div>
+          <div style="font-size:20px;font-weight:900;color:#71717a;margin-top:4px;">Contact</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div style="font-size:10px;color:#71717a;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-weight:700;">Usage Metrics</div>
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:16px;">
+    <tr>
+      <td style="padding:10px 14px;background:#fff7ed;border-radius:8px;text-align:center;width:25%;">
+        <div style="font-size:20px;font-weight:900;color:#f97316;">847</div>
+        <div style="font-size:9px;color:#9a3412;text-transform:uppercase;letter-spacing:1px;">Scans Run</div>
+      </td>
+      <td style="width:8px;"></td>
+      <td style="padding:10px 14px;background:#f0fdf4;border-radius:8px;text-align:center;width:25%;">
+        <div style="font-size:20px;font-weight:900;color:#22c55e;">99.9%</div>
+        <div style="font-size:9px;color:#166534;text-transform:uppercase;letter-spacing:1px;">Uptime</div>
+      </td>
+      <td style="width:8px;"></td>
+      <td style="padding:10px 14px;background:#faf5ff;border-radius:8px;text-align:center;width:25%;">
+        <div style="font-size:20px;font-weight:900;color:#8b5cf6;">12</div>
+        <div style="font-size:9px;color:#5b21b6;text-transform:uppercase;letter-spacing:1px;">Alerts</div>
+      </td>
+      <td style="width:8px;"></td>
+      <td style="padding:10px 14px;background:#f4f4f5;border-radius:8px;text-align:center;width:25%;">
+        <div style="font-size:20px;font-weight:900;color:#18181b;">5</div>
+        <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:1px;">Users</div>
+      </td>
+    </tr>
+  </table>
+  <div style="font-size:10px;color:#71717a;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-weight:700;">Billing Summary</div>
+  <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-bottom:16px;">
+    <tr style="background:#f4f4f5;">
+      <td style="padding:10px 12px;font-size:11px;font-weight:700;color:#18181b;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #f97316;width:50%;">Item</td>
+      <td style="padding:10px 12px;font-size:11px;font-weight:700;color:#18181b;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #f97316;text-align:center;width:20%;">Type</td>
+      <td style="padding:10px 12px;font-size:11px;font-weight:700;color:#18181b;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #f97316;text-align:right;width:30%;">Amount</td>
+    </tr>
+    <tr style="background:#ffffff;">
+      <td style="padding:10px 12px;font-size:12px;color:#18181b;border-bottom:1px solid #e4e4e7;">Professional Plan — Monthly</td>
+      <td style="padding:10px 12px;font-size:11px;color:#22c55e;font-weight:600;text-align:center;border-bottom:1px solid #e4e4e7;">Recurring</td>
+      <td style="padding:10px 12px;font-size:12px;color:#18181b;text-align:right;border-bottom:1px solid #e4e4e7;font-weight:600;">$2,499.00</td>
+    </tr>
+    <tr style="background:#f4f4f5;">
+      <td style="padding:10px 12px;font-size:12px;color:#18181b;border-bottom:1px solid #e4e4e7;">Additional API Calls (350 overage)</td>
+      <td style="padding:10px 12px;font-size:11px;color:#f97316;font-weight:600;text-align:center;border-bottom:1px solid #e4e4e7;">Usage</td>
+      <td style="padding:10px 12px;font-size:12px;color:#18181b;text-align:right;border-bottom:1px solid #e4e4e7;font-weight:600;">$175.00</td>
+    </tr>
+    <tr style="background:#ffffff;">
+      <td style="padding:10px 12px;font-size:12px;color:#18181b;border-bottom:1px solid #e4e4e7;">Premium Threat Intel Add-on</td>
+      <td style="padding:10px 12px;font-size:11px;color:#8b5cf6;font-weight:600;text-align:center;border-bottom:1px solid #e4e4e7;">One-time</td>
+      <td style="padding:10px 12px;font-size:12px;color:#18181b;text-align:right;border-bottom:1px solid #e4e4e7;font-weight:600;">$500.00</td>
+    </tr>
+    <tr style="background:#f4f4f5;">
+      <td style="padding:10px 12px;font-size:12px;color:#22c55e;border-bottom:1px solid #e4e4e7;">Annual Commitment Credit</td>
+      <td style="padding:10px 12px;font-size:11px;color:#22c55e;font-weight:600;text-align:center;border-bottom:1px solid #e4e4e7;">Credit</td>
+      <td style="padding:10px 12px;font-size:12px;color:#22c55e;text-align:right;border-bottom:1px solid #e4e4e7;font-weight:600;">-$250.00</td>
+    </tr>
+    <tr><td style="padding:0;"></td>
+      <td style="padding:10px 12px;font-size:12px;color:#52525b;text-align:right;border-top:1px solid #e4e4e7;">Subtotal</td>
+      <td style="padding:10px 12px;font-size:12px;color:#18181b;text-align:right;border-top:1px solid #e4e4e7;">$2,924.00</td>
+    </tr>
+    <tr><td style="padding:0;"></td>
+      <td style="padding:10px 12px;font-size:14px;font-weight:800;color:#f97316;text-align:right;border-top:2px solid #f97316;">TOTAL DUE</td>
+      <td style="padding:10px 12px;font-size:14px;font-weight:800;color:#f97316;text-align:right;border-top:2px solid #f97316;">$2,924.00</td>
+    </tr>
+  </table>
+  <div style="margin-top:16px;padding:12px 16px;background:#fafafa;border-left:3px solid #f97316;border-radius:4px;">
+    <div style="font-size:10px;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Auto-Pay Enabled</div>
+    <div style="font-size:12px;color:#52525b;">${f.paymentTerms} — ${f.notes}</div>
+  </div>
+  <div style="margin-top:24px;text-align:center;padding-top:16px;border-top:1px solid #e4e4e7;">
+    <div style="font-size:10px;color:#a1a1aa;">${f.companyName} | <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;">stbcybersecurity.com</a> | Subscription Services</div>
+  </div>
+</div>`;
+}
+
+function inv10(f: InvoiceFields) {
+  return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:680px;background:#ffffff;color:#18181b;padding:0;border:2px solid #18181b;">
+  <div style="background:#18181b;padding:20px 36px;">
+    <table cellpadding="0" cellspacing="0" border="0" width="100%">
+      <tr>
+        <td style="vertical-align:middle;">
+          <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="display:block;border-radius:6px;" />
+          <div style="font-size:14px;font-weight:800;color:#ffffff;margin-top:6px;">${f.companyName}</div>
+          <div style="font-size:9px;color:#71717a;letter-spacing:2px;text-transform:uppercase;">GOVERNMENT CONTRACTOR</div>
+        </td>
+        <td style="text-align:right;vertical-align:top;">
+          <div style="font-size:20px;font-weight:900;color:#ffffff;letter-spacing:2px;">GOVERNMENT</div>
+          <div style="font-size:14px;font-weight:700;color:#f97316;letter-spacing:2px;">CONTRACT INVOICE</div>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div style="padding:24px 36px;">
+    <div style="padding:16px;background:#f4f4f5;border:1px solid #d4d4d8;margin-bottom:20px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="width:33%;padding-right:12px;">
+            <div style="font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:1px;">Contract Number</div>
+            <div style="font-family:'Courier New',Consolas,monospace;font-size:12px;color:#18181b;font-weight:700;margin-top:2px;">${f.invoiceNumber}</div>
+          </td>
+          <td style="width:33%;padding-right:12px;">
+            <div style="font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:1px;">DUNS Number</div>
+            <div style="font-family:'Courier New',Consolas,monospace;font-size:12px;color:#18181b;margin-top:2px;">08-765-4321</div>
+          </td>
+          <td style="width:33%;">
+            <div style="font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:1px;">CAGE Code</div>
+            <div style="font-family:'Courier New',Consolas,monospace;font-size:12px;color:#18181b;margin-top:2px;">7X9K2</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div style="padding:12px 16px;background:#fff7ed;border:1px solid #fed7aa;margin-bottom:20px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="width:50%;">
+            <div style="font-size:9px;color:#9a3412;text-transform:uppercase;letter-spacing:1px;">Period of Performance</div>
+            <div style="font-size:12px;color:#78350f;font-weight:700;margin-top:2px;">${f.invoiceDate} through ${f.dueDate}</div>
+          </td>
+          <td style="width:50%;text-align:right;">
+            <div style="font-size:9px;color:#9a3412;text-transform:uppercase;letter-spacing:1px;">Payment Terms</div>
+            <div style="font-size:12px;color:#78350f;font-weight:700;margin-top:2px;">${f.paymentTerms}</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="margin-bottom:20px;">
+      <tr>
+        <td style="vertical-align:top;width:50%;">
+          <div style="font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Contractor</div>
+          <div style="font-size:13px;color:#18181b;font-weight:700;">${f.companyName}</div>
+          <div style="font-size:11px;color:#52525b;">${f.companyAddress}</div>
+          <div style="font-size:11px;color:#52525b;">${f.companyPhone}</div>
+          <div style="font-size:11px;color:#f97316;">${f.companyEmail}</div>
+        </td>
+        <td style="vertical-align:top;width:50%;">
+          <div style="font-size:9px;color:#71717a;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Contracting Agency</div>
+          <div style="font-size:13px;color:#18181b;font-weight:700;">${f.clientName}</div>
+          <div style="font-size:12px;color:#52525b;">${f.clientCompany}</div>
+          <div style="font-size:11px;color:#71717a;">${f.clientAddress}</div>
+        </td>
+      </tr>
+    </table>
+    <div style="font-size:10px;color:#71717a;text-transform:uppercase;letter-spacing:2px;margin-bottom:8px;font-weight:700;">Contract Line Item Numbers (CLINs)</div>
+    <table cellpadding="0" cellspacing="0" border="0" width="100%" style="border-collapse:collapse;margin-bottom:16px;">
+      <tr style="background:#18181b;">
+        <td style="padding:10px 12px;font-size:11px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #f97316;width:12%;">CLIN</td>
+        <td style="padding:10px 12px;font-size:11px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #f97316;width:43%;">Description</td>
+        <td style="padding:10px 12px;font-size:11px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #f97316;text-align:center;width:15%;">Qty</td>
+        <td style="padding:10px 12px;font-size:11px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #f97316;text-align:right;width:15%;">Unit Price</td>
+        <td style="padding:10px 12px;font-size:11px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:1px;border-bottom:2px solid #f97316;text-align:right;width:15%;">Amount</td>
+      </tr>
+      <tr style="background:#ffffff;">
+        <td style="padding:10px 12px;font-family:'Courier New',Consolas,monospace;font-size:12px;color:#18181b;border-bottom:1px solid #d4d4d8;font-weight:700;">0001</td>
+        <td style="padding:10px 12px;font-size:12px;color:#18181b;border-bottom:1px solid #d4d4d8;">Vulnerability Assessment & Penetration Testing</td>
+        <td style="padding:10px 12px;font-size:12px;color:#52525b;text-align:center;border-bottom:1px solid #d4d4d8;">1 EA</td>
+        <td style="padding:10px 12px;font-size:12px;color:#52525b;text-align:right;border-bottom:1px solid #d4d4d8;">$4,500.00</td>
+        <td style="padding:10px 12px;font-size:12px;color:#18181b;text-align:right;border-bottom:1px solid #d4d4d8;font-weight:600;">$4,500.00</td>
+      </tr>
+      <tr style="background:#f4f4f5;">
+        <td style="padding:10px 12px;font-family:'Courier New',Consolas,monospace;font-size:12px;color:#18181b;border-bottom:1px solid #d4d4d8;font-weight:700;">0002</td>
+        <td style="padding:10px 12px;font-size:12px;color:#18181b;border-bottom:1px solid #d4d4d8;">Security Monitoring Setup (Monthly)</td>
+        <td style="padding:10px 12px;font-size:12px;color:#52525b;text-align:center;border-bottom:1px solid #d4d4d8;">3 MO</td>
+        <td style="padding:10px 12px;font-size:12px;color:#52525b;text-align:right;border-bottom:1px solid #d4d4d8;">$1,200.00</td>
+        <td style="padding:10px 12px;font-size:12px;color:#18181b;text-align:right;border-bottom:1px solid #d4d4d8;font-weight:600;">$3,600.00</td>
+      </tr>
+      <tr style="background:#ffffff;">
+        <td style="padding:10px 12px;font-family:'Courier New',Consolas,monospace;font-size:12px;color:#18181b;border-bottom:1px solid #d4d4d8;font-weight:700;">0003</td>
+        <td style="padding:10px 12px;font-size:12px;color:#18181b;border-bottom:1px solid #d4d4d8;">Incident Response Consultation</td>
+        <td style="padding:10px 12px;font-size:12px;color:#52525b;text-align:center;border-bottom:1px solid #d4d4d8;">8 HR</td>
+        <td style="padding:10px 12px;font-size:12px;color:#52525b;text-align:right;border-bottom:1px solid #d4d4d8;">$275.00</td>
+        <td style="padding:10px 12px;font-size:12px;color:#18181b;text-align:right;border-bottom:1px solid #d4d4d8;font-weight:600;">$2,200.00</td>
+      </tr>
+      <tr><td colspan="3" style="padding:0;"></td>
+        <td style="padding:8px 12px;font-size:12px;color:#52525b;text-align:right;border-top:1px solid #d4d4d8;">Subtotal</td>
+        <td style="padding:8px 12px;font-size:12px;color:#18181b;text-align:right;border-top:1px solid #d4d4d8;">$10,300.00</td>
+      </tr>
+      <tr><td colspan="3" style="padding:0;"></td>
+        <td style="padding:4px 12px;font-size:12px;color:#52525b;text-align:right;">Tax (Exempt)</td>
+        <td style="padding:4px 12px;font-size:12px;color:#18181b;text-align:right;">$0.00</td>
+      </tr>
+      <tr><td colspan="3" style="padding:0;"></td>
+        <td style="padding:10px 12px;font-size:14px;font-weight:800;color:#f97316;text-align:right;border-top:2px solid #f97316;">TOTAL</td>
+        <td style="padding:10px 12px;font-size:14px;font-weight:800;color:#f97316;text-align:right;border-top:2px solid #f97316;">$10,300.00</td>
+      </tr>
+    </table>
+    <div style="margin-top:20px;padding:16px;background:#f4f4f5;border:1px solid #d4d4d8;">
+      <div style="font-size:10px;color:#71717a;text-transform:uppercase;letter-spacing:2px;margin-bottom:12px;font-weight:700;">Authorized Signatures</div>
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="width:48%;padding-top:40px;border-top:2px solid #18181b;">
+            <div style="font-size:11px;color:#18181b;font-weight:700;">Contractor Representative</div>
+            <div style="font-size:10px;color:#71717a;">Name / Title / Date</div>
+          </td>
+          <td style="width:4%;"></td>
+          <td style="width:48%;padding-top:40px;border-top:2px solid #18181b;">
+            <div style="font-size:11px;color:#18181b;font-weight:700;">Contracting Officer</div>
+            <div style="font-size:10px;color:#71717a;">Name / Title / Date</div>
+          </td>
+        </tr>
+      </table>
+    </div>
+    <div style="margin-top:16px;padding:12px 16px;background:#fafafa;border-left:3px solid #f97316;border-radius:4px;">
+      <div style="font-size:10px;color:#a1a1aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;">Notes</div>
+      <div style="font-size:12px;color:#52525b;">${f.notes}</div>
+    </div>
+  </div>
+  <div style="background:#18181b;padding:12px 36px;text-align:center;">
+    <div style="font-size:10px;color:#52525b;">${f.companyName} | CAGE: 7X9K2 | DUNS: 08-765-4321 | <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;">stbcybersecurity.com</a></div>
+  </div>
+</div>`;
+}
+
 const templates = [
   { id: 1, name: "Professional", desc: "Clean white layout with STBCS header, standard invoice table, orange accent lines", render: inv1 },
   { id: 2, name: "Dark Ops", desc: "Full dark theme matching STBCS site, orange headers, dark table rows", render: inv2 },
@@ -574,6 +1014,10 @@ const templates = [
   { id: 4, name: "Assessment Report", desc: "Security assessment billing with scope, findings summary, remediation costs", render: inv4 },
   { id: 5, name: "Retainer", desc: "Monthly retainer format with service period, usage summary, overage rates", render: inv5 },
   { id: 6, name: "Quote / Proposal", desc: "Proposal format with service descriptions, pricing tiers, validity period", render: inv6 },
+  { id: 7, name: "Classified", desc: "TOP SECRET classified document aesthetic with stamps, document ID fields, dark header band", render: inv7 },
+  { id: 8, name: "Breach Response", desc: "Emergency incident response billing with severity banner, timeline of response actions", render: inv8 },
+  { id: 9, name: "Subscription", desc: "SaaS recurring subscription invoice with plan tiers, usage metrics, credits section", render: inv9 },
+  { id: 10, name: "Government Contract", desc: "Formal government CAGE-style format with CLIN items, DUNS, authorized signatures block", render: inv10 },
 ];
 
 export default function Invoices() {

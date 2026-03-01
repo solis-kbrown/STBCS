@@ -445,6 +445,239 @@ function sig10(f: SigFields) {
 </table>`;
 }
 
+function sig11(f: SigFields) {
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:540px;background:#0a0a0c;border-radius:12px;overflow:hidden;border:2px solid #f97316;box-shadow:0 0 20px rgba(249,115,22,0.15),inset 0 0 20px rgba(249,115,22,0.05);">
+  <tr>
+    <td style="padding:20px 22px;border-bottom:1px solid rgba(249,115,22,0.2);">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="vertical-align:middle;">
+            <div style="font-size:24px;font-weight:900;color:#f97316;letter-spacing:4px;text-shadow:0 0 10px rgba(249,115,22,0.5);">STB</div>
+            <div style="font-size:9px;color:#71717a;letter-spacing:5px;text-transform:uppercase;">CYBERSECURITY</div>
+          </td>
+          <td style="text-align:right;vertical-align:middle;">
+            <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="display:inline-block;border-radius:10px;border:2px solid rgba(249,115,22,0.4);" />
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:18px 22px;">
+      <div style="font-size:20px;font-weight:800;color:#ffffff;padding-bottom:3px;text-shadow:0 0 8px rgba(249,115,22,0.3);">${f.name}</div>
+      <div style="font-size:12px;color:#f97316;padding-bottom:14px;text-transform:uppercase;letter-spacing:2px;font-weight:600;text-shadow:0 0 6px rgba(249,115,22,0.3);">${f.title}</div>
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr><td style="font-size:11px;color:#a1a1aa;padding-bottom:4px;">&#9993; <a href="mailto:${f.email}" style="color:#d4d4d8;text-decoration:none;">${f.email}</a></td></tr>
+        <tr><td style="font-size:11px;color:#a1a1aa;padding-bottom:4px;">&#9742; ${f.phone}</td></tr>
+        <tr><td style="font-size:11px;color:#a1a1aa;padding-bottom:4px;">&#128205; ${f.location}</td></tr>
+        <tr><td style="font-size:11px;">&#127760; <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;font-weight:600;text-shadow:0 0 6px rgba(249,115,22,0.3);">stbcybersecurity.com</a></td></tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:10px 22px;background:rgba(249,115,22,0.05);border-top:1px solid rgba(249,115,22,0.2);">
+      <div style="font-size:9px;color:#f97316;letter-spacing:3px;text-transform:uppercase;text-shadow:0 0 4px rgba(249,115,22,0.4);">&#9889; NEON PULSE &bull; ALWAYS ON &bull; ALWAYS WATCHING</div>
+    </td>
+  </tr>
+</table>`;
+}
+
+function sig12(f: SigFields) {
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:520px;background:#18181b;border-radius:12px;overflow:hidden;border:2px solid #3f3f46;">
+  <tr>
+    <td style="background:#27272a;padding:8px 16px;border-bottom:3px solid #f97316;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="font-size:10px;font-weight:800;color:#f97316;letter-spacing:3px;text-transform:uppercase;">&#128737; SECURITY BADGE</td>
+          <td style="text-align:right;font-size:9px;color:#52525b;letter-spacing:2px;">STB CYBERSECURITY</td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:16px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="vertical-align:top;width:80px;">
+            <div style="width:72px;height:72px;background:#27272a;border-radius:8px;border:2px solid #3f3f46;display:table-cell;vertical-align:middle;text-align:center;">
+              <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="display:inline-block;border-radius:6px;" />
+            </div>
+          </td>
+          <td style="padding-left:14px;vertical-align:top;">
+            <div style="font-size:18px;font-weight:800;color:#ffffff;padding-bottom:2px;">${f.name}</div>
+            <div style="font-size:11px;color:#f97316;padding-bottom:4px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">${f.title}</div>
+            <div style="font-size:10px;color:#71717a;padding-bottom:6px;">CLEARANCE: <span style="color:#22c55e;font-weight:700;">AUTHORIZED</span></div>
+            <table cellpadding="0" cellspacing="0" border="0">
+              <tr><td style="font-size:11px;color:#a1a1aa;padding-bottom:2px;">&#9993; <a href="mailto:${f.email}" style="color:#d4d4d8;text-decoration:none;">${f.email}</a></td></tr>
+              <tr><td style="font-size:11px;color:#a1a1aa;padding-bottom:2px;">&#9742; ${f.phone}</td></tr>
+              <tr><td style="font-size:11px;color:#a1a1aa;">&#128205; ${f.location}</td></tr>
+            </table>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:0 16px 12px;">
+      <div style="font-size:11px;padding-bottom:6px;">&#127760; <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;font-weight:600;">www.stbcybersecurity.com</a></div>
+      <div style="background:#27272a;border-radius:4px;padding:6px 10px;font-family:'Courier New',Consolas,monospace;">
+        <div style="font-size:8px;color:#52525b;letter-spacing:6px;text-align:center;">&#9612;&#9612;&#9615;&#9612;&#9615;&#9612;&#9612;&#9615;&#9612;&#9612;&#9615;&#9612;&#9615;&#9615;&#9612;&#9612;&#9615;&#9612;&#9612;&#9615;&#9612;&#9615;&#9612;&#9612;&#9615;&#9612;&#9612;&#9615;&#9612;</div>
+        <div style="font-size:7px;color:#3f3f46;text-align:center;padding-top:2px;letter-spacing:1px;">ID-STBCS-VERIFIED</div>
+      </div>
+    </td>
+  </tr>
+</table>`;
+}
+
+function sig13(f: SigFields) {
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:540px;border-collapse:separate;">
+  <tr>
+    <td style="background:#0c0c0e;padding:12px 16px;border:1px solid #27272a;border-right:none;border-radius:8px 0 0 0;">
+      <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:2px;padding-bottom:4px;">OPERATOR</div>
+      <div style="font-size:17px;font-weight:800;color:#ffffff;">${f.name}</div>
+      <div style="font-size:11px;color:#f97316;font-weight:600;text-transform:uppercase;letter-spacing:1px;">${f.title}</div>
+    </td>
+    <td style="background:#0c0c0e;padding:12px 16px;border:1px solid #27272a;border-left:1px solid #27272a;border-radius:0 8px 0 0;">
+      <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:2px;padding-bottom:4px;">CONTACT</div>
+      <div style="font-size:11px;color:#a1a1aa;padding-bottom:2px;">&#9993; <a href="mailto:${f.email}" style="color:#d4d4d8;text-decoration:none;">${f.email}</a></div>
+      <div style="font-size:11px;color:#a1a1aa;padding-bottom:2px;">&#9742; ${f.phone}</div>
+      <div style="font-size:11px;color:#a1a1aa;">&#128205; ${f.location}</div>
+    </td>
+  </tr>
+  <tr>
+    <td style="background:#111113;padding:10px 16px;border:1px solid #27272a;border-top:none;border-right:none;border-radius:0 0 0 8px;">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="vertical-align:middle;padding-right:8px;">
+            <img src="${LOGO_URL}" alt="STBCS" width="28" height="28" style="display:block;border-radius:6px;" />
+          </td>
+          <td style="vertical-align:middle;">
+            <div style="font-size:12px;font-weight:700;color:#d4d4d8;letter-spacing:1px;">STB CYBERSECURITY</div>
+            <div style="font-size:10px;">&#127760; <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;">stbcybersecurity.com</a></div>
+          </td>
+        </tr>
+      </table>
+    </td>
+    <td style="background:#111113;padding:10px 16px;border:1px solid #27272a;border-top:none;border-left:1px solid #27272a;border-radius:0 0 8px 0;">
+      <div style="font-size:9px;color:#52525b;text-transform:uppercase;letter-spacing:2px;padding-bottom:4px;">THREAT STATUS</div>
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr>
+          <td style="padding-right:12px;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;vertical-align:middle;margin-right:4px;"></span>
+            <span style="font-size:10px;color:#22c55e;vertical-align:middle;">NETWORK</span>
+          </td>
+          <td style="padding-right:12px;">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#f97316;vertical-align:middle;margin-right:4px;"></span>
+            <span style="font-size:10px;color:#f97316;vertical-align:middle;">ALERTS</span>
+          </td>
+          <td>
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#22c55e;vertical-align:middle;margin-right:4px;"></span>
+            <span style="font-size:10px;color:#22c55e;vertical-align:middle;">SECURE</span>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>`;
+}
+
+function sig14(f: SigFields) {
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:500px;background:#0a0a0a;border-radius:4px;overflow:hidden;border:1px solid #1a1a1a;">
+  <tr>
+    <td style="padding:16px 20px;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="vertical-align:middle;">
+            <div style="font-size:15px;font-weight:700;color:#a1a1aa;letter-spacing:1px;">${f.name}</div>
+            <div style="font-size:10px;color:#3f3f46;padding-top:2px;text-transform:uppercase;letter-spacing:2px;">${f.title}</div>
+          </td>
+          <td style="text-align:right;vertical-align:middle;">
+            <img src="${LOGO_URL}" alt="STBCS" width="28" height="28" style="display:inline-block;border-radius:4px;opacity:0.4;" />
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:0 20px;">
+      <div style="height:1px;background:#1a1a1a;"></div>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:12px 20px;">
+      <table cellpadding="0" cellspacing="0" border="0">
+        <tr><td style="font-size:10px;color:#27272a;padding-bottom:3px;">&#9993; <a href="mailto:${f.email}" style="color:#52525b;text-decoration:none;">${f.email}</a></td></tr>
+        <tr><td style="font-size:10px;color:#27272a;padding-bottom:3px;">&#9742; <span style="color:#52525b;">${f.phone}</span></td></tr>
+        <tr><td style="font-size:10px;">&#127760; <a href="${SITE_URL}" style="color:#3f3f46;text-decoration:none;">stbcybersecurity.com</a></td></tr>
+      </table>
+    </td>
+  </tr>
+  <tr>
+    <td style="padding:8px 20px 12px;">
+      <div style="display:flex;gap:4px;">
+        <span style="display:inline-block;width:40px;height:6px;background:#1a1a1a;border-radius:1px;"></span>
+        <span style="display:inline-block;width:60px;height:6px;background:#1a1a1a;border-radius:1px;"></span>
+        <span style="display:inline-block;width:30px;height:6px;background:#1a1a1a;border-radius:1px;"></span>
+        <span style="display:inline-block;width:50px;height:6px;background:#1a1a1a;border-radius:1px;"></span>
+      </div>
+      <div style="font-size:8px;color:#1a1a1a;padding-top:6px;letter-spacing:4px;text-transform:uppercase;">STEALTH OPERATIONS &bull; ${f.location}</div>
+    </td>
+  </tr>
+</table>`;
+}
+
+function sig15(f: SigFields) {
+  return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;max-width:540px;background:#0c0c0e;border-radius:12px;overflow:hidden;border:2px solid #27272a;">
+  <tr>
+    <td style="padding:4px 0;">
+      <table cellpadding="0" cellspacing="0" border="0" width="100%">
+        <tr>
+          <td style="padding:0 20px;">
+            <div style="border:2px solid #3f3f46;border-radius:8px;overflow:hidden;">
+              <div style="background:repeating-linear-gradient(90deg,#27272a 0px,#27272a 8px,transparent 8px,transparent 16px);height:6px;"></div>
+              <div style="padding:16px 18px;">
+                <table cellpadding="0" cellspacing="0" border="0" width="100%">
+                  <tr>
+                    <td style="vertical-align:top;">
+                      <div style="width:56px;height:56px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:50%;text-align:center;line-height:56px;border:3px solid #27272a;">
+                        <img src="${LOGO_URL}" alt="STBCS" width="34" height="34" style="display:inline-block;border-radius:6px;vertical-align:middle;" />
+                      </div>
+                    </td>
+                    <td style="padding-left:14px;vertical-align:top;">
+                      <div style="font-size:19px;font-weight:800;color:#ffffff;padding-bottom:2px;">${f.name}</div>
+                      <div style="font-size:11px;color:#f97316;font-weight:600;text-transform:uppercase;letter-spacing:1.5px;padding-bottom:4px;">${f.title}</div>
+                      <div style="font-size:14px;font-weight:700;color:#d4d4d8;letter-spacing:1px;">STB CYBERSECURITY</div>
+                    </td>
+                  </tr>
+                </table>
+                <table cellpadding="0" cellspacing="0" border="0" style="margin-top:12px;border-top:1px solid #27272a;padding-top:10px;" width="100%">
+                  <tr>
+                    <td style="font-size:11px;color:#a1a1aa;padding-bottom:3px;">&#9993; <a href="mailto:${f.email}" style="color:#d4d4d8;text-decoration:none;">${f.email}</a></td>
+                  </tr>
+                  <tr>
+                    <td style="font-size:11px;color:#a1a1aa;padding-bottom:3px;">&#9742; ${f.phone}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size:11px;color:#a1a1aa;padding-bottom:3px;">&#128205; ${f.location}</td>
+                  </tr>
+                  <tr>
+                    <td style="font-size:11px;">&#127760; <a href="${SITE_URL}" style="color:#f97316;text-decoration:none;font-weight:600;">stbcybersecurity.com</a></td>
+                  </tr>
+                </table>
+              </div>
+              <div style="background:#18181b;padding:8px 18px;border-top:1px solid #27272a;">
+                <div style="font-size:9px;color:#f97316;font-weight:700;letter-spacing:3px;text-transform:uppercase;text-align:center;">&#9632; FORTIFIED COMMUNICATIONS &#9632;</div>
+              </div>
+              <div style="background:repeating-linear-gradient(90deg,#27272a 0px,#27272a 8px,transparent 8px,transparent 16px);height:6px;"></div>
+            </div>
+          </td>
+        </tr>
+      </table>
+    </td>
+  </tr>
+</table>`;
+}
+
 const signatures = [
   { id: 1, name: "Executive Classic", desc: "Clean vertical divider with orange accent — professional and authoritative", render: sig1 },
   { id: 2, name: "Command Center", desc: "Orange gradient header card — bold, branded, modern", render: sig2 },
@@ -456,6 +689,11 @@ const signatures = [
   { id: 8, name: "SOC Operator", desc: "Two-row dark banner layout with status indicator — security operations center feel", render: sig8 },
   { id: 9, name: "Red Team", desc: "Aggressive red/orange styling with angular dividers — offensive security aesthetic", render: sig9 },
   { id: 10, name: "Corporate Clean", desc: "Light-mode professional design with subtle orange accents — ideal for non-tech recipients", render: sig10 },
+  { id: 11, name: "Neon Pulse", desc: "Dark background with neon glow effect around borders — futuristic and electrifying", render: sig11 },
+  { id: 12, name: "Badge ID", desc: "ID card / badge style with clearance level and barcode — lanyard-inspired identity", render: sig12 },
+  { id: 13, name: "Threat Matrix", desc: "Grid/matrix layout with threat status indicators — tactical operations dashboard feel", render: sig13 },
+  { id: 14, name: "Stealth Ops", desc: "Ultra-minimal dark design with redacted-style bars — covert and barely visible", render: sig14 },
+  { id: 15, name: "Digital Fortress", desc: "Fortress-inspired geometric border with shield emblem — medieval meets cyber defense", render: sig15 },
 ];
 
 export default function EmailSignatures() {

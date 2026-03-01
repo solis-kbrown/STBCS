@@ -66,6 +66,8 @@ const BrandSocialMedia = lazy(() => import("@/pages/brand-kit/social-media"));
 const BrandPresentations = lazy(() => import("@/pages/brand-kit/presentations"));
 const BrandBackgrounds = lazy(() => import("@/pages/brand-kit/backgrounds"));
 const BrandReportCovers = lazy(() => import("@/pages/brand-kit/report-covers"));
+const BrandPitchDecks = lazy(() => import("@/pages/brand-kit/pitch-decks"));
+const BrandCertificates = lazy(() => import("@/pages/brand-kit/certificates"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -144,6 +146,8 @@ function Router() {
         <Route path="/brand-kit/presentations" component={BrandPresentations}/>
         <Route path="/brand-kit/backgrounds" component={BrandBackgrounds}/>
         <Route path="/brand-kit/report-covers" component={BrandReportCovers}/>
+        <Route path="/brand-kit/pitch-decks" component={BrandPitchDecks}/>
+        <Route path="/brand-kit/certificates" component={BrandCertificates}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>
