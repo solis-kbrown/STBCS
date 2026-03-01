@@ -82,6 +82,7 @@ Preferred communication style: Simple, everyday language.
 - **Incident Response Playbooks**: 5 interactive step-by-step IR guides (Ransomware, Phishing, Data Breach, Malware, Account Compromise) with phase-based checklists.
 - **Service Status Dashboard**: Real-time status monitoring for 8 major cloud services (GitHub, Cloudflare, AWS, Azure, Google Cloud, Slack, Datadog, Vercel).
 - **Dark Web Intelligence**: deepdarkCTI integration for dark web sourced IPs, domains, and URLs.
+- **Remote Desktop**: Browser-based RDP client (Business+ tier) with WebSocket-to-TCP bridging, canvas-based rendering, keyboard/mouse forwarding, fullscreen mode, session management (max 2 per user, 30-min timeout), rate limiting, private IP blocking, and zero credential storage.
 
 ## External Dependencies
 

@@ -39,6 +39,7 @@ const AttackSurface = lazy(() => import("@/pages/attack-surface"));
 const Reports = lazy(() => import("@/pages/reports"));
 const ServiceStatus = lazy(() => import("@/pages/service-status"));
 const Playbooks = lazy(() => import("@/pages/playbooks"));
+const RemoteDesktop = lazy(() => import("@/pages/remote-desktop"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -88,6 +89,7 @@ function Router() {
         <Route path="/reports" component={Reports}/>
         <Route path="/service-status" component={ServiceStatus}/>
         <Route path="/playbooks" component={Playbooks}/>
+        <Route path="/remote-desktop" component={RemoteDesktop}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

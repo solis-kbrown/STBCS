@@ -122,6 +122,11 @@ const PAGE_META: Record<string, PageMeta> = {
     title: 'Incident Response Playbooks | STB Cybersecurity',
     description: 'Step-by-step incident response playbooks for ransomware, phishing, data breaches, and more. Actionable IR procedures aligned with NIST and SANS frameworks.',
   },
+  '/remote-desktop': {
+    title: 'Remote Desktop Client | STB Cybersecurity',
+    description: 'Secure, browser-based RDP client for remote server management. Encrypted WebSocket tunnels with zero credential storage. Business and Enterprise feature.',
+    noindex: true,
+  },
   '/service-status': {
     title: 'Service Status Dashboard | STB Cybersecurity',
     description: 'Real-time operational status of STB Cybersecurity platform services, threat feeds, APIs, and monitoring systems. Current uptime and incident history.',

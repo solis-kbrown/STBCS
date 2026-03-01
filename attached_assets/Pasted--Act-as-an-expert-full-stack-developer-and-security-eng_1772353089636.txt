@@ -1,0 +1,21 @@
+​"Act as an expert full-stack developer and security engineer. I need to design and build a secure, web-based SSH terminal application. This application will serve as a premium tool for my existing platform, STB Cybersecurity (stbcybersecurity.com), and must be strictly gated for paid members only.
+​Please generate the project structure and foundational code based on the following requirements:
+​1. Core Architecture & Tech Stack:
+​Backend: Node.js with Express.
+​SSH Bridge: Use the ssh2 Node.js library to establish the connection to the target server.  
+​Frontend: Use xterm.js to render the terminal interface in the browser. Include the xterm-addon-fit to handle browser window resizing dynamically.  
+​Communication: WebSockets (socket.io or native ws) to pipe standard input (stdin), output (stdout), and error (stderr) streams securely between the xterm.js frontend and the ssh2 backend connection.
+​2. Authentication & Paywall Integration:
+​The app must restrict access to verified, paid users of STB Cybersecurity.
+​Implement an authentication middleware (e.g., JWT verification or an API call to my main site's backend) to verify the user's active subscription status before rendering the terminal or opening a WebSocket connection.
+​Unauthenticated users should be redirected to the main site's upgrade page.
+​3. Security Requirements:
+​Enforce strict HTTPS/WSS.
+​Support both password-based and Private Key (RSA/Ed25519) SSH authentication.
+​Ephemeral memory only: Target IPs, usernames, passwords, and uploaded private keys must exist strictly in memory for the duration of the session and must never be written to disk, logged, or stored.
+​Implement WebSocket connection limits and timeout policies for idle sessions.
+​4. UI/UX:
+​A clean, highly responsive, tactical dark-mode interface optimized for incident response and network management.
+​A pre-connection modal to input Target IP, Port (default 22), Username, and an option to either paste a Private Key or enter a Password.
+​A full-screen terminal view once connected.
+​Ask me any clarifying questions about my existing authentication setup before writing the code, and then outline the step-by-step implementation plan."
