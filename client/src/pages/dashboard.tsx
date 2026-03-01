@@ -395,7 +395,6 @@ export default function Dashboard() {
                         <th scope="col" className="px-6 py-3 font-mono">Date</th>
                         <th scope="col" className="px-6 py-3 font-mono">Victim</th>
                         <th scope="col" className="px-6 py-3 font-mono">Group</th>
-                        <th scope="col" className="px-6 py-3 font-mono">Sector</th>
                         <th scope="col" className="px-6 py-3 font-mono text-right">Status</th>
                       </tr>
                     </thead>
@@ -414,7 +413,6 @@ export default function Dashboard() {
                           <td className="px-6 py-4 font-mono text-xs tabular-nums">{incident.discoveredAt ? new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(incident.discoveredAt)) : 'N/A'}</td>
                           <td className="px-6 py-4 font-medium text-white">{incident.victim}</td>
                           <td className="px-6 py-4 text-primary font-bold">{incident.groupName}</td>
-                          <td className="px-6 py-4">{incident.sector}</td>
                           <td className="px-6 py-4 text-right">
                             <Badge variant="outline" className={
                               incident.status === "Published" ? "border-destructive text-destructive bg-destructive/10" :
