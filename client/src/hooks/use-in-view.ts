@@ -26,13 +26,18 @@ export function useInView(options?: IntersectionObserverInit) {
 }
 
 export function useCountUp(end: number, duration = 1200, startOnView = true) {
-  const [count, setCount] = useState(0);
-  const [started, setStarted] = useState(!startOnView);
+  const prefersReduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const [count, setCount] = useState(prefersReduced ? end : 0);
+  const [started, setStarted] = useState(!startOnView || prefersReduced);
   const frameRef = useRef<number>(0);
 
   const start = useCallback(() => setStarted(true), []);
 
   useEffect(() => {
+    if (prefersReduced) {
+      setCount(end);
+      return;
+    }
     if (!started || end === 0) {
       if (end === 0) setCount(0);
       return;
@@ -52,7 +57,7 @@ export function useCountUp(end: number, duration = 1200, startOnView = true) {
     };
     frameRef.current = requestAnimationFrame(animate);
     return () => cancelAnimationFrame(frameRef.current);
-  }, [started, end, duration]);
+  }, [started, end, duration, prefersReduced]);
 
   return { count, start };
 }

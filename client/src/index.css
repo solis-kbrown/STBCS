@@ -151,9 +151,6 @@
   }
   .font-mono {
     @apply tracking-tight;
-    background: hsl(var(--muted) / 0.15);
-    padding: 0.1em 0.3em;
-    border-radius: 3px;
   }
   code:not(pre code) {
     @apply font-mono text-sm;
@@ -900,6 +897,29 @@
   animation: bellBounce 0.6s ease-out;
 }
 
+/* --- Emergency Banner Effects --- */
+@keyframes emergencyScanLine {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(200%); }
+}
+@keyframes emergencyBorderPulse {
+  0%, 100% { border-color: hsl(var(--primary) / 0.2); }
+  50% { border-color: hsl(var(--primary) / 0.5); }
+}
+.emergency-scan-line {
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, hsl(var(--primary) / 0.08), transparent);
+  animation: emergencyScanLine 4s ease-in-out infinite;
+  pointer-events: none;
+}
+.emergency-border-pulse {
+  animation: emergencyBorderPulse 3s ease-in-out infinite;
+}
+
 /* --- Verification Pulse (Trust Badges) --- */
 @keyframes verifyPulse {
   0%, 100% { 
@@ -966,7 +986,9 @@
   .tier-badge-pro::after,
   .tier-badge-biz::after,
   .bell-bounce,
-  .bell-hover:hover {
+  .bell-hover:hover,
+  .emergency-scan-line,
+  .emergency-border-pulse {
     animation: none !important;
   }
   .sidebar-logo:hover {

@@ -9,18 +9,21 @@ STB Cybersecurity provides professional cybersecurity services and real-time thr
 Preferred communication style: Simple, everyday language.
 - Export/download features (CSV, JSON, STIX) are Pro/Business tier only — always gate behind auth check on both frontend and backend.
 
-### Visual Theme: Stealth Mode / Tactical Operations Center
+### Visual Theme: Stealth Mode / Tactical Operations Center (Premium)
 - **Accent Color**: Orange (#f97316 / orange-500)
 - **Secondary**: Red (#ef4444)
-- **Navigation Style**: Active pill indicator (3px orange bar) with glow, grouped nav sections with gradient dividers
-- **Icons**: Cyber-themed Lucide icons with stat-icon-bg gradient overlays
+- **Navigation Style**: Active pill indicator with animated glow bar (`.sidebar-active-bar`), grouped nav sections with shimmer dividers (`.sidebar-divider`), floating logo (`.sidebar-logo`), scroll fade mask (`.sidebar-scroll-fade`)
+- **Icons**: Cyber-themed Lucide icons with stat-icon-bg gradient overlays, `.icon-bounce` hover effect
 - **Background**: Dark minimal (zinc-900/950) with ambient gradient mesh + noise texture overlay
-- **Text**: Zinc-500 inactive, orange-400 active/accent
-- **Cards**: `card-interactive` with glass gradient, hover glow, `-translate-y-1` lift; `glass-panel` for glassmorphism
-- **Animations**: `hero-scan-line` (dashboard), `skeleton-shimmer` (loading), `upgrade-banner-border` (conic gradient spin), `sidebarGradientSlide`, `statusPulse`, `borderGlow`; all respect `prefers-reduced-motion`
-- **Utilities**: `.section-divider`, `.hover-elevate`, `.active-elevate-2`, `.stat-icon-bg.icon-{color}`, `.chart-card`
-- **Typography**: Orbitron display, Inter body, JetBrains Mono code; h1 0.08em tracking, h2 0.05em tracking
-- **Focus**: Custom `:focus-visible` ring (primary/60%, 2px offset)
+- **Text**: Zinc-500 inactive, orange-400 active/accent; `::selection` in brand red; headings have `text-shadow` glow
+- **Cards**: `card-interactive` with glass gradient, hover glow, top-edge light line; `card-3d` for perspective tilt; `glass-panel` for premium glassmorphism with inner light + saturate
+- **Animations**: `hero-scan-line`, `skeleton-shimmer` (directional), `upgrade-banner-border` (conic gradient with cyan accent), `text-shimmer`, `badge-shimmer`, `animated-border` (rotating gradient border), `sidebar-active-bar`, `sidebar-divider`, `.tier-badge-pro/.tier-badge-biz` shimmer, `.bell-bounce/.bell-hover`, `.emergency-scan-line/.emergency-border-pulse`, `.verify-pulse` (trust badges), `.glow-ring`; all respect `prefers-reduced-motion`
+- **Reveal Animations**: Blur-to-sharp reveals on all `.anim-fade-*` classes with scale + filter blur transitions; increased stagger (80ms intervals)
+- **Utilities**: `.section-divider`, `.hover-elevate`, `.active-elevate-2`, `.stat-icon-bg.icon-{color}`, `.chart-card`, `.link-underline` (draw-from-left), `.btn-press` (elastic scale + hover glow), `.ambient-grid`, `.scroll-progress`, `.input-focus-expand`
+- **Interactive Components**: `HeroParticles` (Canvas2D constellation particle system with mouse interaction), `AmbientGrid` (tactical grid with flowing light pulses), `ToolPageHeader` (shared header with ambient grid, breadcrumbs, tier badges, animated icon), `TypingText` (typewriter effect), `QuickActionsBar` (floating quick-access tool buttons), `ConfettiParticles` (newsletter success), `AnimatedCheckmark` (trust badge verification)
+- **Typography**: Orbitron display with text-shadow glow, Inter body (1.7 line-height), JetBrains Mono code; h1 0.08em tracking, h2 0.05em tracking; responsive scaling at 640px
+- **Focus**: Custom `:focus-visible` ring (primary/50%, 2px offset) with outer glow shadow
+- **Accessibility**: All animations, canvas effects, and JS-driven animations (TypingText, useCountUp) respect `prefers-reduced-motion`
 
 ## System Architecture
 

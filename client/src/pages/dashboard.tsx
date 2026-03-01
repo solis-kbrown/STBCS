@@ -64,9 +64,11 @@ function CountUpStat({ value, label, icon: Icon, color, change, index }: {
 }
 
 function TypingText({ text, className }: { text: string; className?: string }) {
-  const [displayed, setDisplayed] = useState("");
-  const [done, setDone] = useState(false);
+  const prefersReduced = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+  const [displayed, setDisplayed] = useState(prefersReduced ? text : "");
+  const [done, setDone] = useState(prefersReduced);
   useEffect(() => {
+    if (prefersReduced) return;
     let i = 0;
     const timer = setInterval(() => {
       i++;
@@ -77,7 +79,7 @@ function TypingText({ text, className }: { text: string; className?: string }) {
       }
     }, 50);
     return () => clearInterval(timer);
-  }, [text]);
+  }, [text, prefersReduced]);
   return (
     <span className={className}>
       {displayed}
@@ -401,11 +403,15 @@ export default function Dashboard() {
                       {ransomware.map((incident, idx) => (
                         <tr 
                           key={incident.id} 
-                          className="border-b border-white/5 hover:bg-white/5 transition-all duration-200"
+                          className={`border-b border-white/5 hover:bg-white/5 transition-all duration-200 border-l-2 ${
+                            incident.status === "Published" ? "border-l-red-500/60" :
+                            incident.status === "Negotiating" ? "border-l-yellow-500/60" :
+                            "border-l-zinc-700/40"
+                          }`}
                           style={{ animation: `fadeInLeft 0.4s ease-out ${idx * 80}ms both` }}
                           data-testid={`row-ransomware-${incident.id}`}
                         >
-                          <td className="px-6 py-4 font-mono text-xs">{incident.discoveredAt ? new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(incident.discoveredAt)) : 'N/A'}</td>
+                          <td className="px-6 py-4 font-mono text-xs tabular-nums">{incident.discoveredAt ? new Intl.DateTimeFormat(undefined, { year: 'numeric', month: 'short', day: 'numeric' }).format(new Date(incident.discoveredAt)) : 'N/A'}</td>
                           <td className="px-6 py-4 font-medium text-white">{incident.victim}</td>
                           <td className="px-6 py-4 text-primary font-bold">{incident.groupName}</td>
                           <td className="px-6 py-4">{incident.sector}</td>
@@ -441,13 +447,15 @@ export default function Dashboard() {
               { href: "/breaches", label: "Breach Database", icon: Database, desc: "Known data breaches" },
               { href: "/ics-advisories", label: "ICS Advisories", icon: Factory, desc: "CISA ICS-CERT alerts" },
               { href: "/intel", label: "Intel & Feeds", icon: AlertTriangle, desc: "News & live threat data" },
-            ].map((item) => (
-              <a key={item.href} href={item.href} className="group" data-testid={`card-quicklink-${item.href.slice(1)}`}>
-                <Card className="border-white/5 bg-card/50 hover:border-orange-500/30 hover:bg-orange-500/5 transition-all duration-200 h-full">
+            ].map((item, i) => (
+              <a key={item.href} href={item.href} className={`group anim-fade-up stagger-${Math.min(i + 1, 7)}`} data-testid={`card-quicklink-${item.href.slice(1)}`}>
+                <Card className="border-white/5 bg-card/50 hover:border-orange-500/30 hover:bg-orange-500/5 card-3d transition-all duration-300 h-full">
                   <CardContent className="p-4 flex flex-col items-center text-center gap-2">
-                    <item.icon className="h-6 w-6 text-zinc-500 group-hover:text-orange-400 transition-colors" />
-                    <span className="text-sm font-medium text-white group-hover:text-orange-400 transition-colors">{item.label}</span>
-                    <span className="text-[11px] text-zinc-500">{item.desc}</span>
+                    <div className="p-2 rounded-lg bg-zinc-800/50 border border-white/5 group-hover:border-orange-500/20 group-hover:bg-orange-500/10 transition-all duration-300">
+                      <item.icon className="h-5 w-5 text-zinc-500 group-hover:text-orange-400 transition-colors duration-300" />
+                    </div>
+                    <span className="text-sm font-medium text-white group-hover:text-orange-400 transition-colors duration-300">{item.label}</span>
+                    <span className="text-[11px] text-zinc-500 leading-tight">{item.desc}</span>
                   </CardContent>
                 </Card>
               </a>
