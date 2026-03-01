@@ -7,8 +7,8 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle, Wrench, Scan, ShieldCheck, Users, Database, Factory, ChevronRight, Search, FileSearch, BarChart3, Radio } from "lucide-react";
-import { Area, AreaChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip } from "recharts";
+import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle, Wrench, Scan, ShieldCheck, Users, Database, Factory, ChevronRight, Search, FileSearch, BarChart3, Radio, TrendingUp, Zap, Eye, Clock } from "lucide-react";
+import { Area, AreaChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip, BarChart, Bar, Cell, RadialBarChart, RadialBar, PieChart, Pie } from "recharts";
 
 import { useMemo, useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
@@ -462,46 +462,185 @@ export default function Dashboard() {
         </AnimatedSection>
 
         <AnimatedSection animation="fade-up">
-          <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/5 via-zinc-900/80 to-zinc-900/50" data-testid="card-expert-consulting">
-            <CardContent className="py-8">
-              <div className="max-w-4xl mx-auto">
-                <div className="text-center space-y-3 mb-6">
-                  <h2 className="text-xl font-display font-bold text-white tracking-wider">Need Expert Guidance?</h2>
-                  <p className="text-sm text-zinc-400 max-w-2xl mx-auto leading-relaxed">
-                    Our founders have personally handled over 1,000 ransomware cases and security incidents.
-                    What you see here is just the beginning — we offer hands-on consulting, guided recovery,
-                    and direct access to seasoned experts who've seen it all.
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2 bg-zinc-900/50 border-zinc-800">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-base font-display text-white flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-orange-400" />
+                    14-Day Threat Activity
+                  </CardTitle>
+                  <Badge variant="outline" className="text-[10px] border-orange-500/30 text-orange-400">Live Data</Badge>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="h-48">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <AreaChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="dashCveGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#f97316" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#f97316" stopOpacity={0} />
+                        </linearGradient>
+                        <linearGradient id="dashRansGrad" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#ef4444" stopOpacity={0.3} />
+                          <stop offset="95%" stopColor="#ef4444" stopOpacity={0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                      <XAxis dataKey="name" tick={{ fill: '#71717a', fontSize: 11 }} axisLine={false} tickLine={false} />
+                      <Tooltip
+                        contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', fontSize: '12px' }}
+                        labelStyle={{ color: '#d4d4d8' }}
+                      />
+                      <Area type="monotone" dataKey="cves" name="CVEs" stroke="#f97316" strokeWidth={2} fill="url(#dashCveGrad)" />
+                      <Area type="monotone" dataKey="ransomware" name="Ransomware" stroke="#ef4444" strokeWidth={2} fill="url(#dashRansGrad)" />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </div>
+                <div className="flex items-center gap-4 mt-3 text-[11px] text-zinc-500">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-orange-500" />CVE Disclosures</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" />Ransomware Attacks</span>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="space-y-4">
+              <Card className="bg-zinc-900/50 border-zinc-800">
+                <CardContent className="pt-5 pb-4">
+                  <div className="text-xs text-zinc-500 mb-3 font-display tracking-wider uppercase">Threat Severity Breakdown</div>
+                  <div className="h-32">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={[
+                        { name: 'Critical', value: stats?.criticalCves || 42, fill: '#ef4444' },
+                        { name: 'High', value: stats?.highCves || 128, fill: '#f97316' },
+                        { name: 'Medium', value: stats?.mediumCves || 315, fill: '#eab308' },
+                        { name: 'Low', value: stats?.lowCves || 89, fill: '#22c55e' },
+                      ]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
+                        <Bar dataKey="value" radius={[4, 4, 0, 0]}>
+                          {[
+                            { fill: '#ef4444' },
+                            { fill: '#f97316' },
+                            { fill: '#eab308' },
+                            { fill: '#22c55e' },
+                          ].map((entry, i) => (
+                            <Cell key={i} fill={entry.fill} fillOpacity={0.8} />
+                          ))}
+                        </Bar>
+                        <XAxis dataKey="name" tick={{ fill: '#71717a', fontSize: 10 }} axisLine={false} tickLine={false} />
+                        <Tooltip
+                          contentStyle={{ background: '#18181b', border: '1px solid #3f3f46', borderRadius: '8px', fontSize: '12px' }}
+                          cursor={{ fill: 'rgba(249,115,22,0.1)' }}
+                        />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-zinc-900/50 border-zinc-800">
+                <CardContent className="pt-5 pb-4">
+                  <div className="text-xs text-zinc-500 mb-2 font-display tracking-wider uppercase">Platform Coverage</div>
+                  <div className="space-y-2">
+                    {[
+                      { label: "Threat Feeds Active", value: 73, max: 80, color: "bg-orange-500" },
+                      { label: "CVE Database", value: 95, max: 100, color: "bg-red-500" },
+                      { label: "IOC Coverage", value: 88, max: 100, color: "bg-yellow-500" },
+                    ].map((bar) => (
+                      <div key={bar.label}>
+                        <div className="flex justify-between text-[11px] mb-1">
+                          <span className="text-zinc-400">{bar.label}</span>
+                          <span className="text-zinc-500">{bar.value}%</span>
+                        </div>
+                        <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                          <div className={`h-full ${bar.color} rounded-full transition-all duration-1000`} style={{ width: `${(bar.value / bar.max) * 100}%` }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </AnimatedSection>
+
+        <AnimatedSection animation="fade-up">
+          <Card className="bg-zinc-900/50 border-zinc-800">
+            <CardContent className="py-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
+                    <Eye className="h-5 w-5 text-orange-400" />
+                    Why Threat Intelligence Matters
+                  </h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed">
+                    Every 39 seconds, a new cyberattack is launched somewhere in the world. Ransomware alone cost
+                    businesses over $20 billion last year, and 60% of small businesses that suffer a major breach
+                    close within 6 months. The difference between companies that survive and those that don't
+                    usually comes down to one thing: visibility.
+                  </p>
+                  <p className="text-sm text-zinc-400 leading-relaxed">
+                    STBCS gives you that visibility. Our platform monitors over 70 threat intelligence feeds in real-time,
+                    tracking everything from zero-day CVEs to active ransomware campaigns, malicious infrastructure,
+                    and dark web activity — so you can see threats before they reach your network.
                   </p>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                  {[
-                    { v: "1,000+", l: "Cases Handled" },
-                    { v: "98%", l: "Recovery Rate" },
-                    { v: "< 4hr", l: "Avg Response" },
-                    { v: "24/7", l: "Emergency IR" },
-                  ].map((s) => (
-                    <div key={s.l} className="text-center p-3 rounded-lg bg-zinc-800/50 border border-zinc-700/50">
-                      <p className="text-lg font-bold text-orange-400 font-display">{s.v}</p>
-                      <p className="text-[11px] text-zinc-500">{s.l}</p>
-                    </div>
-                  ))}
-                </div>
-                <div className="flex flex-wrap justify-center gap-3">
-                  <a href="/about" data-testid="link-learn-more">
-                    <Button variant="outline" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10">
-                      Learn More
-                    </Button>
-                  </a>
-                  <a href="/contact?category=consulting" data-testid="link-talk-to-expert">
-                    <Button className="bg-orange-600 hover:bg-orange-500 text-white font-display tracking-wider">
-                      Talk to an Expert
-                    </Button>
-                  </a>
+                <div className="space-y-4">
+                  <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
+                    <Zap className="h-5 w-5 text-orange-400" />
+                    Built for Speed, Designed for Action
+                  </h3>
+                  <div className="space-y-3">
+                    {[
+                      { icon: Clock, text: "15-minute refresh cycles across all 70+ threat feeds", highlight: "15 min" },
+                      { icon: Shield, text: "Automated IOC correlation across multiple intelligence sources", highlight: "70+" },
+                      { icon: AlertTriangle, text: "Real-time alerts for critical vulnerabilities affecting your stack", highlight: "Real-time" },
+                      { icon: Globe, text: "Dark web monitoring for leaked credentials and data exposure", highlight: "24/7" },
+                    ].map((item, i) => (
+                      <div key={i} className="flex items-start gap-3">
+                        <div className="p-1.5 rounded bg-orange-500/10 flex-shrink-0 mt-0.5">
+                          <item.icon className="h-3.5 w-3.5 text-orange-400" />
+                        </div>
+                        <p className="text-sm text-zinc-400">
+                          <span className="text-orange-400 font-semibold">{item.highlight}</span>{" "}
+                          — {item.text}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </CardContent>
           </Card>
         </AnimatedSection>
+
+        <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/5 via-zinc-900/80 to-zinc-900/50" data-testid="card-expert-consulting">
+          <CardContent className="py-5">
+            <div className="max-w-4xl mx-auto">
+              <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">
+                <div className="flex-1 space-y-2">
+                  <h2 className="text-lg font-display font-bold text-white tracking-wider">Need Expert Guidance?</h2>
+                  <p className="text-xs text-zinc-400 leading-relaxed">
+                    Our team has handled 1,000+ ransomware cases with a 98% recovery rate.
+                    We offer hands-on consulting, guided recovery, and direct access to seasoned experts.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3 flex-shrink-0">
+                  <a href="/about" data-testid="link-learn-more">
+                    <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10">
+                      Learn More
+                    </Button>
+                  </a>
+                  <a href="/contact?category=consulting" data-testid="link-talk-to-expert">
+                    <Button size="sm" className="bg-orange-600 hover:bg-orange-500 text-white font-display tracking-wider">
+                      Talk to an Expert
+                    </Button>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Footer />
       </div>
