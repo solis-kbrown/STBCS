@@ -42,6 +42,9 @@ const Playbooks = lazy(() => import("@/pages/playbooks"));
 const RemoteDesktop = lazy(() => import("@/pages/remote-desktop"));
 const SSHTerminal = lazy(() => import("@/pages/ssh-terminal"));
 const TelnetClient = lazy(() => import("@/pages/telnet-client"));
+const FileScanner = lazy(() => import("@/pages/file-scanner"));
+const EmailAnalyzer = lazy(() => import("@/pages/email-analyzer"));
+const EncodingTools = lazy(() => import("@/pages/encoding-tools"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -94,6 +97,9 @@ function Router() {
         <Route path="/remote-desktop" component={RemoteDesktop}/>
         <Route path="/ssh-terminal" component={SSHTerminal}/>
         <Route path="/telnet-client" component={TelnetClient}/>
+        <Route path="/file-scanner" component={FileScanner}/>
+        <Route path="/email-analyzer" component={EmailAnalyzer}/>
+        <Route path="/encoding-tools" component={EncodingTools}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

@@ -22,6 +22,8 @@ import { getQuoService, isQuoConfigured } from "./quoService";
 import { reportCriticalError, sendAdminNotification } from "./maintenance";
 import { sendAccountLockoutEmail } from "./email";
 import apiV1Router from "./apiV1Routes";
+import { fileUpload, scanFile } from "./file-scanner";
+import { analyzeEmailHeadersFull, emailHeadersSchema } from "./email-analyzer";
 import { generateApiKey, getTierLimits, hashApiKey } from "./apiKeyAuth";
 import { 
   hashPassword, 
@@ -2150,6 +2152,21 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
+  app.post("/api/analyze/email-headers", requireAuth as any, requirePro as any, proToolsLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const parsed = emailHeadersSchema.safeParse(req.body);
+      if (!parsed.success) {
+        res.status(400).json({ error: "Invalid email headers", details: parsed.error.issues });
+        return;
+      }
+      const result = analyzeEmailHeadersFull(parsed.data.headers);
+      res.json(result);
+    } catch (error) {
+      console.error("Email header analysis error:", error);
+      res.status(500).json({ error: "Failed to analyze email headers" });
+    }
+  });
+
   app.get("/api/tools/service-status", async (_req: Request, res: Response) => {
     try {
       const cacheKey = "service-status";
@@ -2567,6 +2584,26 @@ Hiring: https://stbcybersecurity.com/support
     } catch (error) {
       console.error("Scan usage error:", error);
       res.status(500).json({ error: "Failed to get usage stats" });
+    }
+  });
+
+  // ==========================================
+  // FILE SCANNER
+  // ==========================================
+
+  app.post("/api/scan/file", requireAuth as any, requirePro as any, fileUpload.single("file"), async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const file = (req as any).file;
+      if (!file) {
+        res.status(400).json({ error: "No file uploaded" });
+        return;
+      }
+
+      const result = await scanFile(file.path, file.originalname);
+      res.json(result);
+    } catch (error) {
+      console.error("File scan error:", error);
+      res.status(500).json({ error: "Failed to scan file" });
     }
   });
 

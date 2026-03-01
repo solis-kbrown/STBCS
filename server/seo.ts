@@ -137,6 +137,20 @@ const PAGE_META: Record<string, PageMeta> = {
     description: 'Browser-based Telnet client for SMTP testing, banner grabbing, and network diagnostics. Quick-connect ports for common services. Pro feature.',
     noindex: true,
   },
+  '/file-scanner': {
+    title: 'File Scanner & Analyzer | STB Cybersecurity',
+    description: 'Upload files for security analysis: MD5, SHA-1, SHA-256, SHA-512 hash computation, MIME type detection, entropy analysis, and string extraction. Files auto-deleted after scan.',
+    noindex: true,
+  },
+  '/email-analyzer': {
+    title: 'Email Header Analyzer | STB Cybersecurity',
+    description: 'Analyze raw email headers to trace routing hops, verify SPF/DKIM/DMARC authentication, detect spoofing, and identify delivery delays. Pro feature.',
+    noindex: true,
+  },
+  '/encoding-tools': {
+    title: 'Encoding & Decoding Tools | STB Cybersecurity',
+    description: 'Free online encoding and decoding tools for cybersecurity analysts. Base64, URL encoding, Hex, and ROT13 conversion. All operations run client-side for privacy.',
+  },
   '/service-status': {
     title: 'Service Status Dashboard | STB Cybersecurity',
     description: 'Real-time operational status of STB Cybersecurity platform services, threat feeds, APIs, and monitoring systems. Current uptime and incident history.',

@@ -85,6 +85,9 @@ Preferred communication style: Simple, everyday language.
 - **Remote Desktop**: Browser-based RDP client (Business+ tier) with WebSocket-to-TCP bridging, canvas-based rendering, keyboard/mouse forwarding, fullscreen mode, session management (max 2 per user, 30-min timeout), rate limiting, private IP blocking, and zero credential storage.
 - **SSH Terminal**: Browser-based SSH client (Business+ tier) using ssh2 + xterm.js with password and private key (RSA/Ed25519/ECDSA) authentication, xterm-256color terminal emulation, WebSocket-to-SSH bridging, session management (max 3 per user, 30-min max / 15-min idle timeout), rate limiting, private IP blocking, and zero credential storage.
 - **Telnet Client**: Browser-based Telnet client (Pro+ tier) using raw TCP socket bridging + xterm.js, with quick-select ports for SMTP/HTTP/IMAP/POP3 testing, command input bar, SMTP quick reference sidebar, session management (max 3 per user, 15-min max / 10-min idle timeout), DNS-based SSRF protection, and plaintext warning.
+- **File Scanner**: Upload-based file analysis tool (Pro+ tier) computing MD5/SHA1/SHA256/SHA512 hashes, MIME type detection via magic bytes, Shannon entropy calculation, printable string extraction. Files auto-deleted after analysis. Max 50MB upload.
+- **Email Header Analyzer**: Email header parsing tool (Pro+ tier) that traces routing hops, extracts SPF/DKIM/DMARC authentication results, detects delivery delays between hops, identifies Return-Path/From domain mismatches, and warns about missing authentication.
+- **Encoding/Decoding Tools**: Client-side Base64, URL, Hex, and ROT13 encode/decode utility (Free tier). All operations run in-browser with no server calls.
 
 ## External Dependencies
 
