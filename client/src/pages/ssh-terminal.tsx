@@ -12,6 +12,7 @@ import {
   Eye, EyeOff, AlertTriangle, Server, RefreshCw,
   Check, Power, KeyRound, FileKey, X, Copy, Upload, Plus
 } from "lucide-react";
+import { SSHIcon } from "@/components/branded-icons";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -809,13 +810,18 @@ export default function SSHTerminal() {
     <Layout>
       <div className="space-y-6 animate-in fade-in duration-500">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-white" data-testid="text-ssh-title">
-              SSH Terminal
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Secure, browser-based SSH client for remote server management
-            </p>
+          <div className="flex items-start gap-4">
+            <div className="p-3.5 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/20 shrink-0" style={{ filter: "drop-shadow(0 0 16px rgba(249, 115, 22, 0.3))" }}>
+              <SSHIcon className="h-8 w-8" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-display font-bold text-white" data-testid="text-ssh-title">
+                SSH Terminal
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Secure, browser-based SSH client for remote server management
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/50">

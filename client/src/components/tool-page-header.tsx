@@ -104,7 +104,7 @@ export default function ToolPageHeader({
 
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-start gap-4">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/20 icon-float shrink-0" style={{ filter: "drop-shadow(0 0 12px rgba(249, 115, 22, 0.25))" }}>
+            <div className="p-3.5 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/20 icon-float shrink-0" style={{ filter: "drop-shadow(0 0 16px rgba(249, 115, 22, 0.35))" }}>
               {icon}
             </div>
             <div>

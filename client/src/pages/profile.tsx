@@ -10,6 +10,7 @@ import {
   Calendar, BookOpen, MessageSquare, Eye, ChevronUp, TrendingUp,
   ArrowLeft, Lock, Loader2
 } from "lucide-react";
+import { ProfileIcon } from "@/components/branded-icons";
 import { format } from "date-fns";
 
 const KB_RANKS = [
@@ -116,8 +117,19 @@ export default function ProfilePage() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-1 space-y-4">
-            <Card className="border-zinc-800 bg-zinc-900/50">
-              <CardContent className="p-6 text-center">
+            <Card className="border-zinc-800 bg-zinc-900/50 overflow-hidden">
+              <div className="relative">
+                <div className="absolute inset-0 opacity-[0.04]" style={{
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5 L52 17.5 L52 42.5 L30 55 L8 42.5 L8 17.5Z' fill='none' stroke='%23f97316' stroke-width='1'/%3E%3C/svg%3E")`,
+                  backgroundSize: '40px 40px'
+                }} />
+                <div className="absolute top-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-orange-500/30 to-transparent" />
+                <div className="absolute top-2 left-4 w-8 h-px bg-orange-500/10" />
+                <div className="absolute top-4 left-4 w-px h-6 bg-orange-500/10" />
+                <div className="absolute top-2 right-4 w-8 h-px bg-orange-500/10" />
+                <div className="absolute top-4 right-4 w-px h-6 bg-orange-500/10" />
+              </div>
+              <CardContent className="p-6 text-center relative">
                 {profile.avatarUrl ? (
                   <img
                     src={profile.avatarUrl}
@@ -127,8 +139,8 @@ export default function ProfilePage() {
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
                 ) : (
-                  <div className="h-24 w-24 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center mx-auto mb-4">
-                    <User className="h-12 w-12 text-zinc-600" />
+                  <div className="h-24 w-24 rounded-full bg-zinc-800/80 border-2 border-orange-500/20 flex items-center justify-center mx-auto mb-4" style={{ boxShadow: '0 0 20px rgba(249,115,22,0.08)' }}>
+                    <ProfileIcon className="h-14 w-14" />
                   </div>
                 )}
                 <h1 className="text-xl font-bold text-white" data-testid="text-profile-name">
@@ -196,7 +208,7 @@ export default function ProfilePage() {
                       <span>{nextRank.name} ({nextRank.min} pts)</span>
                     </div>
                     <div className="h-2 bg-zinc-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full transition-all" style={{ width: `${Math.min(progress, 100)}%` }} />
+                      <div className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full transition-all" style={{ width: `${Math.min(progress, 100)}%`, boxShadow: '0 0 8px rgba(249,115,22,0.5), 0 0 16px rgba(249,115,22,0.2)' }} />
                     </div>
                     <p className="text-[10px] text-zinc-600 mt-1 text-center">{nextRank.min - (profile.kbReputation || 0)} pts to {nextRank.name}</p>
                   </div>

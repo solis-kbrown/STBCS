@@ -13,6 +13,7 @@ import {
   Crown, Star, Award, Shield, Pin, Reply, Send, BookOpen,
   Eye, Bookmark, BookmarkCheck, ArrowUpDown, Tag, Link2, Sparkles
 } from "lucide-react";
+import { KBIcon } from "@/components/branded-icons";
 
 function TierBadge({ tier, isTrusted, isAdmin }: { tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }) {
   if (isAdmin) return <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]"><Crown className="h-3 w-3 mr-1" />Admin</Badge>;
@@ -328,7 +329,9 @@ export default function KbPost() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8">
         <Link href="/knowledge-base">
           <button className="flex items-center gap-2 text-sm text-zinc-500 hover:text-orange-400 transition-colors mb-6" data-testid="button-back">
-            <ArrowLeft className="h-4 w-4" />Back to Knowledge Base
+            <ArrowLeft className="h-4 w-4" />
+            <KBIcon className="h-5 w-5" />
+            Back to Knowledge Base
           </button>
         </Link>
 

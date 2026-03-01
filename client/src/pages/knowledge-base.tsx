@@ -15,6 +15,7 @@ import {
   Eye, Bookmark, BookmarkCheck, ArrowUpDown, Tag, Flame,
   ThumbsUp, MessagesSquare, BarChart3
 } from "lucide-react";
+import { KBIcon } from "@/components/branded-icons";
 
 const POST_TYPES = [
   { value: "", label: "All Posts", icon: BookOpen },
@@ -174,14 +175,19 @@ export default function KnowledgeBase() {
             <div className="absolute top-0 left-1/4 w-96 h-96 bg-orange-500/20 rounded-full blur-3xl" />
             <div className="absolute bottom-0 right-1/4 w-64 h-64 bg-red-500/20 rounded-full blur-3xl" />
           </div>
+          <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'url("data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M30 5 L52 17.5 L52 42.5 L30 55 L8 42.5 L8 17.5Z\' fill=\'none\' stroke=\'%23f97316\' stroke-width=\'0.5\'/%3E%3C/svg%3E")', backgroundSize: '60px 60px' }} />
           <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20">
-                <BookOpen className="h-8 w-8 text-orange-400" />
+            <div className="flex items-center gap-4 mb-4">
+              <div className="relative p-3.5 rounded-xl bg-orange-500/10 border border-orange-500/20" style={{ boxShadow: '0 0 20px rgba(249,115,22,0.15), 0 0 40px rgba(249,115,22,0.05)', animation: 'kb-icon-glow 3s ease-in-out infinite' }}>
+                <KBIcon className="h-10 w-10" />
+                <style>{`@keyframes kb-icon-glow { 0%, 100% { box-shadow: 0 0 15px rgba(249,115,22,0.15), 0 0 30px rgba(249,115,22,0.05); } 50% { box-shadow: 0 0 25px rgba(249,115,22,0.25), 0 0 50px rgba(249,115,22,0.1); } }`}</style>
               </div>
               <div>
                 <h1 className="text-3xl font-display font-bold text-white tracking-wide" data-testid="text-kb-title">Knowledge Base</h1>
                 <p className="text-zinc-400 text-sm mt-1">Community-driven cybersecurity intelligence hub</p>
+                <span className="inline-flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-xs font-medium" data-testid="badge-intel-hub">
+                  <Shield className="h-3 w-3" />INTEL HUB
+                </span>
               </div>
             </div>
             <div className="flex flex-wrap items-center gap-3 mt-6">

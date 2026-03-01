@@ -14,6 +14,7 @@ import {
   FileImage, FileCode, FileArchive, Download, Trash2, FolderPlus,
   Pencil, ChevronRight, Home, ArrowUp, HardDrive, Copy
 } from "lucide-react";
+import { SFTPIcon } from "@/components/branded-icons";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -1083,13 +1084,18 @@ export default function SFTPClient() {
     <Layout>
       <div className="space-y-6 animate-in fade-in duration-500">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-white" data-testid="text-sftp-title">
-              SFTP Client
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Secure file transfer, browse remote filesystems, and manage files
-            </p>
+          <div className="flex items-start gap-4">
+            <div className="p-3.5 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-500/5 border border-orange-500/20 shrink-0" style={{ filter: "drop-shadow(0 0 16px rgba(249, 115, 22, 0.3))" }}>
+              <SFTPIcon className="h-8 w-8" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-display font-bold text-white" data-testid="text-sftp-title">
+                SFTP Client
+              </h1>
+              <p className="text-muted-foreground mt-1">
+                Secure file transfer, browse remote filesystems, and manage files
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <Badge className="bg-purple-500/20 text-purple-400 border-purple-500/50">
