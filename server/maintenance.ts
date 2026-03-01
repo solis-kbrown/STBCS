@@ -192,10 +192,13 @@ export async function sendAdminNotification(params: {
   }
 }
 
+const errorCooldowns: Record<string, number> = {};
+
 export function reportCriticalError(error: Error, context?: string): void {
   const now = Date.now();
   const WINDOW_MS = 5 * 60 * 1000;
-  const MAX_ERRORS_PER_WINDOW = 10;
+  const MAX_ERRORS_PER_WINDOW = 5;
+  const PER_CONTEXT_COOLDOWN = 30 * 60 * 1000;
 
   if (now - errorRateWindow.windowStart > WINDOW_MS) {
     errorRateWindow = { count: 0, windowStart: now };
@@ -207,6 +210,14 @@ export function reportCriticalError(error: Error, context?: string): void {
     log.debug(`Suppressing error email (${errorRateWindow.count} errors in window, max ${MAX_ERRORS_PER_WINDOW})`);
     return;
   }
+
+  const cooldownKey = context || "general";
+  const lastSent = errorCooldowns[cooldownKey] || 0;
+  if (now - lastSent < PER_CONTEXT_COOLDOWN) {
+    log.debug(`Suppressing duplicate error email for "${cooldownKey}" (cooldown ${Math.round((PER_CONTEXT_COOLDOWN - (now - lastSent)) / 60000)}min remaining)`);
+    return;
+  }
+  errorCooldowns[cooldownKey] = now;
 
   sendAdminNotification({
     type: "error",
@@ -326,7 +337,6 @@ async function sendDailyHealthCheck(): Promise<void> {
       errorRateWindow = { count: 0, windowStart: now };
     } catch (error) {
       log.error("Health check failed:", error);
-      reportCriticalError(error as Error, "Daily Health Check");
     }
   }
 }
@@ -345,7 +355,7 @@ async function sendWeeklyAdminReport(): Promise<void> {
       const dailyCounts = await storage.getDailyVisitorCounts(7);
       const weekAgo = new Date(now - WEEK_MS);
       const newSignups = await storage.getNewSignupsCount(weekAgo);
-      const totalUsers = (await storage.getAllUsers()).length;
+      const totalUsers = await storage.getTotalUserCount();
 
       const dailyBreakdown = dailyCounts
         .map(d => `  ${d.date}: ${d.uniqueCount || 0} unique / ${d.totalHits || 0} hits`)
@@ -414,7 +424,6 @@ export async function startMaintenanceScheduler(): Promise<void> {
       await sendWeeklyAdminReport();
     } catch (error) {
       log.error("Scheduler error:", error);
-      reportCriticalError(error as Error, "Maintenance Scheduler");
     }
   }, 5 * 60 * 1000);
 

@@ -228,6 +228,7 @@ export interface IStorage {
   getVisitorStats(): Promise<{ totalUnique: number; today: number; thisWeek: number; thisMonth: number }>;
   getDailyVisitorCounts(days: number): Promise<DailyVisitorCount[]>;
   getNewSignupsCount(since: Date): Promise<number>;
+  getTotalUserCount(): Promise<number>;
 
   // API Keys
   createApiKey(data: InsertApiKey): Promise<ApiKey>;
@@ -1820,6 +1821,12 @@ export class DatabaseStorage implements IStorage {
   async getNewSignupsCount(since: Date): Promise<number> {
     const [result] = await db.select({ count: sql<number>`count(*)` })
       .from(users).where(gte(users.createdAt, since));
+    return Number(result?.count || 0);
+  }
+
+  async getTotalUserCount(): Promise<number> {
+    const [result] = await db.select({ count: sql<number>`count(*)` })
+      .from(users);
     return Number(result?.count || 0);
   }
 
