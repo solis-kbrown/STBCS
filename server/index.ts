@@ -13,22 +13,32 @@ declare module "http" {
 
 let appReady = false;
 
-app.use((req, res, next) => {
-  if (appReady) return next();
-  if (req.path === '/health' || req.path === '/__repl') return next();
-  if (req.method === 'GET') {
-    res.status(200).send('<!DOCTYPE html><html><head><meta charset="utf-8"><title>STB Cybersecurity</title><meta http-equiv="refresh" content="3"></head><body style="background:#18181b;color:#a1a1aa;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif"><p>Initializing threat intelligence platform...</p></body></html>');
-    return;
-  }
-  res.status(503).json({ error: "Service starting up, please retry shortly" });
-});
+const STARTUP_HTML = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>STB Cybersecurity</title><meta http-equiv="refresh" content="3"></head><body style="background:#18181b;color:#a1a1aa;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif"><p>Initializing threat intelligence platform...</p></body></html>';
 
 app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok', timestamp: Date.now() });
+  res.status(200).json({ status: 'ok', ready: appReady, timestamp: Date.now() });
 });
 
 app.get('/__repl', (_req, res) => {
   res.status(200).send('ok');
+});
+
+app.use((req, res, next) => {
+  if (appReady) return next();
+  if (req.path === '/health' || req.path === '/__repl') return next();
+  if (req.path === '/') {
+    res.status(200).setHeader('Content-Type', 'text/html').send(STARTUP_HTML);
+    return;
+  }
+  if (req.method === 'GET' && !req.path.startsWith('/api/')) {
+    res.status(200).setHeader('Content-Type', 'text/html').send(STARTUP_HTML);
+    return;
+  }
+  if (req.path.startsWith('/api/')) {
+    res.status(503).json({ error: "Service starting up, please retry shortly" });
+    return;
+  }
+  next();
 });
 
 const httpServer = createServer(app);
@@ -58,10 +68,33 @@ httpServer.listen(
 
 async function initializeApp() {
   const compression = (await import("compression")).default;
+  const path = await import("path");
+  const fs = await import("fs");
 
   const PRIMARY_DOMAIN = process.env.CUSTOM_DOMAIN || 'stbcybersecurity.com';
   const SECONDARY_DOMAINS = ['www.stbcybersecurity.com', 'stoptbcs.com', 'www.stoptbcs.com'];
   const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
+  if (IS_PRODUCTION) {
+    const distPath = path.resolve(__dirname, "public");
+    if (fs.existsSync(distPath)) {
+      app.use(express.static(distPath, {
+        maxAge: '1y',
+        immutable: true,
+        etag: true,
+        lastModified: true,
+        setHeaders: (res, filePath) => {
+          if (filePath.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');
+          }
+          if (filePath.match(/\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|webp|avif|svg|gif|ico)$/)) {
+            res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+          }
+        },
+      }));
+      log("Static file serving initialized early for fast startup");
+    }
+  }
 
   app.use((req, res, next) => {
     const host = req.get('host')?.split(':')[0];
@@ -97,8 +130,8 @@ async function initializeApp() {
       "form-action 'self' https://checkout.stripe.com",
       "upgrade-insecure-requests",
     ].join('; '));
-    const path = req.path;
-    if (path.startsWith('/api/') || path.startsWith('/checkout') || path === '/account' || path === '/messages' || path === '/style-preview') {
+    const reqPath = req.path;
+    if (reqPath.startsWith('/api/') || reqPath.startsWith('/checkout') || reqPath === '/account' || reqPath === '/messages' || reqPath === '/style-preview') {
       res.setHeader('X-Robots-Tag', 'noindex, nofollow');
     }
     next();
@@ -170,7 +203,7 @@ async function initializeApp() {
   const SENSITIVE_PATHS = new Set(['/api/auth/signup', '/api/auth/login', '/api/auth/me', '/api/auth/logout', '/api/stripe/webhook']);
   app.use((req, res, next) => {
     const start = Date.now();
-    const path = req.path;
+    const reqPath = req.path;
     let capturedJsonResponse: Record<string, any> | undefined = undefined;
     const originalResJson = res.json;
     res.json = function (bodyJson, ...args) {
@@ -179,9 +212,9 @@ async function initializeApp() {
     };
     res.on("finish", () => {
       const duration = Date.now() - start;
-      if (path.startsWith("/api")) {
-        let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-        if (capturedJsonResponse && !SENSITIVE_PATHS.has(path)) {
+      if (reqPath.startsWith("/api")) {
+        let logLine = `${req.method} ${reqPath} ${res.statusCode} in ${duration}ms`;
+        if (capturedJsonResponse && !SENSITIVE_PATHS.has(reqPath)) {
           logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
         }
         log(logLine);
@@ -210,8 +243,20 @@ async function initializeApp() {
   });
 
   if (IS_PRODUCTION) {
-    const { serveStatic } = await import("./static");
-    serveStatic(app);
+    const { injectMetaTags } = await import("./seo");
+    const distPath = path.resolve(__dirname, "public");
+    const indexPath = path.resolve(distPath, "index.html");
+    const baseHtml = fs.readFileSync(indexPath, "utf-8");
+    app.use("/{*path}", (req, res, next) => {
+      if (req.path === '/health' || req.path === '/__repl') {
+        return next();
+      }
+      const html = injectMetaTags(baseHtml, req.originalUrl);
+      res.setHeader("Content-Type", "text/html");
+      res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
+      res.setHeader("Vary", "Accept-Encoding");
+      res.send(html);
+    });
   } else {
     const { injectMetaTags } = await import("./seo");
     app.use((req, res, next) => {
@@ -234,6 +279,10 @@ async function initializeApp() {
   appReady = true;
   log("Routes and static serving initialized");
 
+  deferExpensiveTasks();
+}
+
+function deferExpensiveTasks() {
   setTimeout(async () => {
     try {
       await initStripe();
@@ -283,7 +332,7 @@ async function initializeApp() {
       await Promise.all(urls.map(u => fetch(base + u).catch(() => {})));
       log("Cache warm-up complete");
     } catch {}
-  }, 5000);
+  }, 2000);
 }
 
 async function initStripe() {
