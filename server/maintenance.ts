@@ -36,10 +36,6 @@ async function withRetry<T>(fn: () => Promise<T>, label: string, retries = 2): P
   throw new Error("unreachable");
 }
 
-function stagger(ms: number): Promise<void> {
-  return new Promise(r => setTimeout(r, ms));
-}
-
 async function getConfig(configKey: string): Promise<string | null> {
   try {
     const result = await db.select().from(systemConfig).where(eq(systemConfig.key, configKey)).limit(1);
@@ -197,8 +193,8 @@ const errorCooldowns: Record<string, number> = {};
 export function reportCriticalError(error: Error, context?: string): void {
   const now = Date.now();
   const WINDOW_MS = 5 * 60 * 1000;
-  const MAX_ERRORS_PER_WINDOW = 5;
-  const PER_CONTEXT_COOLDOWN = 30 * 60 * 1000;
+  const MAX_ERRORS_PER_WINDOW = 10;
+  const PER_CONTEXT_COOLDOWN = 10 * 60 * 1000;
 
   if (now - errorRateWindow.windowStart > WINDOW_MS) {
     errorRateWindow = { count: 0, windowStart: now };
@@ -229,8 +225,8 @@ export function reportCriticalError(error: Error, context?: string): void {
 
 async function runCleanupTasks(): Promise<void> {
   const now = Date.now();
-  const SESSION_CLEANUP_INTERVAL = 60 * 60 * 1000;
-  const ERROR_EMAIL_COOLDOWN = 6 * 60 * 60 * 1000;
+  const SESSION_CLEANUP_INTERVAL = 30 * 60 * 1000;
+  const ERROR_EMAIL_COOLDOWN = 2 * 60 * 60 * 1000;
 
   if (now - lastSessionCleanup >= SESSION_CLEANUP_INTERVAL) {
     try {
@@ -240,7 +236,7 @@ async function runCleanupTasks(): Promise<void> {
     } catch (error) {
       sessionCleanupFailures++;
       log.error(`Session cleanup failed (attempt ${sessionCleanupFailures}):`, error);
-      if (sessionCleanupFailures >= 10 && now - lastSessionCleanupErrorEmail > ERROR_EMAIL_COOLDOWN) {
+      if (sessionCleanupFailures >= 5 && now - lastSessionCleanupErrorEmail > ERROR_EMAIL_COOLDOWN) {
         reportCriticalError(error as Error, `Session Cleanup (failed ${sessionCleanupFailures} times consecutively)`);
         lastSessionCleanupErrorEmail = now;
         sessionCleanupFailures = 0;
@@ -414,13 +410,9 @@ export async function startMaintenanceScheduler(): Promise<void> {
   maintenanceInterval = setInterval(async () => {
     try {
       await runCleanupTasks();
-      await stagger(2000);
       await checkGrandOpeningSale();
-      await stagger(2000);
       await captureDailyStats();
-      await stagger(2000);
       await sendDailyHealthCheck();
-      await stagger(2000);
       await sendWeeklyAdminReport();
     } catch (error) {
       log.error("Scheduler error:", error);
@@ -429,7 +421,7 @@ export async function startMaintenanceScheduler(): Promise<void> {
 
   setTimeout(async () => {
     try {
-      const STARTUP_COOLDOWN_MS = 60 * 60 * 1000; // 1 hour cooldown
+      const STARTUP_COOLDOWN_MS = 15 * 60 * 1000;
       const lastStartup = await getConfig("last_startup_notification");
       const now = Date.now();
       if (lastStartup && (now - parseInt(lastStartup, 10)) < STARTUP_COOLDOWN_MS) {
