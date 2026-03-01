@@ -11,6 +11,18 @@ const app = express();
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
+let appReady = false;
+
+app.use((req, res, next) => {
+  if (appReady) return next();
+  if (req.path === '/health' || req.path === '/__repl') return next();
+  if (req.method === 'GET' && (req.path === '/' || !req.path.startsWith('/api/'))) {
+    res.status(200).send('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Loading...</title><meta http-equiv="refresh" content="3"></head><body></body></html>');
+    return;
+  }
+  next();
+});
+
 app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: Date.now() });
 });
@@ -291,6 +303,7 @@ app.use((req, res, next) => {
     await setupVite(httpServer, app);
   }
 
+  appReady = true;
   log("Routes and static serving initialized");
 
   // Defer all heavy startup operations
