@@ -58,36 +58,38 @@ export default function UpgradeBanner({ context = "general" }: UpgradeBannerProp
   const msg = contextMessages[context];
 
   return (
-    <Card className="border-orange-500/20 bg-gradient-to-r from-orange-500/5 via-zinc-900/50 to-amber-500/5 overflow-hidden" data-testid="card-upgrade-banner">
-      <CardContent className="py-6">
-        <div className="flex flex-col lg:flex-row items-center gap-6">
-          <div className="flex-1 space-y-3">
-            <div className="flex items-center gap-2">
-              <div className="p-2 bg-orange-500/20 rounded-lg">
-                <Crown className="h-5 w-5 text-orange-400" />
-              </div>
-              <h3 className="text-lg font-bold text-white">{msg.title}</h3>
-            </div>
-            <p className="text-sm text-zinc-400 leading-relaxed">{msg.description}</p>
-            <div className="grid grid-cols-2 gap-2">
-              {msg.features.map((f, i) => (
-                <div key={i} className="flex items-center gap-2 text-xs text-zinc-300">
-                  <f.icon className="h-3.5 w-3.5 text-orange-400 shrink-0" />
-                  <span>{f.text}</span>
+    <div className="relative rounded-lg p-[1px] overflow-hidden upgrade-banner-border" data-testid="card-upgrade-banner">
+      <Card className="relative border-0 bg-gradient-to-r from-orange-500/5 via-zinc-900/80 to-amber-500/5 overflow-hidden">
+        <CardContent className="py-6">
+          <div className="flex flex-col lg:flex-row items-center gap-6">
+            <div className="flex-1 space-y-3">
+              <div className="flex items-center gap-2">
+                <div className="p-2 bg-orange-500/20 rounded-lg shadow-[0_0_12px_rgba(249,115,22,0.15)]">
+                  <Crown className="h-5 w-5 text-orange-400" />
                 </div>
-              ))}
+                <h3 className="text-lg font-bold text-white">{msg.title}</h3>
+              </div>
+              <p className="text-sm text-zinc-400 leading-relaxed">{msg.description}</p>
+              <div className="grid grid-cols-2 gap-2">
+                {msg.features.map((f, i) => (
+                  <div key={i} className="flex items-center gap-2 text-xs text-zinc-300">
+                    <f.icon className="h-3.5 w-3.5 text-orange-400 shrink-0" />
+                    <span>{f.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 shrink-0">
+              <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-6 shadow-[0_0_20px_rgba(249,115,22,0.25)] hover:shadow-[0_0_28px_rgba(249,115,22,0.35)] transition-shadow duration-300" asChild data-testid="button-upgrade-banner">
+                <a href="/support#pricing">
+                  <Crown className="h-4 w-4 mr-2" /> View Pro Plans
+                </a>
+              </Button>
+              <p className="text-[10px] text-zinc-500 text-center">Starting at $7.49/month</p>
             </div>
           </div>
-          <div className="flex flex-col gap-2 shrink-0">
-            <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold px-6" asChild data-testid="button-upgrade-banner">
-              <a href="/support#pricing">
-                <Crown className="h-4 w-4 mr-2" /> View Pro Plans
-              </a>
-            </Button>
-            <p className="text-[10px] text-zinc-500 text-center">Starting at $7.49/month</p>
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   );
 }

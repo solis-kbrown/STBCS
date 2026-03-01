@@ -9,12 +9,22 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle, Wrench, Scan, ShieldCheck, Users, Database, Factory, ChevronRight } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip } from "recharts";
-import { Skeleton } from "@/components/ui/skeleton";
-import { useMemo, useEffect, useState } from "react";
+
+import { useMemo, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import AnimatedMap from "@/components/animated-map";
 import AnimatedSection, { AnimatedList } from "@/components/animated-section";
 import { useInView, useCountUp } from "@/hooks/use-in-view";
+
+const iconColorMap: Record<string, string> = {
+  "text-primary": "icon-primary",
+  "text-destructive": "icon-destructive",
+  "text-secondary": "icon-secondary",
+  "text-green-500": "icon-green",
+  "text-orange-500": "icon-orange",
+  "text-yellow-500": "icon-yellow",
+  "text-red-400": "icon-red",
+};
 
 function CountUpStat({ value, label, icon: Icon, color, change, index }: {
   value: number; label: string; icon: any; color: string; change: string; index: number;
@@ -26,13 +36,15 @@ function CountUpStat({ value, label, icon: Icon, color, change, index }: {
     if (isInView) start();
   }, [isInView, start]);
 
+  const iconBgClass = iconColorMap[color] || "icon-primary";
+
   return (
     <div ref={ref}>
-      <Card className={`border-white/5 bg-card/50 backdrop-blur-sm card-interactive anim-fade-up stagger-${Math.min(index + 1, 7)} ${isInView ? "in-view" : ""}`} data-testid={`card-stat-${index}`}>
+      <Card className={`border-white/5 bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm card-interactive anim-fade-up stagger-${Math.min(index + 1, 7)} ${isInView ? "in-view" : ""}`} data-testid={`card-stat-${index}`}>
         <CardContent className="p-4">
           <div className="flex justify-between items-start mb-3">
-            <div className={`p-1.5 rounded-lg bg-background border border-white/5 ${color} icon-hover`}>
-              <Icon className="h-4 w-4" />
+            <div className={`p-2 rounded-lg bg-background/80 border border-white/5 ${color} stat-icon-bg ${iconBgClass} icon-hover`}>
+              <Icon className="h-4 w-4 relative z-10" />
             </div>
             <Badge variant="outline" className="bg-background/50 border-white/10 text-[10px] px-1.5">
               {change}
@@ -90,9 +102,9 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="space-y-8 page-transition">
+      <div className="space-y-10 page-transition">
         
-        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-card h-64 flex items-center">
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-card h-64 flex items-center hero-scan-line">
           <div className="absolute inset-0 z-0">
             {heroBgId === "threat-map" ? <AnimatedMap /> : getHeroBackground(heroBgId)}
             <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"></div>
@@ -130,11 +142,11 @@ export default function Dashboard() {
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
           {statsLoading ? (
             Array(7).fill(0).map((_, i) => (
-              <Card key={i} className="border-white/5 bg-card/50 backdrop-blur-sm">
+              <Card key={i} className="border-white/5 bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm">
                 <CardContent className="p-4">
-                  <Skeleton className="h-6 w-6 rounded-lg mb-3" />
-                  <Skeleton className="h-6 w-12 mb-1" />
-                  <Skeleton className="h-3 w-20" />
+                  <div className="skeleton-shimmer h-8 w-8 rounded-lg mb-3" />
+                  <div className="skeleton-shimmer h-6 w-14 mb-1.5" />
+                  <div className="skeleton-shimmer h-3 w-20" />
                 </CardContent>
               </Card>
             ))
@@ -174,15 +186,20 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <AnimatedSection animation="fade-up" className="col-span-2">
-            <Card className="border-white/5 bg-card/50 border-glow">
+            <Card className="relative border-white/5 bg-card/50 chart-card border-glow overflow-hidden">
               <CardHeader>
                 <CardTitle className="font-display">Threat Velocity</CardTitle>
                 <CardDescription>How fast new vulnerabilities and ransomware attacks are emerging</CardDescription>
               </CardHeader>
               <CardContent className="h-[300px]">
                 {trendsLoading ? (
-                  <div className="flex items-center justify-center h-full">
-                    <Skeleton className="w-full h-full rounded-lg" />
+                  <div className="flex flex-col gap-3 h-full justify-end pb-4">
+                    <div className="flex-1 flex items-end gap-2 px-4">
+                      {Array(10).fill(0).map((_, i) => (
+                        <div key={i} className="skeleton-shimmer flex-1" style={{ height: `${30 + Math.random() * 60}%` }} />
+                      ))}
+                    </div>
+                    <div className="skeleton-shimmer h-3 w-full" />
                   </div>
                 ) : chartData.length === 0 ? (
                   <div className="flex items-center justify-center h-full text-muted-foreground text-sm">
@@ -242,12 +259,12 @@ export default function Dashboard() {
                 <AnimatedList className="space-y-4">
                   {cvesLoading ? (
                     Array(4).fill(0).map((_, i) => (
-                      <div key={i} className="flex items-center justify-between p-3">
+                      <div key={i} className="flex items-center justify-between p-3 rounded-lg border border-white/5">
                         <div className="space-y-2">
-                          <Skeleton className="h-4 w-24" />
-                          <Skeleton className="h-3 w-32" />
+                          <div className="skeleton-shimmer h-4 w-24" />
+                          <div className="skeleton-shimmer h-3 w-32" />
                         </div>
-                        <Skeleton className="h-8 w-8 rounded" />
+                        <div className="skeleton-shimmer h-8 w-8 rounded" />
                       </div>
                     ))
                   ) : cves.length > 0 ? (
@@ -297,14 +314,19 @@ export default function Dashboard() {
             <CardContent>
               <div className="relative overflow-x-auto">
                 {ransomwareLoading ? (
-                  <div className="space-y-4 p-4">
+                  <div className="space-y-3 p-4">
+                    <div className="flex gap-4 pb-3 border-b border-white/5">
+                      {["w-24", "w-40", "w-28", "w-20", "w-20 ml-auto"].map((w, i) => (
+                        <div key={i} className={`skeleton-shimmer h-3 ${w}`} />
+                      ))}
+                    </div>
                     {Array(5).fill(0).map((_, i) => (
-                      <div key={i} className="flex gap-4">
-                        <Skeleton className="h-4 w-24" />
-                        <Skeleton className="h-4 w-40" />
-                        <Skeleton className="h-4 w-28" />
-                        <Skeleton className="h-4 w-20" />
-                        <Skeleton className="h-4 w-20 ml-auto" />
+                      <div key={i} className="flex gap-4 py-2">
+                        <div className={`skeleton-shimmer h-4 w-24`} />
+                        <div className={`skeleton-shimmer h-4 w-40`} />
+                        <div className={`skeleton-shimmer h-4 w-28`} />
+                        <div className={`skeleton-shimmer h-4 w-20`} />
+                        <div className={`skeleton-shimmer h-4 w-20 ml-auto`} />
                       </div>
                     ))}
                   </div>

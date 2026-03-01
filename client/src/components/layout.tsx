@@ -86,44 +86,66 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/contact", labelKey: "nav.contact", icon: Send },
   ];
 
+  const navGroups = [
+    { items: navItems.slice(0, 3) },
+    { items: navItems.slice(3, 7) },
+    { items: navItems.slice(7, 12) },
+    { items: navItems.slice(12, 15) },
+    { items: navItems.slice(15) },
+  ];
+
   const SidebarContent = () => (
-    <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border">
-      <div className="p-5 group">
+    <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border relative">
+      <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
+      <div className="p-6 pb-4 group">
         <Link href="/">
           <div className="flex flex-col items-center cursor-pointer">
-            <img src={activeTheme.fullLogo} alt="STB Cybersecurity" className="h-32 w-auto rounded-lg group-hover:drop-shadow-[0_0_12px_rgba(239,68,68,0.3)] transition-all duration-300" />
+            <img src={activeTheme.fullLogo} alt="STB Cybersecurity" className="h-32 w-auto rounded-lg group-hover:drop-shadow-[0_0_16px_rgba(249,115,22,0.4)] transition-all duration-500 ease-out" />
           </div>
         </Link>
       </div>
       
-      <div className="flex-1 overflow-y-auto px-4 py-6 space-y-1 scrollbar-thin scrollbar-thumb-orange-500/20 scrollbar-track-transparent">
-        {navItems.map((item) => {
-          const isActive = location === item.href;
-          return (
-            <Link key={item.href} href={item.href}>
-              <div 
-                className={`
-                  flex items-center gap-3 px-4 py-3 rounded-r-md transition-colors duration-200 cursor-pointer group
-                  ${isActive 
-                    ? "bg-orange-500/15 text-orange-400 border-l-2 border-orange-500" 
-                    : "text-zinc-500 hover:bg-zinc-800/50 hover:text-orange-300 border-l-2 border-transparent hover:border-orange-500/50"
-                  }
-                `}
-              >
-                <span className={isActive && iconTheme.styles.activeIconBg ? iconTheme.styles.activeIconBg : iconTheme.styles.iconBg || ""}>
-                  <item.icon aria-hidden="true" className={`h-5 w-5 transition-colors ${isActive ? `${iconTheme.styles.activeIcon} ${iconTheme.styles.activeGlow || ""}` : `${iconTheme.styles.inactiveIcon} ${iconTheme.styles.hoverIcon}`}`} strokeWidth={iconTheme.styles.strokeWidth} />
-                </span>
-                <span className="font-medium">{t(item.labelKey)}</span>
-                {'isPro' in item && item.isPro && (
-                  <span className="ml-auto text-[10px] font-bold bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded">PRO</span>
-                )}
-                {'isBusiness' in item && item.isBusiness && (
-                  <span className="ml-auto text-[10px] font-bold bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">BIZ</span>
-                )}
-              </div>
-            </Link>
-          );
-        })}
+      <div className="flex-1 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-orange-500/20 scrollbar-track-transparent">
+        {navGroups.map((group, groupIndex) => (
+          <div key={groupIndex}>
+            {groupIndex > 0 && (
+              <div className="mx-4 my-2 h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent" />
+            )}
+            <div className="space-y-0.5">
+              {group.items.map((item) => {
+                const isActive = location === item.href;
+                return (
+                  <Link key={item.href} href={item.href}>
+                    <div 
+                      className={`
+                        flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer group relative
+                        transition-all duration-300 ease-out
+                        ${isActive 
+                          ? "bg-orange-500/12 text-orange-400 shadow-[inset_0_0_12px_rgba(249,115,22,0.06)]" 
+                          : "text-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-200"
+                        }
+                      `}
+                    >
+                      {isActive && (
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-orange-500 rounded-r-full shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
+                      )}
+                      <span className={isActive && iconTheme.styles.activeIconBg ? iconTheme.styles.activeIconBg : iconTheme.styles.iconBg || ""}>
+                        <item.icon aria-hidden="true" className={`h-5 w-5 transition-all duration-300 ${isActive ? `${iconTheme.styles.activeIcon} ${iconTheme.styles.activeGlow || ""}` : `${iconTheme.styles.inactiveIcon} group-hover:text-orange-400/70`}`} strokeWidth={iconTheme.styles.strokeWidth} />
+                      </span>
+                      <span className="font-medium text-sm">{t(item.labelKey)}</span>
+                      {'isPro' in item && item.isPro && (
+                        <span className="ml-auto text-[10px] font-bold bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded">PRO</span>
+                      )}
+                      {'isBusiness' in item && item.isBusiness && (
+                        <span className="ml-auto text-[10px] font-bold bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">BIZ</span>
+                      )}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="p-4 border-t border-zinc-800/50 space-y-3">
@@ -133,7 +155,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           </p>
           <a 
             href="tel:+18557821987" 
-            className="text-base font-display font-bold text-white hover:text-orange-400 transition-colors block"
+            className="text-base font-display font-bold text-white hover:text-orange-400 transition-colors duration-300 block"
             data-testid="link-phone-sidebar"
           >
             (855) STB-1987
@@ -142,38 +164,41 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex gap-2 mt-2">
             <a 
               href="tel:+18557821987" 
-              className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-colors"
+              className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-all duration-300"
               data-testid="button-call-sidebar"
             >
               <Phone aria-hidden="true" className="h-3 w-3" /> {t('hotline.callNow')}
             </a>
             <a 
               href="sms:+18557821987" 
-              className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-colors"
+              className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-all duration-300"
               data-testid="button-sms-sidebar"
             >
               <MessageSquare aria-hidden="true" className="h-3 w-3" /> {t('hotline.textUs')}
             </a>
           </div>
         </div>
-        <div className="bg-zinc-900/50 rounded-lg p-4 border border-zinc-800">
-          <h4 className="font-display text-sm font-bold text-orange-400 mb-1">PRO ACCOUNT</h4>
-          <p className="text-xs text-zinc-500 mb-3">Upgrade for unlimited tools, real-time API access, and custom alerts.</p>
-          <Button size="sm" className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold tracking-wide" asChild>
-            <a href="/support#pricing">UPGRADE</a>
-          </Button>
+        <div className="relative rounded-lg p-[1px] overflow-hidden sidebar-upgrade-glow">
+          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-orange-500/40 via-amber-500/40 to-orange-500/40 animate-[borderRotate_3s_linear_infinite]" style={{ backgroundSize: '200% 100%' }} />
+          <div className="relative bg-zinc-900/90 rounded-lg p-4">
+            <h4 className="font-display text-sm font-bold text-orange-400 mb-1">PRO ACCOUNT</h4>
+            <p className="text-xs text-zinc-500 mb-3">Upgrade for unlimited tools, real-time API access, and custom alerts.</p>
+            <Button size="sm" className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold tracking-wide transition-all duration-300 hover:shadow-[0_0_16px_rgba(249,115,22,0.3)]" asChild>
+              <a href="/support#pricing">UPGRADE</a>
+            </Button>
+          </div>
         </div>
         <div className="px-2 space-y-1">
           <a 
             href="/contact?category=general" 
-            className="flex items-center gap-2 text-xs text-zinc-500 hover:text-orange-400 transition-colors"
+            className="flex items-center gap-2 text-xs text-zinc-500 hover:text-orange-400 transition-all duration-300 hover:translate-x-0.5"
           >
             <Mail aria-hidden="true" className="h-3 w-3" />
             <span>Contact Us</span>
           </a>
           <a 
             href="/contact?category=support" 
-            className="flex items-center gap-2 text-xs text-zinc-500 hover:text-orange-400 transition-colors"
+            className="flex items-center gap-2 text-xs text-zinc-500 hover:text-orange-400 transition-all duration-300 hover:translate-x-0.5"
           >
             <Mail aria-hidden="true" className="h-3 w-3" />
             <span>Get Support</span>
@@ -209,13 +234,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
-          <header className="h-16 border-b border-border bg-background/80 backdrop-blur-md flex items-center justify-between px-6 sticky top-0 z-50">
-            <div className="flex items-center gap-4">
-              <Button variant="ghost" size="icon" className="md:hidden" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
+          <header className="h-16 border-b border-border/50 bg-background/85 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 sticky top-0 z-50 relative">
+            <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/40 to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-[6px] bg-gradient-to-t from-orange-500/[0.03] to-transparent pointer-events-none" />
+            <div className="flex items-center gap-3 sm:gap-4">
+              <Button variant="ghost" size="icon" className="md:hidden hover:bg-orange-500/10 transition-colors duration-300" onClick={() => setSidebarOpen(true)} aria-label="Open menu">
                 <Menu className="h-5 w-5" />
               </Button>
               <Link href="/" className="flex items-center gap-2 md:hidden">
-                <img src={activeTheme.icon} alt="STBCS Logo" className="h-8 w-8 drop-shadow-[0_0_4px_rgba(239,68,68,0.3)]" />
+                <img src={activeTheme.icon} alt="STBCS Logo" className="h-8 w-8 drop-shadow-[0_0_6px_rgba(249,115,22,0.3)]" />
                 <span className="font-display font-bold text-sm tracking-wider text-orange-400">STBCS</span>
               </Link>
               <div className="relative hidden sm:block w-96">
