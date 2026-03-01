@@ -42,8 +42,10 @@ export function useCountUp(end: number, duration = 1200, startOnView = true) {
     const animate = (now: number) => {
       const elapsed = now - startTime;
       const progress = Math.min(elapsed / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      setCount(Math.round(eased * end));
+      const eased = progress < 1
+        ? 1 - Math.pow(2, -10 * progress) * Math.cos((progress * 10 - 0.75) * (2 * Math.PI / 3))
+        : 1;
+      setCount(Math.round(Math.min(eased, 1.02) * end));
       if (progress < 1) {
         frameRef.current = requestAnimationFrame(animate);
       }

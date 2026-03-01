@@ -12,6 +12,7 @@ import {
   Info, Globe, ShieldCheck, ShieldAlert, Link2, FileKey, Fingerprint,
   Server, Clock, ArrowRight, ChevronDown, ChevronUp, Copy, Check
 } from "lucide-react";
+import ToolPageHeader from "@/components/tool-page-header";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 
@@ -616,19 +617,18 @@ export default function SSLChecker() {
   return (
     <Layout>
       <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-white" data-testid="text-ssl-checker-title">
-              SSL Checker
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Comprehensive SSL/TLS certificate analysis, protocol testing, and security grading
-            </p>
-          </div>
-          <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/50">
-            <Crown className="h-3 w-3 mr-1" /> PRO
-          </Badge>
-        </div>
+        <ToolPageHeader
+          icon={<Shield className="h-6 w-6 text-orange-400" />}
+          title="SSL Checker"
+          description="Comprehensive SSL/TLS certificate analysis, protocol testing, and security grading"
+          tier="pro"
+          testIdPrefix="ssl-checker"
+          statusBadges={result ? [
+            { label: `Grade: ${result.grade}`, variant: result.grade.startsWith("A") ? "success" : result.grade.startsWith("B") ? "warning" : "error" },
+            { label: `${result.issues.filter(i => i.severity === "critical").length} Critical`, count: undefined, variant: "error" },
+            { label: `${result.issues.filter(i => i.severity === "warning").length} Warnings`, count: undefined, variant: "warning" },
+          ].filter(b => !b.label.startsWith("0")) : undefined}
+        />
 
         <Card className="border-white/5 bg-card/50">
           <CardHeader>

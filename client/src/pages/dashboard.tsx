@@ -7,12 +7,13 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle, Wrench, Scan, ShieldCheck, Users, Database, Factory, ChevronRight } from "lucide-react";
+import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle, Wrench, Scan, ShieldCheck, Users, Database, Factory, ChevronRight, Search, FileSearch, BarChart3, Radio } from "lucide-react";
 import { Area, AreaChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip } from "recharts";
 
-import { useMemo, useEffect } from "react";
+import { useMemo, useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import AnimatedMap from "@/components/animated-map";
+import HeroParticles from "@/components/hero-particles";
 import AnimatedSection, { AnimatedList } from "@/components/animated-section";
 import { useInView, useCountUp } from "@/hooks/use-in-view";
 
@@ -30,7 +31,7 @@ function CountUpStat({ value, label, icon: Icon, color, change, index }: {
   value: number; label: string; icon: any; color: string; change: string; index: number;
 }) {
   const { ref, isInView } = useInView();
-  const { count, start } = useCountUp(value, 1000, true);
+  const { count, start } = useCountUp(value, 1200, true);
 
   useEffect(() => {
     if (isInView) start();
@@ -40,13 +41,13 @@ function CountUpStat({ value, label, icon: Icon, color, change, index }: {
 
   return (
     <div ref={ref}>
-      <Card className={`border-white/5 bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm card-interactive anim-fade-up stagger-${Math.min(index + 1, 7)} ${isInView ? "in-view" : ""}`} data-testid={`card-stat-${index}`}>
+      <Card className={`border-white/5 bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm card-interactive card-3d anim-fade-up stagger-${Math.min(index + 1, 7)} ${isInView ? "in-view" : ""}`} data-testid={`card-stat-${index}`}>
         <CardContent className="p-4">
           <div className="flex justify-between items-start mb-3">
-            <div className={`p-2 rounded-lg bg-background/80 border border-white/5 ${color} stat-icon-bg ${iconBgClass} icon-hover`}>
+            <div className={`p-2.5 rounded-lg bg-background/80 border border-white/5 ${color} stat-icon-bg ${iconBgClass} icon-bounce`}>
               <Icon className="h-4 w-4 relative z-10" />
             </div>
-            <Badge variant="outline" className="bg-background/50 border-white/10 text-[10px] px-1.5">
+            <Badge variant="outline" className="bg-background/50 border-white/10 text-[10px] px-1.5 badge-shimmer">
               {change}
             </Badge>
           </div>
@@ -58,6 +59,56 @@ function CountUpStat({ value, label, icon: Icon, color, change, index }: {
           </div>
         </CardContent>
       </Card>
+    </div>
+  );
+}
+
+function TypingText({ text, className }: { text: string; className?: string }) {
+  const [displayed, setDisplayed] = useState("");
+  const [done, setDone] = useState(false);
+  useEffect(() => {
+    let i = 0;
+    const timer = setInterval(() => {
+      i++;
+      setDisplayed(text.slice(0, i));
+      if (i >= text.length) {
+        clearInterval(timer);
+        setDone(true);
+      }
+    }, 50);
+    return () => clearInterval(timer);
+  }, [text]);
+  return (
+    <span className={className}>
+      {displayed}
+      {!done && <span className="animate-pulse text-primary">|</span>}
+    </span>
+  );
+}
+
+function QuickActionsBar() {
+  const actions = [
+    { href: "/search?tab=ioc", icon: Search, label: "IOC Lookup" },
+    { href: "/risk-score", icon: BarChart3, label: "Risk Score" },
+    { href: "/tools", icon: Wrench, label: "Tools" },
+    { href: "/exploits", icon: FileSearch, label: "CVE Search" },
+    { href: "/intel", icon: Radio, label: "Live Intel" },
+  ];
+  return (
+    <div className="flex items-center justify-center gap-2 flex-wrap" data-testid="bar-quick-actions">
+      {actions.map((a) => (
+        <a key={a.href} href={a.href}>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="border-white/10 bg-card/60 backdrop-blur-sm hover:border-primary/30 hover:bg-primary/10 hover:text-primary transition-all duration-300 gap-2 btn-press"
+            data-testid={`button-quick-${a.label.toLowerCase().replace(/\s/g, '-')}`}
+          >
+            <a.icon className="h-3.5 w-3.5" />
+            <span className="text-xs">{a.label}</span>
+          </Button>
+        </a>
+      ))}
     </div>
   );
 }
@@ -104,19 +155,22 @@ export default function Dashboard() {
     <Layout>
       <div className="space-y-10 page-transition">
         
-        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-card h-64 flex items-center hero-scan-line">
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-card h-72 flex items-center hero-scan-line animated-border">
           <div className="absolute inset-0 z-0">
             {heroBgId === "threat-map" ? <AnimatedMap /> : getHeroBackground(heroBgId)}
-            <div className="absolute inset-0 bg-gradient-to-r from-background via-background/80 to-transparent"></div>
+            <div className="absolute inset-0 z-[1]">
+              <HeroParticles />
+            </div>
+            <div className="absolute inset-0 z-[2] bg-gradient-to-r from-background via-background/85 to-transparent"></div>
           </div>
           
           <div className="relative z-10 p-8 max-w-2xl">
             <Badge className="mb-4 bg-primary/20 text-primary border-primary/50 hover:bg-primary/30 glow-pulse" data-testid="badge-threat-level">
               <span className="w-2 h-2 rounded-full bg-primary mr-2 animate-pulse motion-reduce:animate-none"></span>
-              LIVE THREAT LEVEL: ELEVATED
+              <TypingText text="LIVE THREAT LEVEL: ELEVATED" />
             </Badge>
             <h1 className="text-4xl font-display font-bold text-white mb-2 tracking-wide">
-              KNOW THE THREAT <span className="text-primary">BEFORE IT HITS</span>
+              KNOW THE THREAT <span className="text-primary text-shimmer">BEFORE IT HITS</span>
             </h1>
             <p className="text-muted-foreground text-lg mb-6">
               70+ live threat feeds. Ransomware tracking. CVE monitoring. When your business faces an attack, our incident response team is one call away.
@@ -138,6 +192,8 @@ export default function Dashboard() {
             </div>
           </div>
         </div>
+
+        <QuickActionsBar />
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
           {statsLoading ? (

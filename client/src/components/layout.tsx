@@ -40,7 +40,7 @@ import {
   Network,
   ShieldAlert
 } from "lucide-react";
-import { useState, KeyboardEvent } from "react";
+import { useState, useEffect, useRef, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -69,6 +69,21 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const { user, isAuthenticated, isPro, logout } = useAuth();
   const { activeTheme } = useLogoTheme();
   const { activeTheme: iconTheme } = useIconTheme();
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [bellAnimating, setBellAnimating] = useState(false);
+  const bellIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      bellIntervalRef.current = setInterval(() => {
+        setBellAnimating(true);
+        setTimeout(() => setBellAnimating(false), 800);
+      }, 15000);
+      return () => {
+        if (bellIntervalRef.current) clearInterval(bellIntervalRef.current);
+      };
+    }
+  }, [isAuthenticated]);
 
   const handleSearchKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
@@ -121,19 +136,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border relative">
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
-      <div className="p-6 pb-4 group">
+      <div className="p-6 pb-4">
         <Link href="/">
           <div className="flex flex-col items-center cursor-pointer">
-            <img src={activeTheme.fullLogo} alt="STB Cybersecurity" className="h-32 w-auto rounded-lg group-hover:drop-shadow-[0_0_16px_rgba(249,115,22,0.4)] transition-all duration-500 ease-out" />
+            <img src={activeTheme.fullLogo} alt="STB Cybersecurity" className="h-32 w-auto rounded-lg sidebar-logo" />
           </div>
         </Link>
       </div>
       
-      <div className="flex-1 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-orange-500/20 scrollbar-track-transparent">
+      <div className="flex-1 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-orange-500/20 scrollbar-track-transparent sidebar-scroll-fade">
         {navGroups.map((group, groupIndex) => (
           <div key={groupIndex}>
             {groupIndex > 0 && (
-              <div className="mx-4 my-2 h-px bg-gradient-to-r from-transparent via-zinc-700/50 to-transparent" />
+              <div className="mx-4 my-3 sidebar-divider" />
             )}
             <div className="space-y-0.5">
               {group.items.map((item) => {
@@ -145,23 +160,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         flex items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer group relative
                         transition-all duration-300 ease-out
                         ${isActive 
-                          ? "bg-orange-500/12 text-orange-400 shadow-[inset_0_0_12px_rgba(249,115,22,0.06)]" 
+                          ? "bg-orange-500/12 text-orange-400 shadow-[inset_0_0_12px_rgba(249,115,22,0.06)] sidebar-item-active" 
                           : "text-zinc-500 hover:bg-zinc-800/60 hover:text-zinc-200"
                         }
                       `}
                     >
                       {isActive && (
-                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-5 bg-orange-500 rounded-r-full shadow-[0_0_8px_rgba(249,115,22,0.5)]" />
+                        <div className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] rounded-r-full sidebar-active-bar" />
                       )}
-                      <span className={isActive && iconTheme.styles.activeIconBg ? iconTheme.styles.activeIconBg : iconTheme.styles.iconBg || ""}>
+                      <span className={`icon-bounce ${isActive && iconTheme.styles.activeIconBg ? iconTheme.styles.activeIconBg : iconTheme.styles.iconBg || ""}`}>
                         <item.icon aria-hidden="true" className={`h-5 w-5 transition-all duration-300 ${isActive ? `${iconTheme.styles.activeIcon} ${iconTheme.styles.activeGlow || ""}` : `${iconTheme.styles.inactiveIcon} group-hover:text-orange-400/70`}`} strokeWidth={iconTheme.styles.strokeWidth} />
                       </span>
                       <span className="font-medium text-sm">{t(item.labelKey)}</span>
                       {'isPro' in item && item.isPro && (
-                        <span className="ml-auto text-[10px] font-bold bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded">PRO</span>
+                        <span className="ml-auto text-[10px] font-bold bg-orange-500/20 text-orange-400 px-1.5 py-0.5 rounded tier-badge-pro">PRO</span>
                       )}
                       {'isBusiness' in item && item.isBusiness && (
-                        <span className="ml-auto text-[10px] font-bold bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded">BIZ</span>
+                        <span className="ml-auto text-[10px] font-bold bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded tier-badge-biz">BIZ</span>
                       )}
                     </div>
                   </Link>

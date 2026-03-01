@@ -12,6 +12,7 @@ import {
   Copy, Check, Search
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import ToolPageHeader from "@/components/tool-page-header";
 
 interface HeaderAnalysis {
   name: string;
@@ -253,19 +254,19 @@ export default function HeadersScanner() {
   return (
     <Layout>
       <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-white" data-testid="text-headers-scanner-title">
-              HTTP Security Headers Scanner
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Analyze HTTP response headers for security best practices, missing protections, and misconfigurations.
-            </p>
-          </div>
-          <Badge className="bg-green-600 text-white" data-testid="badge-headers-free">
-            FREE
-          </Badge>
-        </div>
+        <ToolPageHeader
+          icon={<ShieldCheck className="h-6 w-6 text-orange-400" />}
+          title="HTTP Security Headers Scanner"
+          description="Analyze HTTP response headers for security best practices, missing protections, and misconfigurations."
+          tier="free"
+          testIdPrefix="headers-scanner"
+          statusBadges={result ? [
+            { label: `Grade: ${result.grade}`, variant: result.grade.startsWith("A") ? "success" : result.grade.startsWith("B") ? "warning" : "error" },
+            { label: "Passed", count: passCount, variant: "success" },
+            { label: "Failed", count: failCount, variant: "error" },
+            { label: "Warnings", count: warnCount, variant: "warning" },
+          ].filter(b => (b.count ?? 1) > 0) : undefined}
+        />
 
         <Card className="border-white/5 bg-card/50">
           <CardContent className="p-6">

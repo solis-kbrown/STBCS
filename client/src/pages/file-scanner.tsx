@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
+import ToolPageHeader from "@/components/tool-page-header";
 
 interface ScanResult {
   fileName: string;
@@ -478,19 +479,18 @@ export default function FileScanner() {
   return (
     <Layout>
       <div className="space-y-6 animate-in fade-in duration-500">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-display font-bold text-white" data-testid="text-file-scanner-title">
-              File Scanner
-            </h1>
-            <p className="text-muted-foreground mt-1">
-              Upload a file for hash computation, MIME detection, entropy analysis, and string extraction
-            </p>
-          </div>
-          <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/50">
-            <Crown className="h-3 w-3 mr-1" /> PRO
-          </Badge>
-        </div>
+        <ToolPageHeader
+          icon={<FileUp className="h-6 w-6 text-orange-400" />}
+          title="File Scanner"
+          description="Upload a file for hash computation, MIME detection, entropy analysis, and string extraction"
+          tier="pro"
+          testIdPrefix="file-scanner"
+          statusBadges={scanResult ? [
+            { label: scanResult.fileName, variant: "info" },
+            { label: `Entropy: ${scanResult.entropy.toFixed(2)}`, variant: scanResult.entropy > 6 ? "error" : scanResult.entropy > 4 ? "warning" : "success" },
+            { label: "Strings", count: scanResult.stringsCount, variant: "neutral" },
+          ] : undefined}
+        />
 
         {scanResult ? (
           <ScanResults result={scanResult} onReset={handleReset} />
