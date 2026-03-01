@@ -1,47 +1,50 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { createServer } from "http";
-
-const app = express();
-app.disable('x-powered-by');
-app.set('trust proxy', 1);
-
-declare module "http" {
-  interface IncomingMessage {
-    rawBody: unknown;
-  }
-}
-
-let appReady = false;
+import path from "path";
+import fs from "fs";
 
 const STARTUP_HTML = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>STB Cybersecurity</title><meta http-equiv="refresh" content="3"></head><body style="background:#18181b;color:#a1a1aa;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif"><p>Initializing threat intelligence platform...</p></body></html>';
 
-app.get('/health', (_req, res) => {
-  res.status(200).json({ status: 'ok', ready: appReady, timestamp: Date.now() });
-});
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const port = parseInt(process.env.PORT || "5000", 10);
 
-app.get('/__repl', (_req, res) => {
-  res.status(200).send('ok');
-});
+let appReady = false;
+let expressApp: express.Express | null = null;
 
-app.use((req, res, next) => {
-  if (appReady) return next();
-  if (req.path === '/health' || req.path === '/__repl') return next();
-  if (req.path === '/') {
-    res.status(200).setHeader('Content-Type', 'text/html').send(STARTUP_HTML);
+const httpServer = createServer((req, res) => {
+  if (!appReady || !expressApp) {
+    if (req.url === '/health' || req.url === '/health?') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'ok', ready: appReady, timestamp: Date.now() }));
+      return;
+    }
+    if (req.url === '/__repl') {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('ok');
+      return;
+    }
+    if (req.url === '/' || (req.method === 'GET' && !req.url?.startsWith('/api/'))) {
+      if (IS_PRODUCTION) {
+        const indexPath = path.resolve(__dirname, "public", "index.html");
+        try {
+          if (fs.existsSync(indexPath)) {
+            const html = fs.readFileSync(indexPath, 'utf-8');
+            res.writeHead(200, { 'Content-Type': 'text/html' });
+            res.end(html);
+            return;
+          }
+        } catch {}
+      }
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(STARTUP_HTML);
+      return;
+    }
+    res.writeHead(503, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ error: "Service starting up, please retry shortly" }));
     return;
   }
-  if (req.method === 'GET' && !req.path.startsWith('/api/')) {
-    res.status(200).setHeader('Content-Type', 'text/html').send(STARTUP_HTML);
-    return;
-  }
-  if (req.path.startsWith('/api/')) {
-    res.status(503).json({ error: "Service starting up, please retry shortly" });
-    return;
-  }
-  next();
+  expressApp(req, res);
 });
-
-const httpServer = createServer(app);
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -53,27 +56,39 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
-const port = parseInt(process.env.PORT || "5000", 10);
-
 httpServer.listen(
   { port, host: "0.0.0.0", reusePort: true },
   () => {
     log(`serving on port ${port}`);
-    initializeApp().catch((err) => {
-      console.error("Fatal: App initialization failed:", err);
-      process.exit(1);
+    setImmediate(() => {
+      initializeApp().catch((err) => {
+        console.error("Fatal: App initialization failed:", err);
+        process.exit(1);
+      });
     });
   },
 );
 
+async function yieldToEventLoop() {
+  return new Promise<void>(resolve => setImmediate(resolve));
+}
+
+declare module "http" {
+  interface IncomingMessage {
+    rawBody: unknown;
+  }
+}
+
 async function initializeApp() {
+  const app = express();
+  app.disable('x-powered-by');
+  app.set('trust proxy', 1);
+
   const compression = (await import("compression")).default;
-  const path = await import("path");
-  const fs = await import("fs");
+  await yieldToEventLoop();
 
   const PRIMARY_DOMAIN = process.env.CUSTOM_DOMAIN || 'stbcybersecurity.com';
   const SECONDARY_DOMAINS = ['www.stbcybersecurity.com', 'stoptbcs.com', 'www.stoptbcs.com'];
-  const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
   if (IS_PRODUCTION) {
     const distPath = path.resolve(__dirname, "public");
@@ -95,6 +110,14 @@ async function initializeApp() {
       log("Static file serving initialized early for fast startup");
     }
   }
+
+  app.get('/health', (_req, res) => {
+    res.status(200).json({ status: 'ok', ready: appReady, timestamp: Date.now() });
+  });
+
+  app.get('/__repl', (_req, res) => {
+    res.status(200).send('ok');
+  });
 
   app.use((req, res, next) => {
     const host = req.get('host')?.split(':')[0];
@@ -168,6 +191,8 @@ async function initializeApp() {
 
   app.use(compression());
 
+  await yieldToEventLoop();
+
   const { WebhookHandlers } = await import("./webhookHandlers");
   app.post(
     '/api/stripe/webhook',
@@ -223,8 +248,12 @@ async function initializeApp() {
     next();
   });
 
+  await yieldToEventLoop();
+
   const { registerRoutes } = await import("./routes");
   const { reportCriticalError } = await import("./maintenance");
+
+  await yieldToEventLoop();
 
   await registerRoutes(httpServer, app);
 
@@ -276,13 +305,10 @@ async function initializeApp() {
     await setupVite(httpServer, app);
   }
 
+  expressApp = app;
   appReady = true;
   log("Routes and static serving initialized");
 
-  deferExpensiveTasks();
-}
-
-function deferExpensiveTasks() {
   setTimeout(async () => {
     try {
       await initStripe();
@@ -332,7 +358,7 @@ function deferExpensiveTasks() {
       await Promise.all(urls.map(u => fetch(base + u).catch(() => {})));
       log("Cache warm-up complete");
     } catch {}
-  }, 2000);
+  }, 3000);
 }
 
 async function initStripe() {
