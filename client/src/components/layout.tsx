@@ -25,7 +25,8 @@ import {
   Info,
   Send,
   Radar,
-  FileText
+  FileText,
+  ClipboardList
 } from "lucide-react";
 import { useState, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -77,7 +78,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
     { href: "/breaches", labelKey: "nav.breaches", icon: Database },
     { href: "/ics-advisories", labelKey: "nav.icsAdvisories", icon: Factory },
     { href: "/risk-score", labelKey: "nav.riskScore", icon: ShieldCheck },
+    { href: "/playbooks", labelKey: "nav.playbooks", icon: ClipboardList },
     { href: "/intel", labelKey: "nav.intel", icon: Satellite },
+    { href: "/service-status", labelKey: "nav.serviceStatus", icon: MonitorCheck },
     { href: "/support", labelKey: "nav.support", icon: Heart },
     { href: "/about", labelKey: "nav.about", icon: Info },
     { href: "/contact", labelKey: "nav.contact", icon: Send },

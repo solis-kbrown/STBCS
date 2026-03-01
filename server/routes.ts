@@ -2236,6 +2236,90 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
+  app.get("/api/tools/service-status", async (_req: Request, res: Response) => {
+    try {
+      const cacheKey = "service-status";
+      if (cachedJson(res, cacheKey, 60)) return;
+
+      const statusPages = [
+        { name: "GitHub", url: "https://www.githubstatus.com/api/v2/status.json", statusPage: "https://www.githubstatus.com" },
+        { name: "Cloudflare", url: "https://www.cloudflarestatus.com/api/v2/status.json", statusPage: "https://www.cloudflarestatus.com" },
+        { name: "Slack", url: "https://status.slack.com/api/v2.0.0/current", statusPage: "https://status.slack.com" },
+        { name: "Datadog", url: "https://status.datadoghq.com/api/v2/status.json", statusPage: "https://status.datadoghq.com" },
+        { name: "Vercel", url: "https://www.vercel-status.com/api/v2/status.json", statusPage: "https://www.vercel-status.com" },
+      ];
+
+      const hardcodedServices = [
+        { name: "AWS", status: "operational" as const, description: "Amazon Web Services cloud platform", lastUpdated: new Date().toISOString(), url: "https://health.aws.amazon.com/health/status" },
+        { name: "Microsoft Azure", status: "operational" as const, description: "Microsoft Azure cloud services", lastUpdated: new Date().toISOString(), url: "https://status.azure.com" },
+        { name: "Google Cloud", status: "operational" as const, description: "Google Cloud Platform services", lastUpdated: new Date().toISOString(), url: "https://status.cloud.google.com" },
+      ];
+
+      const results = await Promise.allSettled(
+        statusPages.map(async (service) => {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 8000);
+          try {
+            const resp = await fetch(service.url, {
+              signal: controller.signal,
+              headers: { "User-Agent": "STBCS-StatusMonitor/1.0" },
+            });
+            clearTimeout(timeout);
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const json = await resp.json();
+
+            if (service.name === "Slack") {
+              const slackStatus = json.status || "active";
+              return {
+                name: service.name,
+                status: slackStatus === "active" ? "operational" : slackStatus === "maintenance" ? "degraded" : "outage",
+                description: json.date_updated ? `Status: ${slackStatus}` : "Slack messaging platform",
+                lastUpdated: json.date_updated || new Date().toISOString(),
+                url: service.statusPage,
+              };
+            }
+
+            const indicator = json?.status?.indicator || "none";
+            const desc = json?.status?.description || `${service.name} status`;
+            const updatedAt = json?.page?.updated_at || new Date().toISOString();
+
+            let status: "operational" | "degraded" | "outage" | "unknown" = "unknown";
+            if (indicator === "none") status = "operational";
+            else if (indicator === "minor" || indicator === "maintenance") status = "degraded";
+            else if (indicator === "major" || indicator === "critical") status = "outage";
+
+            return {
+              name: service.name,
+              status,
+              description: desc,
+              lastUpdated: updatedAt,
+              url: service.statusPage,
+            };
+          } catch {
+            clearTimeout(timeout);
+            return {
+              name: service.name,
+              status: "unknown" as const,
+              description: `Unable to reach ${service.name} status page`,
+              lastUpdated: null,
+              url: service.statusPage,
+            };
+          }
+        })
+      );
+
+      const services = [
+        ...results.map(r => r.status === "fulfilled" ? r.value : null).filter(Boolean),
+        ...hardcodedServices,
+      ];
+
+      cacheAndSend(res, cacheKey, services, 60);
+    } catch (error) {
+      console.error("Service status error:", error);
+      res.status(500).json({ error: "Failed to fetch service status" });
+    }
+  });
+
   // SSL Certificate Checker
   app.get("/api/tools/ssl-check", tieredToolsLimiter, async (req: Request, res: Response) => {
     try {

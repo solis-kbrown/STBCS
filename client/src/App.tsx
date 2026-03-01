@@ -37,6 +37,8 @@ const GroupsDirectory = lazy(() => import("@/pages/groups"));
 const HeroGallery = lazy(() => import("@/pages/hero-gallery"));
 const AttackSurface = lazy(() => import("@/pages/attack-surface"));
 const Reports = lazy(() => import("@/pages/reports"));
+const ServiceStatus = lazy(() => import("@/pages/service-status"));
+const Playbooks = lazy(() => import("@/pages/playbooks"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -84,6 +86,8 @@ function Router() {
         <Route path="/hero-backgrounds" component={HeroGallery}/>
         <Route path="/attack-surface" component={AttackSurface}/>
         <Route path="/reports" component={Reports}/>
+        <Route path="/service-status" component={ServiceStatus}/>
+        <Route path="/playbooks" component={Playbooks}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

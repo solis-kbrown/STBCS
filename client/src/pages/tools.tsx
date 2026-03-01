@@ -48,6 +48,7 @@ import {
   useNmapScan,
   useNmapUsage,
   useEmailSecurity,
+  useEmailHeaderAnalyzer,
   useThreatFoxLookup,
   useMalwareBazaarLookup,
   useSSLLabsCheck,
@@ -58,7 +59,8 @@ import {
   PortScanResult, 
   ThreatCheckResult,
   ShodanLookupResult,
-  EmailSecurityResult
+  EmailSecurityResult,
+  EmailHeaderAnalysisResult
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -1752,6 +1754,176 @@ function IPReputationAggregator() {
   );
 }
 
+function EmailHeaderAnalyzerTool() {
+  const [headers, setHeaders] = useState("");
+  const { mutate: analyze, data, isPending, error, reset } = useEmailHeaderAnalyzer();
+
+  const handleAnalyze = () => {
+    if (headers.trim().length >= 10) {
+      analyze(headers.trim());
+    }
+  };
+
+  const getAuthBadge = (result: string | undefined, label: string) => {
+    if (!result) return null;
+    const pass = result.toLowerCase().includes('pass');
+    return (
+      <div className="flex items-center gap-2 p-2 rounded-lg bg-white/5 border border-white/10">
+        <div className="flex items-center gap-1">
+          {pass ? <Check className="h-4 w-4 text-green-400" /> : <X className="h-4 w-4 text-red-400" />}
+          <span className="text-sm font-medium text-white">{label}</span>
+        </div>
+        <Badge className={pass ? 'bg-green-600' : 'bg-red-600'}>{result}</Badge>
+      </div>
+    );
+  };
+
+  return (
+    <ToolCard
+      title="Email Header Analyzer"
+      description="Parse and analyze raw email headers to trace routing paths, check authentication (SPF, DKIM, DMARC), and detect suspicious indicators."
+      icon={Mail}
+      tier="free"
+    >
+      <div className="space-y-4">
+        <textarea
+          value={headers}
+          onChange={(e) => { setHeaders(e.target.value); reset(); }}
+          placeholder={"Paste raw email headers here...\n\nReceived: from mail.example.com (10.0.0.1)\n  by mx.recipient.com; Mon, 1 Jan 2024 12:00:00 +0000\nFrom: sender@example.com\nTo: recipient@example.com\nSubject: Test Email"}
+          className="w-full h-40 px-3 py-2 bg-background border border-white/10 rounded-md text-sm text-white font-mono placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/50 resize-y"
+          data-testid="input-email-headers"
+        />
+        <Button
+          onClick={handleAnalyze}
+          disabled={isPending || headers.trim().length < 10}
+          className="w-full"
+          data-testid="button-analyze-headers"
+        >
+          {isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Mail className="h-4 w-4 mr-2" />}
+          Analyze Headers
+        </Button>
+
+        {error && (
+          <div className="p-3 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm">
+            {error.message}
+          </div>
+        )}
+
+        {data && (
+          <div className="space-y-4" data-testid="email-header-results">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {data.from && (
+                <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-xs text-muted-foreground mb-1">From</div>
+                  <p className="font-medium text-white text-sm truncate" data-testid="text-header-from">{data.from}</p>
+                </div>
+              )}
+              {data.to && (
+                <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-xs text-muted-foreground mb-1">To</div>
+                  <p className="font-medium text-white text-sm truncate" data-testid="text-header-to">{data.to}</p>
+                </div>
+              )}
+              {data.subject && (
+                <div className="p-3 rounded-lg bg-white/5 border border-white/10 md:col-span-2">
+                  <div className="text-xs text-muted-foreground mb-1">Subject</div>
+                  <p className="font-medium text-white text-sm" data-testid="text-header-subject">{data.subject}</p>
+                </div>
+              )}
+              {data.date && (
+                <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-xs text-muted-foreground mb-1">Date</div>
+                  <p className="font-medium text-white text-sm">{data.date}</p>
+                </div>
+              )}
+              {data.messageId && (
+                <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-xs text-muted-foreground mb-1">Message-ID</div>
+                  <p className="font-mono text-white text-xs truncate">{data.messageId}</p>
+                </div>
+              )}
+              {data.xMailer && (
+                <div className="p-3 rounded-lg bg-white/5 border border-white/10">
+                  <div className="text-xs text-muted-foreground mb-1">X-Mailer</div>
+                  <p className="font-medium text-white text-sm">{data.xMailer}</p>
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                <Shield className="h-4 w-4 text-primary" />
+                Authentication Results
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-2" data-testid="auth-results">
+                {getAuthBadge(data.spfResult, 'SPF')}
+                {getAuthBadge(data.dkimResult, 'DKIM')}
+                {getAuthBadge(data.dmarcResult, 'DMARC')}
+                {!data.spfResult && !data.dkimResult && !data.dmarcResult && (
+                  <div className="p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/20 md:col-span-3">
+                    <div className="flex items-center gap-2 text-yellow-400 text-sm">
+                      <AlertTriangle className="h-4 w-4" />
+                      No authentication results found in headers
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {data.receivedChain.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Network className="h-4 w-4 text-primary" />
+                  Routing Path ({data.receivedChain.length} hop{data.receivedChain.length !== 1 ? 's' : ''})
+                </h4>
+                <div className="space-y-1" data-testid="routing-path">
+                  {data.receivedChain.map((hop, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 rounded bg-white/5 border border-white/10 text-sm">
+                      <Badge variant="outline" className="text-xs shrink-0">#{idx + 1}</Badge>
+                      <div className="flex items-center gap-1 min-w-0">
+                        <span className="text-muted-foreground shrink-0">from</span>
+                        <span className="font-mono text-white truncate">{hop.from}</span>
+                        <span className="text-muted-foreground shrink-0">→</span>
+                        <span className="font-mono text-white truncate">{hop.by}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {data.warnings.length > 0 && (
+              <div className="space-y-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <AlertTriangle className="h-4 w-4 text-orange-400" />
+                  Suspicious Indicators
+                </h4>
+                <div className="space-y-1" data-testid="header-warnings">
+                  {data.warnings.map((warning, idx) => (
+                    <div key={idx} className="flex items-center gap-2 p-2 rounded-lg bg-orange-500/10 border border-orange-500/20 text-sm text-orange-400">
+                      <AlertTriangle className="h-4 w-4 shrink-0" />
+                      {warning}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {data.warnings.length === 0 && (data.spfResult?.toLowerCase().includes('pass') || data.dkimResult?.toLowerCase().includes('pass')) && (
+              <div className="p-3 rounded-lg bg-green-500/10 border border-green-500/30">
+                <div className="flex items-center gap-2 text-green-400">
+                  <Check className="h-4 w-4" />
+                  No suspicious indicators detected
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </ToolCard>
+  );
+}
+
 export default function ToolsPage() {
   useDocumentTitle("Free Security Tools | STB Cybersecurity", "Free cybersecurity tools: IP/Domain WHOIS, Port Scanner, SSL Checker, Password Checker, Hash Analyzer, Email Header Analyzer, and more. No account needed.");
   return (
@@ -1825,6 +1997,7 @@ export default function ToolsPage() {
               <NmapScanTool />
               <SSLLabsTool />
               <EmailSecurityTool />
+              <EmailHeaderAnalyzerTool />
               <ThreatCheckTool />
               <ThreatFoxTool />
               <MalwareBazaarTool />
@@ -1848,6 +2021,7 @@ export default function ToolsPage() {
           <TabsContent value="email" className="space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <EmailSecurityTool />
+              <EmailHeaderAnalyzerTool />
               <PhishTankTool />
             </div>
           </TabsContent>

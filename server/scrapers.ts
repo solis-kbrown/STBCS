@@ -1472,6 +1472,331 @@ export async function fetchDataplaneSsh(): Promise<number> {
   }
 }
 
+// Dataplane.org VNC Scanning - Remote desktop scanning IPs
+const DATAPLANE_VNC_URL = "https://dataplane.org/vncrfb.txt";
+
+export async function fetchDataplaneVnc(): Promise<number> {
+  try {
+    log.debug("Fetching VNC scanning IPs...");
+    const response = await secureFetch(DATAPLANE_VNC_URL);
+    if (!response.ok) {
+      throw new Error(`Dataplane VNC error: ${response.status}`);
+    }
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#"));
+    let count = 0;
+    for (const line of lines.slice(0, 500)) {
+      const parts = line.split("|");
+      const ip = parts[2]?.trim();
+      if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+        const asnInfo = parts[0]?.trim() && parts[1]?.trim() ? `AS${parts[0].trim()} - ${parts[1].trim()}` : null;
+        await storage.upsertMaliciousIp({
+          ipAddress: ip,
+          source: "Dataplane VNC",
+          threatType: "vnc_scanner",
+          asn: asnInfo,
+          lastSeen: new Date(),
+        });
+        count++;
+      }
+    }
+    log.debug(`Processed ${count} VNC scanning IPs`);
+    await storage.updateFeedLastFetched("Dataplane VNC");
+    return count;
+  } catch (error) {
+    log.error("Dataplane VNC error:", error);
+    return 0;
+  }
+}
+
+// Dataplane.org DNS Abuse - DNS recursive query abuse IPs
+const DATAPLANE_DNS_URL = "https://dataplane.org/dnsrd.txt";
+
+export async function fetchDataplaneDns(): Promise<number> {
+  try {
+    log.debug("Fetching DNS abuse IPs...");
+    const response = await secureFetch(DATAPLANE_DNS_URL);
+    if (!response.ok) {
+      throw new Error(`Dataplane DNS error: ${response.status}`);
+    }
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#"));
+    let count = 0;
+    for (const line of lines.slice(0, 500)) {
+      const parts = line.split("|");
+      const ip = parts[2]?.trim();
+      if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+        const asnInfo = parts[0]?.trim() && parts[1]?.trim() ? `AS${parts[0].trim()} - ${parts[1].trim()}` : null;
+        await storage.upsertMaliciousIp({
+          ipAddress: ip,
+          source: "Dataplane DNS",
+          threatType: "dns_abuse",
+          asn: asnInfo,
+          lastSeen: new Date(),
+        });
+        count++;
+      }
+    }
+    log.debug(`Processed ${count} DNS abuse IPs`);
+    await storage.updateFeedLastFetched("Dataplane DNS");
+    return count;
+  } catch (error) {
+    log.error("Dataplane DNS error:", error);
+    return 0;
+  }
+}
+
+// Dataplane.org SIP/VoIP Abuse - SIP INVITE abuse IPs
+const DATAPLANE_SIP_URL = "https://dataplane.org/sipinvitation.txt";
+
+export async function fetchDataplaneSip(): Promise<number> {
+  try {
+    log.debug("Fetching SIP/VoIP abuse IPs...");
+    const response = await secureFetch(DATAPLANE_SIP_URL);
+    if (!response.ok) {
+      throw new Error(`Dataplane SIP error: ${response.status}`);
+    }
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#"));
+    let count = 0;
+    for (const line of lines.slice(0, 500)) {
+      const parts = line.split("|");
+      const ip = parts[2]?.trim();
+      if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+        const asnInfo = parts[0]?.trim() && parts[1]?.trim() ? `AS${parts[0].trim()} - ${parts[1].trim()}` : null;
+        await storage.upsertMaliciousIp({
+          ipAddress: ip,
+          source: "Dataplane SIP",
+          threatType: "sip_abuse",
+          asn: asnInfo,
+          lastSeen: new Date(),
+        });
+        count++;
+      }
+    }
+    log.debug(`Processed ${count} SIP/VoIP abuse IPs`);
+    await storage.updateFeedLastFetched("Dataplane SIP");
+    return count;
+  } catch (error) {
+    log.error("Dataplane SIP error:", error);
+    return 0;
+  }
+}
+
+// Spamhaus EDROP - Extended hijacked netblocks
+const SPAMHAUS_EDROP_URL = "https://www.spamhaus.org/drop/edrop.txt";
+
+export async function fetchSpamhausEdrop(): Promise<number> {
+  try {
+    log.debug("Fetching EDROP list (extended hijacked netblocks)...");
+    const response = await secureFetch(SPAMHAUS_EDROP_URL);
+    if (!response.ok) {
+      throw new Error(`Spamhaus EDROP error: ${response.status}`);
+    }
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => !line.startsWith(";") && line.trim());
+    let count = 0;
+    for (const line of lines.slice(0, 200)) {
+      const parts = line.split(";")[0].trim().split("/");
+      if (parts.length >= 1 && /^\d+\.\d+\.\d+\.\d+$/.test(parts[0])) {
+        await storage.upsertMaliciousIp({
+          ipAddress: parts[0],
+          source: "Spamhaus EDROP",
+          threatType: "hijacked_netblock",
+          lastSeen: new Date(),
+        });
+        count++;
+      }
+    }
+    log.debug(`Processed ${count} EDROP netblocks`);
+    await storage.updateFeedLastFetched("Spamhaus EDROP");
+    return count;
+  } catch (error) {
+    log.error("Spamhaus EDROP error:", error);
+    return 0;
+  }
+}
+
+// deepdarkCTI - Dark web sourced malicious IPs
+const DEEPDARKCTI_IPS_URL = "https://raw.githubusercontent.com/fastfire/deepdarkCTI/main/ioc_ip.txt";
+
+export async function fetchDeepDarkCTIIps(): Promise<number> {
+  try {
+    log.debug("Fetching dark web threat IPs...");
+    const response = await secureFetch(DEEPDARKCTI_IPS_URL);
+    if (!response.ok) {
+      throw new Error(`deepdarkCTI IPs error: ${response.status}`);
+    }
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#") && !line.startsWith("//"));
+    let count = 0;
+    for (const line of lines.slice(0, 1000)) {
+      const ip = line.trim();
+      if (/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+        await storage.upsertMaliciousIp({
+          ipAddress: ip,
+          source: "deepdarkCTI",
+          threatType: "dark_web_threat",
+          lastSeen: new Date(),
+        });
+        count++;
+      }
+    }
+    log.debug(`Processed ${count} dark web threat IPs`);
+    await storage.updateFeedLastFetched("deepdarkCTI IPs");
+    return count;
+  } catch (error) {
+    log.error("deepdarkCTI IPs error:", error);
+    return 0;
+  }
+}
+
+// deepdarkCTI - Dark web sourced malicious domains
+const DEEPDARKCTI_DOMAINS_URL = "https://raw.githubusercontent.com/fastfire/deepdarkCTI/main/ioc_domain.txt";
+
+export async function fetchDeepDarkCTIDomains(): Promise<number> {
+  try {
+    log.debug("Fetching dark web threat domains...");
+    const response = await secureFetch(DEEPDARKCTI_DOMAINS_URL);
+    if (!response.ok) {
+      throw new Error(`deepdarkCTI Domains error: ${response.status}`);
+    }
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#") && !line.startsWith("//"));
+    let count = 0;
+    for (const line of lines.slice(0, 1000)) {
+      const domain = line.trim().toLowerCase();
+      if (domain && domain.includes(".") && !domain.includes(" ")) {
+        await storage.upsertMaliciousUrl({
+          url: domain,
+          source: "deepdarkCTI",
+          threatType: "dark_web_domain",
+          lastSeen: new Date(),
+        });
+        count++;
+      }
+    }
+    log.debug(`Processed ${count} dark web threat domains`);
+    await storage.updateFeedLastFetched("deepdarkCTI Domains");
+    return count;
+  } catch (error) {
+    log.error("deepdarkCTI Domains error:", error);
+    return 0;
+  }
+}
+
+// deepdarkCTI - Dark web sourced malicious URLs
+const DEEPDARKCTI_URLS_URL = "https://raw.githubusercontent.com/fastfire/deepdarkCTI/main/ioc_url.txt";
+
+export async function fetchDeepDarkCTIUrls(): Promise<number> {
+  try {
+    log.debug("Fetching dark web threat URLs...");
+    const response = await secureFetch(DEEPDARKCTI_URLS_URL);
+    if (!response.ok) {
+      throw new Error(`deepdarkCTI URLs error: ${response.status}`);
+    }
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#") && !line.startsWith("//"));
+    let count = 0;
+    for (const line of lines.slice(0, 1000)) {
+      const url = line.trim();
+      if (url && (url.startsWith("http://") || url.startsWith("https://") || url.includes("."))) {
+        await storage.upsertMaliciousUrl({
+          url: url.slice(0, 2048),
+          source: "deepdarkCTI",
+          threatType: "dark_web_url",
+          lastSeen: new Date(),
+        });
+        count++;
+      }
+    }
+    log.debug(`Processed ${count} dark web threat URLs`);
+    await storage.updateFeedLastFetched("deepdarkCTI URLs");
+    return count;
+  } catch (error) {
+    log.error("deepdarkCTI URLs error:", error);
+    return 0;
+  }
+}
+
+// Maltrail - Malware IOC collection (IPs and domains)
+const MALTRAIL_URL = "https://raw.githubusercontent.com/stamparm/maltrail/master/trails/static/malware/generic.txt";
+
+export async function fetchMaltrail(): Promise<number> {
+  try {
+    log.debug("Fetching Maltrail malware IOCs...");
+    const response = await secureFetch(MALTRAIL_URL);
+    if (!response.ok) {
+      throw new Error(`Maltrail error: ${response.status}`);
+    }
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#"));
+    let count = 0;
+    for (const line of lines.slice(0, 1000)) {
+      const ioc = line.trim().split(/\s+/)[0];
+      if (!ioc) continue;
+      if (/^\d+\.\d+\.\d+\.\d+$/.test(ioc)) {
+        await storage.upsertMaliciousIp({
+          ipAddress: ioc,
+          source: "Maltrail",
+          threatType: "malware",
+          lastSeen: new Date(),
+        });
+        count++;
+      } else if (ioc.includes(".") && !ioc.includes(" ") && ioc.length < 256) {
+        await storage.upsertMaliciousUrl({
+          url: ioc,
+          source: "Maltrail",
+          threatType: "malware_domain",
+          lastSeen: new Date(),
+        });
+        count++;
+      }
+    }
+    log.debug(`Processed ${count} Maltrail IOCs`);
+    await storage.updateFeedLastFetched("Maltrail");
+    return count;
+  } catch (error) {
+    log.error("Maltrail error:", error);
+    return 0;
+  }
+}
+
+// Cybercrime Tracker - C2 panel infrastructure
+const CYBERCRIME_TRACKER_URL = "https://cybercrime-tracker.net/all.php";
+
+export async function fetchCybercrimeTracker(): Promise<number> {
+  try {
+    log.debug("Fetching C2 panel infrastructure...");
+    const response = await secureFetch(CYBERCRIME_TRACKER_URL);
+    if (!response.ok) {
+      throw new Error(`Cybercrime Tracker error: ${response.status}`);
+    }
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim());
+    let count = 0;
+    for (const line of lines.slice(0, 500)) {
+      const url = line.trim();
+      if (url && url.includes(".") && !url.startsWith("#")) {
+        const fullUrl = url.startsWith("http") ? url : `http://${url}`;
+        await storage.upsertMaliciousUrl({
+          url: fullUrl.slice(0, 2048),
+          source: "Cybercrime Tracker",
+          threatType: "c2_panel",
+          lastSeen: new Date(),
+        });
+        count++;
+      }
+    }
+    log.debug(`Processed ${count} C2 panels`);
+    await storage.updateFeedLastFetched("Cybercrime Tracker");
+    return count;
+  } catch (error) {
+    log.error("Cybercrime Tracker error:", error);
+    return 0;
+  }
+}
+
 // Binarydefense (replacement for Rutgers which has broken URL)
 const BINARYDEFENSE_URL = "https://www.binarydefense.com/banlist.txt";
 
@@ -3532,6 +3857,13 @@ const CYBERSECURITY_RSS_FEEDS: RSSFeedConfig[] = [
   { name: "SentinelOne Blog", url: "https://www.sentinelone.com/blog/feed/", category: "Research" },
   { name: "Microsoft Security", url: "https://www.microsoft.com/en-us/security/blog/feed/", category: "Advisory" },
   { name: "US-CERT NCAS", url: "https://www.cisa.gov/news-events/cybersecurity-advisories/all.xml", category: "Advisory" },
+  { name: "Google Project Zero", url: "https://googleprojectzero.blogspot.com/feeds/posts/default", category: "Research" },
+  { name: "Google Security Blog", url: "https://security.googleblog.com/feeds/posts/default", category: "Research" },
+  { name: "MSRC", url: "https://msrc.microsoft.com/blog/feed/", category: "Advisory" },
+  { name: "NCSC UK", url: "https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml", category: "Advisory" },
+  { name: "CERT-EU", url: "https://cert.europa.eu/publications/security-advisories/rss", category: "Advisory" },
+  { name: "Packet Storm", url: "https://rss.packetstormsecurity.com/", category: "Cybersecurity" },
+  { name: "Sophos News", url: "https://news.sophos.com/en-us/feed/", category: "Research" },
 ];
 
 function categorizeArticle(title: string, summary: string): string {
@@ -3692,6 +4024,22 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "Disconnect Malvertising", url: "https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt", feedType: "url", updateFrequency: "daily", requiresProTier: false, description: "Malicious ad network domains" },
     { name: "GitHub GHSA", url: "https://api.github.com/advisories", feedType: "cve", updateFrequency: "15min", requiresProTier: false, description: "Open source supply chain vulnerabilities" },
     { name: "MITRE ATT&CK", url: "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "Authoritative threat actor TTPs and group profiles" },
+    { name: "Dataplane VNC", url: "https://dataplane.org/vncrfb.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "VNC remote desktop scanning IPs" },
+    { name: "Dataplane DNS", url: "https://dataplane.org/dnsrd.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "DNS recursive query abuse IPs" },
+    { name: "Dataplane SIP", url: "https://dataplane.org/sipinvitation.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "VoIP/SIP telephony abuse IPs" },
+    { name: "Spamhaus EDROP", url: "https://www.spamhaus.org/drop/edrop.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Extended hijacked netblocks - do not route" },
+    { name: "deepdarkCTI IPs", url: "https://raw.githubusercontent.com/fastfire/deepdarkCTI/main/ioc_ip.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Dark web sourced malicious IPs" },
+    { name: "deepdarkCTI Domains", url: "https://raw.githubusercontent.com/fastfire/deepdarkCTI/main/ioc_domain.txt", feedType: "url", updateFrequency: "daily", requiresProTier: false, description: "Dark web sourced malicious domains" },
+    { name: "deepdarkCTI URLs", url: "https://raw.githubusercontent.com/fastfire/deepdarkCTI/main/ioc_url.txt", feedType: "url", updateFrequency: "daily", requiresProTier: false, description: "Dark web sourced malicious URLs" },
+    { name: "Maltrail", url: "https://raw.githubusercontent.com/stamparm/maltrail/master/trails/static/malware/generic.txt", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "Large malware IOC collection - IPs and domains" },
+    { name: "Cybercrime Tracker", url: "https://cybercrime-tracker.net/all.php", feedType: "url", updateFrequency: "15min", requiresProTier: false, description: "C2 panel infrastructure tracking" },
+    { name: "Google Project Zero", url: "https://googleprojectzero.blogspot.com/feeds/posts/default", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Google's elite zero-day vulnerability research" },
+    { name: "Google Security Blog", url: "https://security.googleblog.com/feeds/posts/default", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Security updates across Google products" },
+    { name: "MSRC", url: "https://msrc.microsoft.com/blog/feed/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Microsoft Security Response Center blog" },
+    { name: "NCSC UK", url: "https://www.ncsc.gov.uk/api/1/services/v1/all-rss-feed.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "UK National Cyber Security Centre advisories" },
+    { name: "CERT-EU", url: "https://cert.europa.eu/publications/security-advisories/rss", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "EU CERT security advisories" },
+    { name: "Packet Storm", url: "https://rss.packetstormsecurity.com/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Exploit and vulnerability news" },
+    { name: "Sophos News", url: "https://news.sophos.com/en-us/feed/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Sophos security research and analysis" },
     { name: "Schneier on Security", url: "https://www.schneier.com/feed/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Bruce Schneier's security analysis and commentary" },
     { name: "WeLiveSecurity", url: "https://www.welivesecurity.com/en/rss/feed/", feedType: "news", updateFrequency: "15min", requiresProTier: false, description: "ESET research and threat reports" },
     { name: "Cisco Talos Blog", url: "https://blog.talosintelligence.com/rss/", feedType: "news", updateFrequency: "15min", requiresProTier: false, description: "Cisco Talos threat research" },
@@ -3913,6 +4261,36 @@ export async function fetchAllData(): Promise<void> {
   await delay(2000);
 
   try { scraperLog.recordFeed("MITRE ATT&CK", await fetchMITREAttackGroups()); } catch(e) { scraperLog.recordError("MITRE ATT&CK", e); }
+  await delay(1000);
+
+  // ===========================================
+  // EXPANDED 2026 FEEDS - Deep Intelligence
+  // ===========================================
+  try { scraperLog.recordFeed("Dataplane VNC", await fetchDataplaneVnc()); } catch(e) { scraperLog.recordError("Dataplane VNC", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Dataplane DNS", await fetchDataplaneDns()); } catch(e) { scraperLog.recordError("Dataplane DNS", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Dataplane SIP", await fetchDataplaneSip()); } catch(e) { scraperLog.recordError("Dataplane SIP", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Spamhaus EDROP", await fetchSpamhausEdrop()); } catch(e) { scraperLog.recordError("Spamhaus EDROP", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("deepdarkCTI IPs", await fetchDeepDarkCTIIps()); } catch(e) { scraperLog.recordError("deepdarkCTI IPs", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("deepdarkCTI Domains", await fetchDeepDarkCTIDomains()); } catch(e) { scraperLog.recordError("deepdarkCTI Domains", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("deepdarkCTI URLs", await fetchDeepDarkCTIUrls()); } catch(e) { scraperLog.recordError("deepdarkCTI URLs", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Maltrail", await fetchMaltrail()); } catch(e) { scraperLog.recordError("Maltrail", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Cybercrime Tracker", await fetchCybercrimeTracker()); } catch(e) { scraperLog.recordError("Cybercrime Tracker", e); }
   await delay(1000);
 
   // ===========================================

@@ -807,6 +807,38 @@ export function useEmailSecurity() {
   });
 }
 
+export interface EmailHeaderAnalysisResult {
+  from?: string;
+  to?: string;
+  subject?: string;
+  date?: string;
+  receivedChain: { from: string; by: string; timestamp?: string }[];
+  spfResult?: string;
+  dkimResult?: string;
+  dmarcResult?: string;
+  messageId?: string;
+  xMailer?: string;
+  contentType?: string;
+  warnings: string[];
+}
+
+export function useEmailHeaderAnalyzer() {
+  return useMutation<EmailHeaderAnalysisResult, Error, string>({
+    mutationFn: async (headers: string) => {
+      const response = await fetch('/api/tools/email-headers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ headers }),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to analyze email headers");
+      }
+      return response.json();
+    },
+  });
+}
+
 export function useThreatCheck() {
   return useMutation({
     mutationFn: async (ip: string): Promise<ThreatCheckResult> => {

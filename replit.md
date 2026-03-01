@@ -47,8 +47,8 @@ Preferred communication style: Simple, everyday language.
 
 ### Features
 - **Threat Intelligence**: Aggregates data from various sources with 15-minute refresh cycles.
-- **Security Tools**: Offers IP/Domain WHOIS, Port Scanner, Threat Database Check, Password Strength Checker, Subnet Calculator, and more.
-- **IOC Search**: Unified Indicator of Compromise search across 57+ feeds.
+- **Security Tools**: Offers IP/Domain WHOIS, Port Scanner, Threat Database Check, Password Strength Checker, Subnet Calculator, Email Header Analyzer, and more.
+- **IOC Search**: Unified Indicator of Compromise search across 73+ feeds.
 - **Cyber Risk Score Calculator**: Free 12-question SMB security assessment.
 - **Monitoring Suite**: Pro/Business feature for uptime, SSL certificate, and dark web monitoring with email/SMS alerting.
 - **Attack Surface Discovery**: Pro feature — domain scanning for subdomains (crt.sh), open ports (Shodan InternetDB), DNS records, email security (SPF/DKIM/DMARC), SSL certificates, technology detection, and security headers with risk scoring.
@@ -70,6 +70,9 @@ Preferred communication style: Simple, everyday language.
 - **Logging**: Structured logging for various operations.
 - **Live Chat Widget**: Floating chat bubble for visitor interaction via SMS.
 - **Maintenance & Monitoring**: Scheduled data cleanup, error reporting, and health checks.
+- **Incident Response Playbooks**: 5 interactive step-by-step IR guides (Ransomware, Phishing, Data Breach, Malware, Account Compromise) with phase-based checklists.
+- **Service Status Dashboard**: Real-time status monitoring for 8 major cloud services (GitHub, Cloudflare, AWS, Azure, Google Cloud, Slack, Datadog, Vercel).
+- **Dark Web Intelligence**: deepdarkCTI integration for dark web sourced IPs, domains, and URLs.
 
 ## External Dependencies
 
