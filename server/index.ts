@@ -139,6 +139,9 @@ app.use((req, res, next) => {
       }
     } catch { /* invalid referer, allow through */ }
   }
+  if (!origin && !referer) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
   next();
 });
 

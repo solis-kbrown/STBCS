@@ -32,7 +32,8 @@ import {
   requireAuth, 
   requirePro,
   requireBusiness,
-  type AuthenticatedRequest 
+  type AuthenticatedRequest,
+  invalidateSessionCache,
 } from "./auth";
 
 async function resolveGroupSlug(slug: string): Promise<string | null> {
@@ -551,6 +552,7 @@ Hiring: https://stbcybersecurity.com/support
       }
       
       if (!user) {
+        await verifyPassword(data.password, "$2a$12$x".padEnd(60, "0"));
         res.status(401).json({ error: "Invalid credentials" });
         return;
       }
@@ -640,6 +642,7 @@ Hiring: https://stbcybersecurity.com/support
   app.post("/api/auth/logout", async (req: AuthenticatedRequest, res: Response) => {
     try {
       if (req.session) {
+        invalidateSessionCache(req.session.token);
         await storage.deleteSession(req.session.id);
       }
       res.clearCookie("session_token");

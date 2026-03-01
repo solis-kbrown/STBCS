@@ -29,14 +29,14 @@ Preferred communication style: Simple, everyday language.
 ### Backend
 - **Runtime**: Node.js with Express 5, TypeScript (ESM modules).
 - **API Design**: RESTful JSON API (`/api/*`) with Zod validation.
-- **Security**: Rate limiting via `express-rate-limit`, input validation.
+- **Security**: Rate limiting via `express-rate-limit`, input validation, login timing attack protection (dummy bcrypt on unknown users).
 - **Data Scraping**: Server-side scrapers collect threat intelligence data.
-- **Caching**: In-memory response cache with TTL-based expiration, startup cache warm-up.
+- **Caching**: In-memory response cache with TTL-based expiration, startup cache warm-up, session auth caching (60s TTL) to reduce DB load.
 - **Performance**: Parallelized DB queries (Promise.all) for all list+count endpoints, in-memory index.html caching.
-- **CSRF Protection**: Origin/Referer validation for state-changing requests in production.
+- **CSRF Protection**: Origin/Referer validation for state-changing requests in production; blocks requests with no Origin and no Referer.
 
 ### Data Storage
-- **Database**: PostgreSQL via Drizzle ORM.
+- **Database**: PostgreSQL via Drizzle ORM with optimized connection pool (max 20 connections, 30s idle timeout, 5s connect timeout, 30s statement timeout).
 - **Schema**: Defined for CVEs, ransomware, threat actors, and user data.
 
 ### Key Design Patterns

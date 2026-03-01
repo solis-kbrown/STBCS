@@ -23,7 +23,7 @@ export function serveStatic(app: Express) {
       if (filePath.endsWith('.html')) {
         res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');
       }
-      if (filePath.match(/\.(js|css|woff2?|ttf|eot)$/)) {
+      if (filePath.match(/\.(js|css|woff2?|ttf|eot|png|jpg|jpeg|webp|avif|svg|gif|ico)$/)) {
         res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
       }
     },

@@ -6,6 +6,19 @@ import { storage } from "./storage";
 const SALT_ROUNDS = 12;
 const SESSION_EXPIRY_DAYS = 7;
 
+const sessionCache = new Map<string, { user: AuthenticatedRequest["user"]; sessionId: string; expires: number }>();
+const SESSION_CACHE_TTL = 60_000;
+setInterval(() => {
+  const now = Date.now();
+  for (const [key, entry] of sessionCache) {
+    if (now > entry.expires) sessionCache.delete(key);
+  }
+}, 30_000);
+
+export function invalidateSessionCache(token: string): void {
+  sessionCache.delete(token);
+}
+
 export async function hashPassword(password: string): Promise<string> {
   return bcrypt.hash(password, SALT_ROUNDS);
 }
@@ -54,6 +67,14 @@ export async function authMiddleware(
     next();
     return;
   }
+
+  const cached = sessionCache.get(token);
+  if (cached && Date.now() < cached.expires) {
+    req.user = cached.user;
+    req.session = { id: cached.sessionId, token };
+    next();
+    return;
+  }
   
   try {
     const session = await storage.getSessionByToken(token);
@@ -62,6 +83,7 @@ export async function authMiddleware(
       if (session) {
         await storage.deleteSession(session.id);
       }
+      sessionCache.delete(token);
       next();
       return;
     }
@@ -70,11 +92,12 @@ export async function authMiddleware(
     
     if (!user) {
       await storage.deleteSession(session.id);
+      sessionCache.delete(token);
       next();
       return;
     }
     
-    req.user = {
+    const userData = {
       id: user.id,
       username: user.username,
       email: user.email,
@@ -83,6 +106,10 @@ export async function authMiddleware(
       stripeSubscriptionId: user.stripeSubscriptionId,
       createdAt: user.createdAt,
     };
+
+    sessionCache.set(token, { user: userData, sessionId: session.id, expires: Date.now() + SESSION_CACHE_TTL });
+
+    req.user = userData;
     req.session = {
       id: session.id,
       token: session.token,
