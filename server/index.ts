@@ -234,7 +234,6 @@ async function initializeApp() {
   appReady = true;
   log("Routes and static serving initialized");
 
-  // Defer heavy background operations
   setTimeout(async () => {
     try {
       await initStripe();
@@ -284,7 +283,7 @@ async function initializeApp() {
       await Promise.all(urls.map(u => fetch(base + u).catch(() => {})));
       log("Cache warm-up complete");
     } catch {}
-  }, 500);
+  }, 5000);
 }
 
 async function initStripe() {

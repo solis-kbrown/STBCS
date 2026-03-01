@@ -29,7 +29,10 @@ export function serveStatic(app: Express) {
     },
   }));
 
-  app.use("/{*path}", (req, res) => {
+  app.use("/{*path}", (req, res, next) => {
+    if (req.path === '/health' || req.path === '/__repl') {
+      return next();
+    }
     const html = injectMetaTags(baseHtml, req.originalUrl);
     res.setHeader("Content-Type", "text/html");
     res.setHeader("Cache-Control", "public, max-age=300, s-maxage=600");
