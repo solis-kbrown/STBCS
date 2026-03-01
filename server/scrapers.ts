@@ -3095,10 +3095,411 @@ export async function fetchRansomwareData(): Promise<number> {
 }
 
 // ============================================
+// BOTVRIJ.EU - European CERT Curated IOCs
+// Free, no auth - curated indicators from EU CERTs
+// ============================================
+const BOTVRIJ_IP_URL = "https://www.botvrij.eu/data/ioclist.ip-dst.raw";
+const BOTVRIJ_DOMAIN_URL = "https://www.botvrij.eu/data/ioclist.domain.raw";
+
+export async function fetchBotvrijIPs(): Promise<number> {
+  try {
+    log.debug("Fetching EU CERT curated threat IPs...");
+    const response = await secureFetch(BOTVRIJ_IP_URL);
+    if (!response.ok) throw new Error(`Botvrij IP error: ${response.status}`);
+
+    const text = await response.text();
+    const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+$/.test(line.trim()) && !line.startsWith("#"));
+    let count = 0;
+
+    for (const ip of ips.slice(0, 500)) {
+      await storage.upsertMaliciousIp({
+        ipAddress: ip.trim(),
+        source: "Botvrij.eu",
+        threatType: "eu_cert_ioc",
+        lastSeen: new Date(),
+      });
+      count++;
+    }
+
+    log.debug(`Processed ${count} EU CERT IOC IPs`);
+    await storage.updateFeedLastFetched("Botvrij.eu IPs");
+    return count;
+  } catch (error) {
+    log.error("Botvrij IP error:", error);
+    return 0;
+  }
+}
+
+export async function fetchBotvrijDomains(): Promise<number> {
+  try {
+    log.debug("Fetching EU CERT curated malicious domains...");
+    const response = await secureFetch(BOTVRIJ_DOMAIN_URL);
+    if (!response.ok) throw new Error(`Botvrij domain error: ${response.status}`);
+
+    const text = await response.text();
+    const domains = text.split("\n").filter(line => line.trim() && !line.startsWith("#") && line.includes("."));
+    let count = 0;
+
+    for (const domain of domains.slice(0, 300)) {
+      const cleanDomain = domain.trim();
+      if (cleanDomain.length > 3) {
+        await storage.upsertMaliciousUrl({
+          url: cleanDomain,
+          source: "Botvrij.eu",
+          threatType: "eu_cert_malicious_domain",
+          status: "active",
+          reportedAt: new Date(),
+        });
+        count++;
+      }
+    }
+
+    log.debug(`Processed ${count} EU CERT malicious domains`);
+    await storage.updateFeedLastFetched("Botvrij.eu Domains");
+    return count;
+  } catch (error) {
+    log.error("Botvrij domain error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// RUTGERS SSH BLOCKLIST - SSH Brute Force IPs
+// Free, no auth - university-operated sensor network
+// ============================================
+const RUTGERS_SSH_URL = "https://report.cs.rutgers.edu/DROP/attackers";
+
+export async function fetchRutgersSsh(): Promise<number> {
+  try {
+    log.debug("Fetching Rutgers SSH brute-force IPs...");
+    const response = await secureFetch(RUTGERS_SSH_URL);
+    if (!response.ok) throw new Error(`Rutgers SSH error: ${response.status}`);
+
+    const text = await response.text();
+    const ips = text.split("\n").filter(line => /^\d+\.\d+\.\d+\.\d+/.test(line.trim()) && !line.startsWith("#"));
+    let count = 0;
+
+    for (const line of ips.slice(0, 500)) {
+      const ip = line.trim().split(/\s+/)[0];
+      if (/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
+        await storage.upsertMaliciousIp({
+          ipAddress: ip,
+          source: "Rutgers SSH",
+          threatType: "ssh_bruteforce",
+          lastSeen: new Date(),
+        });
+        count++;
+      }
+    }
+
+    log.debug(`Processed ${count} SSH brute-force IPs`);
+    await storage.updateFeedLastFetched("Rutgers SSH");
+    return count;
+  } catch (error) {
+    log.error("Rutgers SSH error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// CHARLES HALEY SSH BLOCKLIST
+// Free, no auth - SSH attack monitoring
+// ============================================
+const CHARLES_HALEY_URL = "https://charles.the-haleys.org/ssh_dico_attack_hdeny_format.php/hostsdeny.txt";
+
+export async function fetchCharlesHaleySsh(): Promise<number> {
+  try {
+    log.debug("Fetching Charles Haley SSH attack IPs...");
+    const response = await secureFetch(CHARLES_HALEY_URL);
+    if (!response.ok) throw new Error(`Charles Haley error: ${response.status}`);
+
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#"));
+    let count = 0;
+
+    for (const line of lines.slice(0, 500)) {
+      const match = line.match(/(\d+\.\d+\.\d+\.\d+)/);
+      if (match) {
+        await storage.upsertMaliciousIp({
+          ipAddress: match[1],
+          source: "Charles Haley",
+          threatType: "ssh_dictionary_attack",
+          lastSeen: new Date(),
+        });
+        count++;
+      }
+    }
+
+    log.debug(`Processed ${count} SSH dictionary attack IPs`);
+    await storage.updateFeedLastFetched("Charles Haley SSH");
+    return count;
+  } catch (error) {
+    log.error("Charles Haley error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// ABUSE.CH SSLBL - SSL Certificate Blacklist
+// Free, no auth - SSL certs used by malware C2
+// ============================================
+const SSLBL_CSV_URL = "https://sslbl.abuse.ch/blacklist/sslblacklist.csv";
+
+export async function fetchSSLBLCerts(): Promise<number> {
+  try {
+    log.debug("Fetching SSL certificate blacklist...");
+    const response = await secureFetch(SSLBL_CSV_URL);
+    if (!response.ok) throw new Error(`SSLBL CSV error: ${response.status}`);
+
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#"));
+    let count = 0;
+
+    for (const line of lines.slice(0, 300)) {
+      const parts = line.split(",");
+      if (parts.length >= 3) {
+        const listing_date = parts[0]?.trim();
+        const sha1 = parts[1]?.trim();
+        const reason = parts[2]?.trim();
+        if (sha1 && sha1.length === 40 && reason) {
+          await storage.upsertMaliciousUrl({
+            url: `ssl:${sha1}`,
+            source: "SSLBL",
+            threatType: "malware_ssl_cert",
+            status: "active",
+            malwareFamily: reason || null,
+            reportedAt: listing_date ? new Date(listing_date) : new Date(),
+          });
+          count++;
+        }
+      }
+    }
+
+    log.debug(`Processed ${count} malicious SSL certificates`);
+    await storage.updateFeedLastFetched("SSLBL Certs");
+    return count;
+  } catch (error) {
+    log.error("SSLBL CSV error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// DISCONNECT.ME - Malvertising Domain List
+// Free, open source - malicious ad network domains
+// ============================================
+const DISCONNECT_MALVERT_URL = "https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt";
+
+export async function fetchDisconnectMalvertising(): Promise<number> {
+  try {
+    log.debug("Fetching malvertising domains...");
+    const response = await secureFetch(DISCONNECT_MALVERT_URL);
+    if (!response.ok) throw new Error(`Disconnect error: ${response.status}`);
+
+    const text = await response.text();
+    const domains = text.split("\n").filter(line => line.trim() && !line.startsWith("#") && line.includes("."));
+    let count = 0;
+
+    for (const domain of domains.slice(0, 500)) {
+      const cleanDomain = domain.trim();
+      if (cleanDomain.length > 3) {
+        await storage.upsertMaliciousUrl({
+          url: cleanDomain,
+          source: "Disconnect.me",
+          threatType: "malvertising",
+          status: "active",
+          reportedAt: new Date(),
+        });
+        count++;
+      }
+    }
+
+    log.debug(`Processed ${count} malvertising domains`);
+    await storage.updateFeedLastFetched("Disconnect Malvertising");
+    return count;
+  } catch (error) {
+    log.error("Disconnect error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// GITHUB SECURITY ADVISORIES (GHSA)
+// Free, no auth - open source/supply chain vulnerabilities
+// ============================================
+const GHSA_API_URL = "https://api.github.com/advisories";
+
+export async function fetchGitHubAdvisories(): Promise<number> {
+  try {
+    log.debug("Fetching GitHub Security Advisories...");
+    const response = await secureFetch(`${GHSA_API_URL}?per_page=50&type=reviewed`, {
+      headers: {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+      },
+    });
+
+    if (!response.ok) {
+      if (response.status === 403) {
+        log.debug("GitHub API rate limited - will retry next cycle");
+        return 0;
+      }
+      throw new Error(`GHSA error: ${response.status}`);
+    }
+
+    const advisories = await response.json();
+    let count = 0;
+
+    if (Array.isArray(advisories)) {
+      for (const advisory of advisories.slice(0, 50)) {
+        try {
+          const cveId = advisory.cve_id;
+          if (!cveId || !cveId.startsWith("CVE-")) continue;
+
+          const severity = (advisory.severity || "unknown").toUpperCase();
+          const cvssScore = advisory.cvss?.score || 0;
+          const ecosystem = advisory.vulnerabilities?.[0]?.package?.ecosystem || "Unknown";
+          const packageName = advisory.vulnerabilities?.[0]?.package?.name || "";
+
+          const cveData: InsertCve = {
+            id: cveId,
+            cveId: cveId,
+            description: (advisory.summary || advisory.description || "No description available").slice(0, 2000),
+            severity: severity === "CRITICAL" ? "CRITICAL" : severity === "HIGH" ? "HIGH" : severity === "MODERATE" ? "MEDIUM" : severity === "LOW" ? "LOW" : "UNKNOWN",
+            score: cvssScore,
+            platform: ecosystem,
+            vendor: packageName ? `${ecosystem}/${packageName}` : ecosystem,
+            status: advisory.withdrawn_at ? "Withdrawn" : "Active",
+            publishedDate: advisory.published_at ? new Date(advisory.published_at) : new Date(),
+            lastModified: advisory.updated_at ? new Date(advisory.updated_at) : new Date(),
+            references: advisory.html_url || null,
+            exploitAvailable: false,
+            affectedProducts: advisory.vulnerabilities?.map((v: any) =>
+              `${v.package?.ecosystem || ""}/${v.package?.name || ""} ${v.vulnerable_version_range || ""}`
+            ).join("; ") || null,
+          };
+
+          await storage.upsertCve(cveData);
+          count++;
+
+          await triggerWatchlistNotifications('cve', {
+            cveId: cveId,
+            description: cveData.description || undefined,
+          });
+        } catch (err) {
+          continue;
+        }
+      }
+    }
+
+    log.debug(`Processed ${count} GitHub Security Advisories`);
+    await storage.updateFeedLastFetched("GitHub GHSA");
+    return count;
+  } catch (error) {
+    log.error("GHSA error:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// MITRE ATT&CK - Threat Actor Groups & TTPs
+// Free, no auth - authoritative threat actor intelligence
+// ============================================
+const MITRE_GROUPS_URL = "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json";
+
+export async function fetchMITREAttackGroups(): Promise<number> {
+  try {
+    log.debug("Fetching MITRE ATT&CK group intelligence...");
+    const response = await secureFetch(MITRE_GROUPS_URL);
+    if (!response.ok) throw new Error(`MITRE ATT&CK error: ${response.status}`);
+
+    const bundle = await response.json();
+    if (!bundle.objects || !Array.isArray(bundle.objects)) return 0;
+
+    const groups = bundle.objects.filter((obj: any) => obj.type === "intrusion-set" && !obj.revoked);
+    let count = 0;
+
+    for (const group of groups) {
+      try {
+        const name = group.name;
+        if (!name) continue;
+
+        const aliases = group.aliases?.filter((a: string) => a !== name).join(", ") || null;
+        const description = (group.description || "").replace(/\(Citation:[^)]+\)/g, "").trim().slice(0, 3000);
+
+        const ttps = bundle.objects
+          .filter((obj: any) =>
+            obj.type === "relationship" &&
+            obj.source_ref === group.id &&
+            obj.relationship_type === "uses"
+          )
+          .map((rel: any) => {
+            const target = bundle.objects.find((o: any) => o.id === rel.target_ref);
+            return target?.name;
+          })
+          .filter(Boolean)
+          .slice(0, 30)
+          .join(", ");
+
+        const malwareFamilies = bundle.objects
+          .filter((obj: any) =>
+            obj.type === "relationship" &&
+            obj.source_ref === group.id &&
+            obj.relationship_type === "uses"
+          )
+          .map((rel: any) => {
+            const target = bundle.objects.find((o: any) => o.id === rel.target_ref && o.type === "malware");
+            return target?.name;
+          })
+          .filter(Boolean)
+          .slice(0, 20)
+          .join(", ");
+
+        const rawSectors = group.x_mitre_sectors;
+        const targetSectors = Array.isArray(rawSectors) ? rawSectors.join(", ") : (rawSectors || null);
+        const rawCountry = group.x_mitre_country;
+        const origin = Array.isArray(rawCountry) ? rawCountry.join(", ") : (rawCountry || null);
+
+        const existingActor = await storage.getThreatActorByName(name);
+
+        const actorData = {
+          name,
+          aliases: aliases || existingActor?.aliases || null,
+          description: description || existingActor?.description || null,
+          type: Array.isArray(group.x_mitre_type) ? group.x_mitre_type[0] : (group.x_mitre_type || "nation-state"),
+          origin: origin || existingActor?.origin || null,
+          firstSeen: group.first_seen ? new Date(group.first_seen) : existingActor?.firstSeen || null,
+          lastActive: group.last_seen ? new Date(group.last_seen) : existingActor?.lastActive || null,
+          ttps: ttps || existingActor?.ttps || null,
+          targetSectors: targetSectors || existingActor?.targetSectors || null,
+          malwareFamilies: malwareFamilies || existingActor?.malwareFamilies || null,
+          active: !group.revoked,
+          profileUrl: group.external_references?.find((r: any) => r.source_name === "mitre-attack")?.url || null,
+        };
+
+        await storage.upsertThreatActor(actorData);
+        count++;
+      } catch (err) {
+        continue;
+      }
+    }
+
+    log.debug(`Processed ${count} MITRE ATT&CK threat actor groups`);
+    await storage.updateFeedLastFetched("MITRE ATT&CK");
+    return count;
+  } catch (error) {
+    log.error("MITRE ATT&CK error:", error);
+    return 0;
+  }
+}
+
+// ============================================
 // CYBERSECURITY NEWS - Real RSS Feed Scraper
 // Sources: BleepingComputer, The Hacker News, Krebs on Security,
 // CISA Alerts, SANS ISC, Dark Reading, SecurityWeek, Naked Security,
-// The Record, Graham Cluley, Infosecurity Magazine
+// The Record, Graham Cluley, Infosecurity Magazine,
+// Schneier on Security, WeLiveSecurity (ESET), Cisco Talos Blog,
+// SentinelOne Blog, Microsoft Security Blog, US-CERT NCAS
 // ============================================
 
 const rssParser = new Parser({
@@ -3125,6 +3526,12 @@ const CYBERSECURITY_RSS_FEEDS: RSSFeedConfig[] = [
   { name: "The Record", url: "https://therecord.media/feed", category: "Cybersecurity" },
   { name: "Graham Cluley", url: "https://grahamcluley.com/feed/", category: "Cybersecurity" },
   { name: "Infosecurity Magazine", url: "https://www.infosecurity-magazine.com/rss/news/", category: "Cybersecurity" },
+  { name: "Schneier on Security", url: "https://www.schneier.com/feed/", category: "Cybersecurity" },
+  { name: "WeLiveSecurity", url: "https://www.welivesecurity.com/en/rss/feed/", category: "Research" },
+  { name: "Cisco Talos Blog", url: "https://blog.talosintelligence.com/rss/", category: "Research" },
+  { name: "SentinelOne Blog", url: "https://www.sentinelone.com/blog/feed/", category: "Research" },
+  { name: "Microsoft Security", url: "https://www.microsoft.com/en-us/security/blog/feed/", category: "Advisory" },
+  { name: "US-CERT NCAS", url: "https://www.cisa.gov/news-events/cybersecurity-advisories/all.xml", category: "Advisory" },
 ];
 
 function categorizeArticle(title: string, summary: string): string {
@@ -3276,6 +3683,22 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "Shodan", url: "https://www.shodan.io", feedType: "ip", updateFrequency: "realtime", requiresProTier: true, description: "100 credits/month FREE - internet scanning" },
     { name: "Pulsedive", url: "https://pulsedive.com", feedType: "ioc", updateFrequency: "15min", requiresProTier: true, description: "FREE tier available - community intel" },
     { name: "HoneyDB", url: "https://honeydb.io", feedType: "ip", updateFrequency: "15min", requiresProTier: true, description: "FREE API key - honeypot activity" },
+    // New 2026 Feeds
+    { name: "Botvrij.eu IPs", url: "https://www.botvrij.eu/data/ioclist.ip-dst.raw", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "European CERT curated threat indicators" },
+    { name: "Botvrij.eu Domains", url: "https://www.botvrij.eu/data/ioclist.domain.raw", feedType: "url", updateFrequency: "15min", requiresProTier: false, description: "EU CERT curated malicious domains" },
+    { name: "Rutgers SSH", url: "https://report.cs.rutgers.edu/DROP/attackers", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "University sensor SSH brute-force IPs" },
+    { name: "Charles Haley SSH", url: "https://charles.the-haleys.org/ssh_dico_attack_hdeny_format.php/hostsdeny.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "SSH dictionary attack monitoring" },
+    { name: "SSLBL Certs", url: "https://sslbl.abuse.ch/blacklist/sslblacklist.csv", feedType: "url", updateFrequency: "15min", requiresProTier: false, description: "Malicious SSL certificates used by malware C2" },
+    { name: "Disconnect Malvertising", url: "https://s3.amazonaws.com/lists.disconnect.me/simple_malvertising.txt", feedType: "url", updateFrequency: "daily", requiresProTier: false, description: "Malicious ad network domains" },
+    { name: "GitHub GHSA", url: "https://api.github.com/advisories", feedType: "cve", updateFrequency: "15min", requiresProTier: false, description: "Open source supply chain vulnerabilities" },
+    { name: "MITRE ATT&CK", url: "https://raw.githubusercontent.com/mitre/cti/master/enterprise-attack/enterprise-attack.json", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "Authoritative threat actor TTPs and group profiles" },
+    { name: "Schneier on Security", url: "https://www.schneier.com/feed/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Bruce Schneier's security analysis and commentary" },
+    { name: "WeLiveSecurity", url: "https://www.welivesecurity.com/en/rss/feed/", feedType: "news", updateFrequency: "15min", requiresProTier: false, description: "ESET research and threat reports" },
+    { name: "Cisco Talos Blog", url: "https://blog.talosintelligence.com/rss/", feedType: "news", updateFrequency: "15min", requiresProTier: false, description: "Cisco Talos threat research" },
+    { name: "SentinelOne Blog", url: "https://www.sentinelone.com/blog/feed/", feedType: "news", updateFrequency: "15min", requiresProTier: false, description: "SentinelOne Labs threat intelligence" },
+    { name: "Microsoft Security", url: "https://www.microsoft.com/en-us/security/blog/feed/", feedType: "news", updateFrequency: "15min", requiresProTier: false, description: "Microsoft Security Response Center blog" },
+    { name: "US-CERT NCAS", url: "https://www.cisa.gov/news-events/cybersecurity-advisories/all.xml", feedType: "news", updateFrequency: "15min", requiresProTier: false, description: "US-CERT National Cyber Awareness System alerts" },
+
     { name: "Ransomwhere", url: "https://ransomwhe.re", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "Bitcoin ransomware payments tracker" },
     { name: "RansomWatch", url: "https://github.com/joshhighet/ransomwatch", feedType: "ransomware", updateFrequency: "15min", requiresProTier: false, description: "Dark web ransomware leak site monitoring with 16K+ victim posts" },
     { name: "Cisco Talos", url: "https://talosintelligence.com", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Enterprise IP blocklist from Cisco" },
@@ -3465,6 +3888,33 @@ export async function fetchAllData(): Promise<void> {
   try { scraperLog.recordFeed("EPSS", await fetchEPSSScores()); } catch(e) { scraperLog.recordError("EPSS", e); }
   await delay(1000);
   
+  // ===========================================
+  // NEW 2026 FEEDS - Extended Intelligence
+  // ===========================================
+  try { scraperLog.recordFeed("Botvrij.eu IPs", await fetchBotvrijIPs()); } catch(e) { scraperLog.recordError("Botvrij.eu IPs", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Botvrij.eu Domains", await fetchBotvrijDomains()); } catch(e) { scraperLog.recordError("Botvrij.eu Domains", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Rutgers SSH", await fetchRutgersSsh()); } catch(e) { scraperLog.recordError("Rutgers SSH", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Charles Haley SSH", await fetchCharlesHaleySsh()); } catch(e) { scraperLog.recordError("Charles Haley SSH", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("SSLBL Certs", await fetchSSLBLCerts()); } catch(e) { scraperLog.recordError("SSLBL Certs", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Disconnect", await fetchDisconnectMalvertising()); } catch(e) { scraperLog.recordError("Disconnect", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("GitHub GHSA", await fetchGitHubAdvisories()); } catch(e) { scraperLog.recordError("GitHub GHSA", e); }
+  await delay(2000);
+
+  try { scraperLog.recordFeed("MITRE ATT&CK", await fetchMITREAttackGroups()); } catch(e) { scraperLog.recordError("MITRE ATT&CK", e); }
+  await delay(1000);
+
   // ===========================================
   // RANSOMWARE & NEWS DATA
   // ===========================================

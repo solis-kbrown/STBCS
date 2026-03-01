@@ -48,7 +48,7 @@ Preferred communication style: Simple, everyday language.
 ### Features
 - **Threat Intelligence**: Aggregates data from various sources with 15-minute refresh cycles.
 - **Security Tools**: Offers IP/Domain WHOIS, Port Scanner, Threat Database Check, Password Strength Checker, Subnet Calculator, and more.
-- **IOC Search**: Unified Indicator of Compromise search across 40+ feeds.
+- **IOC Search**: Unified Indicator of Compromise search across 57+ feeds.
 - **Cyber Risk Score Calculator**: Free 12-question SMB security assessment.
 - **Monitoring Suite**: Pro/Business feature for uptime, SSL certificate, and dark web monitoring with email/SMS alerting.
 - **Attack Surface Discovery**: Pro feature — domain scanning for subdomains (crt.sh), open ports (Shodan InternetDB), DNS records, email security (SPF/DKIM/DMARC), SSL certificates, technology detection, and security headers with risk scoring.
