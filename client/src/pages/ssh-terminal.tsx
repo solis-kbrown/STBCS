@@ -209,7 +209,7 @@ function ConnectionForm({
                 data-testid="input-ssh-privatekey"
                 value={config.privateKey}
                 onChange={(e) => setConfig({ ...config, privateKey: e.target.value })}
-                placeholder={"-----BEGIN OPENSSH PRIVATE KEY-----\n...\n-----END OPENSSH PRIVATE KEY-----"}
+                placeholder={"Paste your private key here (PEM format)"}
                 className="w-full h-32 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600 font-mono resize-none focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500"
               />
               <div className="flex items-center gap-2 mt-2">
