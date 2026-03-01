@@ -13,6 +13,8 @@ let maintenanceInterval: NodeJS.Timeout | null = null;
 let errorRateWindow: { count: number; windowStart: number } = { count: 0, windowStart: Date.now() };
 let saleEndNotificationSent = false;
 let sessionCleanupFailures = 0;
+let lastSessionCleanup = 0;
+let lastSessionCleanupErrorEmail = 0;
 
 async function withRetry<T>(fn: () => Promise<T>, label: string, retries = 2): Promise<T> {
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -215,19 +217,26 @@ export function reportCriticalError(error: Error, context?: string): void {
 }
 
 async function runCleanupTasks(): Promise<void> {
-  try {
-    await withRetry(() => storage.cleanupExpiredSessions(), "Session cleanup");
-    sessionCleanupFailures = 0;
-  } catch (error) {
-    sessionCleanupFailures++;
-    log.error("Session cleanup failed:", error);
-    if (sessionCleanupFailures >= 3) {
-      reportCriticalError(error as Error, "Session Cleanup (failed 3+ times consecutively)");
+  const now = Date.now();
+  const SESSION_CLEANUP_INTERVAL = 60 * 60 * 1000;
+  const ERROR_EMAIL_COOLDOWN = 6 * 60 * 60 * 1000;
+
+  if (now - lastSessionCleanup >= SESSION_CLEANUP_INTERVAL) {
+    try {
+      await withRetry(() => storage.cleanupExpiredSessions(), "Session cleanup");
       sessionCleanupFailures = 0;
+      lastSessionCleanup = now;
+    } catch (error) {
+      sessionCleanupFailures++;
+      log.error(`Session cleanup failed (attempt ${sessionCleanupFailures}):`, error);
+      if (sessionCleanupFailures >= 10 && now - lastSessionCleanupErrorEmail > ERROR_EMAIL_COOLDOWN) {
+        reportCriticalError(error as Error, `Session Cleanup (failed ${sessionCleanupFailures} times consecutively)`);
+        lastSessionCleanupErrorEmail = now;
+        sessionCleanupFailures = 0;
+      }
     }
   }
 
-  const now = Date.now();
   const dayOfWeek = new Date().getUTCDay();
   const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
   const lastWeeklyRun = await getLastRun("weekly_cleanup");
