@@ -1,0 +1,26 @@
+Act as an expert full-stack developer and community platform architect. I need to design and build an 'evolving' Knowledge Base (KB) and community contribution hub. This will be integrated into my existing platform, STB Cybersecurity (stbcybersecurity.com).
+​Please generate the project structure, database schema, and foundational code based on the following requirements:
+​1. Core Architecture & Tech Stack:
+​Framework: Next.js (React) for a seamless, SEO-friendly frontend and robust API routes.
+​Database: PostgreSQL (using an ORM like Prisma or Drizzle) to handle structured relationships between users, posts, comments, and tags.
+​Content Rendering: A robust Markdown parser (like react-markdown) that supports code block highlighting (for shell scripts, PowerShell, etc.) and strict HTML sanitization to prevent XSS.
+​2. Authentication & Role-Based Access Control (RBAC):
+​Integrate with my existing authentication/paywall system (via API or JWT) to establish the following user tiers:
+​Tier 0 (Public/Free): Can only view official, public-facing KB articles. Cannot comment or see internal community posts.
+​Tier 1 (Paid Member): Can read all KB articles, comment on posts, and submit new posts into 'Sandbox' or 'Pending Review' queues.
+​Tier 2 (Trusted/Verified Contributor): Paid members who have earned trust. They receive a visual 'Verified' badge. Their posts/comments bypass the moderation queue and go live immediately.
+​Tier 3 (Admin/Moderator): Full CRUD access. Can approve Tier 1 posts, promote users to Tier 2, and manage official KB documentation.
+​3. Core Features & Data Models:
+​Taxonomy: Posts must be categorizable into specific types: Official KB, Bug Reports, Feature Requests, Threat Intel, and General Ideas.
+​Voting/Feedback: Allow users to upvote helpful KB articles, bug reports, or feature requests to prioritize them for the admin team.
+​Commenting System: Threaded comments on all post types to foster discussion among members.
+​Search & Filtering: A powerful, fast search bar to query titles, content, and tags.
+​4. UI/UX:
+​A modern, dark-mode, professional interface consistent with a tactical cybersecurity brand.
+​Clear visual distinction between 'Official STB Documentation' and 'Community Contributions'.
+​Badges or flair next to user names to indicate their trust level (e.g., 'STB Admin', 'Trusted Contributor', 'Member').
+​Ask me any clarifying questions about my existing database structure or how I want to handle the SSO (Single Sign-On) between my main site and this KB before writing the code. Then, outline the step-by-step implementation plan and database schema."
+​Strategic Next Steps to Consider
+​The "Trust" Algorithm: How will a user become "Trusted"? Will it be a manual promotion by you and your team, or do you want an automated system (e.g., after a user's account is active for 6 months and they receive 50 upvotes on their comments)? Starting with manual promotion is much safer and easier to build initially.
+​Content Moderation: For a cybersecurity community, users will likely post code snippets, logs, and technical data. Replit will need to ensure the Markdown editor strips out malicious executable scripts while allowing safe formatting.
+​Seamless Navigation: You'll want this to feel like a natural extension of stbcybersecurity.com. You might host this on a subdomain like docs.stbcybersecurity.com or community.stbcybersecurity.com.
