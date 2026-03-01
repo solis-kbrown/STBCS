@@ -102,7 +102,7 @@ function Comment({ comment, depth, postId, user, onReply }: { comment: any; dept
     <div className={`${depth > 0 ? "ml-6 border-l-2 border-zinc-800 pl-4" : ""}`} data-testid={`comment-${comment.id}`}>
       <div className="py-3">
         <div className="flex items-center gap-2 mb-2">
-          <span className="text-sm font-medium text-zinc-300">{comment.author?.username || "Unknown"}</span>
+          <Link href={`/user/${comment.author?.username}`}><span className="text-sm font-medium text-zinc-300 hover:text-orange-400 transition-colors cursor-pointer">{comment.author?.username || "Unknown"}</span></Link>
           {comment.author && <TierBadge tier={comment.author.tier} isTrusted={comment.author.isTrusted} isAdmin={comment.author.isAdmin} />}
           <span className="text-xs text-zinc-600">·</span>
           <span className="text-xs text-zinc-500">{timeAgo(comment.createdAt)}</span>
@@ -338,7 +338,7 @@ export default function KbPost() {
 
             <div className="flex items-center gap-3 mb-4 text-sm text-zinc-500 flex-wrap">
               <span className="flex items-center gap-1">
-                By <strong className="text-zinc-300">{post.author?.username || "Unknown"}</strong>
+                By <Link href={`/user/${post.author?.username}`}><strong className="text-zinc-300 hover:text-orange-400 transition-colors cursor-pointer">{post.author?.username || "Unknown"}</strong></Link>
                 {post.author && <TierBadge tier={post.author.tier} isTrusted={post.author.isTrusted} isAdmin={post.author.isAdmin} />}
               </span>
               <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{timeAgo(post.createdAt)}</span>

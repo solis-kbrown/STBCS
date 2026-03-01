@@ -8,10 +8,12 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
-import { User, Crown, CreditCard, Calendar, Shield, ExternalLink, Loader2, ArrowRight, Bell, Mail, Key, Copy, Trash2, Eye, EyeOff, Plus } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { User, Crown, CreditCard, Calendar, Shield, ExternalLink, Loader2, ArrowRight, Bell, Mail, Key, Copy, Trash2, Eye, EyeOff, Plus, Camera, MapPin, Building, Globe, Award, Save, BookOpen } from "lucide-react";
 import { format } from "date-fns";
-import { useLocation } from "wouter";
-import { useState } from "react";
+import { useLocation, Link } from "wouter";
+import { useState, useEffect } from "react";
 
 const tierColors: Record<string, string> = {
   free: "bg-zinc-700 text-zinc-300",
@@ -100,12 +102,53 @@ export default function AccountPage() {
   const [newKeyName, setNewKeyName] = useState("");
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    displayName: "", bio: "", avatarUrl: "", location: "", website: "", company: "",
+    profilePublic: true, showEmail: false,
+  });
 
   const account = accountData?.user;
   const subscription = accountData?.subscription;
   const tier = account?.tier || user?.tier || "free";
   const isPaid = tier !== "free";
   const hasPaidApi = tier === "pro" || tier === "business" || tier === "unlimited";
+
+  useEffect(() => {
+    if (account) {
+      setProfileForm({
+        displayName: account.displayName || "",
+        bio: account.bio || "",
+        avatarUrl: account.avatarUrl || "",
+        location: account.location || "",
+        website: account.website || "",
+        company: account.company || "",
+        profilePublic: account.profilePublic !== false,
+        showEmail: account.showEmail === true,
+      });
+    }
+  }, [account]);
+
+  const profileMutation = useMutation({
+    mutationFn: async (data: typeof profileForm) => {
+      const res = await fetch("/api/account/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update profile");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["account"] });
+      setEditingProfile(false);
+      toast({ title: "Profile updated" });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
 
   const { data: apiKeysData, isLoading: keysLoading } = useQuery({
     queryKey: ["api-keys"],
@@ -171,36 +214,230 @@ export default function AccountPage() {
 
         <Card className="border-zinc-800 bg-zinc-900/50">
           <CardHeader>
-            <CardTitle className="text-lg text-white flex items-center gap-2">
-              <User className="h-5 w-5 text-orange-400" />
-              Profile
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Username</p>
-                <p className="text-white font-medium" data-testid="text-account-username">{account?.username || user?.username}</p>
-              </div>
-              <div>
-                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Email</p>
-                <p className="text-white font-medium" data-testid="text-account-email">{account?.email || user?.email || "Not set"}</p>
-              </div>
-              <div>
-                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Membership</p>
-                <Badge className={`${tierColors[tier] || tierColors.free}`} data-testid="badge-account-tier">
-                  {isPaid && <Crown className="h-3 w-3 mr-1" />}
-                  {tierLabels[tier] || tier}
-                </Badge>
-              </div>
-              <div>
-                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Member Since</p>
-                <p className="text-white font-medium flex items-center gap-1.5">
-                  <Calendar className="h-3.5 w-3.5 text-zinc-500" />
-                  {account?.createdAt ? format(new Date(account.createdAt), "MMMM d, yyyy") : "N/A"}
-                </p>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg text-white flex items-center gap-2">
+                <User className="h-5 w-5 text-orange-400" />
+                Profile
+              </CardTitle>
+              <div className="flex items-center gap-2">
+                <Link href={`/user/${account?.username || user?.username}`}>
+                  <Button variant="ghost" size="sm" className="text-zinc-400 hover:text-orange-400 text-xs" data-testid="button-view-public-profile">
+                    <Eye className="h-3.5 w-3.5 mr-1" />View Public Profile
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setEditingProfile(!editingProfile)}
+                  className="border-zinc-700 text-zinc-400 hover:text-orange-400 text-xs"
+                  data-testid="button-edit-profile"
+                >
+                  {editingProfile ? "Cancel" : "Edit Profile"}
+                </Button>
               </div>
             </div>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="shrink-0">
+                {(account?.avatarUrl || profileForm.avatarUrl) ? (
+                  <img
+                    src={editingProfile ? profileForm.avatarUrl : account?.avatarUrl}
+                    alt="Avatar"
+                    className="h-16 w-16 rounded-full object-cover border-2 border-zinc-700"
+                    data-testid="img-avatar"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                  />
+                ) : (
+                  <div className="h-16 w-16 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center">
+                    <User className="h-8 w-8 text-zinc-600" />
+                  </div>
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-lg font-semibold text-white" data-testid="text-account-username">
+                  {account?.displayName || account?.username || user?.username}
+                </p>
+                <p className="text-sm text-zinc-500">@{account?.username || user?.username}</p>
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge className={`${tierColors[tier] || tierColors.free}`} data-testid="badge-account-tier">
+                    {isPaid && <Crown className="h-3 w-3 mr-1" />}
+                    {tierLabels[tier] || tier}
+                  </Badge>
+                  {account?.kbReputation > 0 && (
+                    <Badge className="bg-orange-500/20 text-orange-400 border-orange-500/30 text-[10px]">
+                      <Award className="h-3 w-3 mr-1" />{account.kbReputation} KB Rep
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {!editingProfile ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-zinc-800">
+                <div>
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Email</p>
+                  <p className="text-white font-medium text-sm" data-testid="text-account-email">{account?.email || user?.email || "Not set"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Member Since</p>
+                  <p className="text-white font-medium text-sm flex items-center gap-1.5">
+                    <Calendar className="h-3.5 w-3.5 text-zinc-500" />
+                    {account?.createdAt ? format(new Date(account.createdAt), "MMMM d, yyyy") : "N/A"}
+                  </p>
+                </div>
+                {account?.bio && (
+                  <div className="sm:col-span-2">
+                    <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Bio</p>
+                    <p className="text-zinc-300 text-sm">{account.bio}</p>
+                  </div>
+                )}
+                {(account?.location || account?.company || account?.website) && (
+                  <>
+                    {account?.location && (
+                      <div>
+                        <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Location</p>
+                        <p className="text-zinc-300 text-sm flex items-center gap-1"><MapPin className="h-3 w-3 text-zinc-500" />{account.location}</p>
+                      </div>
+                    )}
+                    {account?.company && (
+                      <div>
+                        <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Company</p>
+                        <p className="text-zinc-300 text-sm flex items-center gap-1"><Building className="h-3 w-3 text-zinc-500" />{account.company}</p>
+                      </div>
+                    )}
+                    {account?.website && (
+                      <div className="sm:col-span-2">
+                        <p className="text-xs text-zinc-500 uppercase tracking-wider mb-1">Website</p>
+                        <a href={account.website} target="_blank" rel="noopener noreferrer" className="text-orange-400 text-sm hover:underline flex items-center gap-1">
+                          <Globe className="h-3 w-3" />{account.website}
+                        </a>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4 pt-2 border-t border-zinc-800">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">Display Name</label>
+                    <Input
+                      data-testid="input-display-name"
+                      value={profileForm.displayName}
+                      onChange={(e) => setProfileForm(f => ({ ...f, displayName: e.target.value }))}
+                      placeholder="Your display name"
+                      className="bg-zinc-800 border-zinc-700 text-white"
+                      maxLength={100}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">Avatar URL</label>
+                    <Input
+                      data-testid="input-avatar-url"
+                      value={profileForm.avatarUrl}
+                      onChange={(e) => setProfileForm(f => ({ ...f, avatarUrl: e.target.value }))}
+                      placeholder="https://example.com/avatar.jpg"
+                      className="bg-zinc-800 border-zinc-700 text-white"
+                      maxLength={500}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">Bio</label>
+                  <Textarea
+                    data-testid="input-bio"
+                    value={profileForm.bio}
+                    onChange={(e) => setProfileForm(f => ({ ...f, bio: e.target.value }))}
+                    placeholder="Tell others about yourself..."
+                    className="bg-zinc-800 border-zinc-700 text-white min-h-[80px]"
+                    maxLength={500}
+                  />
+                  <p className="text-[10px] text-zinc-600 mt-1">{profileForm.bio.length}/500</p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">Location</label>
+                    <Input
+                      data-testid="input-location"
+                      value={profileForm.location}
+                      onChange={(e) => setProfileForm(f => ({ ...f, location: e.target.value }))}
+                      placeholder="City, Country"
+                      className="bg-zinc-800 border-zinc-700 text-white"
+                      maxLength={100}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">Company</label>
+                    <Input
+                      data-testid="input-company"
+                      value={profileForm.company}
+                      onChange={(e) => setProfileForm(f => ({ ...f, company: e.target.value }))}
+                      placeholder="Your organization"
+                      className="bg-zinc-800 border-zinc-700 text-white"
+                      maxLength={100}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">Website</label>
+                    <Input
+                      data-testid="input-website"
+                      value={profileForm.website}
+                      onChange={(e) => setProfileForm(f => ({ ...f, website: e.target.value }))}
+                      placeholder="https://yoursite.com"
+                      className="bg-zinc-800 border-zinc-700 text-white"
+                      maxLength={200}
+                    />
+                  </div>
+                </div>
+                <div className="border-t border-zinc-800 pt-4 space-y-3">
+                  <h4 className="text-sm font-medium text-white">Privacy Settings</h4>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-zinc-300">Public Profile</p>
+                      <p className="text-xs text-zinc-500">Show your bio, location, company, and website to others</p>
+                    </div>
+                    <Switch
+                      data-testid="switch-profile-public"
+                      checked={profileForm.profilePublic}
+                      onCheckedChange={(checked) => setProfileForm(f => ({ ...f, profilePublic: checked }))}
+                    />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-zinc-300">Show Email</p>
+                      <p className="text-xs text-zinc-500">Display your email address on your public profile</p>
+                    </div>
+                    <Switch
+                      data-testid="switch-show-email"
+                      checked={profileForm.showEmail}
+                      onCheckedChange={(checked) => setProfileForm(f => ({ ...f, showEmail: checked }))}
+                    />
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setEditingProfile(false)}
+                    className="border-zinc-700 text-zinc-400"
+                    data-testid="button-cancel-profile"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={() => profileMutation.mutate(profileForm)}
+                    disabled={profileMutation.isPending}
+                    className="bg-orange-500 hover:bg-orange-600 text-white"
+                    data-testid="button-save-profile"
+                  >
+                    {profileMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                    Save Profile
+                  </Button>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 

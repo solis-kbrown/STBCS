@@ -56,6 +56,7 @@ const KnowledgeBase = lazy(() => import("@/pages/knowledge-base"));
 const KbPost = lazy(() => import("@/pages/kb-post"));
 const KbEditor = lazy(() => import("@/pages/kb-editor"));
 const KbAdmin = lazy(() => import("@/pages/kb-admin"));
+const UserProfile = lazy(() => import("@/pages/profile"));
 const Feedback = lazy(() => import("@/pages/feedback"));
 const EmailSignatures = lazy(() => import("@/pages/email-signatures"));
 const BrandKit = lazy(() => import("@/pages/brand-kit"));
@@ -135,6 +136,7 @@ function Router() {
         <Route path="/knowledge-base/admin" component={KbAdmin}/>
         <Route path="/knowledge-base/:slug/edit" component={KbEditor}/>
         <Route path="/knowledge-base/:slug" component={KbPost}/>
+        <Route path="/user/:username" component={UserProfile}/>
         <Route path="/feedback" component={Feedback}/>
         <Route path="/email-signatures" component={EmailSignatures}/>
         <Route path="/brand-kit" component={BrandKit}/>

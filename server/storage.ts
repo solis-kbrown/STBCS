@@ -2693,6 +2693,106 @@ export class DatabaseStorage implements IStorage {
     }
   }
 
+  async updateUserProfile(userId: string, updates: Record<string, any>): Promise<void> {
+    await db.update(users).set(updates).where(eq(users.id, userId));
+  }
+
+  async getPublicProfile(username: string): Promise<any | null> {
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    if (!user) return null;
+    const isPublic = user.profilePublic !== false;
+    const postCount = await db.select({ count: sql<number>`count(*)::int` })
+      .from(kbPosts).where(and(eq(kbPosts.authorId, user.id), eq(kbPosts.status, "published")));
+    const commentCount = await db.select({ count: sql<number>`count(*)::int` })
+      .from(kbComments).where(eq(kbComments.authorId, user.id));
+    const recentPosts = await db.select().from(kbPosts)
+      .where(and(eq(kbPosts.authorId, user.id), eq(kbPosts.status, "published")))
+      .orderBy(desc(kbPosts.createdAt)).limit(5);
+    return {
+      username: user.username,
+      displayName: isPublic ? (user.displayName || null) : null,
+      bio: isPublic ? (user.bio || null) : null,
+      avatarUrl: user.avatarUrl || null,
+      location: isPublic ? (user.location || null) : null,
+      website: isPublic ? (user.website || null) : null,
+      company: isPublic ? (user.company || null) : null,
+      email: (isPublic && user.showEmail) ? user.email : null,
+      tier: user.tier,
+      isAdmin: user.isAdmin || false,
+      isTrusted: user.isTrusted || false,
+      kbReputation: user.kbReputation || 0,
+      profilePublic: isPublic,
+      createdAt: user.createdAt,
+      stats: {
+        posts: postCount[0]?.count || 0,
+        comments: commentCount[0]?.count || 0,
+      },
+      recentPosts: recentPosts.map(p => ({
+        id: p.id, title: p.title, slug: p.slug, type: p.type,
+        voteCount: p.voteCount, commentCount: p.commentCount, viewCount: p.viewCount,
+        createdAt: p.createdAt,
+      })),
+    };
+  }
+
+  async getKbActivityStats(): Promise<{
+    totalPosts: number; newPosts24h: number; newPosts7d: number;
+    totalComments: number; newComments24h: number; newComments7d: number;
+    totalViews: number; pendingCount: number;
+    topPostsWeek: { title: string; voteCount: number; viewCount: number; commentCount: number }[];
+    topContributorsWeek: { username: string; reputation: number; postCount: number }[];
+  }> {
+    const now = new Date();
+    const day1 = new Date(now.getTime() - 24 * 60 * 60 * 1000);
+    const day7 = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+    const [totalPostsR] = await db.select({ count: sql<number>`count(*)::int` }).from(kbPosts).where(eq(kbPosts.status, "published"));
+    const [newPosts24hR] = await db.select({ count: sql<number>`count(*)::int` }).from(kbPosts).where(and(eq(kbPosts.status, "published"), sql`${kbPosts.createdAt} > ${day1}`));
+    const [newPosts7dR] = await db.select({ count: sql<number>`count(*)::int` }).from(kbPosts).where(and(eq(kbPosts.status, "published"), sql`${kbPosts.createdAt} > ${day7}`));
+    const [totalCommentsR] = await db.select({ count: sql<number>`count(*)::int` }).from(kbComments);
+    const [newComments24hR] = await db.select({ count: sql<number>`count(*)::int` }).from(kbComments).where(sql`${kbComments.createdAt} > ${day1}`);
+    const [newComments7dR] = await db.select({ count: sql<number>`count(*)::int` }).from(kbComments).where(sql`${kbComments.createdAt} > ${day7}`);
+    const [totalViewsR] = await db.select({ total: sql<number>`COALESCE(sum(${kbPosts.viewCount}), 0)::int` }).from(kbPosts);
+    const [pendingR] = await db.select({ count: sql<number>`count(*)::int` }).from(kbPosts).where(eq(kbPosts.status, "pending_review"));
+
+    const topPostsWeek = await db.select({
+      title: kbPosts.title,
+      voteCount: kbPosts.voteCount,
+      viewCount: kbPosts.viewCount,
+      commentCount: kbPosts.commentCount,
+    }).from(kbPosts)
+      .where(and(eq(kbPosts.status, "published"), sql`${kbPosts.createdAt} > ${day7}`))
+      .orderBy(desc(kbPosts.voteCount))
+      .limit(5);
+
+    const topContributorsWeek = await db.execute(sql`
+      SELECT u.username, u.kb_reputation as reputation,
+        (SELECT count(*)::int FROM kb_posts WHERE author_id = u.id AND status = 'published' AND created_at > ${day7}) as post_count
+      FROM users u
+      WHERE u.kb_reputation > 0
+      ORDER BY u.kb_reputation DESC
+      LIMIT 5
+    `);
+
+    return {
+      totalPosts: totalPostsR.count,
+      newPosts24h: newPosts24hR.count,
+      newPosts7d: newPosts7dR.count,
+      totalComments: totalCommentsR.count,
+      newComments24h: newComments24hR.count,
+      newComments7d: newComments7dR.count,
+      totalViews: totalViewsR.total,
+      pendingCount: pendingR.count,
+      topPostsWeek: topPostsWeek.map(p => ({
+        title: p.title, voteCount: p.voteCount || 0,
+        viewCount: p.viewCount || 0, commentCount: p.commentCount || 0,
+      })),
+      topContributorsWeek: (topContributorsWeek.rows as any[]).map(r => ({
+        username: r.username, reputation: r.reputation || 0, postCount: r.post_count || 0,
+      })),
+    };
+  }
+
   async incrementKbPostViews(id: number): Promise<void> {
     await db.update(kbPosts)
       .set({ viewCount: sql`COALESCE(${kbPosts.viewCount}, 0) + 1` })

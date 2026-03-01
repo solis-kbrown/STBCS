@@ -340,8 +340,10 @@ export default function KnowledgeBase() {
                           {post.content?.replace(/[#*`>\-\[\]()!]/g, "").slice(0, 200)}
                         </p>
                         <div className="flex items-center gap-4 mt-3 text-xs text-zinc-500">
-                          <span className="flex items-center gap-1">
-                            {post.author?.username || "Unknown"}
+                          <span className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                            <Link href={`/user/${post.author?.username}`} className="hover:text-orange-400 transition-colors">
+                              {post.author?.username || "Unknown"}
+                            </Link>
                             {post.author && <TierBadge tier={post.author.tier} isTrusted={post.author.isTrusted} isAdmin={post.author.isAdmin} />}
                           </span>
                           <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{timeAgo(post.createdAt)}</span>

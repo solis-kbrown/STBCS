@@ -322,11 +322,26 @@ async function sendDailyHealthCheck(): Promise<void> {
       const stats = await storage.getDashboardStats();
       const endDate = await getOrInitializeSaleDate();
 
+      let kbSection = "";
+      try {
+        const kbStats = await storage.getKbActivityStats();
+        kbSection = [
+          "",
+          "KNOWLEDGE BASE (24h)",
+          `- New Posts: ${kbStats.newPosts24h} (${kbStats.totalPosts} total)`,
+          `- New Comments: ${kbStats.newComments24h} (${kbStats.totalComments} total)`,
+          `- Total Views: ${kbStats.totalViews.toLocaleString()}`,
+          `- Pending Moderation: ${kbStats.pendingCount}`,
+          kbStats.topPostsWeek.length > 0 ? `- Top Post This Week: "${kbStats.topPostsWeek[0].title}" (${kbStats.topPostsWeek[0].voteCount} votes, ${kbStats.topPostsWeek[0].viewCount} views)` : "",
+          kbStats.topContributorsWeek.length > 0 ? `- Top Contributor: ${kbStats.topContributorsWeek[0].username} (${kbStats.topContributorsWeek[0].reputation} rep)` : "",
+        ].filter(Boolean).join("\n");
+      } catch (e) { /* KB stats optional */ }
+
       await sendAdminNotification({
         type: "info",
         title: "Daily Health Check Report",
         message: "STBCS platform is operational. Here's today's summary:",
-        details: `Platform Statistics:\n- Active Ransomware Groups: ${stats.activeGroups}\n- Critical CVEs: ${stats.criticalCves}\n- Active Exploits: ${stats.activeExploits}\n- Total Incidents: ${stats.totalIncidents}\n- Malicious IPs: ${stats.maliciousIps}\n- Malicious URLs: ${stats.maliciousUrls}\n- CISA KEV Count: ${stats.cisaKevCount}\n\nSystem Status: All systems operational\nErrors in current window: ${errorRateWindow.count}\n\nGrand Opening Sale Ends: ${endDate.toLocaleDateString()}`
+        details: `Platform Statistics:\n- Active Ransomware Groups: ${stats.activeGroups}\n- Critical CVEs: ${stats.criticalCves}\n- Active Exploits: ${stats.activeExploits}\n- Total Incidents: ${stats.totalIncidents}\n- Malicious IPs: ${stats.maliciousIps}\n- Malicious URLs: ${stats.maliciousUrls}\n- CISA KEV Count: ${stats.cisaKevCount}${kbSection}\n\nSystem Status: All systems operational\nErrors in current window: ${errorRateWindow.count}\n\nGrand Opening Sale Ends: ${endDate.toLocaleDateString()}`
       });
 
       await setLastRun("daily_health_check");
@@ -357,6 +372,33 @@ async function sendWeeklyAdminReport(): Promise<void> {
         .map(d => `  ${d.date}: ${d.uniqueCount || 0} unique / ${d.totalHits || 0} hits`)
         .join("\n");
 
+      let kbLines: string[] = [];
+      try {
+        const kbStats = await storage.getKbActivityStats();
+        kbLines = [
+          "",
+          "KNOWLEDGE BASE",
+          `- Total Published Posts: ${kbStats.totalPosts}`,
+          `- New Posts (7d): ${kbStats.newPosts7d}`,
+          `- Total Comments: ${kbStats.totalComments}`,
+          `- New Comments (7d): ${kbStats.newComments7d}`,
+          `- Total Article Views: ${kbStats.totalViews.toLocaleString()}`,
+          `- Pending Moderation: ${kbStats.pendingCount}`,
+        ];
+        if (kbStats.topPostsWeek.length > 0) {
+          kbLines.push("", "TOP POSTS THIS WEEK");
+          kbStats.topPostsWeek.forEach((p, i) => {
+            kbLines.push(`  ${i + 1}. "${p.title}" — ${p.voteCount} votes, ${p.viewCount} views, ${p.commentCount} comments`);
+          });
+        }
+        if (kbStats.topContributorsWeek.length > 0) {
+          kbLines.push("", "TOP CONTRIBUTORS");
+          kbStats.topContributorsWeek.forEach((c, i) => {
+            kbLines.push(`  ${i + 1}. ${c.username} — ${c.reputation} rep, ${c.postCount} posts this week`);
+          });
+        }
+      } catch (e) { /* KB stats optional */ }
+
       await sendAdminNotification({
         type: "info",
         title: "Weekly Site Report",
@@ -383,6 +425,7 @@ async function sendWeeklyAdminReport(): Promise<void> {
           `- Malicious IPs Tracked: ${stats.maliciousIps.toLocaleString()}`,
           `- Malicious URLs Tracked: ${stats.maliciousUrls.toLocaleString()}`,
           `- CISA KEV Entries: ${stats.cisaKevCount}`,
+          ...kbLines,
         ].join("\n")
       });
 

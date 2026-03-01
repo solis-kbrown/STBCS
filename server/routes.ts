@@ -3287,6 +3287,17 @@ Hiring: https://stbcybersecurity.com/support
           tier: req.user.tier || "free",
           createdAt: req.user.createdAt,
           hasStripeCustomer: !!req.user.stripeCustomerId,
+          displayName: req.user.displayName || null,
+          bio: req.user.bio || null,
+          avatarUrl: req.user.avatarUrl || null,
+          location: req.user.location || null,
+          website: req.user.website || null,
+          company: req.user.company || null,
+          profilePublic: req.user.profilePublic !== false,
+          showEmail: req.user.showEmail === true,
+          kbReputation: req.user.kbReputation || 0,
+          isTrusted: req.user.isTrusted || false,
+          isAdmin: req.user.isAdmin || false,
         },
         subscription: subscription ? {
           status: subscription.status,
@@ -3298,6 +3309,44 @@ Hiring: https://stbcybersecurity.com/support
     } catch (error) {
       console.error("Account error:", error);
       res.status(500).json({ error: "Failed to fetch account details" });
+    }
+  });
+
+  app.patch("/api/account/profile", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      const { displayName, bio, avatarUrl, location, website, company, profilePublic, showEmail } = req.body;
+      const updates: Record<string, any> = {};
+      if (displayName !== undefined) updates.displayName = String(displayName || "").slice(0, 100) || null;
+      if (bio !== undefined) updates.bio = String(bio || "").slice(0, 500) || null;
+      if (avatarUrl !== undefined) {
+        const url = String(avatarUrl || "").slice(0, 500);
+        updates.avatarUrl = url && /^https?:\/\//i.test(url) ? url : null;
+      }
+      if (location !== undefined) updates.location = String(location || "").slice(0, 100) || null;
+      if (website !== undefined) {
+        const url = String(website || "").slice(0, 200);
+        updates.website = url && /^https?:\/\//i.test(url) ? url : null;
+      }
+      if (company !== undefined) updates.company = String(company || "").slice(0, 100) || null;
+      if (profilePublic !== undefined) updates.profilePublic = !!profilePublic;
+      if (showEmail !== undefined) updates.showEmail = !!showEmail;
+      if (Object.keys(updates).length === 0) { res.json({ success: true }); return; }
+      await storage.updateUserProfile(user.id, updates);
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  app.get("/api/users/:username/profile", generalLimiter, async (req: Request, res: Response) => {
+    try {
+      const username = req.params.username;
+      const profile = await storage.getPublicProfile(username);
+      if (!profile) { res.status(404).json({ error: "User not found" }); return; }
+      res.json(profile);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch profile" });
     }
   });
 

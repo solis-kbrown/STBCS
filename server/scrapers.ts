@@ -7,6 +7,20 @@ import { createLogger, scraperLog } from "./logger";
 import Parser from "rss-parser";
 const log = createLogger("Scraper");
 
+function logScraperError(feedName: string, error: unknown): number {
+  const msg = error instanceof Error ? error.message : String(error);
+  const isTransient = /429|rate.?limit|too many requests/i.test(msg) ||
+    /ENOTFOUND|ECONNREFUSED|ECONNRESET|ETIMEDOUT|EAI_AGAIN/i.test(msg) ||
+    /aborted|abort|timeout|fetch failed|socket hang up/i.test(msg) ||
+    /503|502|500|Connection terminated/i.test(msg);
+  if (isTransient) {
+    log.warn(`${feedName}: ${msg.split("\n")[0]}`);
+  } else {
+    log.error(`${feedName}: ${msg}`);
+  }
+  return 0;
+}
+
 // Notification trigger for Pro users when new threats match watchlists
 async function triggerWatchlistNotifications(
   threatType: 'ransomware' | 'cve' | 'breach',
@@ -70,7 +84,7 @@ async function triggerWatchlistNotifications(
       }
     }
   } catch (error) {
-    log.error('Error triggering watchlist notifications:', error);
+    logScraperError("WatchlistNotify", error);
   }
 }
 
@@ -224,7 +238,7 @@ export async function fetchNVDCves(): Promise<number> {
     await storage.updateFeedLastFetched("NVD");
     return totalCount;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -280,7 +294,7 @@ export async function fetchCISAKev(): Promise<number> {
     await storage.updateFeedLastFetched("CISA KEV");
     return allKevData.length;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -455,7 +469,7 @@ export async function fetchURLhaus(): Promise<number> {
     await storage.updateFeedLastFetched("URLhaus");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -510,7 +524,7 @@ export async function fetchFeodoTracker(): Promise<number> {
     await storage.updateFeedLastFetched("Feodo Tracker");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -554,7 +568,7 @@ export async function fetchDShield(): Promise<number> {
     await storage.updateFeedLastFetched("SANS DShield");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -595,7 +609,7 @@ export async function fetchTorExitNodes(): Promise<number> {
     await storage.updateFeedLastFetched("Tor Exit Nodes");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -636,7 +650,7 @@ export async function fetchOpenPhish(): Promise<number> {
     await storage.updateFeedLastFetched("OpenPhish");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -679,7 +693,7 @@ export async function fetchSSLBlacklist(): Promise<number> {
     await storage.updateFeedLastFetched("SSL Blacklist");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -727,7 +741,7 @@ export async function fetchIPsum(): Promise<number> {
     await storage.updateFeedLastFetched("IPsum");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -767,7 +781,7 @@ export async function fetchBlocklistDe(): Promise<number> {
     await storage.updateFeedLastFetched("Blocklist.de");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -807,7 +821,7 @@ export async function fetchCINS(): Promise<number> {
     await storage.updateFeedLastFetched("CINS Army");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -847,7 +861,7 @@ export async function fetchGreenSnow(): Promise<number> {
     await storage.updateFeedLastFetched("GreenSnow");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -887,7 +901,7 @@ export async function fetchEmergingThreats(): Promise<number> {
     await storage.updateFeedLastFetched("EmergingThreats");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -947,7 +961,7 @@ export async function fetchThreatFox(): Promise<number> {
     await storage.updateFeedLastFetched("ThreatFox");
     return ipCount + urlCount;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -994,7 +1008,7 @@ export async function fetchBambenekC2(): Promise<number> {
     await storage.updateFeedLastFetched("Bambenek C2");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1042,7 +1056,7 @@ export async function fetchPhishTank(): Promise<number> {
     await storage.updateFeedLastFetched("PhishTank");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1082,7 +1096,7 @@ export async function fetchBotnetC2(): Promise<number> {
     await storage.updateFeedLastFetched("Feodo Recommended");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1122,7 +1136,7 @@ export async function fetchDanTorNodes(): Promise<number> {
     await storage.updateFeedLastFetched("Dan.me.uk Tor");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1170,7 +1184,7 @@ export async function fetchMalwareBazaar(): Promise<number> {
     await storage.updateFeedLastFetched("Malware Bazaar");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1213,7 +1227,7 @@ export async function fetchSpamhausDrop(): Promise<number> {
     await storage.updateFeedLastFetched("Spamhaus DROP");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1256,7 +1270,7 @@ export async function fetchFireHOL(): Promise<number> {
     await storage.updateFeedLastFetched("FireHOL Level1");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1296,7 +1310,7 @@ export async function fetchSSLBLAggressive(): Promise<number> {
     await storage.updateFeedLastFetched("SSLBL Aggressive");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1336,7 +1350,7 @@ export async function fetchC2Tracker(): Promise<number> {
     await storage.updateFeedLastFetched("C2 Tracker");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1378,7 +1392,7 @@ export async function fetchCleanTalk(): Promise<number> {
     await storage.updateFeedLastFetched("CleanTalk");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1421,7 +1435,7 @@ export async function fetchC2IntelFeeds(): Promise<number> {
     await storage.updateFeedLastFetched("C2IntelFeeds");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1467,7 +1481,7 @@ export async function fetchDataplaneSsh(): Promise<number> {
     await storage.updateFeedLastFetched("Dataplane SSH");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1830,7 +1844,7 @@ export async function fetchBinaryDefense(): Promise<number> {
     await storage.updateFeedLastFetched("BinaryDefense");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1873,7 +1887,7 @@ export async function fetchTurrisSentinel(): Promise<number> {
     await storage.updateFeedLastFetched("Turris Sentinel");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1917,7 +1931,7 @@ export async function fetchGreyNoiseCommunity(): Promise<number> {
       return 0;
     }
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -1997,7 +2011,7 @@ export async function fetchCrowdSec(): Promise<number> {
     await storage.updateFeedLastFetched("CrowdSec");
     return enrichedCount;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -2075,7 +2089,7 @@ export async function fetchPulsedive(): Promise<number> {
     await storage.updateFeedLastFetched("Pulsedive");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -2155,7 +2169,7 @@ export async function fetchShodanIntel(): Promise<number> {
     await storage.updateFeedLastFetched("Shodan");
     return enrichedCount;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -2250,7 +2264,7 @@ export async function fetchAlienVaultOTX(): Promise<number> {
     await storage.updateFeedLastFetched("AlienVault OTX");
     return ipCount + urlCount;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -2305,7 +2319,7 @@ export async function fetchVirusTotalFeed(): Promise<number> {
       return 0;
     }
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -2385,7 +2399,7 @@ export async function fetchHybridAnalysis(): Promise<number> {
     await storage.updateFeedLastFetched("Hybrid Analysis");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -2437,7 +2451,7 @@ export async function fetchCIRCLCves(): Promise<number> {
     await storage.updateFeedLastFetched("CIRCL CVE");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -2923,7 +2937,7 @@ export async function fetchRansomwhere(): Promise<number> {
     await storage.updateFeedLastFetched("Ransomwhere");
     return actorCount;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -2974,7 +2988,7 @@ export async function fetchTalosBlocklist(): Promise<number> {
     await storage.updateFeedLastFetched("Cisco Talos");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -3139,7 +3153,7 @@ export async function fetchThreatFoxRecent(): Promise<number> {
     await storage.updateFeedLastFetched("ThreatFox");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -3199,7 +3213,7 @@ export async function fetchMalwareBazaarRecent(): Promise<number> {
     await storage.updateFeedLastFetched("MalwareBazaar");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -3252,7 +3266,7 @@ export async function fetchThreatFeedsIO(): Promise<number> {
     await storage.updateFeedLastFetched("ThreatFeeds.io");
     return totalCount;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -4369,7 +4383,7 @@ export async function fetchHoneyDB(): Promise<number> {
     await storage.updateFeedLastFetched("HoneyDB");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -4439,7 +4453,7 @@ export async function fetchAbuseIPDB(): Promise<number> {
     await storage.updateFeedLastFetched("AbuseIPDB");
     return count;
   } catch (error) {
-    log.error("Error:", error);
+    logScraperError("Feed", error);
     return 0;
   }
 }
