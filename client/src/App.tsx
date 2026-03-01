@@ -55,6 +55,7 @@ const KnowledgeBase = lazy(() => import("@/pages/knowledge-base"));
 const KbPost = lazy(() => import("@/pages/kb-post"));
 const KbEditor = lazy(() => import("@/pages/kb-editor"));
 const KbAdmin = lazy(() => import("@/pages/kb-admin"));
+const Feedback = lazy(() => import("@/pages/feedback"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -121,6 +122,7 @@ function Router() {
         <Route path="/knowledge-base/admin" component={KbAdmin}/>
         <Route path="/knowledge-base/:slug/edit" component={KbEditor}/>
         <Route path="/knowledge-base/:slug" component={KbPost}/>
+        <Route path="/feedback" component={Feedback}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

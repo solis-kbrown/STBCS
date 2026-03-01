@@ -1219,3 +1219,56 @@ export type KbComment = typeof kbComments.$inferSelect;
 export type InsertKbComment = z.infer<typeof insertKbCommentSchema>;
 export type KbVote = typeof kbVotes.$inferSelect;
 export type InsertKbVote = z.infer<typeof insertKbVoteSchema>;
+
+export const KB_RANKS = [
+  { name: "Recruit", minPoints: 0, color: "text-zinc-400" },
+  { name: "Analyst", minPoints: 10, color: "text-blue-400" },
+  { name: "Specialist", minPoints: 50, color: "text-green-400" },
+  { name: "Expert", minPoints: 150, color: "text-purple-400" },
+  { name: "Elite", minPoints: 300, color: "text-orange-400" },
+  { name: "Legend", minPoints: 500, color: "text-red-400" },
+] as const;
+
+export function getKbRank(points: number) {
+  for (let i = KB_RANKS.length - 1; i >= 0; i--) {
+    if (points >= KB_RANKS[i].minPoints) return KB_RANKS[i];
+  }
+  return KB_RANKS[0];
+}
+
+export const KB_POINTS = {
+  POST_CREATED: 5,
+  POST_APPROVED: 3,
+  COMMENT_CREATED: 2,
+  RECEIVED_UPVOTE: 1,
+  LOST_UPVOTE: -1,
+} as const;
+
+export const feedbackSubmissions = pgTable("feedback_submissions", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id"),
+  name: text("name"),
+  email: text("email"),
+  category: text("category").notNull().default("general_feedback"),
+  subject: text("subject").notNull(),
+  description: text("description").notNull(),
+  status: text("status").notNull().default("open"),
+  adminNotes: text("admin_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("feedback_user_idx").on(table.userId),
+  index("feedback_status_idx").on(table.status),
+  index("feedback_category_idx").on(table.category),
+]);
+
+export const insertFeedbackSchema = createInsertSchema(feedbackSubmissions).omit({
+  id: true,
+  status: true,
+  adminNotes: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type FeedbackSubmission = typeof feedbackSubmissions.$inferSelect;
+export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;

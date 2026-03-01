@@ -180,6 +180,14 @@ const PAGE_META: Record<string, PageMeta> = {
     title: 'Service Status Dashboard | STB Cybersecurity',
     description: 'Real-time operational status of STB Cybersecurity platform services, threat feeds, APIs, and monitoring systems. Current uptime and incident history.',
   },
+  '/knowledge-base': {
+    title: 'Knowledge Base & Community Hub | STB Cybersecurity',
+    description: 'Community-driven cybersecurity knowledge base with threat intel articles, bug reports, feature requests, and expert contributions. Auto-sourced from 12+ RSS feeds.',
+  },
+  '/feedback': {
+    title: 'Feedback & Bug Reports | STB Cybersecurity',
+    description: 'Report bugs, request features, submit feedback, or flag security concerns. Help improve the STBCS platform. No account required.',
+  },
 };
 
 const MAX_TITLE_LENGTH = 60;

@@ -42,7 +42,8 @@ Preferred communication style: Simple, everyday language.
 - **Pro/Business Features**: Monitoring Suite (uptime, SSL, dark web), Attack Surface Discovery, Threat Intelligence Reports (on-demand/scheduled), Remote Desktop, SSH Terminal, Telnet Client, SFTP Client.
 - **Core Security Capabilities**: IOC Search, Cyber Risk Score Calculator, ICS-CERT Advisories, MITRE ATT&CK Mapping, STIX 2.1 Export, Groups Directory.
 - **User & Subscription Management**: Authentication, subscription tiers (Supporter, Pro, Business, Unlimited Everything), API Key System, Monitor Alert Engine.
-- **Communication & Support**: Newsletter, Quo Phone System integration, email notifications, Contact Page, About Page, Live Chat Widget, Knowledge Base & Community Hub (with RBAC, content scraping, moderation).
+- **Communication & Support**: Newsletter, Quo Phone System integration, email notifications, Contact Page, About Page, Live Chat Widget, Knowledge Base & Community Hub (with RBAC, content scraping, moderation, gamification ranks).
+- **Feedback & Bug Reports**: Public feedback system at `/feedback` — any user (even unauthenticated) can report bugs, site issues, feature requests, recommendations, or security concerns. Rate-limited. Admin dashboard for review/status tracking.
 - **Security & Compliance**: Robust security headers, secure cookies, API logging, rate limiting, consent flows (CCPA/CPRA, COPPA, CAN-SPAM), legal pages.
 - **Interactive Playbooks**: 5 incident response guides.
 - **Service Status Dashboard**: Monitors major cloud services.

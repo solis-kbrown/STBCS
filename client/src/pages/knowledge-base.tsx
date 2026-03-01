@@ -262,6 +262,7 @@ export default function KnowledgeBase() {
                         <p className="text-sm font-medium text-zinc-300 truncate">{u.username}</p>
                         <div className="flex items-center gap-1">
                           <TierBadge tier={u.tier} isTrusted={u.isTrusted} isAdmin={u.isAdmin} />
+                          {u.rank && <Badge className={`${u.rank.color.replace('text-', 'bg-').replace('-400', '-500/20')} ${u.rank.color} border-transparent text-[10px]`}>{u.rank.name}</Badge>}
                         </div>
                       </div>
                       <span className="text-xs font-bold text-orange-400">{u.reputation} pts</span>
@@ -279,6 +280,26 @@ export default function KnowledgeBase() {
                   <p><strong className="text-zinc-300">Paid Members:</strong> Post, comment, vote (moderated)</p>
                   <p><strong className="text-zinc-300">Trusted:</strong> Posts go live instantly</p>
                   <p><strong className="text-zinc-300">Earn Trust:</strong> Get 50+ upvotes to auto-promote</p>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-5">
+                <h3 className="text-sm font-semibold text-white flex items-center gap-2 mb-3">
+                  <Award className="h-4 w-4 text-orange-400" />Earn Points & Ranks
+                </h3>
+                <div className="space-y-2 text-xs text-zinc-400">
+                  <p><strong className="text-zinc-300">+5 pts</strong> Create a post</p>
+                  <p><strong className="text-zinc-300">+3 pts</strong> Post approved by admin</p>
+                  <p><strong className="text-zinc-300">+2 pts</strong> Post a comment</p>
+                  <p><strong className="text-zinc-300">+1 pt</strong> Receive an upvote</p>
+                  <div className="border-t border-zinc-800 pt-2 mt-2 space-y-1">
+                    <p><span className="text-zinc-400">Recruit</span> <span className="text-zinc-600">0 pts</span></p>
+                    <p><span className="text-blue-400">Analyst</span> <span className="text-zinc-600">10+ pts</span></p>
+                    <p><span className="text-green-400">Specialist</span> <span className="text-zinc-600">50+ pts</span></p>
+                    <p><span className="text-purple-400">Expert</span> <span className="text-zinc-600">150+ pts</span></p>
+                    <p><span className="text-orange-400">Elite</span> <span className="text-zinc-600">300+ pts</span></p>
+                    <p><span className="text-red-400">Legend</span> <span className="text-zinc-600">500+ pts</span></p>
+                  </div>
                 </div>
               </div>
             </div>

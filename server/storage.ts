@@ -34,6 +34,8 @@ import {
   type KbPost, type InsertKbPost,
   type KbComment, type InsertKbComment,
   type KbVote,
+  type FeedbackSubmission, type InsertFeedback,
+  KB_POINTS,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
   userNotifications, watchlistItems, breachIncidents, cisaIcsAdvisories, newsletterSubscriptions,
@@ -41,7 +43,7 @@ import {
   apiKeys, apiKeyUsage, addOns, userAddOns, monitorAlertLog,
   uptimeMonitors, uptimeChecks, uptimeIncidents, darkWebMonitors, darkWebFindings,
   dailyThreatStats, attackSurfaceScans, attackSurfaceAssets, threatReports, reportSchedules,
-  kbPosts, kbComments, kbVotes
+  kbPosts, kbComments, kbVotes, feedbackSubmissions
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte, asc, count, ne } from "drizzle-orm";
@@ -340,6 +342,12 @@ export interface IStorage {
   setUserTrusted(userId: string, isTrusted: boolean): Promise<void>;
   getKbLeaderboard(limit?: number): Promise<{ userId: string; username: string; reputation: number; isTrusted: boolean; isAdmin: boolean; tier: string | null }[]>;
   checkAutoPromotion(userId: string): Promise<boolean>;
+  awardReputation(userId: string, points: number): Promise<void>;
+
+  createFeedback(feedback: InsertFeedback): Promise<FeedbackSubmission>;
+  getFeedbackSubmissions(options: { status?: string; category?: string; limit?: number; offset?: number }): Promise<FeedbackSubmission[]>;
+  getFeedbackCount(options: { status?: string; category?: string }): Promise<number>;
+  updateFeedbackStatus(id: number, status: string, adminNotes?: string): Promise<FeedbackSubmission>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2528,12 +2536,23 @@ export class DatabaseStorage implements IStorage {
       const [comment] = await db.update(kbComments)
         .set({ voteCount: sql`GREATEST(${kbComments.voteCount} - 1, 0)` })
         .where(eq(kbComments.id, commentId)).returning();
+      if (comment) {
+        await db.update(users)
+          .set({ kbReputation: sql`GREATEST(${users.kbReputation} - 1, 0)` })
+          .where(eq(users.id, comment.authorId));
+      }
       return { voted: false, newCount: comment.voteCount || 0 };
     } else {
       await db.insert(kbVotes).values({ userId, commentId });
       const [comment] = await db.update(kbComments)
         .set({ voteCount: sql`${kbComments.voteCount} + 1` })
         .where(eq(kbComments.id, commentId)).returning();
+      if (comment) {
+        await db.update(users)
+          .set({ kbReputation: sql`${users.kbReputation} + 1` })
+          .where(eq(users.id, comment.authorId));
+        await this.checkAutoPromotion(comment.authorId);
+      }
       return { voted: true, newCount: comment.voteCount || 0 };
     }
   }
@@ -2594,6 +2613,52 @@ export class DatabaseStorage implements IStorage {
       return true;
     }
     return false;
+  }
+
+  async awardReputation(userId: string, points: number): Promise<void> {
+    if (points > 0) {
+      await db.update(users)
+        .set({ kbReputation: sql`${users.kbReputation} + ${points}` })
+        .where(eq(users.id, userId));
+    } else if (points < 0) {
+      await db.update(users)
+        .set({ kbReputation: sql`GREATEST(${users.kbReputation} + ${points}, 0)` })
+        .where(eq(users.id, userId));
+    }
+  }
+
+  async createFeedback(feedback: InsertFeedback): Promise<FeedbackSubmission> {
+    const [created] = await db.insert(feedbackSubmissions).values(feedback).returning();
+    return created;
+  }
+
+  async getFeedbackSubmissions(options: { status?: string; category?: string; limit?: number; offset?: number }): Promise<FeedbackSubmission[]> {
+    const { status, category, limit = 50, offset = 0 } = options;
+    const conditions = [];
+    if (status) conditions.push(eq(feedbackSubmissions.status, status));
+    if (category) conditions.push(eq(feedbackSubmissions.category, category));
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    return db.select().from(feedbackSubmissions)
+      .where(whereClause)
+      .orderBy(desc(feedbackSubmissions.createdAt))
+      .limit(limit).offset(offset);
+  }
+
+  async getFeedbackCount(options: { status?: string; category?: string }): Promise<number> {
+    const { status, category } = options;
+    const conditions = [];
+    if (status) conditions.push(eq(feedbackSubmissions.status, status));
+    if (category) conditions.push(eq(feedbackSubmissions.category, category));
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    const [result] = await db.select({ count: sql<number>`count(*)::int` }).from(feedbackSubmissions).where(whereClause);
+    return result.count;
+  }
+
+  async updateFeedbackStatus(id: number, status: string, adminNotes?: string): Promise<FeedbackSubmission> {
+    const updates: any = { status, updatedAt: new Date() };
+    if (adminNotes !== undefined) updates.adminNotes = adminNotes;
+    const [updated] = await db.update(feedbackSubmissions).set(updates).where(eq(feedbackSubmissions.id, id)).returning();
+    return updated;
   }
 }
 

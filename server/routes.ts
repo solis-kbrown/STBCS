@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import cookieParser from "cookie-parser";
 import { storage } from "./storage";
 import { visitorTrackingMiddleware } from "./visitors";
-import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema, toSlug, contentViews, logoVotes, siteSettings, users, sessions, insertKbPostSchema, insertKbCommentSchema } from "@shared/schema";
+import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema, toSlug, contentViews, logoVotes, siteSettings, users, sessions, insertKbPostSchema, insertKbCommentSchema, KB_POINTS, insertFeedbackSchema } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql as dsql } from "drizzle-orm";
 import { z } from "zod";
@@ -349,6 +349,20 @@ export async function registerRoutes(
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/knowledge-base</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/feedback</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
   </url>
 
 ${groupEntries}
@@ -5250,6 +5264,8 @@ Hiring: https://stbcybersecurity.com/support
         tags: Array.isArray(tags) ? tags : [],
       });
 
+      await storage.awardReputation(user.id, KB_POINTS.POST_CREATED);
+
       res.status(201).json(post);
     } catch (error) {
       res.status(500).json({ error: "Failed to create post" });
@@ -5352,6 +5368,9 @@ Hiring: https://stbcybersecurity.com/support
         parentId: parentId || null,
         content: content.trim(),
       });
+
+      await storage.awardReputation(user.id, KB_POINTS.COMMENT_CREATED);
+
       res.status(201).json(comment);
     } catch (error) {
       res.status(500).json({ error: "Failed to create comment" });
@@ -5400,7 +5419,9 @@ Hiring: https://stbcybersecurity.com/support
     try {
       if (!req.user?.isAdmin) { res.status(403).json({ error: "Admin access required" }); return; }
       const postId = parseInt(req.params.id);
+      const post = await storage.getKbPostById(postId);
       const updated = await storage.updateKbPost(postId, { status: "published" });
+      if (post) await storage.awardReputation(post.authorId, KB_POINTS.POST_APPROVED);
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to approve post" });
@@ -5469,14 +5490,92 @@ Hiring: https://stbcybersecurity.com/support
 
   app.get("/api/kb/leaderboard", kbLimiter, async (_req: Request, res: Response) => {
     try {
+      const { getKbRank } = await import("@shared/schema");
       const leaderboard = await storage.getKbLeaderboard(20);
-      res.json(leaderboard);
+      res.json(leaderboard.map(l => ({
+        ...l,
+        rank: getKbRank(l.reputation),
+      })));
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch leaderboard" });
     }
   });
 
   // ===================== END KNOWLEDGE BASE ROUTES =====================
+
+  // ===================== FEEDBACK / BUG REPORT ROUTES =====================
+  const feedbackLimiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 10, standardHeaders: true, legacyHeaders: false });
+
+  app.post("/api/feedback", feedbackLimiter, async (req: Request, res: Response) => {
+    try {
+      const { name, email, category, subject, description } = req.body;
+      if (!subject || !description) {
+        res.status(400).json({ error: "Subject and description are required" });
+        return;
+      }
+      if (String(subject).length > 200 || String(description).length > 5000) {
+        res.status(400).json({ error: "Subject (max 200) or description (max 5000) too long" });
+        return;
+      }
+      if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(email))) {
+        res.status(400).json({ error: "Invalid email format" });
+        return;
+      }
+
+      const validCategories = ["bug_report", "site_issue", "feature_request", "general_feedback", "recommendation", "security_concern"];
+      const feedbackCategory = validCategories.includes(category) ? category : "general_feedback";
+
+      const authReq = req as AuthenticatedRequest;
+      const userId = authReq.user?.id || null;
+
+      const feedback = await storage.createFeedback({
+        userId,
+        name: name ? String(name).slice(0, 100) : null,
+        email: email ? String(email).slice(0, 200) : null,
+        category: feedbackCategory,
+        subject: String(subject).slice(0, 200),
+        description: String(description).slice(0, 5000),
+      });
+
+      res.status(201).json({ success: true, id: feedback.id });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to submit feedback" });
+    }
+  });
+
+  app.get("/api/feedback", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user?.isAdmin) { res.status(403).json({ error: "Admin access required" }); return; }
+      const status = asString(req.query.status as string) || undefined;
+      const category = asString(req.query.category as string) || undefined;
+      const page = parseInt(asString(req.query.page as string) || "1");
+      const limit = 30;
+      const offset = (page - 1) * limit;
+      const [submissions, total] = await Promise.all([
+        storage.getFeedbackSubmissions({ status, category, limit, offset }),
+        storage.getFeedbackCount({ status, category }),
+      ]);
+      res.json({ submissions, total, page, pages: Math.ceil(total / limit) });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch feedback" });
+    }
+  });
+
+  app.put("/api/feedback/:id/status", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user?.isAdmin) { res.status(403).json({ error: "Admin access required" }); return; }
+      const id = parseInt(req.params.id);
+      const { status, adminNotes } = req.body;
+      const validStatuses = ["open", "in_progress", "resolved", "closed", "wont_fix"];
+      if (!validStatuses.includes(status)) { res.status(400).json({ error: "Invalid status" }); return; }
+      const updated = await storage.updateFeedbackStatus(id, status, adminNotes);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update feedback" });
+    }
+  });
+
+  // ===================== END FEEDBACK ROUTES =====================
 
   function generateRecommendations(stats: any, scanSummaries: any[]): string[] {
     const recs: string[] = [];
