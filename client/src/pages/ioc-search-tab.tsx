@@ -220,7 +220,7 @@ export default function IOCSearchTab() {
           IOC Search
         </h2>
         <p className="text-muted-foreground">
-          Search Indicators of Compromise across 40+ threat intelligence feeds. Enter an IP address, domain, file hash, URL, or CVE ID.
+          Search Indicators of Compromise across 70+ threat intelligence feeds. Enter an IP address, domain, file hash, URL, or CVE ID.
         </p>
       </div>
 

@@ -4502,7 +4502,7 @@ let lastRefreshTimestamp = 0;
 export function getLastRefreshTimestamp(): number { return lastRefreshTimestamp; }
 
 export function startDataRefreshScheduler(intervalMinutes = 15): void {
-  log.info(`Starting threat intel refresh every ${intervalMinutes} minutes (40+ sources)`);
+  log.info(`Starting threat intel refresh every ${intervalMinutes} minutes (70+ sources)`);
   
   const fetchAndInvalidate = async () => {
     try {

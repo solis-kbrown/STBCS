@@ -51,7 +51,7 @@ function CountUpStat({ value, label, icon: Icon, color, change, index }: {
 }
 
 export default function Dashboard() {
-  useDocumentTitle("STB Cybersecurity | Real-Time Threat Intelligence for SMBs", "Track ransomware, CVEs, and malicious IPs across 45+ live feeds. Get 24/7 incident response, ransomware recovery, and threat hunting for your business.");
+  useDocumentTitle("STB Cybersecurity | Real-Time Threat Intelligence for SMBs", "Track ransomware, CVEs, and malicious IPs across 70+ live feeds. Get 24/7 incident response, ransomware recovery, and threat hunting for your business.");
   const { data: stats, isLoading: statsLoading } = useStats();
   const { data: cvesData, isLoading: cvesLoading } = useCves(5);
   const { data: ransomwareData, isLoading: ransomwareLoading } = useRansomware(5);
@@ -107,7 +107,7 @@ export default function Dashboard() {
               KNOW THE THREAT <span className="text-primary">BEFORE IT HITS</span>
             </h1>
             <p className="text-muted-foreground text-lg mb-6">
-              45+ live threat feeds. Ransomware tracking. CVE monitoring. When your business faces an attack, our incident response team is one call away.
+              70+ live threat feeds. Ransomware tracking. CVE monitoring. When your business faces an attack, our incident response team is one call away.
             </p>
             <div className="flex gap-4">
               <Button className="bg-primary hover:bg-primary/90 text-white font-bold btn-press" data-testid="button-view-incidents" asChild>
@@ -357,7 +357,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             {[
               { href: "/tools", label: "Security Tools", icon: Wrench, desc: "IP lookup, port scan & more" },
-              { href: "/search?tab=ioc", label: "IOC Lookup", icon: Scan, desc: "Search 40+ threat feeds" },
+              { href: "/search?tab=ioc", label: "IOC Lookup", icon: Scan, desc: "Search 70+ threat feeds" },
               { href: "/risk-score", label: "Risk Score", icon: ShieldCheck, desc: "Free cyber risk assessment" },
               { href: "/groups", label: "Threat Actors", icon: Users, desc: "Ransomware & APT profiles" },
               { href: "/breaches", label: "Breach Database", icon: Database, desc: "Known data breaches" },

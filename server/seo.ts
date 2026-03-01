@@ -10,7 +10,7 @@ interface PageMeta {
 const PAGE_META: Record<string, PageMeta> = {
   '/': {
     title: 'STBCS | Threat Intelligence & Incident Response',
-    description: 'STBCS delivers 24/7 incident response, ransomware recovery, and real-time threat intelligence from 45+ feeds. Trusted cybersecurity partner for SMBs.',
+    description: 'STBCS delivers 24/7 incident response, ransomware recovery, and real-time threat intelligence from 70+ feeds. Trusted cybersecurity partner for SMBs.',
   },
   '/ransomware': {
     title: 'Ransomware Tracker | STB Cybersecurity',
@@ -22,7 +22,7 @@ const PAGE_META: Record<string, PageMeta> = {
   },
   '/exploits': {
     title: 'Exploits & CVE Database | STB Cybersecurity',
-    description: 'Search and track CVEs, zero-days, and exploits from NVD, CISA KEV, and 45+ feeds. CVSS scoring, EPSS predictions, and real-time exploit alerts.',
+    description: 'Search and track CVEs, zero-days, and exploits from NVD, CISA KEV, and 70+ feeds. CVSS scoring, EPSS predictions, and real-time exploit alerts.',
   },
   '/tools': {
     title: 'Free Security Tools | STB Cybersecurity',
@@ -30,11 +30,11 @@ const PAGE_META: Record<string, PageMeta> = {
   },
   '/search': {
     title: 'Threat Search & IOC Lookup | STB Cybersecurity',
-    description: 'Search CVEs, ransomware incidents, malicious IPs, phishing URLs, and threat actors. IOC lookup across 40+ threat intelligence feeds.',
+    description: 'Search CVEs, ransomware incidents, malicious IPs, phishing URLs, and threat actors. IOC lookup across 70+ threat intelligence feeds.',
   },
   '/intel': {
     title: 'Intel & Threat Feeds | STB Cybersecurity',
-    description: 'Curated cybersecurity news, real-time malicious IPs, phishing URLs, CISA KEV, and threat indicators from 45+ feeds including SANS DShield and Feodo Tracker.',
+    description: 'Curated cybersecurity news, real-time malicious IPs, phishing URLs, CISA KEV, and threat indicators from 70+ feeds including SANS DShield and Feodo Tracker.',
   },
   '/support': {
     title: 'Support & Membership | STB Cybersecurity',
@@ -46,7 +46,7 @@ const PAGE_META: Record<string, PageMeta> = {
   },
   '/about': {
     title: 'About Us — Incident Response & Threat Intelligence | STB Cybersecurity',
-    description: 'Meet STB Cybersecurity: incident responders, recovery engineers, and threat hunters protecting SMBs. 45+ live threat feeds, 24/7 IR, ransomware recovery, and security consulting.',
+    description: 'Meet STB Cybersecurity: incident responders, recovery engineers, and threat hunters protecting SMBs. 70+ live threat feeds, 24/7 IR, ransomware recovery, and security consulting.',
   },
   '/contact': {
     title: 'Contact Us | STB Cybersecurity',
@@ -117,6 +117,14 @@ const PAGE_META: Record<string, PageMeta> = {
   '/reports': {
     title: 'Threat Intelligence Reports | STB Cybersecurity',
     description: 'Generate branded threat intelligence reports with executive summaries, ransomware landscape analysis, critical CVEs, attack surface findings, and actionable recommendations.',
+  },
+  '/playbooks': {
+    title: 'Incident Response Playbooks | STB Cybersecurity',
+    description: 'Step-by-step incident response playbooks for ransomware, phishing, data breaches, and more. Actionable IR procedures aligned with NIST and SANS frameworks.',
+  },
+  '/service-status': {
+    title: 'Service Status Dashboard | STB Cybersecurity',
+    description: 'Real-time operational status of STB Cybersecurity platform services, threat feeds, APIs, and monitoring systems. Current uptime and incident history.',
   },
 };
 
@@ -252,6 +260,8 @@ function getH1Text(path: string, meta: PageMeta): string {
     '/ics-advisories': 'ICS-CERT Advisories',
     '/breaches': 'Data Breach Database',
     '/monitors': 'Monitoring & Alerts',
+    '/playbooks': 'Incident Response Playbooks',
+    '/service-status': 'Service Status Dashboard',
   };
   const cleanPath = path.split('?')[0].split('#')[0].replace(/\/$/, '') || '/';
   if (titleMap[cleanPath]) return titleMap[cleanPath];

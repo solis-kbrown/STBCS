@@ -106,7 +106,7 @@ export default function HeroGallery() {
                     KNOW THE THREAT <span className="text-primary">BEFORE IT HITS</span>
                   </h2>
                   <p className="text-muted-foreground text-lg">
-                    45+ live threat feeds. Ransomware tracking. CVE monitoring.
+                    70+ live threat feeds. Ransomware tracking. CVE monitoring.
                   </p>
                 </div>
               </div>
