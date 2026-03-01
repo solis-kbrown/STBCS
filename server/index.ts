@@ -11,29 +11,34 @@ const port = parseInt(process.env.PORT || "5000", 10);
 let appReady = false;
 let expressApp: express.Express | null = null;
 
+let cachedIndexHtml: string | null = null;
+if (IS_PRODUCTION) {
+  try {
+    const indexPath = path.resolve(__dirname, "public", "index.html");
+    if (fs.existsSync(indexPath)) {
+      cachedIndexHtml = fs.readFileSync(indexPath, 'utf-8');
+    }
+  } catch {}
+}
+
 const httpServer = createServer((req, res) => {
+  if (req.url === '/health' || req.url === '/health?' || req.url?.startsWith('/health?')) {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok', ready: appReady, timestamp: Date.now() }));
+    return;
+  }
+  if (req.url === '/__repl') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('ok');
+    return;
+  }
+
   if (!appReady || !expressApp) {
-    if (req.url === '/health' || req.url === '/health?') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', ready: appReady, timestamp: Date.now() }));
-      return;
-    }
-    if (req.url === '/__repl') {
-      res.writeHead(200, { 'Content-Type': 'text/plain' });
-      res.end('ok');
-      return;
-    }
     if (req.url === '/' || (req.method === 'GET' && !req.url?.startsWith('/api/'))) {
-      if (IS_PRODUCTION) {
-        const indexPath = path.resolve(__dirname, "public", "index.html");
-        try {
-          if (fs.existsSync(indexPath)) {
-            const html = fs.readFileSync(indexPath, 'utf-8');
-            res.writeHead(200, { 'Content-Type': 'text/html' });
-            res.end(html);
-            return;
-          }
-        } catch {}
+      if (cachedIndexHtml) {
+        res.writeHead(200, { 'Content-Type': 'text/html' });
+        res.end(cachedIndexHtml);
+        return;
       }
       res.writeHead(200, { 'Content-Type': 'text/html' });
       res.end(STARTUP_HTML);
@@ -251,11 +256,13 @@ async function initializeApp() {
   await yieldToEventLoop();
 
   const { registerRoutes } = await import("./routes");
-  const { reportCriticalError } = await import("./maintenance");
+  await yieldToEventLoop();
 
+  const { reportCriticalError } = await import("./maintenance");
   await yieldToEventLoop();
 
   await registerRoutes(httpServer, app);
+  await yieldToEventLoop();
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
