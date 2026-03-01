@@ -43,6 +43,9 @@ Preferred communication style: Simple, everyday language.
 ### Data Storage
 - **Database**: PostgreSQL via Drizzle ORM with optimized connection pool (max 20 connections, 30s idle timeout, 5s connect timeout, 30s statement timeout).
 - **Schema**: Defined for CVEs, ransomware, threat actors, and user data.
+- **Unique Constraints**: Composite unique indexes on `malicious_ips(ip_address, source)`, `malicious_urls(url, source)`, `ransomware_incidents(victim, group_name)` for atomic upserts.
+- **Atomic Upserts**: All upsert operations use `onConflictDoUpdate`/`onConflictDoNothing` for race-condition-free writes.
+- **Transaction Wrapping**: Multi-step operations (cleanup, ransomware enrichment, signup) use `db.transaction()` for atomicity.
 
 ### Key Design Patterns
 - **Shared Types**: For common definitions.

@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, real, boolean, index, integer } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, real, boolean, index, uniqueIndex, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -101,11 +101,13 @@ export const ransomwareIncidents = pgTable("ransomware_incidents", {
   victimRevenue: text("victim_revenue"),
   employeeCount: text("employee_count"),
 }, (table) => [
+  uniqueIndex("ransom_victim_group_uniq").on(table.victim, table.groupName),
   index("ransom_group_idx").on(table.groupName),
   index("ransom_sector_idx").on(table.sector),
   index("ransom_status_idx").on(table.status),
   index("ransom_victim_idx").on(table.victim),
   index("ransom_country_idx").on(table.country),
+  index("ransom_discovered_idx").on(table.discoveredAt),
 ]);
 
 export const threatActors = pgTable("threat_actors", {
@@ -159,8 +161,11 @@ export const newsArticles = pgTable("news_articles", {
   publishedAt: timestamp("published_at"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
+  uniqueIndex("news_source_url_uniq").on(table.sourceUrl),
   index("news_category_idx").on(table.category),
   index("news_published_idx").on(table.publishedAt),
+  index("news_title_idx").on(table.title),
+  index("news_created_idx").on(table.createdAt),
 ]);
 
 // Malicious IPs from various threat feeds
@@ -184,10 +189,13 @@ export const maliciousIps = pgTable("malicious_ips", {
   tags: text("tags"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
+  uniqueIndex("ip_address_source_uniq").on(table.ipAddress, table.source),
   index("ip_address_idx").on(table.ipAddress),
   index("ip_source_idx").on(table.source),
   index("ip_threat_idx").on(table.threatType),
   index("ip_abuse_score_idx").on(table.abuseConfidenceScore),
+  index("ip_last_seen_idx").on(table.lastSeen),
+  index("ip_created_idx").on(table.createdAt),
 ]);
 
 // Malicious URLs from URLhaus, PhishTank, etc.
@@ -204,9 +212,12 @@ export const maliciousUrls = pgTable("malicious_urls", {
   reportedAt: timestamp("reported_at"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
+  uniqueIndex("url_url_source_uniq").on(table.url, table.source),
   index("url_source_idx").on(table.source),
   index("url_threat_idx").on(table.threatType),
   index("url_status_idx").on(table.status),
+  index("url_reported_idx").on(table.reportedAt),
+  index("url_created_idx").on(table.createdAt),
 ]);
 
 // CISA Known Exploited Vulnerabilities

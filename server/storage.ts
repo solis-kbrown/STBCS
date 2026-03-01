@@ -409,16 +409,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertCve(cve: InsertCve): Promise<Cve> {
-    const existing = await this.getCveByCveId(cve.cveId);
-    if (existing) {
-      const [updated] = await db.update(cves)
-        .set({ ...cve, lastModified: new Date() })
-        .where(eq(cves.cveId, cve.cveId))
-        .returning();
-      return updated;
-    }
-    const [created] = await db.insert(cves).values(cve).returning();
-    return created;
+    const [result] = await db.insert(cves)
+      .values(cve)
+      .onConflictDoUpdate({
+        target: cves.cveId,
+        set: { ...cve, lastModified: new Date() },
+      })
+      .returning();
+    return result;
   }
 
   async getCveCount(): Promise<number> {
@@ -456,62 +454,62 @@ export class DatabaseStorage implements IStorage {
   }
   
   async upsertRansomwareIncidentWithFlag(incident: InsertRansomware): Promise<{ incident: RansomwareIncident; isNew: boolean }> {
-    // Check if victim with same name and group exists
-    const existing = await db.select()
+    const [existing] = await db.select({ id: ransomwareIncidents.id })
       .from(ransomwareIncidents)
       .where(and(
         eq(ransomwareIncidents.victim, incident.victim),
         eq(ransomwareIncidents.groupName, incident.groupName)
       ))
       .limit(1);
-    
-    if (existing.length > 0) {
-      const [updated] = await db.update(ransomwareIncidents)
-        .set({
-          country: incident.country ?? existing[0].country,
-          website: incident.website ?? existing[0].website,
-          description: incident.description ?? existing[0].description,
-          status: incident.status ?? existing[0].status,
-          postUrl: incident.postUrl ?? existing[0].postUrl,
-          screenshotUrl: incident.screenshotUrl ?? existing[0].screenshotUrl,
-          activity: incident.activity ?? existing[0].activity,
-        })
-        .where(eq(ransomwareIncidents.id, existing[0].id))
-        .returning();
-      return { incident: updated, isNew: false };
-    }
-    
-    const [created] = await db.insert(ransomwareIncidents).values(incident).returning();
-    return { incident: created, isNew: true };
+
+    const [result] = await db.insert(ransomwareIncidents)
+      .values(incident)
+      .onConflictDoUpdate({
+        target: [ransomwareIncidents.victim, ransomwareIncidents.groupName],
+        set: {
+          country: sql`COALESCE(excluded.country, ${ransomwareIncidents.country})`,
+          website: sql`COALESCE(excluded.website, ${ransomwareIncidents.website})`,
+          description: sql`COALESCE(excluded.description, ${ransomwareIncidents.description})`,
+          status: sql`COALESCE(excluded.status, ${ransomwareIncidents.status})`,
+          postUrl: sql`COALESCE(excluded.post_url, ${ransomwareIncidents.postUrl})`,
+          screenshotUrl: sql`COALESCE(excluded.screenshot_url, ${ransomwareIncidents.screenshotUrl})`,
+          activity: sql`COALESCE(excluded.activity, ${ransomwareIncidents.activity})`,
+        },
+      })
+      .returning();
+
+    return { incident: result, isNew: !existing };
   }
 
   async enrichRansomwarePaymentsByGroup(groupName: string, data: { totalUSD: number; ransomCurrency?: string; bitcoinWallet?: string; paymentStatus?: string }): Promise<number> {
     const normalizedName = groupName.toLowerCase().replace(/[^a-z0-9]/g, '');
-    
-    const matchingIncidents = await db.select({ id: ransomwareIncidents.id })
-      .from(ransomwareIncidents)
-      .where(and(
-        sql`LOWER(REGEXP_REPLACE(${ransomwareIncidents.groupName}, '[^a-zA-Z0-9]', '', 'g')) = ${normalizedName}`,
-        sql`${ransomwareIncidents.ransomAmount} IS NULL`
-      ));
-    
-    if (matchingIncidents.length === 0) return 0;
-    
-    const perIncidentAmount = data.totalUSD / matchingIncidents.length;
-    const formattedAmount = `$${perIncidentAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
-    
-    const ids = matchingIncidents.map(i => i.id);
-    const result = await db.update(ransomwareIncidents)
-      .set({
-        ransomAmount: formattedAmount,
-        ransomCurrency: data.ransomCurrency ?? undefined,
-        bitcoinWallet: data.bitcoinWallet ?? undefined,
-        paymentStatus: data.paymentStatus ?? undefined,
-      })
-      .where(sql`${ransomwareIncidents.id} = ANY(${ids})`)
-      .returning();
-    
-    return result.length;
+
+    return await db.transaction(async (tx) => {
+      const matchingIncidents = await tx.select({ id: ransomwareIncidents.id })
+        .from(ransomwareIncidents)
+        .where(and(
+          sql`LOWER(REGEXP_REPLACE(${ransomwareIncidents.groupName}, '[^a-zA-Z0-9]', '', 'g')) = ${normalizedName}`,
+          sql`${ransomwareIncidents.ransomAmount} IS NULL`
+        ));
+
+      if (matchingIncidents.length === 0) return 0;
+
+      const perIncidentAmount = data.totalUSD / matchingIncidents.length;
+      const formattedAmount = `$${perIncidentAmount.toLocaleString('en-US', { maximumFractionDigits: 0 })}`;
+
+      const ids = matchingIncidents.map(i => i.id);
+      const result = await tx.update(ransomwareIncidents)
+        .set({
+          ransomAmount: formattedAmount,
+          ransomCurrency: data.ransomCurrency ?? undefined,
+          bitcoinWallet: data.bitcoinWallet ?? undefined,
+          paymentStatus: data.paymentStatus ?? undefined,
+        })
+        .where(sql`${ransomwareIncidents.id} = ANY(${ids})`)
+        .returning();
+
+      return result.length;
+    });
   }
 
   async searchRansomware(query: string, limit = 50): Promise<RansomwareIncident[]> {
@@ -826,14 +824,6 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertNews(article: InsertNews): Promise<{ article: NewsArticle; isNew: boolean }> {
-    if (article.sourceUrl) {
-      const [existing] = await db.select().from(newsArticles)
-        .where(eq(newsArticles.sourceUrl, article.sourceUrl))
-        .limit(1);
-      if (existing) {
-        return { article: existing, isNew: false };
-      }
-    }
     if (article.title) {
       const [existing] = await db.select().from(newsArticles)
         .where(eq(newsArticles.title, article.title))
@@ -841,6 +831,19 @@ export class DatabaseStorage implements IStorage {
       if (existing) {
         return { article: existing, isNew: false };
       }
+    }
+    if (article.sourceUrl) {
+      const [result] = await db.insert(newsArticles)
+        .values(article)
+        .onConflictDoNothing({ target: newsArticles.sourceUrl })
+        .returning();
+      if (result) {
+        return { article: result, isNew: true };
+      }
+      const [existing] = await db.select().from(newsArticles)
+        .where(eq(newsArticles.sourceUrl, article.sourceUrl))
+        .limit(1);
+      return { article: existing, isNew: false };
     }
     const [created] = await db.insert(newsArticles).values(article).returning();
     return { article: created, isNew: true };
@@ -870,21 +873,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertMaliciousIp(ip: InsertMaliciousIp): Promise<MaliciousIp> {
-    const [existing] = await db.select().from(maliciousIps)
-      .where(and(
-        eq(maliciousIps.ipAddress, ip.ipAddress),
-        eq(maliciousIps.source, ip.source)
-      ));
-    
-    if (existing) {
-      const [updated] = await db.update(maliciousIps)
-        .set({ ...ip, lastSeen: new Date() })
-        .where(eq(maliciousIps.id, existing.id))
-        .returning();
-      return updated;
-    }
-    const [created] = await db.insert(maliciousIps).values(ip).returning();
-    return created;
+    const [result] = await db.insert(maliciousIps)
+      .values(ip)
+      .onConflictDoUpdate({
+        target: [maliciousIps.ipAddress, maliciousIps.source],
+        set: { ...ip, lastSeen: new Date() },
+      })
+      .returning();
+    return result;
   }
 
   async getMaliciousIpCount(): Promise<number> {
@@ -917,21 +913,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertMaliciousUrl(url: InsertMaliciousUrl): Promise<MaliciousUrl> {
-    const [existing] = await db.select().from(maliciousUrls)
-      .where(and(
-        eq(maliciousUrls.url, url.url),
-        eq(maliciousUrls.source, url.source)
-      ));
-    
-    if (existing) {
-      const [updated] = await db.update(maliciousUrls)
-        .set(url)
-        .where(eq(maliciousUrls.id, existing.id))
-        .returning();
-      return updated;
-    }
-    const [created] = await db.insert(maliciousUrls).values(url).returning();
-    return created;
+    const [result] = await db.insert(maliciousUrls)
+      .values(url)
+      .onConflictDoUpdate({
+        target: [maliciousUrls.url, maliciousUrls.source],
+        set: url,
+      })
+      .returning();
+    return result;
   }
 
   async getMaliciousUrlCount(): Promise<number> {
@@ -945,17 +934,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertCisaKev(kev: InsertCisaKev): Promise<CisaKev> {
-    const [existing] = await db.select().from(cisaKev).where(eq(cisaKev.cveId, kev.cveId));
-    
-    if (existing) {
-      const [updated] = await db.update(cisaKev)
-        .set(kev)
-        .where(eq(cisaKev.cveId, kev.cveId))
-        .returning();
-      return updated;
-    }
-    const [created] = await db.insert(cisaKev).values(kev).returning();
-    return created;
+    const [result] = await db.insert(cisaKev)
+      .values(kev)
+      .onConflictDoUpdate({
+        target: cisaKev.cveId,
+        set: kev,
+      })
+      .returning();
+    return result;
   }
 
   async batchUpsertCisaKev(kevs: InsertCisaKev[]): Promise<void> {
@@ -1198,24 +1184,26 @@ export class DatabaseStorage implements IStorage {
     newsDeleted: number;
   }> {
     const cutoffDate = new Date(Date.now() - retentionDays * 24 * 60 * 60 * 1000);
-    
-    const ipCondition = sql`${maliciousIps.lastSeen} < ${cutoffDate} OR (${maliciousIps.lastSeen} IS NULL AND ${maliciousIps.createdAt} < ${cutoffDate})`;
-    const urlCondition = sql`${maliciousUrls.reportedAt} < ${cutoffDate} OR (${maliciousUrls.reportedAt} IS NULL AND ${maliciousUrls.createdAt} < ${cutoffDate})`;
-    const newsCondition = sql`${newsArticles.publishedAt} < ${cutoffDate}`;
 
-    const [ipsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(maliciousIps).where(ipCondition);
-    const [urlsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(maliciousUrls).where(urlCondition);
-    const [newsCount] = await db.select({ count: sql<number>`count(*)::int` }).from(newsArticles).where(newsCondition);
+    return await db.transaction(async (tx) => {
+      const ipCondition = sql`${maliciousIps.lastSeen} < ${cutoffDate} OR (${maliciousIps.lastSeen} IS NULL AND ${maliciousIps.createdAt} < ${cutoffDate})`;
+      const urlCondition = sql`${maliciousUrls.reportedAt} < ${cutoffDate} OR (${maliciousUrls.reportedAt} IS NULL AND ${maliciousUrls.createdAt} < ${cutoffDate})`;
+      const newsCondition = sql`${newsArticles.publishedAt} < ${cutoffDate}`;
 
-    if (ipsCount.count > 0) await db.delete(maliciousIps).where(ipCondition);
-    if (urlsCount.count > 0) await db.delete(maliciousUrls).where(urlCondition);
-    if (newsCount.count > 0) await db.delete(newsArticles).where(newsCondition);
-    
-    return {
-      ipsDeleted: ipsCount.count,
-      urlsDeleted: urlsCount.count,
-      newsDeleted: newsCount.count,
-    };
+      const [ipsCount] = await tx.select({ count: sql<number>`count(*)::int` }).from(maliciousIps).where(ipCondition);
+      const [urlsCount] = await tx.select({ count: sql<number>`count(*)::int` }).from(maliciousUrls).where(urlCondition);
+      const [newsCount] = await tx.select({ count: sql<number>`count(*)::int` }).from(newsArticles).where(newsCondition);
+
+      if (ipsCount.count > 0) await tx.delete(maliciousIps).where(ipCondition);
+      if (urlsCount.count > 0) await tx.delete(maliciousUrls).where(urlCondition);
+      if (newsCount.count > 0) await tx.delete(newsArticles).where(newsCondition);
+
+      return {
+        ipsDeleted: ipsCount.count,
+        urlsDeleted: urlsCount.count,
+        newsDeleted: newsCount.count,
+      };
+    });
   }
 
   // Check if IP is in threat database (optimized lookup)

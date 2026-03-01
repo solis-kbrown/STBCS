@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import cookieParser from "cookie-parser";
 import { storage } from "./storage";
 import { visitorTrackingMiddleware } from "./visitors";
-import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema, toSlug, contentViews, logoVotes, siteSettings } from "@shared/schema";
+import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema, toSlug, contentViews, logoVotes, siteSettings, users, sessions } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql as dsql } from "drizzle-orm";
 import { z } from "zod";
@@ -55,52 +55,46 @@ const generalLimiter = rateLimit({
   message: { error: "Too many requests, please try again later" },
   standardHeaders: true,
   legacyHeaders: false,
-  validate: { xForwardedForHeader: false }, // Trust proxy setup handled in Express config
 });
 
 const strictLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 30, // 30 requests per minute for sensitive endpoints
+  windowMs: 60 * 1000,
+  max: 30,
   message: { error: "Rate limit exceeded. Please wait before trying again." },
   standardHeaders: true,
   legacyHeaders: false,
-  validate: { xForwardedForHeader: false }, // Trust proxy setup handled in Express config
 });
 
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10, // 10 auth attempts per 15 minutes per IP
+  windowMs: 15 * 60 * 1000,
+  max: 10,
   message: { error: "Too many authentication attempts. Please try again in 15 minutes." },
   standardHeaders: true,
   legacyHeaders: false,
-  validate: { xForwardedForHeader: false },
 });
 
 const freeToolsLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 10, // Free users: 10 tool requests per minute
+  windowMs: 60 * 1000,
+  max: 10,
   message: { error: "Free tier rate limit reached. Upgrade to Pro for unlimited access." },
   standardHeaders: true,
   legacyHeaders: false,
-  validate: { xForwardedForHeader: false },
 });
 
 const proToolsLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 60, // Pro users: 60 tool requests per minute
+  windowMs: 60 * 1000,
+  max: 60,
   message: { error: "Rate limit exceeded. Please wait before trying again." },
   standardHeaders: true,
   legacyHeaders: false,
-  validate: { xForwardedForHeader: false },
 });
 
 const businessToolsLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 120, // Business users: 120 tool requests per minute
+  windowMs: 60 * 1000,
+  max: 120,
   message: { error: "Rate limit exceeded. Please wait before trying again." },
   standardHeaders: true,
   legacyHeaders: false,
-  validate: { xForwardedForHeader: false },
 });
 
 const liveChatLimiter = rateLimit({
@@ -109,7 +103,6 @@ const liveChatLimiter = rateLimit({
   message: { error: "Too many requests. Please wait a moment." },
   standardHeaders: true,
   legacyHeaders: false,
-  validate: { xForwardedForHeader: false },
 });
 
 function tieredToolsLimiter(req: Request, res: Response, next: NextFunction) {
@@ -483,22 +476,24 @@ Hiring: https://stbcybersecurity.com/support
         return;
       }
       
-      // Hash password and create user
       const hashedPassword = await hashPassword(data.password);
-      const user = await storage.createUser({
-        username: data.username,
-        email: data.email,
-        password: hashedPassword,
+      const { user, token } = await db.transaction(async (tx) => {
+        const [newUser] = await tx.insert(users).values({
+          username: data.username,
+          email: data.email,
+          password: hashedPassword,
+        }).returning();
+
+        const sessionToken = generateSessionToken();
+        await tx.insert(sessions).values({
+          userId: newUser.id,
+          token: sessionToken,
+          expiresAt: getSessionExpiry(),
+        });
+
+        return { user: newUser, token: sessionToken };
       });
-      
-      // Create session
-      const token = generateSessionToken();
-      await storage.createSession({
-        userId: user.id,
-        token,
-        expiresAt: getSessionExpiry(),
-      });
-      
+
       res.cookie("session_token", token, {
         httpOnly: true,
         secure: true,
@@ -1637,106 +1632,7 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
-  // ==========================================
-  // PRO TIER - WATCHLIST
-  // ==========================================
-
-  // Get user watchlist items
-  app.get("/api/watchlist", strictLimiter, async (req: Request, res: Response) => {
-    try {
-      const schema = z.object({
-        userId: z.string().min(1).max(100),
-        itemType: z.string().max(50).optional(),
-      });
-      
-      const parsed = schema.safeParse(req.query);
-      if (!parsed.success) {
-        return res.status(400).json({ error: "Invalid request parameters" });
-      }
-      
-      const { userId, itemType } = parsed.data;
-      const items = itemType 
-        ? await storage.getWatchlistsByType(userId, itemType)
-        : await storage.getWatchlistItems(userId);
-      
-      res.json({ items, count: items.length });
-    } catch (error) {
-      console.error("Get watchlist error:", error);
-      res.status(500).json({ error: "Failed to fetch watchlist" });
-    }
-  });
-
-  // Add watchlist item
-  app.post("/api/watchlist", strictLimiter, async (req: Request, res: Response) => {
-    try {
-      const schema = z.object({
-        userId: z.string().min(1).max(100),
-        itemType: z.enum(["company", "sector", "cve", "threat_actor", "country", "keyword"]),
-        itemValue: z.string().min(1).max(500),
-        label: z.string().max(200).nullable().optional(),
-        alertOnMatch: z.boolean().default(true),
-        emailOnMatch: z.boolean().default(false),
-        smsOnMatch: z.boolean().default(false),
-        notes: z.string().max(1000).nullable().optional(),
-      });
-      
-      const parsed = schema.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({ error: "Invalid request body", details: parsed.error.flatten() });
-      }
-      
-      const item = await storage.createWatchlistItem(parsed.data);
-      res.status(201).json(item);
-    } catch (error) {
-      console.error("Create watchlist item error:", error);
-      res.status(500).json({ error: "Failed to create watchlist item" });
-    }
-  });
-
-  // Update watchlist item
-  app.patch("/api/watchlist/:id", strictLimiter, async (req: Request, res: Response) => {
-    try {
-      const schema = z.object({
-        userId: z.string().min(1).max(100),
-        label: z.string().max(200).optional(),
-        alertOnMatch: z.boolean().optional(),
-        emailOnMatch: z.boolean().optional(),
-        notes: z.string().max(1000).optional(),
-      });
-      
-      const parsed = schema.safeParse(req.body);
-      if (!parsed.success) {
-        return res.status(400).json({ error: "Invalid request body" });
-      }
-      
-      const { userId, ...updates } = parsed.data;
-      const item = await storage.updateWatchlistItem(asString(req.params.id), userId, updates);
-      res.json(item);
-    } catch (error) {
-      console.error("Update watchlist item error:", error);
-      res.status(500).json({ error: "Failed to update watchlist item" });
-    }
-  });
-
-  // Delete watchlist item
-  app.delete("/api/watchlist/:id", strictLimiter, async (req: Request, res: Response) => {
-    try {
-      const schema = z.object({
-        userId: z.string().min(1).max(100),
-      });
-      
-      const parsed = schema.safeParse(req.query);
-      if (!parsed.success) {
-        return res.status(400).json({ error: "Invalid request parameters" });
-      }
-      
-      await storage.deleteWatchlistItem(asString(req.params.id), parsed.data.userId);
-      res.json({ success: true });
-    } catch (error) {
-      console.error("Delete watchlist item error:", error);
-      res.status(500).json({ error: "Failed to delete watchlist item" });
-    }
-  });
+  // Watchlist routes moved to authenticated section (see "PRO FEATURES" block below)
 
   // ==========================================
   // BREACH INCIDENTS
@@ -2508,7 +2404,6 @@ Hiring: https://stbcybersecurity.com/support
     message: { error: "Scan rate limit exceeded. Please wait before running more scans." },
     standardHeaders: true,
     legacyHeaders: false,
-    validate: { xForwardedForHeader: false },
     keyGenerator: (req: AuthenticatedRequest) => req.user?.id || 'anonymous',
   });
 
@@ -3673,26 +3568,6 @@ Hiring: https://stbcybersecurity.com/support
     } catch (error) {
       console.error("Notification dismiss error:", error);
       res.status(500).json({ error: "Failed to dismiss notification" });
-    }
-  });
-
-  // Search breaches (Pro feature)
-  app.get("/api/breaches", async (req: AuthenticatedRequest, res: Response) => {
-    try {
-      const schema = z.object({
-        limit: z.coerce.number().int().min(1).max(100).default(50),
-        offset: z.coerce.number().int().min(0).default(0),
-        search: z.string().max(200).optional(),
-      });
-      
-      const { limit, offset, search } = schema.parse(req.query);
-      const breaches = await storage.getBreachIncidents(limit, offset, search);
-      const total = await storage.getBreachCount();
-      
-      res.json({ data: breaches, total, limit, offset });
-    } catch (error) {
-      console.error("Breaches fetch error:", error);
-      res.status(500).json({ error: "Failed to fetch breaches" });
     }
   });
 
