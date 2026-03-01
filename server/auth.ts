@@ -144,7 +144,7 @@ export function requirePro(
     return;
   }
   
-  const proTiers = ["supporter", "pro", "business", "enterprise"];
+  const proTiers = ["supporter", "pro", "business", "enterprise", "unlimited"];
   if (!proTiers.includes(req.user.tier)) {
     res.status(403).json({ error: "Pro subscription required" });
     return;
@@ -162,7 +162,7 @@ export function requireBusiness(
     return;
   }
   
-  const businessTiers = ["business", "enterprise"];
+  const businessTiers = ["business", "enterprise", "unlimited"];
   if (!businessTiers.includes(req.user.tier)) {
     res.status(403).json({ error: "Business subscription required" });
     return;

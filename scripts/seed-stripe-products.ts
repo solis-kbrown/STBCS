@@ -68,21 +68,45 @@ async function createProducts() {
 
   const businessMonthly = await stripe.prices.create({
     product: businessProduct.id,
-    unit_amount: 14999,
+    unit_amount: 19999,
     currency: 'usd',
     recurring: { interval: 'month' },
-    metadata: { display: '$149.99/month' },
+    metadata: { display: '$199.99/month' },
   });
 
   const businessYearly = await stripe.prices.create({
     product: businessProduct.id,
-    unit_amount: 149990,
+    unit_amount: 199990,
     currency: 'usd',
     recurring: { interval: 'year' },
-    metadata: { display: '$1,499.90/year', savings: '2 months free' },
+    metadata: { display: '$1,999.90/year', savings: '2 months free' },
   });
 
   console.log('Created Business:', businessProduct.id, businessMonthly.id, businessYearly.id);
+
+  const unlimitedProduct = await stripe.products.create({
+    name: 'STBCS Unlimited Everything',
+    description: 'Full unlimited access to the entire STBCS platform — no limits, no restrictions. Includes white-label reports, custom threat feeds, priority support, and early access to all new features.',
+    metadata: { type: 'membership', tier: 'unlimited' },
+  });
+
+  const unlimitedMonthly = await stripe.prices.create({
+    product: unlimitedProduct.id,
+    unit_amount: 49999,
+    currency: 'usd',
+    recurring: { interval: 'month' },
+    metadata: { display: '$499.99/month' },
+  });
+
+  const unlimitedYearly = await stripe.prices.create({
+    product: unlimitedProduct.id,
+    unit_amount: 499990,
+    currency: 'usd',
+    recurring: { interval: 'year' },
+    metadata: { display: '$4,999.90/year', savings: '2 months free' },
+  });
+
+  console.log('Created Unlimited Everything:', unlimitedProduct.id, unlimitedMonthly.id, unlimitedYearly.id);
 
   console.log('All products created successfully!');
 }

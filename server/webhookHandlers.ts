@@ -5,6 +5,7 @@ const TIER_PRODUCT_MAP: Record<string, string> = {
   'STBCS Supporter': 'supporter',
   'STBCS Pro': 'pro',
   'STBCS Business': 'business',
+  'STBCS Unlimited Everything': 'unlimited',
 };
 
 export class WebhookHandlers {

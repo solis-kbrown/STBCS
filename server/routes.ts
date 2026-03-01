@@ -115,7 +115,9 @@ const liveChatLimiter = rateLimit({
 function tieredToolsLimiter(req: Request, res: Response, next: NextFunction) {
   const authReq = req as AuthenticatedRequest;
   const tier = authReq.user?.tier;
-  if (tier && ["business", "enterprise"].includes(tier)) {
+  if (tier && ["unlimited"].includes(tier)) {
+    return businessToolsLimiter(req, res, next);
+  } else if (tier && ["business", "enterprise"].includes(tier)) {
     return businessToolsLimiter(req, res, next);
   } else if (tier && ["pro", "supporter"].includes(tier)) {
     return proToolsLimiter(req, res, next);
@@ -2960,7 +2962,7 @@ Hiring: https://stbcybersecurity.com/support
         }
       }
       
-      const validNames = ['STBCS Supporter', 'STBCS Pro', 'STBCS Business'];
+      const validNames = ['STBCS Supporter', 'STBCS Pro', 'STBCS Business', 'STBCS Unlimited Everything'];
       const filtered = Array.from(productsMap.values()).filter((p: any) => validNames.includes(p.name));
       res.json({ products: filtered });
     } catch (error) {

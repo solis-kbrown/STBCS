@@ -51,9 +51,9 @@ const contextMessages = {
 };
 
 export default function UpgradeBanner({ context = "general" }: UpgradeBannerProps) {
-  const { isPro, isBusiness } = useAuth();
+  const { isPro, isBusiness, isUnlimited } = useAuth();
   
-  if (isPro || isBusiness) return null;
+  if (isPro || isBusiness || isUnlimited) return null;
 
   const msg = contextMessages[context];
 

@@ -14,6 +14,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isPro: boolean;
   isBusiness: boolean;
+  isUnlimited: boolean;
   login: (username: string, password: string) => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -90,10 +91,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     queryClient.invalidateQueries();
   };
 
-  const proTiers = ["supporter", "pro", "business", "enterprise"];
-  const businessTiers = ["business", "enterprise"];
+  const proTiers = ["supporter", "pro", "business", "enterprise", "unlimited"];
+  const businessTiers = ["business", "enterprise", "unlimited"];
+  const unlimitedTiers = ["unlimited"];
   const isPro = user ? proTiers.includes(user.tier) : false;
   const isBusiness = user ? businessTiers.includes(user.tier) : false;
+  const isUnlimited = user ? unlimitedTiers.includes(user.tier) : false;
 
   return (
     <AuthContext.Provider
@@ -103,6 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!user,
         isPro,
         isBusiness,
+        isUnlimited,
         login,
         signup,
         logout,

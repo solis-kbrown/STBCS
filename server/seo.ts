@@ -38,7 +38,7 @@ const PAGE_META: Record<string, PageMeta> = {
   },
   '/support': {
     title: 'Support & Membership | STB Cybersecurity',
-    description: 'Subscribe to STBCS Supporter, Pro, or Business plans for advanced threat intelligence, real-time alerts, watchlists, and priority incident response.',
+    description: 'Subscribe to STBCS Supporter, Pro, Business, or Unlimited Everything plans for advanced threat intelligence, real-time alerts, watchlists, and priority incident response.',
   },
   '/api-docs': {
     title: 'API Documentation | STB Cybersecurity',

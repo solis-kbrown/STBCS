@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Heart, Shield, Users, Zap, Check, Coffee, Rocket, Building2, ExternalLink, CreditCard, Lock, ArrowRight } from "lucide-react";
+import { Heart, Shield, Users, Zap, Check, Coffee, Rocket, Building2, ExternalLink, CreditCard, Lock, ArrowRight, Crown } from "lucide-react";
 import AnimatedSection, { AnimatedList } from "@/components/animated-section";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -25,12 +25,14 @@ const donationAmounts = [
 const membershipTiers = [
   {
     name: "Supporter",
-    originalPrice: "$14.99",
-    price: "$7.49",
-    interval: "month",
+    monthlyOriginal: "$14.99",
+    monthlyPrice: "$7.49",
+    yearlyOriginal: "$149.90",
+    yearlyPrice: "$74.95",
     discount: "50% OFF",
     description: "Back our mission and keep free security tools available for everyone",
     icon: Coffee,
+    stripeName: "Supporter",
     features: [
       "Supporter-only platform updates",
       "Your name on our supporters wall",
@@ -43,13 +45,15 @@ const membershipTiers = [
   },
   {
     name: "Pro",
-    originalPrice: "$49.99",
-    price: "$24.99",
-    interval: "month",
+    monthlyOriginal: "$49.99",
+    monthlyPrice: "$24.99",
+    yearlyOriginal: "$499.90",
+    yearlyPrice: "$249.95",
     discount: "50% OFF",
     description: "Everything you need to monitor threats targeting your business",
     icon: Rocket,
     popular: true,
+    stripeName: "Pro",
     features: [
       "Unlimited threat intelligence API calls",
       "Real-time email and SMS alerts when threats match your watchlist",
@@ -67,12 +71,14 @@ const membershipTiers = [
   },
   {
     name: "Business",
-    originalPrice: "$149.99",
-    price: "$74.99",
-    interval: "month",
+    monthlyOriginal: "$199.99",
+    monthlyPrice: "$99.99",
+    yearlyOriginal: "$1,999.90",
+    yearlyPrice: "$999.95",
     discount: "50% OFF",
     description: "Threat intelligence built for security teams and managed service providers",
     icon: Building2,
+    stripeName: "Business",
     features: [
       "Everything in Pro, plus:",
       "25 uptime monitors with deep SSL inspection",
@@ -88,6 +94,32 @@ const membershipTiers = [
     color: "from-zinc-800/50 to-zinc-900/50",
     borderColor: "border-zinc-700",
   },
+  {
+    name: "Unlimited Everything",
+    monthlyOriginal: "$499.99",
+    monthlyPrice: "$249.99",
+    yearlyOriginal: "$4,999.90",
+    yearlyPrice: "$2,499.95",
+    discount: "50% OFF",
+    description: "Full unlimited access to the entire STBCS platform — no limits, no restrictions",
+    icon: Crown,
+    stripeName: "Unlimited Everything",
+    features: [
+      "Everything in Business, plus:",
+      "Unlimited uptime monitors — no cap",
+      "Unlimited dark web monitors across all intel sources",
+      "Unlimited API keys with no daily quota cap",
+      "Unlimited threat intelligence report generation",
+      "White-label reports with your company branding",
+      "Direct Slack/Teams integration for alerts",
+      "Priority incident response queue — your tickets come first",
+      "Custom threat feed curation by our analysts",
+      "Quarterly executive threat briefing calls",
+      "Early access to every new feature before public release",
+    ],
+    color: "from-yellow-500/20 to-amber-600/10",
+    borderColor: "border-yellow-500/50",
+  },
 ];
 
 export default function SupportPage() {
@@ -101,6 +133,7 @@ export default function SupportPage() {
   const [donorName, setDonorName] = useState("");
   const [donationAgreed, setDonationAgreed] = useState(false);
   const [subscriptionAgreed, setSubscriptionAgreed] = useState(false);
+  const [billingInterval, setBillingInterval] = useState<"month" | "year">("month");
 
   const { data: productsData } = useQuery({
     queryKey: ["stripe-products"],
@@ -127,31 +160,31 @@ export default function SupportPage() {
     navigate(`/checkout?type=donation&amount=${amount}`);
   };
 
-  const handleSubscribe = (tierName: string) => {
+  const handleSubscribe = (tierStripeName: string) => {
     if (!subscriptionAgreed) {
       toast({ title: "Please agree to the Terms of Service, Privacy Policy, and recurring billing to proceed", variant: "destructive" });
       return;
     }
 
     const products = productsData?.products || [];
-    const product = products.find((p: any) => p.name?.includes(tierName));
+    const product = products.find((p: any) => p.name?.includes(tierStripeName));
     
     if (!product) {
       toast({ title: "Error", description: "Membership plan not found. Please refresh and try again.", variant: "destructive" });
       return;
     }
 
-    const monthlyPrice = product?.prices?.find((p: any) => 
-      p.recurring?.interval === 'month'
+    const matchedPrice = product?.prices?.find((p: any) => 
+      p.recurring?.interval === billingInterval
     );
-    const price = monthlyPrice || product?.prices?.[0];
+    const price = matchedPrice || product?.prices?.[0];
     
     if (!price?.id) {
       toast({ title: "Error", description: "Price not available. Please refresh and try again.", variant: "destructive" });
       return;
     }
 
-    navigate(`/checkout?type=subscription&priceId=${encodeURIComponent(price.id)}&tier=${encodeURIComponent(tierName)}`);
+    navigate(`/checkout?type=subscription&priceId=${encodeURIComponent(price.id)}&tier=${encodeURIComponent(tierStripeName)}`);
   };
 
   return (
@@ -218,7 +251,7 @@ export default function SupportPage() {
 
         <Tabs defaultValue="membership" className="space-y-6">
           <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 bg-zinc-900 border border-zinc-800 p-1">
-            <TabsTrigger value="membership" className="data-[state=active]:!bg-orange-500 data-[state=active]:!text-white data-[state=active]:!shadow-none text-zinc-400" data-testid="tab-membership">Monthly Membership</TabsTrigger>
+            <TabsTrigger value="membership" className="data-[state=active]:!bg-orange-500 data-[state=active]:!text-white data-[state=active]:!shadow-none text-zinc-400" data-testid="tab-membership">Membership Plans</TabsTrigger>
             <TabsTrigger value="donate" className="data-[state=active]:!bg-orange-500 data-[state=active]:!text-white data-[state=active]:!shadow-none text-zinc-400" data-testid="tab-donate">One-Time Donation</TabsTrigger>
           </TabsList>
 
@@ -346,19 +379,50 @@ export default function SupportPage() {
           <div className="text-center max-w-2xl mx-auto mb-8">
             <h2 className="text-2xl font-bold mb-2 text-white">Pick the Plan That Fits Your Threat Profile</h2>
             <p className="text-zinc-400">
-              From community supporter to full enterprise coverage. Cancel anytime, no long-term contracts.
+              From community supporter to full unlimited coverage. Cancel anytime, no long-term contracts.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6">
-            {membershipTiers.map((tier, index) => (
-              <AnimatedSection key={tier.name} animation="fade-up" stagger={(index + 1) as 1 | 2 | 3}>
+          <div className="flex items-center justify-center gap-4 mb-8">
+            <button
+              onClick={() => setBillingInterval("month")}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${billingInterval === "month" ? "bg-orange-500 text-white" : "bg-zinc-800 text-zinc-400 hover:text-white"}`}
+              data-testid="toggle-monthly"
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingInterval("year")}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-colors relative ${billingInterval === "year" ? "bg-orange-500 text-white" : "bg-zinc-800 text-zinc-400 hover:text-white"}`}
+              data-testid="toggle-annual"
+            >
+              Annual
+              <Badge className="absolute -top-2.5 -right-14 bg-green-500 text-white text-[10px] px-1.5 py-0.5 whitespace-nowrap">
+                Save 2 months
+              </Badge>
+            </button>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {membershipTiers.map((tier, index) => {
+              const displayPrice = billingInterval === "month" ? tier.monthlyPrice : tier.yearlyPrice;
+              const displayOriginal = billingInterval === "month" ? tier.monthlyOriginal : tier.yearlyOriginal;
+              const intervalLabel = billingInterval === "month" ? "mo" : "yr";
+              const isUnlimited = tier.name === "Unlimited Everything";
+
+              return (
+              <AnimatedSection key={tier.name} animation="fade-up" stagger={((index % 3) + 1) as 1 | 2 | 3}>
               <Card 
-                className={`relative bg-gradient-to-b ${tier.color} ${tier.borderColor} ${tier.popular ? 'ring-2 ring-orange-500 glow-pulse' : ''} card-interactive`}
+                className={`relative bg-gradient-to-b ${tier.color} ${tier.borderColor} ${tier.popular ? 'ring-2 ring-orange-500 glow-pulse' : ''} ${isUnlimited ? 'ring-2 ring-yellow-500/70' : ''} card-interactive h-full flex flex-col`}
               >
                 {tier.popular && (
                   <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-orange-500 text-white">
                     Most Popular
+                  </Badge>
+                )}
+                {isUnlimited && (
+                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-yellow-500 to-amber-500 text-black font-bold">
+                    Ultimate Plan
                   </Badge>
                 )}
                 {tier.discount && (
@@ -367,32 +431,35 @@ export default function SupportPage() {
                   </Badge>
                 )}
                 <CardHeader className="text-center pb-2">
-                  <tier.icon className={`h-12 w-12 mx-auto mb-2 icon-hover ${tier.popular ? 'text-orange-400' : 'text-zinc-400'}`} />
+                  <tier.icon className={`h-12 w-12 mx-auto mb-2 icon-hover ${tier.popular ? 'text-orange-400' : isUnlimited ? 'text-yellow-400' : 'text-zinc-400'}`} />
                   <CardTitle className="text-xl text-white">{tier.name}</CardTitle>
                   <div className="mt-2">
-                    {tier.originalPrice && (
-                      <span className="text-lg text-zinc-500 line-through mr-2">{tier.originalPrice}</span>
+                    {displayOriginal && (
+                      <span className="text-lg text-zinc-500 line-through mr-2">{displayOriginal}</span>
                     )}
-                    <span className="text-3xl font-bold text-green-400">{tier.price}</span>
-                    <span className="text-zinc-500">/{tier.interval}</span>
+                    <span className={`text-3xl font-bold ${isUnlimited ? 'text-yellow-400' : 'text-green-400'}`}>{displayPrice}</span>
+                    <span className="text-zinc-500">/{intervalLabel}</span>
                   </div>
+                  {billingInterval === "year" && (
+                    <span className="text-xs text-green-400 mt-1 block">2 months free vs monthly</span>
+                  )}
                   <CardDescription className="mt-2 text-zinc-400">{tier.description}</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="space-y-2">
+                <CardContent className="space-y-4 flex-1 flex flex-col">
+                  <ul className="space-y-2 flex-1">
                     {tier.features.map((feature, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-zinc-300">
-                        <Check className="h-4 w-4 text-green-400 shrink-0 mt-0.5" aria-hidden="true" />
+                        <Check className={`h-4 w-4 ${isUnlimited ? 'text-yellow-400' : 'text-green-400'} shrink-0 mt-0.5`} aria-hidden="true" />
                         <span>{feature}</span>
                       </li>
                     ))}
                   </ul>
                   <Button 
-                    className={`w-full font-bold ${tier.popular ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border-zinc-700 text-zinc-300 hover:bg-zinc-800'}`}
-                    variant={tier.popular ? "default" : "outline"}
-                    onClick={() => handleSubscribe(tier.name)}
+                    className={`w-full font-bold ${tier.popular ? 'bg-orange-500 hover:bg-orange-600 text-white' : isUnlimited ? 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black' : 'border-zinc-700 text-zinc-300 hover:bg-zinc-800'}`}
+                    variant={tier.popular || isUnlimited ? "default" : "outline"}
+                    onClick={() => handleSubscribe(tier.stripeName)}
                     disabled={!subscriptionAgreed}
-                    data-testid={`button-subscribe-${tier.name.toLowerCase()}`}
+                    data-testid={`button-subscribe-${tier.name.toLowerCase().replace(/\s+/g, "-")}`}
                   >
                     <CreditCard className="h-4 w-4 mr-2" aria-hidden="true" />
                     Start {tier.name} Plan
@@ -400,7 +467,8 @@ export default function SupportPage() {
                 </CardContent>
               </Card>
               </AnimatedSection>
-            ))}
+              );
+            })}
           </div>
 
           <div className="max-w-2xl mx-auto">
@@ -425,7 +493,7 @@ export default function SupportPage() {
 
           <div className="flex items-center justify-center gap-2 text-xs text-zinc-500">
             <Lock className="h-3 w-3" aria-hidden="true" />
-            <span>All subscriptions are billed monthly through Stripe. You can cancel anytime. We never store your payment information.</span>
+            <span>All subscriptions are billed {billingInterval === "month" ? "monthly" : "annually"} through Stripe. You can cancel anytime. We never store your payment information.</span>
           </div>
         </TabsContent>
         </Tabs>

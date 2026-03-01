@@ -6,6 +6,7 @@ const TIER_LIMITS = {
   pro: { maxKeys: 1, dailyQuota: 1000, rateLimitPerMin: 60, liveLookupDaily: 50 },
   business: { maxKeys: 5, dailyQuota: 10000, rateLimitPerMin: 120, liveLookupDaily: 200 },
   enterprise: { maxKeys: 5, dailyQuota: 10000, rateLimitPerMin: 120, liveLookupDaily: 200 },
+  unlimited: { maxKeys: 10, dailyQuota: 100000, rateLimitPerMin: 300, liveLookupDaily: 1000 },
 };
 
 const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
@@ -15,7 +16,7 @@ export function hashApiKey(rawKey: string): string {
 }
 
 export function generateApiKey(tier: string): { rawKey: string; prefix: string; keyHash: string } {
-  const prefixTag = tier === "business" || tier === "enterprise" ? "biz" : "pro";
+  const prefixTag = tier === "unlimited" ? "ult" : tier === "business" || tier === "enterprise" ? "biz" : "pro";
   const prefix = `stbcs_${prefixTag}_${randomBytes(4).toString("hex")}`;
   const secret = randomBytes(24).toString("hex");
   const rawKey = `${prefix}_${secret}`;

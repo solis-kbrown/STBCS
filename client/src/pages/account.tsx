@@ -18,6 +18,7 @@ const tierColors: Record<string, string> = {
   supporter: "bg-blue-500/20 text-blue-400 border-blue-500/30",
   pro: "bg-orange-500/20 text-orange-400 border-orange-500/30",
   business: "bg-purple-500/20 text-purple-400 border-purple-500/30",
+  unlimited: "bg-amber-500/20 text-amber-400 border-amber-500/30",
 };
 
 const tierLabels: Record<string, string> = {
@@ -25,6 +26,7 @@ const tierLabels: Record<string, string> = {
   supporter: "STBCS Supporter",
   pro: "STBCS Pro",
   business: "STBCS Business",
+  unlimited: "STBCS Unlimited Everything",
 };
 
 export default function AccountPage() {
@@ -103,7 +105,7 @@ export default function AccountPage() {
   const subscription = accountData?.subscription;
   const tier = account?.tier || user?.tier || "free";
   const isPaid = tier !== "free";
-  const hasPaidApi = tier === "pro" || tier === "business";
+  const hasPaidApi = tier === "pro" || tier === "business" || tier === "unlimited";
 
   const { data: apiKeysData, isLoading: keysLoading } = useQuery({
     queryKey: ["api-keys"],
@@ -303,7 +305,7 @@ export default function AccountPage() {
                 API Keys
               </CardTitle>
               <CardDescription>
-                Access the STBCS Threat Intelligence API programmatically. {tier === "pro" ? "1 key allowed." : "Up to 5 keys."}
+                Access the STBCS Threat Intelligence API programmatically. {tier === "pro" ? "1 key allowed." : tier === "unlimited" ? "Up to 10 keys." : "Up to 5 keys."}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

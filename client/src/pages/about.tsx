@@ -51,7 +51,7 @@ const whyUs = [
   "Threat intelligence from 70+ live public and commercial feeds",
   "No long-term contracts required for consulting engagements",
   "Free security tools and threat intelligence for everyone",
-  "Subscription plans that scale with your business",
+  "Subscription plans that scale — Supporter, Pro, Business, and Unlimited Everything tiers",
   "24/7 emergency hotline for active incidents",
 ];
 

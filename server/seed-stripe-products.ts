@@ -64,7 +64,7 @@ const products: ProductConfig[] = [
       },
     ],
   },
-  // Business/Enterprise Tier
+  // Business Tier
   {
     name: 'STBCS Business',
     description: 'Enterprise-grade threat intelligence with dedicated support, custom integrations, and SLA guarantees.',
@@ -74,16 +74,39 @@ const products: ProductConfig[] = [
     },
     prices: [
       {
-        unit_amount: 14999, // $149.99
+        unit_amount: 19999, // $199.99
         currency: 'usd',
         recurring: { interval: 'month' },
-        metadata: { display: '$149.99/month' },
+        metadata: { display: '$199.99/month' },
       },
       {
-        unit_amount: 149990, // $1,499.90 (2 months free)
+        unit_amount: 199990, // $1,999.90 (2 months free)
         currency: 'usd',
         recurring: { interval: 'year' },
-        metadata: { display: '$1,499.90/year', savings: '2 months free' },
+        metadata: { display: '$1,999.90/year', savings: '2 months free' },
+      },
+    ],
+  },
+  // Unlimited Everything Tier
+  {
+    name: 'STBCS Unlimited Everything',
+    description: 'Full unlimited access to the entire STBCS platform — no limits, no restrictions. Includes white-label reports, custom threat feeds, priority support, and early access to all new features.',
+    metadata: {
+      tier: 'unlimited',
+      type: 'membership',
+    },
+    prices: [
+      {
+        unit_amount: 49999, // $499.99
+        currency: 'usd',
+        recurring: { interval: 'month' },
+        metadata: { display: '$499.99/month' },
+      },
+      {
+        unit_amount: 499990, // $4,999.90 (2 months free)
+        currency: 'usd',
+        recurring: { interval: 'year' },
+        metadata: { display: '$4,999.90/year', savings: '2 months free' },
       },
     ],
   },

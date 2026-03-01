@@ -2,7 +2,7 @@
 
 ## Overview
 
-STB Cybersecurity provides professional cybersecurity services and real-time threat intelligence by aggregating data from over 40 free public threat intelligence feeds. The platform tracks ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news. STBCS offers Cybersecurity Consulting, Incident Response, Ransomware Recovery & Restoration, and Threat Hunting services, primarily for small to medium-sized businesses. The project aims to be a comprehensive hub for cybersecurity insights and professional services, focusing on becoming a leader in SMB cybersecurity.
+STB Cybersecurity provides professional cybersecurity services and real-time threat intelligence by aggregating data from 73+ free public threat intelligence feeds. The platform tracks ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news. STBCS offers Cybersecurity Consulting, Incident Response, Ransomware Recovery & Restoration, and Threat Hunting services, primarily for small to medium-sized businesses. The project aims to be a comprehensive hub for cybersecurity insights and professional services, focusing on becoming a leader in SMB cybersecurity.
 
 ## User Preferences
 
@@ -64,6 +64,7 @@ Preferred communication style: Simple, everyday language.
 - **Public API v1**: RESTful endpoints with authentication, rate limiting, and daily quotas.
 - **API Key System**: Manages API keys with tiered rate limits and quotas.
 - **Monitor Alert Engine**: Processes watchlist items and sends alerts.
+- **Subscription Tiers**: Supporter, Pro, Business, and Unlimited Everything — with monthly and annual billing. Unlimited Everything provides full unrestricted platform access, white-label reports, Slack/Teams integration, and priority incident response.
 - **Pro Tier Features**: User authentication, subscription management, watchlist system, breach database, tiered API, and advanced search/scanning.
 - **Security & US Compliance**: Implements robust security headers, secure cookies, API logging, rate limiting, and consent flows (CCPA/CPRA, COPPA, CAN-SPAM).
 - **Authentication**: Secure signup/login with bcrypt and cryptographic session tokens.
