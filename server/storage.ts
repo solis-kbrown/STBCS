@@ -46,7 +46,7 @@ import {
   kbPosts, kbComments, kbVotes, feedbackSubmissions
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, ilike, or, sql, and, gte, asc, count, ne } from "drizzle-orm";
+import { eq, desc, ilike, or, sql, and, gte, asc, count, ne, inArray } from "drizzle-orm";
 
 export interface GroupStats {
   totalVictims: number;
@@ -2466,11 +2466,13 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createKbComment(comment: InsertKbComment): Promise<KbComment> {
-    const [created] = await db.insert(kbComments).values(comment).returning();
-    await db.update(kbPosts)
-      .set({ commentCount: sql`${kbPosts.commentCount} + 1` })
-      .where(eq(kbPosts.id, comment.postId));
-    return created;
+    return await db.transaction(async (tx) => {
+      const [created] = await tx.insert(kbComments).values(comment).returning();
+      await tx.update(kbPosts)
+        .set({ commentCount: sql`${kbPosts.commentCount} + 1` })
+        .where(eq(kbPosts.id, comment.postId));
+      return created;
+    });
   }
 
   async getKbCommentsByPost(postId: number): Promise<KbComment[]> {
@@ -2498,77 +2500,95 @@ export class DatabaseStorage implements IStorage {
   }
 
   async toggleKbPostVote(userId: string, postId: number): Promise<{ voted: boolean; newCount: number }> {
-    const [existing] = await db.select().from(kbVotes)
-      .where(and(eq(kbVotes.userId, userId), eq(kbVotes.postId, postId)));
-    if (existing) {
-      await db.delete(kbVotes).where(eq(kbVotes.id, existing.id));
-      const [post] = await db.update(kbPosts)
-        .set({ voteCount: sql`GREATEST(${kbPosts.voteCount} - 1, 0)` })
-        .where(eq(kbPosts.id, postId)).returning();
-      const authorPost = await this.getKbPostById(postId);
-      if (authorPost) {
-        await db.update(users)
+    return await db.transaction(async (tx) => {
+      const [existing] = await tx.select().from(kbVotes)
+        .where(and(eq(kbVotes.userId, userId), eq(kbVotes.postId, postId)));
+      const [postRow] = await tx.select().from(kbPosts).where(eq(kbPosts.id, postId));
+      if (!postRow) throw new Error("Post not found");
+      if (postRow.authorId === userId) throw new Error("Cannot vote on your own post");
+      if (existing) {
+        await tx.delete(kbVotes).where(eq(kbVotes.id, existing.id));
+        const [post] = await tx.update(kbPosts)
+          .set({ voteCount: sql`GREATEST(${kbPosts.voteCount} - 1, 0)` })
+          .where(eq(kbPosts.id, postId)).returning();
+        await tx.update(users)
           .set({ kbReputation: sql`GREATEST(${users.kbReputation} - 1, 0)` })
-          .where(eq(users.id, authorPost.authorId));
+          .where(eq(users.id, postRow.authorId));
+        return { voted: false, newCount: post.voteCount || 0 };
+      } else {
+        await tx.insert(kbVotes).values({ userId, postId });
+        const [post] = await tx.update(kbPosts)
+          .set({ voteCount: sql`${kbPosts.voteCount} + 1` })
+          .where(eq(kbPosts.id, postId)).returning();
+        await tx.update(users)
+          .set({ kbReputation: sql`LEAST(${users.kbReputation} + 1, 10000)` })
+          .where(eq(users.id, postRow.authorId));
+        return { voted: true, newCount: post.voteCount || 0 };
       }
-      return { voted: false, newCount: post.voteCount || 0 };
-    } else {
-      await db.insert(kbVotes).values({ userId, postId });
-      const [post] = await db.update(kbPosts)
-        .set({ voteCount: sql`${kbPosts.voteCount} + 1` })
-        .where(eq(kbPosts.id, postId)).returning();
-      const authorPost = await this.getKbPostById(postId);
-      if (authorPost) {
-        await db.update(users)
-          .set({ kbReputation: sql`${users.kbReputation} + 1` })
-          .where(eq(users.id, authorPost.authorId));
-        await this.checkAutoPromotion(authorPost.authorId);
+    }).then(async (result) => {
+      if (result.voted) {
+        const [postRow] = await db.select().from(kbPosts).where(eq(kbPosts.id, postId));
+        if (postRow) await this.checkAutoPromotion(postRow.authorId);
       }
-      return { voted: true, newCount: post.voteCount || 0 };
-    }
+      return result;
+    });
   }
 
   async toggleKbCommentVote(userId: string, commentId: number): Promise<{ voted: boolean; newCount: number }> {
-    const [existing] = await db.select().from(kbVotes)
-      .where(and(eq(kbVotes.userId, userId), eq(kbVotes.commentId, commentId)));
-    if (existing) {
-      await db.delete(kbVotes).where(eq(kbVotes.id, existing.id));
-      const [comment] = await db.update(kbComments)
-        .set({ voteCount: sql`GREATEST(${kbComments.voteCount} - 1, 0)` })
-        .where(eq(kbComments.id, commentId)).returning();
-      if (comment) {
-        await db.update(users)
-          .set({ kbReputation: sql`GREATEST(${users.kbReputation} - 1, 0)` })
-          .where(eq(users.id, comment.authorId));
+    return await db.transaction(async (tx) => {
+      const [existing] = await tx.select().from(kbVotes)
+        .where(and(eq(kbVotes.userId, userId), eq(kbVotes.commentId, commentId)));
+      const [targetComment] = await tx.select().from(kbComments).where(eq(kbComments.id, commentId));
+      if (targetComment && targetComment.authorId === userId) throw new Error("Cannot vote on your own comment");
+      if (existing) {
+        await tx.delete(kbVotes).where(eq(kbVotes.id, existing.id));
+        const [comment] = await tx.update(kbComments)
+          .set({ voteCount: sql`GREATEST(${kbComments.voteCount} - 1, 0)` })
+          .where(eq(kbComments.id, commentId)).returning();
+        if (comment) {
+          await tx.update(users)
+            .set({ kbReputation: sql`GREATEST(${users.kbReputation} - 1, 0)` })
+            .where(eq(users.id, comment.authorId));
+        }
+        return { voted: false, newCount: comment?.voteCount || 0 };
+      } else {
+        await tx.insert(kbVotes).values({ userId, commentId });
+        const [comment] = await tx.update(kbComments)
+          .set({ voteCount: sql`${kbComments.voteCount} + 1` })
+          .where(eq(kbComments.id, commentId)).returning();
+        if (comment) {
+          await tx.update(users)
+            .set({ kbReputation: sql`LEAST(${users.kbReputation} + 1, 10000)` })
+            .where(eq(users.id, comment.authorId));
+        }
+        return { voted: true, newCount: comment?.voteCount || 0, authorId: comment?.authorId };
       }
-      return { voted: false, newCount: comment.voteCount || 0 };
-    } else {
-      await db.insert(kbVotes).values({ userId, commentId });
-      const [comment] = await db.update(kbComments)
-        .set({ voteCount: sql`${kbComments.voteCount} + 1` })
-        .where(eq(kbComments.id, commentId)).returning();
-      if (comment) {
-        await db.update(users)
-          .set({ kbReputation: sql`${users.kbReputation} + 1` })
-          .where(eq(users.id, comment.authorId));
-        await this.checkAutoPromotion(comment.authorId);
+    }).then(async (result: any) => {
+      if (result.voted && result.authorId) {
+        await this.checkAutoPromotion(result.authorId);
       }
-      return { voted: true, newCount: comment.voteCount || 0 };
-    }
+      return { voted: result.voted, newCount: result.newCount };
+    });
   }
 
   async getKbUserVotes(userId: string, postIds?: number[], commentIds?: number[]): Promise<{ postVotes: number[]; commentVotes: number[] }> {
     const postVotes: number[] = [];
     const commentVotes: number[] = [];
     if (postIds && postIds.length > 0) {
-      const votes = await db.select().from(kbVotes)
-        .where(and(eq(kbVotes.userId, userId), sql`${kbVotes.postId} = ANY(ARRAY[${sql.raw(postIds.join(","))}]::int[])`));
-      for (const v of votes) { if (v.postId) postVotes.push(v.postId); }
+      const safeIds = postIds.map(Number).filter(n => Number.isFinite(n));
+      if (safeIds.length > 0) {
+        const votes = await db.select().from(kbVotes)
+          .where(and(eq(kbVotes.userId, userId), inArray(kbVotes.postId, safeIds)));
+        for (const v of votes) { if (v.postId) postVotes.push(v.postId); }
+      }
     }
     if (commentIds && commentIds.length > 0) {
-      const votes = await db.select().from(kbVotes)
-        .where(and(eq(kbVotes.userId, userId), sql`${kbVotes.commentId} = ANY(ARRAY[${sql.raw(commentIds.join(","))}]::int[])`));
-      for (const v of votes) { if (v.commentId) commentVotes.push(v.commentId); }
+      const safeIds = commentIds.map(Number).filter(n => Number.isFinite(n));
+      if (safeIds.length > 0) {
+        const votes = await db.select().from(kbVotes)
+          .where(and(eq(kbVotes.userId, userId), inArray(kbVotes.commentId, safeIds)));
+        for (const v of votes) { if (v.commentId) commentVotes.push(v.commentId); }
+      }
     }
     return { postVotes, commentVotes };
   }
@@ -2616,9 +2636,10 @@ export class DatabaseStorage implements IStorage {
   }
 
   async awardReputation(userId: string, points: number): Promise<void> {
+    const MAX_REPUTATION = 10000;
     if (points > 0) {
       await db.update(users)
-        .set({ kbReputation: sql`${users.kbReputation} + ${points}` })
+        .set({ kbReputation: sql`LEAST(${users.kbReputation} + ${points}, ${MAX_REPUTATION})` })
         .where(eq(users.id, userId));
     } else if (points < 0) {
       await db.update(users)

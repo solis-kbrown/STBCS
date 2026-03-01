@@ -46,6 +46,9 @@ export interface AuthenticatedRequest extends Request {
     stripeCustomerId?: string | null;
     stripeSubscriptionId?: string | null;
     createdAt?: Date | null;
+    isAdmin: boolean;
+    isTrusted: boolean;
+    kbReputation: number;
   };
   session?: {
     id: string;
@@ -105,6 +108,9 @@ export async function authMiddleware(
       stripeCustomerId: user.stripeCustomerId,
       stripeSubscriptionId: user.stripeSubscriptionId,
       createdAt: user.createdAt,
+      isAdmin: user.isAdmin || false,
+      isTrusted: user.isTrusted || false,
+      kbReputation: user.kbReputation || 0,
     };
 
     sessionCache.set(token, { user: userData, sessionId: session.id, expires: Date.now() + SESSION_CACHE_TTL });

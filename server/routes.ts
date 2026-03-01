@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import cookieParser from "cookie-parser";
 import { storage } from "./storage";
 import { visitorTrackingMiddleware } from "./visitors";
-import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema, toSlug, contentViews, logoVotes, siteSettings, users, sessions, insertKbPostSchema, insertKbCommentSchema, KB_POINTS, insertFeedbackSchema } from "@shared/schema";
+import { insertCveSchema, insertRansomwareSchema, insertNewsSchema, insertWatchlistItemSchema, toSlug, contentViews, logoVotes, siteSettings, users, sessions, insertKbPostSchema, insertKbCommentSchema, kbComments, KB_POINTS, insertFeedbackSchema } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql as dsql } from "drizzle-orm";
 import { z } from "zod";
@@ -617,6 +617,15 @@ Hiring: https://stbcybersecurity.com/support
       // Successful login — clear any failed attempts
       loginAttempts.delete(accountKey);
 
+      const ADMIN_EMAILS = ["kbpc.inc@gmail.com"];
+      if (user.email && ADMIN_EMAILS.includes(user.email.toLowerCase()) && !user.isAdmin) {
+        await storage.setUserAdmin(user.id, true);
+        await storage.setUserTrusted(user.id, true);
+        user.isAdmin = true;
+        user.isTrusted = true;
+        console.log(`[Auth] Auto-promoted site owner to admin: ${user.username}`);
+      }
+
       // Create session
       const token = generateSessionToken();
       await storage.createSession({
@@ -639,6 +648,8 @@ Hiring: https://stbcybersecurity.com/support
           username: user.username,
           email: user.email,
           tier: user.tier || "free",
+          isAdmin: user.isAdmin || false,
+          isTrusted: user.isTrusted || false,
         },
       });
     } catch (error) {
@@ -5234,6 +5245,13 @@ Hiring: https://stbcybersecurity.com/support
       const { title, content, type, tags } = req.body;
       if (!title || !content) { res.status(400).json({ error: "Title and content are required" }); return; }
 
+      const MAX_TITLE_LEN = 200;
+      const MAX_CONTENT_LEN = 50000;
+      const MAX_TAGS = 10;
+      const MAX_TAG_LEN = 50;
+      if (title.length > MAX_TITLE_LEN) { res.status(400).json({ error: `Title must be under ${MAX_TITLE_LEN} characters` }); return; }
+      if (content.length > MAX_CONTENT_LEN) { res.status(400).json({ error: `Content must be under ${MAX_CONTENT_LEN} characters` }); return; }
+
       const validTypes = ["official_kb", "bug_report", "feature_request", "threat_intel", "general_idea"];
       const postType = validTypes.includes(type) ? type : "general_idea";
 
@@ -5241,6 +5259,10 @@ Hiring: https://stbcybersecurity.com/support
         res.status(403).json({ error: "Only admins can create official KB articles" });
         return;
       }
+
+      const sanitizedTags = Array.isArray(tags)
+        ? tags.slice(0, MAX_TAGS).map((t: string) => String(t).slice(0, MAX_TAG_LEN).trim()).filter(Boolean)
+        : [];
 
       const baseSlug = toSlug(title);
       let slug = baseSlug;
@@ -5255,13 +5277,13 @@ Hiring: https://stbcybersecurity.com/support
 
       const post = await storage.createKbPost({
         authorId: user.id,
-        title,
+        title: title.slice(0, MAX_TITLE_LEN),
         slug,
-        content,
+        content: content.slice(0, MAX_CONTENT_LEN),
         type: postType,
         status,
         isPinned: false,
-        tags: Array.isArray(tags) ? tags : [],
+        tags: sanitizedTags,
       });
 
       await storage.awardReputation(user.id, KB_POINTS.POST_CREATED);
@@ -5309,13 +5331,10 @@ Hiring: https://stbcybersecurity.com/support
   app.delete("/api/kb/posts/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const user = req.user!;
+      if (!user.isAdmin) { res.status(403).json({ error: "Admin access required to delete posts" }); return; }
       const postId = parseInt(req.params.id);
       const post = await storage.getKbPostById(postId);
       if (!post) { res.status(404).json({ error: "Post not found" }); return; }
-      if (!user.isAdmin && post.authorId !== user.id) {
-        res.status(403).json({ error: "Not authorized" });
-        return;
-      }
       await storage.deleteKbPost(postId);
       res.json({ success: true });
     } catch (error) {
@@ -5328,6 +5347,9 @@ Hiring: https://stbcybersecurity.com/support
       const user = req.user!;
       if (user.tier === "free") { res.status(403).json({ error: "Paid membership required to vote" }); return; }
       const postId = parseInt(req.params.id);
+      const post = await storage.getKbPostById(postId);
+      if (!post) { res.status(404).json({ error: "Post not found" }); return; }
+      if (post.authorId === user.id) { res.status(403).json({ error: "Cannot vote on your own post" }); return; }
       const result = await storage.toggleKbPostVote(user.id, postId);
       res.json(result);
     } catch (error) {
@@ -5361,12 +5383,14 @@ Hiring: https://stbcybersecurity.com/support
       const postId = parseInt(req.params.id);
       const { content, parentId } = req.body;
       if (!content || content.trim().length < 1) { res.status(400).json({ error: "Content is required" }); return; }
+      const MAX_COMMENT_LEN = 5000;
+      if (content.length > MAX_COMMENT_LEN) { res.status(400).json({ error: `Comment must be under ${MAX_COMMENT_LEN} characters` }); return; }
 
       const comment = await storage.createKbComment({
         postId,
         authorId: user.id,
         parentId: parentId || null,
-        content: content.trim(),
+        content: content.trim().slice(0, MAX_COMMENT_LEN),
       });
 
       await storage.awardReputation(user.id, KB_POINTS.COMMENT_CREATED);
@@ -5394,6 +5418,9 @@ Hiring: https://stbcybersecurity.com/support
       const user = req.user!;
       if (user.tier === "free") { res.status(403).json({ error: "Paid membership required to vote" }); return; }
       const commentId = parseInt(req.params.id);
+      const [comment] = await db.select().from(kbComments).where(eq(kbComments.id, commentId));
+      if (!comment) { res.status(404).json({ error: "Comment not found" }); return; }
+      if (comment.authorId === user.id) { res.status(403).json({ error: "Cannot vote on your own comment" }); return; }
       const result = await storage.toggleKbCommentVote(user.id, commentId);
       res.json(result);
     } catch (error) {
