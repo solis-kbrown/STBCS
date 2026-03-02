@@ -28,13 +28,20 @@ const httpServer = launcher?.server || createServer((req, res) => {
   const url = req.url || '/';
   const urlPath = url.split('?')[0];
 
-  if (urlPath === '/health' || urlPath === '/__repl' || urlPath === '/') {
-    if (urlPath === '/health') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ status: 'ok', ready: appReady, timestamp: Date.now() }));
-      return;
-    }
-    if (urlPath === '/__repl') {
+  if (urlPath === '/health') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('ok');
+    return;
+  }
+
+  if (urlPath === '/__repl') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('ok');
+    return;
+  }
+
+  if (urlPath === '/') {
+    if (!appReady) {
       res.writeHead(200, { 'Content-Type': 'text/plain' });
       res.end('ok');
       return;
@@ -45,13 +52,8 @@ const httpServer = launcher?.server || createServer((req, res) => {
   }
 
   if (!appReady || !expressApp) {
-    if (req.method === 'GET' && !urlPath.startsWith('/api/')) {
-      res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(cachedIndexHtml || STARTUP_HTML);
-      return;
-    }
-    res.writeHead(503, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ error: "Service starting up, please retry shortly" }));
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('ok');
     return;
   }
   expressApp(req, res);
@@ -108,7 +110,7 @@ function delay(ms: number) {
 }
 
 async function staggeredStartup(port: number) {
-  await delay(3000);
+  await delay(500);
 
   try {
     await initStripe();
@@ -116,7 +118,7 @@ async function staggeredStartup(port: number) {
     console.error("Deferred Stripe init failed:", err);
   }
 
-  await delay(2000);
+  await delay(500);
 
   try {
     const { startDigestScheduler } = await import("./digest");
@@ -132,7 +134,7 @@ async function staggeredStartup(port: number) {
     console.error("Maintenance scheduler failed:", err);
   }
 
-  await delay(3000);
+  await delay(500);
 
   try {
     const { startKbScraper, ensureSeedMembers } = await import("./kbScraper");
@@ -142,7 +144,7 @@ async function staggeredStartup(port: number) {
     console.error("KB scraper failed:", err);
   }
 
-  await delay(5000);
+  await delay(1000);
 
   try {
     const { startDataRefreshScheduler } = await import("./scrapers");
@@ -151,7 +153,7 @@ async function staggeredStartup(port: number) {
     console.error("Scraper scheduler failed:", err);
   }
 
-  await delay(5000);
+  await delay(1000);
 
   try {
     const { startUptimeScheduler } = await import("./uptimeEngine");
@@ -160,7 +162,7 @@ async function staggeredStartup(port: number) {
     console.error("Uptime scheduler failed:", err);
   }
 
-  await delay(5000);
+  await delay(1000);
 
   try {
     const { startDarkWebScheduler } = await import("./darkWebEngine");
@@ -169,7 +171,7 @@ async function staggeredStartup(port: number) {
     console.error("Dark web scheduler failed:", err);
   }
 
-  await delay(3000);
+  await delay(1000);
 
   try {
     const base = `http://127.0.0.1:${port}`;
@@ -436,6 +438,10 @@ async function initializeApp() {
     await setupVite(httpServer, app);
   }
 
+  setImmediate(() => {
+    staggeredStartup(port).catch(err => console.error("Staggered startup error:", err));
+  });
+
   expressApp = app;
   appReady = true;
 
@@ -444,16 +450,9 @@ async function initializeApp() {
       expressApp!(req, res);
     };
     launcher.ready = true;
-    if (IS_PRODUCTION && seoIndexHtml) {
-      launcher.seoHtml = seoIndexHtml;
-    }
   }
 
   log("Routes and static serving initialized");
-
-  setImmediate(() => {
-    staggeredStartup(port).catch(err => console.error("Staggered startup error:", err));
-  });
 }
 
 async function initStripe() {

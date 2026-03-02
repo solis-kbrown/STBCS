@@ -32,42 +32,23 @@ const allowlist = [
 
 const LAUNCHER_CODE = `
 const http = require('http');
-const path = require('path');
-const fs = require('fs');
 const port = parseInt(process.env.PORT || '5000', 10);
 
-let indexHtml = '';
-try {
-  const p = path.resolve(__dirname, 'public', 'index.html');
-  if (fs.existsSync(p)) indexHtml = fs.readFileSync(p, 'utf-8');
-} catch (e) {}
-if (!indexHtml) indexHtml = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>STB Cybersecurity</title><meta http-equiv="refresh" content="3"></head><body style="background:#18181b;color:#a1a1aa;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif"><p>Loading...</p></body></html>';
-
-global.__launcher = { indexHtml, ready: false, handler: null };
+global.__launcher = { ready: false, handler: null };
 
 const server = http.createServer((req, res) => {
   const url = (req.url || '/').split('?')[0];
-  if (url === '/health' || url === '/__repl') {
-    res.writeHead(200, { 'Content-Type': url === '/health' ? 'application/json' : 'text/plain' });
-    res.end(url === '/health' ? JSON.stringify({ status: 'ok', ready: global.__launcher.ready, ts: Date.now() }) : 'ok');
-    return;
-  }
-  if (url === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=300' });
-    res.end(global.__launcher.seoHtml || indexHtml);
+  if (url === '/health' || url === '/__repl' || url === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('ok');
     return;
   }
   if (global.__launcher.handler) {
     global.__launcher.handler(req, res);
     return;
   }
-  if (req.method === 'GET' && !url.startsWith('/api/')) {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(indexHtml);
-    return;
-  }
-  res.writeHead(503, { 'Content-Type': 'application/json' });
-  res.end('{"error":"Starting up..."}');
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('ok');
 });
 
 global.__launcher.server = server;
