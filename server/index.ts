@@ -28,20 +28,22 @@ const httpServer = launcher?.server || createServer((req, res) => {
   const url = req.url || '/';
   const urlPath = url.split('?')[0];
 
-  if (urlPath === '/health' || urlPath === '/__repl') {
-    const html = cachedIndexHtml || STARTUP_HTML;
-    res.writeHead(200, { 'Content-Type': 'text/html', 'Connection': 'close' });
-    res.end(html);
+  if (urlPath === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Connection': 'close' });
+    res.end('{"status":"ok"}');
+    return;
+  }
+
+  if (urlPath === '/__repl') {
+    res.writeHead(200, { 'Content-Type': 'text/plain', 'Connection': 'close' });
+    res.end('ok');
     return;
   }
 
   if (expressApp) {
     expressApp(req, res);
-  } else if (urlPath === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=300' });
-    res.end(cachedIndexHtml || STARTUP_HTML);
   } else {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-cache' });
     res.end(cachedIndexHtml || STARTUP_HTML);
   }
 });
@@ -109,7 +111,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Digest scheduler failed:", err);
     }
-  }, 60000);
+  }, 5000);
 
   setTimeout(async () => {
     try {
@@ -118,7 +120,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Maintenance scheduler failed:", err);
     }
-  }, 65000);
+  }, 8000);
 
   setTimeout(async () => {
     try {
@@ -128,16 +130,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("KB scraper failed:", err);
     }
-  }, 70000);
-
-  setTimeout(async () => {
-    try {
-      const { startDataRefreshScheduler } = await import("./scrapers");
-      startDataRefreshScheduler(15);
-    } catch (err) {
-      console.error("Scraper scheduler failed:", err);
-    }
-  }, 90000);
+  }, 11000);
 
   setTimeout(async () => {
     try {
@@ -146,7 +139,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Uptime scheduler failed:", err);
     }
-  }, 75000);
+  }, 14000);
 
   setTimeout(async () => {
     try {
@@ -155,11 +148,20 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Dark web scheduler failed:", err);
     }
-  }, 80000);
+  }, 17000);
 
   setTimeout(() => {
     initStripe().catch(err => console.error("Deferred Stripe init failed:", err));
-  }, 85000);
+  }, 20000);
+
+  setTimeout(async () => {
+    try {
+      const { startDataRefreshScheduler } = await import("./scrapers");
+      startDataRefreshScheduler(15);
+    } catch (err) {
+      console.error("Scraper scheduler failed:", err);
+    }
+  }, 23000);
 
   setTimeout(async () => {
     try {
@@ -172,7 +174,7 @@ async function staggeredStartup(port: number) {
       }
       log("Cache warm-up complete");
     } catch {}
-  }, 95000);
+  }, 26000);
 }
 
 declare module "http" {
@@ -217,21 +219,14 @@ async function initializeApp() {
   await yieldToEventLoop();
 
   app.get('/health', (_req, res) => {
-    const html = cachedIndexHtml || STARTUP_HTML;
-    res.status(200).setHeader('Content-Type', 'text/html').send(html);
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Connection': 'close' });
+    res.end('{"status":"ok"}');
   });
 
   app.get('/__repl', (_req, res) => {
-    const html = cachedIndexHtml || STARTUP_HTML;
-    res.status(200).setHeader('Content-Type', 'text/html').send(html);
+    res.writeHead(200, { 'Content-Type': 'text/plain', 'Connection': 'close' });
+    res.end('ok');
   });
-
-  if (IS_PRODUCTION) {
-    app.get('/', (req, res) => {
-      const html = cachedIndexHtml || STARTUP_HTML;
-      res.status(200).setHeader('Content-Type', 'text/html').send(html);
-    });
-  }
 
   app.use((req, res, next) => {
     const host = req.get('host')?.split(':')[0];

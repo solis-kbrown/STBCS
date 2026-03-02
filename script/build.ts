@@ -39,36 +39,29 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const port = parseInt(process.env.PORT || '5000', 10);
-const MINIMAL_HTML = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>STB Cybersecurity</title></head><body><div id="root"></div></body></html>';
-let indexHtml = MINIMAL_HTML;
+const STARTUP_HTML = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>STB Cybersecurity</title></head><body><div id="root"></div></body></html>';
+let indexHtml = STARTUP_HTML;
 try { const p = path.resolve(__dirname, 'public', 'index.html'); if (fs.existsSync(p)) indexHtml = fs.readFileSync(p, 'utf-8'); } catch(e) {}
-let reqCount = 0;
 
 global.__launcher = { ready: false, handler: null };
 
-function isHealthCheck(req) {
-  const ua = (req.headers['user-agent'] || '').toLowerCase();
-  return !ua || ua.includes('googlehc') || ua.includes('kube-probe') || ua.includes('health') || ua.includes('uptime') || ua.includes('monitoring') || ua.includes('bot');
-}
-
 const server = http.createServer((req, res) => {
-  reqCount++;
   const url = (req.url || '/').split('?')[0];
-  if (url === '/health' || url === '/__repl') {
-    res.writeHead(200, { 'Content-Type': 'text/html', 'Connection': 'close' });
-    res.end(indexHtml);
+  if (url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json', 'Connection': 'close' });
+    res.end('{"status":"ok"}');
     return;
   }
-  if (url === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=300, s-maxage=600' });
-    res.end(indexHtml);
+  if (url === '/__repl') {
+    res.writeHead(200, { 'Content-Type': 'text/plain', 'Connection': 'close' });
+    res.end('ok');
     return;
   }
   if (global.__launcher.handler) {
     global.__launcher.handler(req, res);
     return;
   }
-  res.writeHead(200, { 'Content-Type': 'text/html' });
+  res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'no-cache' });
   res.end(indexHtml);
 });
 
