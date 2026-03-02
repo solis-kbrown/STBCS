@@ -67,25 +67,34 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
+async function initWithRetry(maxRetries = 5) {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      await initializeApp();
+      return;
+    } catch (err: any) {
+      const isDbError = err?.message?.includes('endpoint') || err?.code === 'XX000' || err?.code === 'ECONNREFUSED' || err?.message?.includes('database') || err?.message?.includes('connect');
+      if (isDbError && attempt < maxRetries) {
+        const waitSec = Math.min(attempt * 5, 30);
+        console.error(`App init attempt ${attempt}/${maxRetries} failed (DB issue): ${err.message}. Retrying in ${waitSec}s...`);
+        await new Promise(r => setTimeout(r, waitSec * 1000));
+      } else {
+        console.error("Fatal: App initialization failed:", err);
+        process.exit(1);
+      }
+    }
+  }
+}
+
 if (launcher) {
   log(`reusing launcher server on port ${port}`);
-  setImmediate(() => {
-    initializeApp().catch((err) => {
-      console.error("Fatal: App initialization failed:", err);
-      process.exit(1);
-    });
-  });
+  setImmediate(() => { initWithRetry(); });
 } else {
   httpServer.listen(
     { port, host: "0.0.0.0", reusePort: true },
     () => {
       log(`serving on port ${port}`);
-      setImmediate(() => {
-        initializeApp().catch((err) => {
-          console.error("Fatal: App initialization failed:", err);
-          process.exit(1);
-        });
-      });
+      setImmediate(() => { initWithRetry(); });
     },
   );
 }

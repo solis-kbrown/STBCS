@@ -21,13 +21,20 @@ pool.on('error', (err) => {
   console.error('Unexpected database pool error:', err.message);
 });
 
-pool.connect()
-  .then(client => {
-    client.release();
-    console.log('Database pool connection verified');
-  })
-  .catch(err => {
-    console.error('Database pool initial connection failed:', err.message);
-  });
+async function verifyConnection(retries = 3) {
+  for (let i = 1; i <= retries; i++) {
+    try {
+      const client = await pool.connect();
+      client.release();
+      console.log('Database pool connection verified');
+      return;
+    } catch (err: any) {
+      console.error(`Database connection attempt ${i}/${retries} failed: ${err.message}`);
+      if (i < retries) await new Promise(r => setTimeout(r, i * 2000));
+    }
+  }
+}
+
+verifyConnection();
 
 export const db = drizzle(pool, { schema });
