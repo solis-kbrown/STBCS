@@ -3,7 +3,7 @@ import { createServer } from "http";
 import path from "path";
 import fs from "fs";
 
-const STARTUP_HTML = '<!DOCTYPE html><html><head><title>STBCS</title></head><body>ok</body></html>';
+const STARTUP_HTML = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>STB Cybersecurity</title></head><body><div id="root"></div></body></html>';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const port = parseInt(process.env.PORT || "5000", 10);
@@ -28,15 +28,10 @@ const httpServer = launcher?.server || createServer((req, res) => {
   const url = req.url || '/';
   const urlPath = url.split('?')[0];
 
-  if (urlPath === '/health') {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('ok');
-    return;
-  }
-
-  if (urlPath === '/__repl') {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('ok');
+  if (urlPath === '/health' || urlPath === '/__repl') {
+    const html = cachedIndexHtml || STARTUP_HTML;
+    res.writeHead(200, { 'Content-Type': 'text/html', 'Connection': 'close' });
+    res.end(html);
     return;
   }
 
@@ -47,7 +42,7 @@ const httpServer = launcher?.server || createServer((req, res) => {
     res.end(cachedIndexHtml || STARTUP_HTML);
   } else {
     res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(STARTUP_HTML);
+    res.end(cachedIndexHtml || STARTUP_HTML);
   }
 });
 
@@ -222,16 +217,19 @@ async function initializeApp() {
   await yieldToEventLoop();
 
   app.get('/health', (_req, res) => {
-    res.status(200).json({ status: 'ok' });
+    const html = cachedIndexHtml || STARTUP_HTML;
+    res.status(200).setHeader('Content-Type', 'text/html').send(html);
   });
 
   app.get('/__repl', (_req, res) => {
-    res.status(200).send('ok');
+    const html = cachedIndexHtml || STARTUP_HTML;
+    res.status(200).setHeader('Content-Type', 'text/html').send(html);
   });
 
   if (IS_PRODUCTION) {
     app.get('/', (req, res) => {
-      res.status(200).send('ok');
+      const html = cachedIndexHtml || STARTUP_HTML;
+      res.status(200).setHeader('Content-Type', 'text/html').send(html);
     });
   }
 

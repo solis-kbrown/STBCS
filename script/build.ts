@@ -39,7 +39,7 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const port = parseInt(process.env.PORT || '5000', 10);
-const MINIMAL_HTML = '<!DOCTYPE html><html><head><title>STBCS</title></head><body>ok</body></html>';
+const MINIMAL_HTML = '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><title>STB Cybersecurity</title></head><body><div id="root"></div></body></html>';
 let indexHtml = MINIMAL_HTML;
 try { const p = path.resolve(__dirname, 'public', 'index.html'); if (fs.existsSync(p)) indexHtml = fs.readFileSync(p, 'utf-8'); } catch(e) {}
 let reqCount = 0;
@@ -55,16 +55,11 @@ const server = http.createServer((req, res) => {
   reqCount++;
   const url = (req.url || '/').split('?')[0];
   if (url === '/health' || url === '/__repl') {
-    res.writeHead(200, { 'Content-Type': 'text/plain', 'Connection': 'close' });
-    res.end('ok');
+    res.writeHead(200, { 'Content-Type': 'text/html', 'Connection': 'close' });
+    res.end(indexHtml);
     return;
   }
   if (url === '/') {
-    if (isHealthCheck(req)) {
-      res.writeHead(200, { 'Content-Type': 'text/html', 'Connection': 'close' });
-      res.end('<!DOCTYPE html><html><body>ok</body></html>');
-      return;
-    }
     res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=300, s-maxage=600' });
     res.end(indexHtml);
     return;
@@ -74,7 +69,7 @@ const server = http.createServer((req, res) => {
     return;
   }
   res.writeHead(200, { 'Content-Type': 'text/html' });
-  res.end(MINIMAL_HTML);
+  res.end(indexHtml);
 });
 
 global.__launcher.server = server;
@@ -82,7 +77,7 @@ global.__launcher.server = server;
 server.listen({ port, host: '0.0.0.0', reusePort: true }, () => {
   const t = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
   console.log(t + ' [launcher] Port ' + port + ' open, loading app...');
-  setTimeout(() => { import('./index.js').catch(e => console.error('App load failed:', e)); }, 1000);
+  setTimeout(() => { import('./index.js').catch(e => console.error('App load failed:', e)); }, 100);
 });
 `.trim();
 
