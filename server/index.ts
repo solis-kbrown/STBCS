@@ -72,9 +72,8 @@ async function initWithRetry(maxRetries = 5) {
     } catch (err: any) {
       const isDbError = err?.message?.includes('endpoint') || err?.code === 'XX000' || err?.code === 'ECONNREFUSED' || err?.message?.includes('database') || err?.message?.includes('connect');
       if (isDbError && attempt < maxRetries) {
-        const waitSec = Math.min(attempt, 3);
-        console.error(`App init attempt ${attempt}/${maxRetries} failed (DB issue): ${err.message}. Retrying in ${waitSec}s...`);
-        await new Promise(r => setTimeout(r, waitSec * 1000));
+        console.error(`App init attempt ${attempt}/${maxRetries} failed (DB issue): ${err.message}. Retrying in 1s...`);
+        await new Promise(r => setTimeout(r, 1000));
       } else {
         console.error("Fatal: App initialization failed:", err);
         process.exit(1);
@@ -160,21 +159,20 @@ async function staggeredStartup(port: number) {
 
   setTimeout(() => {
     initStripe().catch(err => console.error("Deferred Stripe init failed:", err));
-  }, 0);
+  }, 30000);
 
-  await delay(10000);
-  await yieldToEventLoop();
-
-  try {
-    const base = `http://127.0.0.1:${port}`;
-    const urls = ["/api/stats", "/api/trends", "/api/cves", "/api/ransomware",
-      "/api/site-settings/hero-bg", "/api/site-settings/logo-theme", "/api/site-settings/icon-theme"];
-    for (const u of urls) {
-      await fetch(base + u).catch(() => {});
-      await yieldToEventLoop();
-    }
-    log("Cache warm-up complete");
-  } catch {}
+  setTimeout(async () => {
+    try {
+      const base = `http://127.0.0.1:${port}`;
+      const urls = ["/api/stats", "/api/trends", "/api/cves", "/api/ransomware",
+        "/api/site-settings/hero-bg", "/api/site-settings/logo-theme", "/api/site-settings/icon-theme"];
+      for (const u of urls) {
+        await fetch(base + u).catch(() => {});
+        await yieldToEventLoop();
+      }
+      log("Cache warm-up complete");
+    } catch {}
+  }, 5000);
 }
 
 declare module "http" {

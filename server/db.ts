@@ -30,7 +30,7 @@ async function verifyConnection(retries = 3) {
       return;
     } catch (err: any) {
       console.error(`Database connection attempt ${i}/${retries} failed: ${err.message}`);
-      if (i < retries) await new Promise(r => setTimeout(r, i * 2000));
+      if (i < retries) await new Promise(r => setTimeout(r, i * 500));
     }
   }
 }
