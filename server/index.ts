@@ -105,7 +105,7 @@ async function yieldToEventLoop() {
 }
 
 async function staggeredStartup(port: number) {
-  log("Staggered startup: deferring background services (30s+ after health checks)");
+  log("Staggered startup: deferring background services (60s+ after health checks)");
 
   setTimeout(async () => {
     try {
@@ -114,7 +114,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Digest scheduler failed:", err);
     }
-  }, 30000);
+  }, 60000);
 
   setTimeout(async () => {
     try {
@@ -123,7 +123,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Maintenance scheduler failed:", err);
     }
-  }, 32000);
+  }, 65000);
 
   setTimeout(async () => {
     try {
@@ -133,7 +133,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("KB scraper failed:", err);
     }
-  }, 35000);
+  }, 70000);
 
   setTimeout(async () => {
     try {
@@ -142,7 +142,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Scraper scheduler failed:", err);
     }
-  }, 45000);
+  }, 90000);
 
   setTimeout(async () => {
     try {
@@ -151,7 +151,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Uptime scheduler failed:", err);
     }
-  }, 38000);
+  }, 75000);
 
   setTimeout(async () => {
     try {
@@ -160,11 +160,11 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Dark web scheduler failed:", err);
     }
-  }, 40000);
+  }, 80000);
 
   setTimeout(() => {
     initStripe().catch(err => console.error("Deferred Stripe init failed:", err));
-  }, 42000);
+  }, 85000);
 
   setTimeout(async () => {
     try {
@@ -177,7 +177,7 @@ async function staggeredStartup(port: number) {
       }
       log("Cache warm-up complete");
     } catch {}
-  }, 50000);
+  }, 95000);
 }
 
 declare module "http" {
@@ -231,13 +231,7 @@ async function initializeApp() {
 
   if (IS_PRODUCTION) {
     app.get('/', (req, res) => {
-      const ua = (req.headers['user-agent'] || '').toLowerCase();
-      if (ua.includes('googlehc') || ua.includes('kube-probe') || ua.includes('health') || ua.includes('uptime') || ua.includes('monitoring') || ua === '') {
-        res.setHeader('Connection', 'close');
-        return res.status(200).send('ok');
-      }
-      res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');
-      res.status(200).send(cachedIndexHtml || '<!DOCTYPE html><html><head><title>STBCS</title></head><body>ok</body></html>');
+      res.status(200).send('ok');
     });
   }
 
@@ -419,8 +413,8 @@ async function initializeApp() {
     const indexPath = path.resolve(distPath, "index.html");
     const baseHtml = fs.readFileSync(indexPath, "utf-8");
     seoIndexHtml = injectMetaTags(baseHtml, '/');
-    app.use("/{*path}", (req, res, next) => {
-      if (req.path === '/health' || req.path === '/__repl' || req.path === '/') {
+    app.get('/{*path}', (req, res, next) => {
+      if (req.path === '/health' || req.path === '/__repl') {
         return next();
       }
       const html = injectMetaTags(baseHtml, req.originalUrl);

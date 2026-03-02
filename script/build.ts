@@ -31,9 +31,13 @@ const allowlist = [
 ];
 
 const LAUNCHER_CODE = `
-const http = require('http');
-const path = require('path');
-const fs = require('fs');
+import http from 'http';
+import path from 'path';
+import fs from 'fs';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const port = parseInt(process.env.PORT || '5000', 10);
 const MINIMAL_HTML = '<!DOCTYPE html><html><head><title>STBCS</title></head><body>ok</body></html>';
 let indexHtml = MINIMAL_HTML;
@@ -61,11 +65,7 @@ const server = http.createServer((req, res) => {
       res.end('<!DOCTYPE html><html><body>ok</body></html>');
       return;
     }
-    if (global.__launcher.ready && global.__launcher.handler) {
-      global.__launcher.handler(req, res);
-      return;
-    }
-    res.writeHead(200, { 'Content-Type': 'text/html', 'Connection': 'close' });
+    res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=300, s-maxage=600' });
     res.end(indexHtml);
     return;
   }
@@ -82,7 +82,7 @@ global.__launcher.server = server;
 server.listen({ port, host: '0.0.0.0', reusePort: true }, () => {
   const t = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
   console.log(t + ' [launcher] Port ' + port + ' open, loading app...');
-  setTimeout(() => { try { require('./index.cjs'); } catch(e) { console.error('App load failed:', e); } }, 1000);
+  setTimeout(() => { import('./index.js').catch(e => console.error('App load failed:', e)); }, 1000);
 });
 `.trim();
 
@@ -104,8 +104,11 @@ async function buildAll() {
     entryPoints: ["server/index.ts"],
     platform: "node",
     bundle: true,
-    format: "cjs",
-    outfile: "dist/index.cjs",
+    format: "esm",
+    outfile: "dist/index.js",
+    banner: {
+      js: `import { createRequire as __createRequire } from 'module';import { fileURLToPath as __fileURLToPath } from 'url';import { dirname as __dirname_fn } from 'path';const require = __createRequire(import.meta.url);const __filename = __fileURLToPath(import.meta.url);const __dirname = __dirname_fn(__filename);`,
+    },
     define: {
       "process.env.NODE_ENV": '"production"',
     },
@@ -115,7 +118,7 @@ async function buildAll() {
   });
 
   console.log("writing launcher...");
-  await writeFile("dist/start.cjs", LAUNCHER_CODE, "utf-8");
+  await writeFile("dist/start.js", LAUNCHER_CODE, "utf-8");
 }
 
 buildAll().catch((err) => {
