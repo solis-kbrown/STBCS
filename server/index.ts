@@ -46,12 +46,12 @@ const httpServer = launcher?.server || createServer((req, res) => {
     return;
   }
 
-  if (!appReady || !expressApp) {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('ok');
-    return;
+  if (expressApp) {
+    expressApp(req, res);
+  } else {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(STARTUP_HTML);
   }
-  expressApp(req, res);
 });
 
 export function log(message: string, source = "express") {
@@ -107,7 +107,7 @@ function delay(ms: number) {
 }
 
 async function staggeredStartup(port: number) {
-  await delay(15000);
+  await delay(3000);
   await yieldToEventLoop();
 
   try {
@@ -238,7 +238,7 @@ async function initializeApp() {
   await yieldToEventLoop();
 
   app.get('/health', (_req, res) => {
-    res.status(200).json({ status: 'ok', ready: appReady });
+    res.status(200).json({ status: 'ok' });
   });
 
   app.get('/__repl', (_req, res) => {
@@ -513,7 +513,7 @@ async function initStripe() {
       stripeSync.syncBackfill()
         .then(() => console.log('Stripe data synced'))
         .catch((err: Error) => console.error('Error syncing Stripe data:', err));
-    }, 30000);
+    }, 5000);
   } catch (error) {
     console.error('Failed to initialize Stripe:', error);
   }
