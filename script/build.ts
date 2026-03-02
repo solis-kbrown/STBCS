@@ -44,28 +44,28 @@ global.__launcher = { ready: false, handler: null };
 
 function isHealthCheck(req) {
   const ua = (req.headers['user-agent'] || '').toLowerCase();
-  return ua.includes('googlehc') || ua.includes('kube-probe') || ua.includes('health') || ua.includes('uptime') || ua.includes('monitoring') || ua === '';
+  return !ua || ua.includes('googlehc') || ua.includes('kube-probe') || ua.includes('health') || ua.includes('uptime') || ua.includes('monitoring') || ua.includes('bot');
 }
 
 const server = http.createServer((req, res) => {
   reqCount++;
   const url = (req.url || '/').split('?')[0];
-  const ts = new Date().toISOString();
   if (url === '/health' || url === '/__repl') {
-    console.log(ts + ' [launcher] health-check #' + reqCount + ' path=' + url + ' -> 200 ok');
     res.writeHead(200, { 'Content-Type': 'text/plain', 'Connection': 'close' });
     res.end('ok');
     return;
   }
   if (url === '/') {
     if (isHealthCheck(req)) {
-      console.log(ts + ' [launcher] health-check #' + reqCount + ' path=/ ua=bot -> 200 ok');
       res.writeHead(200, { 'Content-Type': 'text/html', 'Connection': 'close' });
       res.end('<!DOCTYPE html><html><body>ok</body></html>');
       return;
     }
-    console.log(ts + ' [launcher] root-check #' + reqCount + ' path=/ -> 200 html');
-    res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=300, s-maxage=600' });
+    if (global.__launcher.ready && global.__launcher.handler) {
+      global.__launcher.handler(req, res);
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': 'text/html', 'Connection': 'close' });
     res.end(indexHtml);
     return;
   }
