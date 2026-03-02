@@ -101,65 +101,67 @@ async function yieldToEventLoop() {
   return new Promise<void>(resolve => setImmediate(resolve));
 }
 
-function delay(ms: number) {
-  return new Promise<void>(resolve => setTimeout(resolve, ms));
-}
-
 async function staggeredStartup(port: number) {
-  await yieldToEventLoop();
+  log("Staggered startup: deferring all background services");
 
-  try {
-    const { startDigestScheduler } = await import("./digest");
-    startDigestScheduler();
-  } catch (err) {
-    console.error("Digest scheduler failed:", err);
-  }
-  await yieldToEventLoop();
+  setTimeout(async () => {
+    try {
+      const { startDigestScheduler } = await import("./digest");
+      startDigestScheduler();
+    } catch (err) {
+      console.error("Digest scheduler failed:", err);
+    }
+  }, 2000);
 
-  try {
-    const { startMaintenanceScheduler } = await import("./maintenance");
-    startMaintenanceScheduler();
-  } catch (err) {
-    console.error("Maintenance scheduler failed:", err);
-  }
-  await yieldToEventLoop();
+  setTimeout(async () => {
+    try {
+      const { startMaintenanceScheduler } = await import("./maintenance");
+      startMaintenanceScheduler();
+    } catch (err) {
+      console.error("Maintenance scheduler failed:", err);
+    }
+  }, 3000);
 
-  try {
-    const { startKbScraper, ensureSeedMembers } = await import("./kbScraper");
-    startKbScraper();
-    ensureSeedMembers().catch(err => console.error("Seed members failed:", err));
-  } catch (err) {
-    console.error("KB scraper failed:", err);
-  }
-  await yieldToEventLoop();
+  setTimeout(async () => {
+    try {
+      const { startKbScraper, ensureSeedMembers } = await import("./kbScraper");
+      startKbScraper();
+      ensureSeedMembers().catch(err => console.error("Seed members failed:", err));
+    } catch (err) {
+      console.error("KB scraper failed:", err);
+    }
+  }, 4000);
 
-  try {
-    const { startDataRefreshScheduler } = await import("./scrapers");
-    startDataRefreshScheduler(15);
-  } catch (err) {
-    console.error("Scraper scheduler failed:", err);
-  }
-  await yieldToEventLoop();
+  setTimeout(async () => {
+    try {
+      const { startDataRefreshScheduler } = await import("./scrapers");
+      startDataRefreshScheduler(15);
+    } catch (err) {
+      console.error("Scraper scheduler failed:", err);
+    }
+  }, 6000);
 
-  try {
-    const { startUptimeScheduler } = await import("./uptimeEngine");
-    startUptimeScheduler(60);
-  } catch (err) {
-    console.error("Uptime scheduler failed:", err);
-  }
-  await yieldToEventLoop();
+  setTimeout(async () => {
+    try {
+      const { startUptimeScheduler } = await import("./uptimeEngine");
+      startUptimeScheduler(60);
+    } catch (err) {
+      console.error("Uptime scheduler failed:", err);
+    }
+  }, 8000);
 
-  try {
-    const { startDarkWebScheduler } = await import("./darkWebEngine");
-    startDarkWebScheduler(360);
-  } catch (err) {
-    console.error("Dark web scheduler failed:", err);
-  }
-  await yieldToEventLoop();
+  setTimeout(async () => {
+    try {
+      const { startDarkWebScheduler } = await import("./darkWebEngine");
+      startDarkWebScheduler(360);
+    } catch (err) {
+      console.error("Dark web scheduler failed:", err);
+    }
+  }, 10000);
 
   setTimeout(() => {
     initStripe().catch(err => console.error("Deferred Stripe init failed:", err));
-  }, 30000);
+  }, 45000);
 
   setTimeout(async () => {
     try {
@@ -172,7 +174,7 @@ async function staggeredStartup(port: number) {
       }
       log("Cache warm-up complete");
     } catch {}
-  }, 5000);
+  }, 20000);
 }
 
 declare module "http" {
