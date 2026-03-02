@@ -88,14 +88,14 @@ async function initWithRetry(maxRetries = 10) {
 if (launcher) {
   log(`reusing launcher server on port ${port}`);
   appReady = true;
-  setImmediate(() => { initWithRetry(); });
+  initWithRetry().catch(err => console.error('Init failed:', err));
 } else {
   httpServer.listen(
     { port, host: "0.0.0.0", reusePort: true },
     () => {
       log(`serving on port ${port}`);
       appReady = true;
-      setImmediate(() => { initWithRetry(); });
+      initWithRetry().catch(err => console.error('Init failed:', err));
     },
   );
 }
@@ -105,7 +105,7 @@ async function yieldToEventLoop() {
 }
 
 async function staggeredStartup(port: number) {
-  log("Staggered startup: deferring all background services (60s+ grace period for health checks)");
+  log("Staggered startup: deferring background services");
 
   setTimeout(async () => {
     try {
@@ -114,7 +114,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Digest scheduler failed:", err);
     }
-  }, 60000);
+  }, 5000);
 
   setTimeout(async () => {
     try {
@@ -123,7 +123,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Maintenance scheduler failed:", err);
     }
-  }, 65000);
+  }, 6000);
 
   setTimeout(async () => {
     try {
@@ -133,7 +133,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("KB scraper failed:", err);
     }
-  }, 70000);
+  }, 7000);
 
   setTimeout(async () => {
     try {
@@ -142,7 +142,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Scraper scheduler failed:", err);
     }
-  }, 90000);
+  }, 10000);
 
   setTimeout(async () => {
     try {
@@ -151,7 +151,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Uptime scheduler failed:", err);
     }
-  }, 75000);
+  }, 8000);
 
   setTimeout(async () => {
     try {
@@ -160,11 +160,11 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Dark web scheduler failed:", err);
     }
-  }, 80000);
+  }, 9000);
 
   setTimeout(() => {
     initStripe().catch(err => console.error("Deferred Stripe init failed:", err));
-  }, 85000);
+  }, 15000);
 
   setTimeout(async () => {
     try {
@@ -177,7 +177,7 @@ async function staggeredStartup(port: number) {
       }
       log("Cache warm-up complete");
     } catch {}
-  }, 95000);
+  }, 12000);
 }
 
 declare module "http" {
