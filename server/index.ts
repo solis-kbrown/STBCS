@@ -3,7 +3,7 @@ import { createServer } from "http";
 import path from "path";
 import fs from "fs";
 
-const STARTUP_HTML = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>STB Cybersecurity</title><meta http-equiv="refresh" content="3"></head><body style="background:#18181b;color:#a1a1aa;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif"><p>Initializing threat intelligence platform...</p></body></html>';
+const STARTUP_HTML = '<!DOCTYPE html><html><head><title>STBCS</title></head><body>ok</body></html>';
 
 const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 const port = parseInt(process.env.PORT || "5000", 10);
@@ -85,12 +85,14 @@ async function initWithRetry(maxRetries = 5) {
 
 if (launcher) {
   log(`reusing launcher server on port ${port}`);
+  appReady = true;
   setImmediate(() => { initWithRetry(); });
 } else {
   httpServer.listen(
     { port, host: "0.0.0.0", reusePort: true },
     () => {
       log(`serving on port ${port}`);
+      appReady = true;
       setImmediate(() => { initWithRetry(); });
     },
   );
@@ -105,7 +107,7 @@ function delay(ms: number) {
 }
 
 async function staggeredStartup(port: number) {
-  await delay(5000);
+  await delay(100);
 
   try {
     await initStripe();
@@ -227,7 +229,7 @@ async function initializeApp() {
   });
 
   app.get('/', (_req, res) => {
-    res.status(200).send(cachedIndexHtml || STARTUP_HTML);
+    res.status(200).send(cachedIndexHtml || '<!DOCTYPE html><html><head><title>STBCS</title></head><body>ok</body></html>');
   });
 
   app.use((req, res, next) => {
@@ -441,7 +443,6 @@ async function initializeApp() {
     staggeredStartup(port).catch(err => console.error("Staggered startup error:", err));
   });
 
-  appReady = true;
   expressApp = app;
 
   if (launcher) {
