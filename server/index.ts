@@ -40,14 +40,11 @@ const httpServer = launcher?.server || createServer((req, res) => {
     return;
   }
 
-  if (urlPath === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=300' });
-    res.end(cachedIndexHtml || STARTUP_HTML);
-    return;
-  }
-
   if (expressApp) {
     expressApp(req, res);
+  } else if (urlPath === '/') {
+    res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=300' });
+    res.end(cachedIndexHtml || STARTUP_HTML);
   } else {
     res.writeHead(200, { 'Content-Type': 'text/html' });
     res.end(STARTUP_HTML);
@@ -204,6 +201,7 @@ async function initializeApp() {
     const distPath = path.resolve(__dirname, "public");
     if (fs.existsSync(distPath)) {
       app.use(express.static(distPath, {
+        index: false,
         maxAge: '1y',
         immutable: true,
         etag: true,
@@ -231,10 +229,17 @@ async function initializeApp() {
     res.status(200).send('ok');
   });
 
-  app.get('/', (_req, res) => {
-    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');
-    res.status(200).send(cachedIndexHtml || '<!DOCTYPE html><html><head><title>STBCS</title></head><body>ok</body></html>');
-  });
+  if (IS_PRODUCTION) {
+    app.get('/', (req, res) => {
+      const ua = (req.headers['user-agent'] || '').toLowerCase();
+      if (ua.includes('googlehc') || ua.includes('kube-probe') || ua.includes('health') || ua.includes('uptime') || ua.includes('monitoring') || ua === '') {
+        res.setHeader('Connection', 'close');
+        return res.status(200).send('ok');
+      }
+      res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');
+      res.status(200).send(cachedIndexHtml || '<!DOCTYPE html><html><head><title>STBCS</title></head><body>ok</body></html>');
+    });
+  }
 
   app.use((req, res, next) => {
     const host = req.get('host')?.split(':')[0];

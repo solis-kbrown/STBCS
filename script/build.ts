@@ -42,17 +42,28 @@ let reqCount = 0;
 
 global.__launcher = { ready: false, handler: null };
 
+function isHealthCheck(req) {
+  const ua = (req.headers['user-agent'] || '').toLowerCase();
+  return ua.includes('googlehc') || ua.includes('kube-probe') || ua.includes('health') || ua.includes('uptime') || ua.includes('monitoring') || ua === '';
+}
+
 const server = http.createServer((req, res) => {
   reqCount++;
   const url = (req.url || '/').split('?')[0];
   const ts = new Date().toISOString();
   if (url === '/health' || url === '/__repl') {
     console.log(ts + ' [launcher] health-check #' + reqCount + ' path=' + url + ' -> 200 ok');
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.writeHead(200, { 'Content-Type': 'text/plain', 'Connection': 'close' });
     res.end('ok');
     return;
   }
   if (url === '/') {
+    if (isHealthCheck(req)) {
+      console.log(ts + ' [launcher] health-check #' + reqCount + ' path=/ ua=bot -> 200 ok');
+      res.writeHead(200, { 'Content-Type': 'text/html', 'Connection': 'close' });
+      res.end('<!DOCTYPE html><html><body>ok</body></html>');
+      return;
+    }
     console.log(ts + ' [launcher] root-check #' + reqCount + ' path=/ -> 200 html');
     res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=300, s-maxage=600' });
     res.end(indexHtml);
@@ -71,7 +82,7 @@ global.__launcher.server = server;
 server.listen({ port, host: '0.0.0.0', reusePort: true }, () => {
   const t = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
   console.log(t + ' [launcher] Port ' + port + ' open, loading app...');
-  setImmediate(() => { try { require('./index.cjs'); } catch(e) { console.error('App load failed:', e); } });
+  setTimeout(() => { try { require('./index.cjs'); } catch(e) { console.error('App load failed:', e); } }, 1000);
 });
 `.trim();
 
