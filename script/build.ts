@@ -35,22 +35,31 @@ const http = require('http');
 const path = require('path');
 const fs = require('fs');
 const port = parseInt(process.env.PORT || '5000', 10);
-const FALLBACK = '<!DOCTYPE html><html><head><meta charset="utf-8"><title>STB Cybersecurity</title><meta http-equiv="refresh" content="3"></head><body style="background:#18181b;color:#a1a1aa;display:flex;align-items:center;justify-content:center;height:100vh;font-family:sans-serif"><p>Loading...</p></body></html>';
-let indexHtml = FALLBACK;
+const MINIMAL_HTML = '<!DOCTYPE html><html><head><title>STBCS</title></head><body>ok</body></html>';
+let indexHtml = MINIMAL_HTML;
 try { const p = path.resolve(__dirname, 'public', 'index.html'); if (fs.existsSync(p)) indexHtml = fs.readFileSync(p, 'utf-8'); } catch(e) {}
+let reqCount = 0;
 
 global.__launcher = { ready: false, handler: null };
 
 const server = http.createServer((req, res) => {
+  reqCount++;
   const url = (req.url || '/').split('?')[0];
+  const ts = new Date().toISOString();
   if (url === '/health' || url === '/__repl') {
+    console.log(ts + ' [launcher] health-check #' + reqCount + ' path=' + url + ' -> 200 ok');
     res.writeHead(200, { 'Content-Type': 'text/plain' });
     res.end('ok');
     return;
   }
   if (url === '/') {
-    res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=300' });
-    res.end(indexHtml);
+    console.log(ts + ' [launcher] root-check #' + reqCount + ' path=/ -> 200 html (' + (global.__launcher.ready ? 'ready' : 'loading') + ')');
+    if (global.__launcher.ready && global.__launcher.handler) {
+      global.__launcher.handler(req, res);
+    } else {
+      res.writeHead(200, { 'Content-Type': 'text/html' });
+      res.end(MINIMAL_HTML);
+    }
     return;
   }
   if (global.__launcher.handler) {
@@ -58,7 +67,7 @@ const server = http.createServer((req, res) => {
     return;
   }
   res.writeHead(200, { 'Content-Type': 'text/html' });
-  res.end(indexHtml);
+  res.end(MINIMAL_HTML);
 });
 
 global.__launcher.server = server;

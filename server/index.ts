@@ -105,7 +105,7 @@ function delay(ms: number) {
 }
 
 async function staggeredStartup(port: number) {
-  await delay(5000);
+  await delay(120000);
 
   try {
     await initStripe();
