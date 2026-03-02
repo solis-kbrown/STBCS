@@ -54,7 +54,7 @@ const server = http.createServer((req, res) => {
   }
   if (url === '/') {
     console.log(ts + ' [launcher] root-check #' + reqCount + ' path=/ -> 200 html');
-    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=300, s-maxage=600' });
     res.end(indexHtml);
     return;
   }
@@ -71,7 +71,7 @@ global.__launcher.server = server;
 server.listen({ port, host: '0.0.0.0', reusePort: true }, () => {
   const t = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
   console.log(t + ' [launcher] Port ' + port + ' open, loading app...');
-  setTimeout(() => { try { require('./index.cjs'); } catch(e) { console.error('App load failed:', e); } }, 2000);
+  setImmediate(() => { try { require('./index.cjs'); } catch(e) { console.error('App load failed:', e); } });
 });
 `.trim();
 

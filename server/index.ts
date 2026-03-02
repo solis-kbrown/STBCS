@@ -64,19 +64,25 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
-async function initWithRetry(maxRetries = 5) {
+async function initWithRetry(maxRetries = 10) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       await initializeApp();
       return;
     } catch (err: any) {
       const isDbError = err?.message?.includes('endpoint') || err?.code === 'XX000' || err?.code === 'ECONNREFUSED' || err?.message?.includes('database') || err?.message?.includes('connect');
+      const waitSec = Math.min(attempt * 1, 5);
       if (isDbError && attempt < maxRetries) {
-        console.error(`App init attempt ${attempt}/${maxRetries} failed (DB issue): ${err.message}. Retrying in 1s...`);
-        await new Promise(r => setTimeout(r, 1000));
+        console.error(`App init attempt ${attempt}/${maxRetries} failed (DB issue): ${err.message}. Retrying in ${waitSec}s...`);
+        await new Promise(r => setTimeout(r, waitSec * 1000));
+      } else if (attempt < maxRetries) {
+        console.error(`App init attempt ${attempt}/${maxRetries} failed: ${err.message}. Retrying in ${waitSec}s...`);
+        await new Promise(r => setTimeout(r, waitSec * 1000));
       } else {
-        console.error("Fatal: App initialization failed:", err);
-        process.exit(1);
+        console.error("App initialization failed after all retries:", err);
+        console.error("Launcher will remain alive for health checks. Scheduling retry in 30s...");
+        setTimeout(() => { initWithRetry(maxRetries).catch(e => console.error("Re-init failed:", e)); }, 30000);
+        return;
       }
     }
   }
@@ -161,7 +167,7 @@ async function staggeredStartup(port: number) {
 
   setTimeout(() => {
     initStripe().catch(err => console.error("Deferred Stripe init failed:", err));
-  }, 45000);
+  }, 30000);
 
   setTimeout(async () => {
     try {
@@ -226,6 +232,7 @@ async function initializeApp() {
   });
 
   app.get('/', (_req, res) => {
+    res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=600');
     res.status(200).send(cachedIndexHtml || '<!DOCTYPE html><html><head><title>STBCS</title></head><body>ok</body></html>');
   });
 
