@@ -21,19 +21,32 @@ if (IS_PRODUCTION) {
   } catch {}
 }
 
+let seoIndexHtml: string | null = null;
+
 const httpServer = createServer((req, res) => {
   const url = req.url || '/';
   const urlPath = url.split('?')[0];
 
-  if (urlPath === '/health' || urlPath === '/__repl') {
-    res.writeHead(200, { 'Content-Type': urlPath === '/health' ? 'application/json' : 'text/plain' });
-    res.end(urlPath === '/health' ? JSON.stringify({ status: 'ok', ready: appReady, timestamp: Date.now() }) : 'ok');
-    return;
-  }
-
-  if (urlPath === '/' && (!appReady || !expressApp)) {
-    res.writeHead(200, { 'Content-Type': 'text/html' });
-    res.end(cachedIndexHtml || STARTUP_HTML);
+  if (urlPath === '/health' || urlPath === '/__repl' || urlPath === '/') {
+    if (urlPath === '/health') {
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify({ status: 'ok', ready: appReady, timestamp: Date.now() }));
+      return;
+    }
+    if (urlPath === '/__repl') {
+      res.writeHead(200, { 'Content-Type': 'text/plain' });
+      res.end('ok');
+      return;
+    }
+    const html = seoIndexHtml || cachedIndexHtml || STARTUP_HTML;
+    res.writeHead(200, {
+      'Content-Type': 'text/html',
+      'Cache-Control': 'public, max-age=300, s-maxage=600',
+      'X-Frame-Options': 'DENY',
+      'X-Content-Type-Options': 'nosniff',
+      'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
+    });
+    res.end(html);
     return;
   }
 
@@ -334,33 +347,32 @@ async function initializeApp() {
 
   await yieldToEventLoop();
 
-  const { registerRoutes } = await import("./routes");
-  await yieldToEventLoop();
-
-  const { reportCriticalError } = await import("./maintenance");
-  await yieldToEventLoop();
+  const [
+    { registerRoutes },
+    { reportCriticalError },
+    { registerRDPRoutes, setupRDPWebSocket },
+    { registerSSHRoutes, setupSSHWebSocket },
+    { registerTelnetRoutes, setupTelnetWebSocket },
+    { registerSFTPRoutes },
+  ] = await Promise.all([
+    import("./routes"),
+    import("./maintenance"),
+    import("./rdp"),
+    import("./ssh"),
+    import("./telnet"),
+    import("./sftp"),
+  ]);
 
   await registerRoutes(httpServer, app);
   await yieldToEventLoop();
 
-  const { registerRDPRoutes, setupRDPWebSocket } = await import("./rdp");
   registerRDPRoutes(app);
   setupRDPWebSocket(httpServer);
-  await yieldToEventLoop();
-
-  const { registerSSHRoutes, setupSSHWebSocket } = await import("./ssh");
   registerSSHRoutes(app);
   setupSSHWebSocket(httpServer);
-  await yieldToEventLoop();
-
-  const { registerTelnetRoutes, setupTelnetWebSocket } = await import("./telnet");
   registerTelnetRoutes(app);
   setupTelnetWebSocket(httpServer);
-  await yieldToEventLoop();
-
-  const { registerSFTPRoutes } = await import("./sftp");
   registerSFTPRoutes(app);
-  await yieldToEventLoop();
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {
     const status = err.status || err.statusCode || 500;
@@ -381,8 +393,9 @@ async function initializeApp() {
     const distPath = path.resolve(__dirname, "public");
     const indexPath = path.resolve(distPath, "index.html");
     const baseHtml = fs.readFileSync(indexPath, "utf-8");
+    seoIndexHtml = injectMetaTags(baseHtml, '/');
     app.use("/{*path}", (req, res, next) => {
-      if (req.path === '/health' || req.path === '/__repl') {
+      if (req.path === '/health' || req.path === '/__repl' || req.path === '/') {
         return next();
       }
       const html = injectMetaTags(baseHtml, req.originalUrl);
