@@ -32,7 +32,7 @@ Preferred communication style: Simple, everyday language.
 - **Schema**: Defined for CVEs, ransomware, threat actors, and user data.
 - **Integrity**: Unique constraints and atomic upserts (`onConflictDoUpdate`) for race-condition-free writes.
 - **Transactions**: Multi-step operations use `db.transaction()` for atomicity.
-- **Startup**: Staggered service initialization in `server/index.ts` — Stripe (+3s), Digest/Maintenance (+5s), KB Scraper (+8s), Threat Scrapers (+13s, +15s internal delay), Uptime Engine (+18s, +15s internal delay), Dark Web (+23s, +30s internal delay), Cache warm-up (+26s, sequential). Prevents DB pool exhaustion on deploy.
+- **Startup**: Two-stage launcher (`dist/start.cjs`) opens port 5000 instantly, serves health checks for 2 seconds before loading 2MB app bundle. Staggered service initialization in `server/index.ts` with 15s initial delay — Stripe (+15s), Digest/Maintenance (+16s), KB Scraper (+17s), Threat Scrapers (+19s), Uptime Engine (+21s), Dark Web (+23s), Cache warm-up (+28s, sequential). Every task yields to event loop between operations. Prevents DB pool exhaustion and health check timeouts on deploy.
 
 ### Key Design Patterns
 - Shared Types, Storage Abstraction, API Hooks (for React Query), Path Aliases (`@/`, `@shared/`).

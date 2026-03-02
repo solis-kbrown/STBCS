@@ -71,7 +71,7 @@ global.__launcher.server = server;
 server.listen({ port, host: '0.0.0.0', reusePort: true }, () => {
   const t = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true });
   console.log(t + ' [launcher] Port ' + port + ' open, loading app...');
-  setImmediate(() => { try { require('./index.cjs'); } catch(e) { console.error('App load failed:', e); } });
+  setTimeout(() => { try { require('./index.cjs'); } catch(e) { console.error('App load failed:', e); } }, 2000);
 });
 `.trim();
 

@@ -107,15 +107,18 @@ function delay(ms: number) {
 }
 
 async function staggeredStartup(port: number) {
-  await delay(100);
+  await delay(15000);
+  await yieldToEventLoop();
 
   try {
     await initStripe();
   } catch (err) {
     console.error("Deferred Stripe init failed:", err);
   }
+  await yieldToEventLoop();
 
-  await delay(500);
+  await delay(1000);
+  await yieldToEventLoop();
 
   try {
     const { startDigestScheduler } = await import("./digest");
@@ -123,6 +126,7 @@ async function staggeredStartup(port: number) {
   } catch (err) {
     console.error("Digest scheduler failed:", err);
   }
+  await yieldToEventLoop();
 
   try {
     const { startMaintenanceScheduler } = await import("./maintenance");
@@ -130,8 +134,10 @@ async function staggeredStartup(port: number) {
   } catch (err) {
     console.error("Maintenance scheduler failed:", err);
   }
+  await yieldToEventLoop();
 
-  await delay(500);
+  await delay(1000);
+  await yieldToEventLoop();
 
   try {
     const { startKbScraper, ensureSeedMembers } = await import("./kbScraper");
@@ -140,8 +146,10 @@ async function staggeredStartup(port: number) {
   } catch (err) {
     console.error("KB scraper failed:", err);
   }
+  await yieldToEventLoop();
 
-  await delay(1000);
+  await delay(2000);
+  await yieldToEventLoop();
 
   try {
     const { startDataRefreshScheduler } = await import("./scrapers");
@@ -149,8 +157,10 @@ async function staggeredStartup(port: number) {
   } catch (err) {
     console.error("Scraper scheduler failed:", err);
   }
+  await yieldToEventLoop();
 
-  await delay(1000);
+  await delay(2000);
+  await yieldToEventLoop();
 
   try {
     const { startUptimeScheduler } = await import("./uptimeEngine");
@@ -158,8 +168,10 @@ async function staggeredStartup(port: number) {
   } catch (err) {
     console.error("Uptime scheduler failed:", err);
   }
+  await yieldToEventLoop();
 
-  await delay(1000);
+  await delay(2000);
+  await yieldToEventLoop();
 
   try {
     const { startDarkWebScheduler } = await import("./darkWebEngine");
@@ -167,8 +179,10 @@ async function staggeredStartup(port: number) {
   } catch (err) {
     console.error("Dark web scheduler failed:", err);
   }
+  await yieldToEventLoop();
 
-  await delay(1000);
+  await delay(5000);
+  await yieldToEventLoop();
 
   try {
     const base = `http://127.0.0.1:${port}`;
@@ -176,6 +190,7 @@ async function staggeredStartup(port: number) {
       "/api/site-settings/hero-bg", "/api/site-settings/logo-theme", "/api/site-settings/icon-theme"];
     for (const u of urls) {
       await fetch(base + u).catch(() => {});
+      await yieldToEventLoop();
       await delay(500);
     }
     log("Cache warm-up complete");
@@ -219,6 +234,8 @@ async function initializeApp() {
       log("Static file serving initialized early for fast startup");
     }
   }
+
+  await yieldToEventLoop();
 
   app.get('/health', (_req, res) => {
     res.status(200).json({ status: 'ok', ready: appReady });
@@ -438,6 +455,8 @@ async function initializeApp() {
     const { setupVite } = await import("./vite");
     await setupVite(httpServer, app);
   }
+
+  await yieldToEventLoop();
 
   setImmediate(() => {
     staggeredStartup(port).catch(err => console.error("Staggered startup error:", err));
