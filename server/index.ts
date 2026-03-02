@@ -107,17 +107,12 @@ function delay(ms: number) {
 }
 
 async function staggeredStartup(port: number) {
-  await delay(3000);
+  await delay(15000);
   await yieldToEventLoop();
 
-  try {
-    await initStripe();
-  } catch (err) {
-    console.error("Deferred Stripe init failed:", err);
-  }
-  await yieldToEventLoop();
-
-  await delay(1000);
+  setTimeout(() => {
+    initStripe().catch(err => console.error("Deferred Stripe init failed:", err));
+  }, 0);
   await yieldToEventLoop();
 
   try {
@@ -136,19 +131,13 @@ async function staggeredStartup(port: number) {
   }
   await yieldToEventLoop();
 
-  await delay(1000);
-  await yieldToEventLoop();
-
   try {
     const { startKbScraper, ensureSeedMembers } = await import("./kbScraper");
     startKbScraper();
-    await ensureSeedMembers().catch(err => console.error("Seed members failed:", err));
+    ensureSeedMembers().catch(err => console.error("Seed members failed:", err));
   } catch (err) {
     console.error("KB scraper failed:", err);
   }
-  await yieldToEventLoop();
-
-  await delay(2000);
   await yieldToEventLoop();
 
   try {
@@ -159,18 +148,12 @@ async function staggeredStartup(port: number) {
   }
   await yieldToEventLoop();
 
-  await delay(2000);
-  await yieldToEventLoop();
-
   try {
     const { startUptimeScheduler } = await import("./uptimeEngine");
     startUptimeScheduler(60);
   } catch (err) {
     console.error("Uptime scheduler failed:", err);
   }
-  await yieldToEventLoop();
-
-  await delay(2000);
   await yieldToEventLoop();
 
   try {
@@ -191,7 +174,6 @@ async function staggeredStartup(port: number) {
     for (const u of urls) {
       await fetch(base + u).catch(() => {});
       await yieldToEventLoop();
-      await delay(500);
     }
     log("Cache warm-up complete");
   } catch {}
