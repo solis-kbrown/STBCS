@@ -72,7 +72,7 @@ async function initWithRetry(maxRetries = 5) {
     } catch (err: any) {
       const isDbError = err?.message?.includes('endpoint') || err?.code === 'XX000' || err?.code === 'ECONNREFUSED' || err?.message?.includes('database') || err?.message?.includes('connect');
       if (isDbError && attempt < maxRetries) {
-        const waitSec = Math.min(attempt * 2, 10);
+        const waitSec = Math.min(attempt, 3);
         console.error(`App init attempt ${attempt}/${maxRetries} failed (DB issue): ${err.message}. Retrying in ${waitSec}s...`);
         await new Promise(r => setTimeout(r, waitSec * 1000));
       } else {
@@ -107,12 +107,6 @@ function delay(ms: number) {
 }
 
 async function staggeredStartup(port: number) {
-  await delay(15000);
-  await yieldToEventLoop();
-
-  setTimeout(() => {
-    initStripe().catch(err => console.error("Deferred Stripe init failed:", err));
-  }, 0);
   await yieldToEventLoop();
 
   try {
@@ -164,7 +158,11 @@ async function staggeredStartup(port: number) {
   }
   await yieldToEventLoop();
 
-  await delay(5000);
+  setTimeout(() => {
+    initStripe().catch(err => console.error("Deferred Stripe init failed:", err));
+  }, 0);
+
+  await delay(10000);
   await yieldToEventLoop();
 
   try {
