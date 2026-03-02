@@ -105,7 +105,7 @@ async function yieldToEventLoop() {
 }
 
 async function staggeredStartup(port: number) {
-  log("Staggered startup: deferring all background services");
+  log("Staggered startup: deferring all background services (60s+ grace period for health checks)");
 
   setTimeout(async () => {
     try {
@@ -114,7 +114,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Digest scheduler failed:", err);
     }
-  }, 2000);
+  }, 60000);
 
   setTimeout(async () => {
     try {
@@ -123,7 +123,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Maintenance scheduler failed:", err);
     }
-  }, 3000);
+  }, 65000);
 
   setTimeout(async () => {
     try {
@@ -133,7 +133,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("KB scraper failed:", err);
     }
-  }, 4000);
+  }, 70000);
 
   setTimeout(async () => {
     try {
@@ -142,7 +142,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Scraper scheduler failed:", err);
     }
-  }, 6000);
+  }, 90000);
 
   setTimeout(async () => {
     try {
@@ -151,7 +151,7 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Uptime scheduler failed:", err);
     }
-  }, 8000);
+  }, 75000);
 
   setTimeout(async () => {
     try {
@@ -160,11 +160,11 @@ async function staggeredStartup(port: number) {
     } catch (err) {
       console.error("Dark web scheduler failed:", err);
     }
-  }, 10000);
+  }, 80000);
 
   setTimeout(() => {
     initStripe().catch(err => console.error("Deferred Stripe init failed:", err));
-  }, 30000);
+  }, 85000);
 
   setTimeout(async () => {
     try {
@@ -177,7 +177,7 @@ async function staggeredStartup(port: number) {
       }
       log("Cache warm-up complete");
     } catch {}
-  }, 20000);
+  }, 95000);
 }
 
 declare module "http" {
