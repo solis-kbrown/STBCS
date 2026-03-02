@@ -41,11 +41,6 @@ const httpServer = launcher?.server || createServer((req, res) => {
   }
 
   if (urlPath === '/') {
-    if (!appReady) {
-      res.writeHead(200, { 'Content-Type': 'text/plain' });
-      res.end('ok');
-      return;
-    }
     res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=300' });
     res.end(cachedIndexHtml || STARTUP_HTML);
     return;
@@ -77,7 +72,7 @@ async function initWithRetry(maxRetries = 5) {
     } catch (err: any) {
       const isDbError = err?.message?.includes('endpoint') || err?.code === 'XX000' || err?.code === 'ECONNREFUSED' || err?.message?.includes('database') || err?.message?.includes('connect');
       if (isDbError && attempt < maxRetries) {
-        const waitSec = Math.min(attempt * 5, 30);
+        const waitSec = Math.min(attempt * 2, 10);
         console.error(`App init attempt ${attempt}/${maxRetries} failed (DB issue): ${err.message}. Retrying in ${waitSec}s...`);
         await new Promise(r => setTimeout(r, waitSec * 1000));
       } else {
@@ -110,7 +105,7 @@ function delay(ms: number) {
 }
 
 async function staggeredStartup(port: number) {
-  await delay(500);
+  await delay(5000);
 
   try {
     await initStripe();
@@ -489,10 +484,12 @@ async function initStripe() {
     } else {
       console.log('No domain available, skipping webhook configuration');
     }
-    console.log('Syncing Stripe data...');
-    stripeSync.syncBackfill()
-      .then(() => console.log('Stripe data synced'))
-      .catch((err: Error) => console.error('Error syncing Stripe data:', err));
+    console.log('Stripe sync queued for background execution...');
+    setTimeout(() => {
+      stripeSync.syncBackfill()
+        .then(() => console.log('Stripe data synced'))
+        .catch((err: Error) => console.error('Error syncing Stripe data:', err));
+    }, 30000);
   } catch (error) {
     console.error('Failed to initialize Stripe:', error);
   }
