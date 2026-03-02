@@ -22,26 +22,25 @@ if (IS_PRODUCTION) {
 }
 
 const httpServer = createServer((req, res) => {
-  if (req.url === '/health' || req.url === '/health?' || req.url?.startsWith('/health?')) {
-    res.writeHead(200, { 'Content-Type': 'application/json' });
-    res.end(JSON.stringify({ status: 'ok', ready: appReady, timestamp: Date.now() }));
+  const url = req.url || '/';
+  const urlPath = url.split('?')[0];
+
+  if (urlPath === '/health' || urlPath === '/__repl') {
+    res.writeHead(200, { 'Content-Type': urlPath === '/health' ? 'application/json' : 'text/plain' });
+    res.end(urlPath === '/health' ? JSON.stringify({ status: 'ok', ready: appReady, timestamp: Date.now() }) : 'ok');
     return;
   }
-  if (req.url === '/__repl') {
-    res.writeHead(200, { 'Content-Type': 'text/plain' });
-    res.end('ok');
+
+  if (urlPath === '/' && (!appReady || !expressApp)) {
+    res.writeHead(200, { 'Content-Type': 'text/html' });
+    res.end(cachedIndexHtml || STARTUP_HTML);
     return;
   }
 
   if (!appReady || !expressApp) {
-    if (req.url === '/' || (req.method === 'GET' && !req.url?.startsWith('/api/'))) {
-      if (cachedIndexHtml) {
-        res.writeHead(200, { 'Content-Type': 'text/html' });
-        res.end(cachedIndexHtml);
-        return;
-      }
+    if (req.method === 'GET' && !urlPath.startsWith('/api/')) {
       res.writeHead(200, { 'Content-Type': 'text/html' });
-      res.end(STARTUP_HTML);
+      res.end(cachedIndexHtml || STARTUP_HTML);
       return;
     }
     res.writeHead(503, { 'Content-Type': 'application/json' });
@@ -415,7 +414,9 @@ async function initializeApp() {
   appReady = true;
   log("Routes and static serving initialized");
 
-  staggeredStartup(port).catch(err => console.error("Staggered startup error:", err));
+  setImmediate(() => {
+    staggeredStartup(port).catch(err => console.error("Staggered startup error:", err));
+  });
 }
 
 async function initStripe() {
