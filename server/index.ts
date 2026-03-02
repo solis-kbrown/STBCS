@@ -22,8 +22,9 @@ if (IS_PRODUCTION) {
 }
 
 let seoIndexHtml: string | null = null;
+const launcher = IS_PRODUCTION ? (global as any).__launcher : null;
 
-const httpServer = createServer((req, res) => {
+const httpServer = launcher?.server || createServer((req, res) => {
   const url = req.url || '/';
   const urlPath = url.split('?')[0];
 
@@ -38,15 +39,8 @@ const httpServer = createServer((req, res) => {
       res.end('ok');
       return;
     }
-    const html = seoIndexHtml || cachedIndexHtml || STARTUP_HTML;
-    res.writeHead(200, {
-      'Content-Type': 'text/html',
-      'Cache-Control': 'public, max-age=300, s-maxage=600',
-      'X-Frame-Options': 'DENY',
-      'X-Content-Type-Options': 'nosniff',
-      'Strict-Transport-Security': 'max-age=63072000; includeSubDomains; preload',
-    });
-    res.end(html);
+    res.writeHead(200, { 'Content-Type': 'text/html', 'Cache-Control': 'public, max-age=300' });
+    res.end(cachedIndexHtml || STARTUP_HTML);
     return;
   }
 
@@ -73,18 +67,28 @@ export function log(message: string, source = "express") {
   console.log(`${formattedTime} [${source}] ${message}`);
 }
 
-httpServer.listen(
-  { port, host: "0.0.0.0", reusePort: true },
-  () => {
-    log(`serving on port ${port}`);
-    setImmediate(() => {
-      initializeApp().catch((err) => {
-        console.error("Fatal: App initialization failed:", err);
-        process.exit(1);
-      });
+if (launcher) {
+  log(`reusing launcher server on port ${port}`);
+  setImmediate(() => {
+    initializeApp().catch((err) => {
+      console.error("Fatal: App initialization failed:", err);
+      process.exit(1);
     });
-  },
-);
+  });
+} else {
+  httpServer.listen(
+    { port, host: "0.0.0.0", reusePort: true },
+    () => {
+      log(`serving on port ${port}`);
+      setImmediate(() => {
+        initializeApp().catch((err) => {
+          console.error("Fatal: App initialization failed:", err);
+          process.exit(1);
+        });
+      });
+    },
+  );
+}
 
 async function yieldToEventLoop() {
   return new Promise<void>(resolve => setImmediate(resolve));
@@ -425,6 +429,17 @@ async function initializeApp() {
 
   expressApp = app;
   appReady = true;
+
+  if (launcher) {
+    launcher.handler = (req: any, res: any) => {
+      expressApp!(req, res);
+    };
+    launcher.ready = true;
+    if (IS_PRODUCTION && seoIndexHtml) {
+      launcher.seoHtml = seoIndexHtml;
+    }
+  }
+
   log("Routes and static serving initialized");
 
   setImmediate(() => {
