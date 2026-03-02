@@ -105,7 +105,7 @@ function delay(ms: number) {
 }
 
 async function staggeredStartup(port: number) {
-  await delay(120000);
+  await delay(5000);
 
   try {
     await initStripe();
@@ -219,11 +219,15 @@ async function initializeApp() {
   }
 
   app.get('/health', (_req, res) => {
-    res.status(200).json({ status: 'ok', ready: appReady, timestamp: Date.now() });
+    res.status(200).json({ status: 'ok', ready: appReady });
   });
 
   app.get('/__repl', (_req, res) => {
     res.status(200).send('ok');
+  });
+
+  app.get('/', (_req, res) => {
+    res.status(200).send(cachedIndexHtml || STARTUP_HTML);
   });
 
   app.use((req, res, next) => {
@@ -437,8 +441,8 @@ async function initializeApp() {
     staggeredStartup(port).catch(err => console.error("Staggered startup error:", err));
   });
 
-  expressApp = app;
   appReady = true;
+  expressApp = app;
 
   if (launcher) {
     launcher.handler = (req: any, res: any) => {
