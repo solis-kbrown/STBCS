@@ -2700,7 +2700,6 @@ export class DatabaseStorage implements IStorage {
   async checkAutoPromotion(userId: string): Promise<boolean> {
     const [user] = await db.select().from(users).where(eq(users.id, userId));
     if (!user || user.isTrusted || user.isAdmin) return false;
-    if (user.tier === "free") return false;
     const threshold = 50;
     if ((user.kbReputation || 0) >= threshold) {
       await db.update(users).set({ isTrusted: true }).where(eq(users.id, userId));

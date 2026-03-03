@@ -19,6 +19,7 @@ import HeroParticles from "@/components/hero-particles";
 import AnimatedSection, { AnimatedList } from "@/components/animated-section";
 import { useInView, useCountUp } from "@/hooks/use-in-view";
 import ThreatTicker from "@/components/threat-ticker";
+import { AuthModal } from "@/components/auth-modal";
 import { useAuth } from "@/lib/auth";
 
 const iconColorMap: Record<string, string> = {
@@ -320,6 +321,9 @@ export default function Dashboard() {
     queryFn: () => fetch("/api/site-settings/hero-bg").then(r => r.json()).catch(() => ({ value: "threat-map" })),
   });
   const heroBgId = heroBgData?.value || "threat-map";
+
+  const { isAuthenticated } = useAuth();
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const cves = cvesData?.data || [];
   const ransomware = ransomwareData?.data || [];
@@ -723,6 +727,25 @@ export default function Dashboard() {
           </Card>
         </AnimatedSection>
 
+        {!isAuthenticated && (
+          <AnimatedSection animation="fade-up">
+            <div className="rounded-xl border border-orange-500/20 bg-gradient-to-r from-orange-500/5 via-orange-600/10 to-orange-500/5 p-5">
+              <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
+                <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 shrink-0">
+                  <Users className="h-8 w-8 text-orange-400" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-lg font-display font-bold text-white" data-testid="text-dashboard-signup-cta">Create Your Free Account</h3>
+                  <p className="text-sm text-zinc-400 mt-1">Set up your profile, track threats, earn badges, post in the Knowledge Base, and join the community — all for free.</p>
+                </div>
+                <Button onClick={() => setShowAuthModal(true)} className="bg-orange-500 hover:bg-orange-600 text-white shrink-0" data-testid="button-dashboard-signup">
+                  Sign Up Free
+                </Button>
+              </div>
+            </div>
+          </AnimatedSection>
+        )}
+
         <AnimatedSection animation="fade-up">
           <h2 className="text-xl font-display font-bold text-white mb-4">Explore the Platform</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
@@ -952,6 +975,11 @@ export default function Dashboard() {
 
         <Footer />
       </div>
+      <AuthModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        defaultTab="signup"
+      />
     </Layout>
   );
 }

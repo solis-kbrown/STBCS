@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
+import { AuthModal } from "@/components/auth-modal";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import {
   BookOpen, Search, Plus, ChevronUp, MessageSquare,
@@ -183,6 +184,8 @@ export default function KnowledgeBase() {
 
   const { toast } = useToast();
   const isPaid = isAuthenticated && user?.tier !== "free";
+  const canParticipate = isAuthenticated;
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   const topContributorSet = new Set(
     (leaderboard || []).slice(0, 5).map((u: any) => u.username)
@@ -229,11 +232,15 @@ export default function KnowledgeBase() {
               <Button onClick={handleSearch} variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800" data-testid="button-kb-search">
                 <Search className="h-4 w-4 mr-2" />Search
               </Button>
-              {isPaid && (
+              {canParticipate ? (
                 <Button onClick={() => setLocation("/knowledge-base/new")} className="bg-orange-500 hover:bg-orange-600 text-white" data-testid="button-kb-new-post">
                   <Plus className="h-4 w-4 mr-2" />New Post
                 </Button>
-              )}
+              ) : !isAuthenticated ? (
+                <Button onClick={() => setShowAuthModal(true)} className="bg-orange-500 hover:bg-orange-600 text-white" data-testid="button-kb-signup-post">
+                  <Plus className="h-4 w-4 mr-2" />Sign Up to Post
+                </Button>
+              ) : null}
               {user?.isAdmin && (
                 <Button onClick={() => setLocation("/knowledge-base/admin")} variant="outline" className="border-red-500/30 text-red-400 hover:bg-red-500/10" data-testid="button-kb-admin">
                   <Shield className="h-4 w-4 mr-2" />Admin
@@ -293,7 +300,7 @@ export default function KnowledgeBase() {
                 </button>
               );
             })}
-            {isPaid && (
+            {canParticipate && (
               <>
                 <button
                   onClick={() => { setShowBookmarks(!showBookmarks); setShowDrafts(false); setActiveTag(""); setPage(1); }}
@@ -491,7 +498,7 @@ export default function KnowledgeBase() {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                        {isPaid && (
+                        {canParticipate && (
                           <button
                             onClick={(e) => { e.preventDefault(); e.stopPropagation(); bookmarkMutation.mutate(post.id); }}
                             data-testid={`button-bookmark-${post.id}`}
@@ -622,6 +629,22 @@ export default function KnowledgeBase() {
           </div>
         </div>
       </div>
+      {!isAuthenticated && (
+        <div className="bg-gradient-to-r from-orange-500/10 via-orange-600/15 to-orange-500/10 border-t border-orange-500/20 px-4 py-6">
+          <div className="max-w-3xl mx-auto text-center">
+            <h3 className="text-lg font-display font-bold text-white mb-2" data-testid="text-kb-signup-banner">Join the Community</h3>
+            <p className="text-zinc-400 text-sm mb-4">Create a free account to post articles, comment, earn reputation points, and climb the leaderboard.</p>
+            <Button onClick={() => setShowAuthModal(true)} className="bg-orange-500 hover:bg-orange-600 text-white" data-testid="button-kb-signup-cta">
+              <Users className="h-4 w-4 mr-2" />Create Free Account
+            </Button>
+          </div>
+        </div>
+      )}
+      <AuthModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        defaultTab="signup"
+      />
     </Layout>
   );
 }
