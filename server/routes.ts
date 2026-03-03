@@ -1328,7 +1328,7 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // Global Search across all threat data
-  app.get("/api/search", async (req: Request, res: Response) => {
+  app.get("/api/search", strictLimiter, async (req: Request, res: Response) => {
     try {
       const searchSchema = z.object({
         q: z.string().min(2).max(200),
@@ -4665,7 +4665,7 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
-  app.post("/api/contact", strictLimiter, async (req: Request, res: Response) => {
+  app.post("/api/contact", authLimiter, async (req: Request, res: Response) => {
     try {
       const { insertContactMessageSchema } = await import("@shared/schema");
       const result = insertContactMessageSchema.safeParse(req.body);
