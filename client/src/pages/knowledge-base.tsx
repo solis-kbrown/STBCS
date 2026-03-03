@@ -75,12 +75,20 @@ export default function KnowledgeBase() {
   const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);
   const [showBookmarks, setShowBookmarks] = useState(false);
+  const [showDrafts, setShowDrafts] = useState(false);
 
   const { data, isLoading } = useQuery({
-    queryKey: showBookmarks
-      ? ["/api/kb/bookmarks", page]
-      : ["/api/kb/posts", activeType, activeTag, searchQuery, activeSort, page],
+    queryKey: showDrafts
+      ? ["/api/kb/drafts", page]
+      : showBookmarks
+        ? ["/api/kb/bookmarks", page]
+        : ["/api/kb/posts", activeType, activeTag, searchQuery, activeSort, page],
     queryFn: async () => {
+      if (showDrafts) {
+        const res = await fetch(`/api/kb/drafts?page=${page}&limit=20`, { credentials: "include" });
+        if (!res.ok) throw new Error("Failed to fetch");
+        return res.json();
+      }
       if (showBookmarks) {
         const res = await fetch(`/api/kb/bookmarks?page=${page}&limit=20`);
         if (!res.ok) throw new Error("Failed to fetch");
@@ -146,6 +154,7 @@ export default function KnowledgeBase() {
     setSearchQuery(searchInput.trim());
     setActiveTag("");
     setShowBookmarks(false);
+    setShowDrafts(false);
     setPage(1);
   };
 
@@ -155,6 +164,7 @@ export default function KnowledgeBase() {
     setSearchQuery("");
     setSearchInput("");
     setShowBookmarks(false);
+    setShowDrafts(false);
     setPage(1);
   };
 
@@ -223,11 +233,11 @@ export default function KnowledgeBase() {
           <div className="flex flex-wrap gap-2 mb-4">
             {POST_TYPES.map((t) => {
               const Icon = t.icon;
-              const isActive = !showBookmarks && activeType === t.value && !activeTag;
+              const isActive = !showBookmarks && !showDrafts && activeType === t.value && !activeTag;
               return (
                 <button
                   key={t.value}
-                  onClick={() => { setActiveType(t.value); setActiveTag(""); setShowBookmarks(false); setPage(1); }}
+                  onClick={() => { setActiveType(t.value); setActiveTag(""); setShowBookmarks(false); setShowDrafts(false); setPage(1); }}
                   data-testid={`button-filter-${t.value || "all"}`}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     isActive
@@ -240,17 +250,30 @@ export default function KnowledgeBase() {
               );
             })}
             {isPaid && (
-              <button
-                onClick={() => { setShowBookmarks(!showBookmarks); setActiveTag(""); setPage(1); }}
-                data-testid="button-filter-bookmarks"
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  showBookmarks
-                    ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
-                    : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-zinc-800 hover:text-zinc-200"
-                }`}
-              >
-                <BookmarkCheck className="h-4 w-4" />My Bookmarks
-              </button>
+              <>
+                <button
+                  onClick={() => { setShowBookmarks(!showBookmarks); setShowDrafts(false); setActiveTag(""); setPage(1); }}
+                  data-testid="button-filter-bookmarks"
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    showBookmarks
+                      ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
+                      : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-zinc-800 hover:text-zinc-200"
+                  }`}
+                >
+                  <BookmarkCheck className="h-4 w-4" />My Bookmarks
+                </button>
+                <button
+                  onClick={() => { setShowDrafts(!showDrafts); setShowBookmarks(false); setActiveTag(""); setPage(1); }}
+                  data-testid="button-filter-drafts"
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    showDrafts
+                      ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
+                      : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-zinc-800 hover:text-zinc-200"
+                  }`}
+                >
+                  <FileText className="h-4 w-4" />My Drafts
+                </button>
+              </>
             )}
           </div>
 
@@ -269,7 +292,7 @@ export default function KnowledgeBase() {
             </div>
           )}
 
-          {!showBookmarks && (
+          {!showBookmarks && !showDrafts && (
             <div className="flex items-center gap-2 mb-6">
               <ArrowUpDown className="h-4 w-4 text-zinc-500" />
               <div className="flex gap-1">
@@ -310,10 +333,10 @@ export default function KnowledgeBase() {
                 <div className="text-center py-16 rounded-xl border border-zinc-800 bg-zinc-900/50">
                   <BookOpen className="h-12 w-12 text-zinc-600 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-zinc-400">
-                    {showBookmarks ? "No bookmarks yet" : "No posts found"}
+                    {showDrafts ? "No drafts yet" : showBookmarks ? "No bookmarks yet" : "No posts found"}
                   </h3>
                   <p className="text-zinc-500 text-sm mt-2">
-                    {showBookmarks ? "Bookmark articles to save them for later" : searchQuery ? "Try a different search term" : "Be the first to contribute!"}
+                    {showDrafts ? "Save posts as drafts to finish them later" : showBookmarks ? "Bookmark articles to save them for later" : searchQuery ? "Try a different search term" : "Be the first to contribute!"}
                   </p>
                 </div>
               ) : (
@@ -328,9 +351,10 @@ export default function KnowledgeBase() {
                         <ChevronUp className="h-5 w-5 text-zinc-600 group-hover:text-orange-400 transition-colors" />
                         <span className="text-sm font-bold text-zinc-300" data-testid={`text-votes-${post.id}`}>{post.voteCount || 0}</span>
                       </div>
-                      <Link href={`/knowledge-base/${post.slug}`} className="flex-1 min-w-0 cursor-pointer">
+                      <Link href={post.status === "draft" ? `/knowledge-base/${post.slug}/edit` : `/knowledge-base/${post.slug}`} className="flex-1 min-w-0 cursor-pointer">
                         <div className="flex items-center gap-2 mb-2 flex-wrap">
                           {post.isPinned && <Pin className="h-3.5 w-3.5 text-orange-400" />}
+                          {post.status === "draft" && <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-[10px]">Draft</Badge>}
                           <TypeBadge type={post.type} />
                           {post.tags?.slice(0, 5).map((tag: string) => (
                             <Badge

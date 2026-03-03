@@ -8,10 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { useToast } from "@/hooks/use-toast";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Shield, Check, X, ArrowLeft, Clock, Eye,
   Crown, Award, Star, ChevronUp, ChevronDown,
-  Users, FileText, AlertTriangle, BookOpen
+  Users, FileText, AlertTriangle, BookOpen, Flag, MessageSquare
 } from "lucide-react";
 
 function TierBadge({ tier, isTrusted, isAdmin }: { tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }) {
@@ -36,7 +37,34 @@ export default function KbAdmin() {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<"pending" | "users">("pending");
+  const [tab, setTab] = useState<"pending" | "users" | "reports">("pending");
+
+  const { data: reportsData, isLoading: reportsLoading } = useQuery({
+    queryKey: ["/api/kb/admin/reports"],
+    queryFn: async () => {
+      const res = await fetch("/api/kb/admin/reports", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    enabled: tab === "reports",
+  });
+
+  const reviewReportMutation = useMutation({
+    mutationFn: async ({ reportId, status, adminNotes }: { reportId: number; status: string; adminNotes?: string }) => {
+      const res = await fetch(`/api/kb/admin/reports/${reportId}/review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ status, adminNotes }),
+      });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kb/admin/reports"] });
+      toast({ title: "Report updated" });
+    },
+  });
 
   const { data: pendingData, isLoading: pendingLoading } = useQuery({
     queryKey: ["/api/kb/admin/pending"],
@@ -154,6 +182,18 @@ export default function KbAdmin() {
             }`}
           >
             <Users className="h-4 w-4" />User Management
+          </button>
+          <button
+            onClick={() => setTab("reports")}
+            data-testid="tab-reports"
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+              tab === "reports" ? "bg-orange-500/15 text-orange-400 border border-orange-500/30" : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50"
+            }`}
+          >
+            <Flag className="h-4 w-4" />Reports
+            {reportsData?.reports?.filter((r: any) => r.status === "pending").length > 0 && (
+              <Badge className="bg-red-500/20 text-red-400 text-[10px] ml-1">{reportsData.reports.filter((r: any) => r.status === "pending").length}</Badge>
+            )}
           </button>
         </div>
 
@@ -291,6 +331,78 @@ export default function KbAdmin() {
                   </tbody>
                 </table>
               </div>
+            )}
+          </div>
+        )}
+
+        {tab === "reports" && (
+          <div className="space-y-4">
+            {reportsLoading ? (
+              <div className="space-y-4">{[1, 2, 3].map(i => (
+                <div key={i} className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6 animate-pulse">
+                  <div className="h-5 bg-zinc-800 rounded w-2/3 mb-3" />
+                  <div className="h-4 bg-zinc-800 rounded w-1/3" />
+                </div>
+              ))}</div>
+            ) : !reportsData?.reports?.length ? (
+              <div className="text-center py-16 rounded-xl border border-zinc-800 bg-zinc-900/50">
+                <Check className="h-12 w-12 text-emerald-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-zinc-300">No reports</h3>
+                <p className="text-zinc-500 text-sm mt-2">No content has been reported</p>
+              </div>
+            ) : (
+              reportsData.reports.map((report: any) => (
+                <div key={report.id} className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6" data-testid={`report-${report.id}`}>
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge className={`text-[10px] ${
+                          report.status === "pending" ? "bg-yellow-500/20 text-yellow-400 border-yellow-500/30" :
+                          report.status === "reviewed" ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30" :
+                          "bg-zinc-500/20 text-zinc-400 border-zinc-500/30"
+                        }`}>
+                          {report.status}
+                        </Badge>
+                        <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">
+                          {report.reason?.replace("_", " ")}
+                        </Badge>
+                        <Badge variant="outline" className="text-[10px] border-zinc-700 text-zinc-500">
+                          {report.postId ? "Post" : "Comment"}
+                        </Badge>
+                      </div>
+                      {report.details && <p className="text-sm text-zinc-400 mb-2">{report.details}</p>}
+                      <div className="text-xs text-zinc-500 space-y-1">
+                        <p>Reported by: <strong className="text-zinc-300">{report.reporter?.username || "Unknown"}</strong> · {timeAgo(report.createdAt)}</p>
+                        {report.post && <p>Post: <Link href={`/knowledge-base/${report.post.slug}`} className="text-orange-400 hover:underline">{report.post.title}</Link></p>}
+                        {report.comment && <p>Comment: <span className="text-zinc-300 italic">"{report.comment.content?.slice(0, 100)}{report.comment.content?.length > 100 ? "..." : ""}"</span></p>}
+                      </div>
+                    </div>
+                    {report.status === "pending" && (
+                      <div className="flex gap-2 shrink-0">
+                        <Button
+                          size="sm"
+                          onClick={() => reviewReportMutation.mutate({ reportId: report.id, status: "reviewed", adminNotes: "Action taken" })}
+                          disabled={reviewReportMutation.isPending}
+                          className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                          data-testid={`button-review-${report.id}`}
+                        >
+                          <Check className="h-4 w-4 mr-1" />Review
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => reviewReportMutation.mutate({ reportId: report.id, status: "dismissed" })}
+                          disabled={reviewReportMutation.isPending}
+                          className="border-zinc-700 text-zinc-400"
+                          data-testid={`button-dismiss-${report.id}`}
+                        >
+                          <X className="h-4 w-4 mr-1" />Dismiss
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
             )}
           </div>
         )}

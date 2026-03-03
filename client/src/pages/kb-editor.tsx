@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import Layout from "@/components/layout";
@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { useToast } from "@/hooks/use-toast";
+import { renderMarkdown, highlightCodeBlocks } from "@/lib/render-markdown";
 import {
   Save, Eye, Edit, ArrowLeft, X, Plus, BookOpen,
   Shield, Bug, Lightbulb, AlertTriangle, Sparkles
@@ -22,27 +23,6 @@ const POST_TYPES = [
   { value: "feature_request", label: "Feature Request", icon: Lightbulb },
   { value: "official_kb", label: "Official KB", icon: Shield, adminOnly: true },
 ];
-
-function renderMarkdown(content: string) {
-  let html = content
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/```(\w*)\n([\s\S]*?)```/g, (_m, _lang, code) =>
-      `<pre class="bg-zinc-800 border border-zinc-700 rounded-lg p-4 overflow-x-auto my-4"><code class="text-sm text-emerald-400 font-mono">${code.trim()}</code></pre>`)
-    .replace(/`([^`]+)`/g, '<code class="bg-zinc-800 text-orange-400 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
-    .replace(/^### (.+)$/gm, '<h3 class="text-lg font-bold text-white mt-6 mb-2">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-white mt-8 mb-3">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold text-white mt-8 mb-4">$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^\- (.+)$/gm, '<li class="ml-4 text-zinc-300">• $1</li>')
-    .replace(/^\d+\. (.+)$/gm, '<li class="ml-4 text-zinc-300">$1</li>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text, url) => {
-      const safeUrl = /^https?:\/\//i.test(url) ? url : "#";
-      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-orange-400 hover:text-orange-300 underline">${text}</a>`;
-    })
-    .replace(/^(?!<[hpuol]|<li|<pre|<code|<a|<strong|<em)(.*\S.*)$/gm, '<p class="text-zinc-300 leading-relaxed mb-3">$1</p>');
-  return html;
-}
 
 export default function KbEditor() {
   const [, editParams] = useRoute("/knowledge-base/:slug/edit");
@@ -59,6 +39,13 @@ export default function KbEditor() {
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [preview, setPreview] = useState(false);
+  const previewRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (preview) {
+      highlightCodeBlocks(previewRef);
+    }
+  }, [preview, content]);
 
   useDocumentTitle(isEditMode ? "Edit Post | Knowledge Base" : "New Post | Knowledge Base");
 
@@ -81,23 +68,59 @@ export default function KbEditor() {
     }
   }, [existingPost]);
 
+  const isDraft = isEditMode && existingPost?.status === "draft";
+
+  useEffect(() => {
+    if (!isEditMode) {
+      const saved = localStorage.getItem("kb-draft-autosave");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed.title && !title) setTitle(parsed.title);
+          if (parsed.content && !content) setContent(parsed.content);
+          if (parsed.type) setType(parsed.type);
+          if (parsed.tags?.length) setTags(parsed.tags);
+        } catch {}
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!isEditMode && (title || content)) {
+      const timer = setTimeout(() => {
+        localStorage.setItem("kb-draft-autosave", JSON.stringify({ title, content, type, tags }));
+      }, 30000);
+      return () => clearTimeout(timer);
+    }
+  }, [title, content, type, tags, isEditMode]);
+
   const saveMutation = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (asDraft: boolean = false) => {
       const url = isEditMode ? `/api/kb/posts/${existingPost.id}` : "/api/kb/posts";
       const method = isEditMode ? "PUT" : "POST";
+      const body: any = { title, content, type, tags };
+      if (asDraft) body.isDraft = true;
+      if (isEditMode && isDraft && !asDraft) body.publish = true;
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ title, content, type, tags }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) throw new Error((await res.json()).error || "Failed to save");
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data, asDraft) => {
       queryClient.invalidateQueries({ queryKey: ["/api/kb/posts"] });
-      toast({ title: isEditMode ? "Post updated" : "Post created" });
-      setLocation(`/knowledge-base/${data.slug}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/kb/drafts"] });
+      if (!isEditMode) localStorage.removeItem("kb-draft-autosave");
+      if (asDraft) {
+        toast({ title: "Draft saved" });
+        if (!isEditMode) setLocation(`/knowledge-base/${data.slug}/edit`);
+      } else {
+        toast({ title: isEditMode ? (isDraft ? "Post submitted" : "Post updated") : "Post created" });
+        setLocation(`/knowledge-base/${data.slug}`);
+      }
     },
     onError: (err: Error) => {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -142,8 +165,11 @@ export default function KbEditor() {
             <Button variant="outline" onClick={() => setPreview(!preview)} className="border-zinc-700 text-zinc-400" data-testid="button-toggle-preview">
               {preview ? <><Edit className="h-4 w-4 mr-2" />Edit</> : <><Eye className="h-4 w-4 mr-2" />Preview</>}
             </Button>
-            <Button onClick={() => saveMutation.mutate()} disabled={!title.trim() || !content.trim() || saveMutation.isPending} className="bg-orange-500 hover:bg-orange-600 text-white" data-testid="button-save-post">
-              <Save className="h-4 w-4 mr-2" />{bypassModeration ? "Publish" : "Submit for Review"}
+            <Button variant="outline" onClick={() => saveMutation.mutate(true)} disabled={!title.trim() || saveMutation.isPending} className="border-zinc-700 text-zinc-400" data-testid="button-save-draft">
+              <Save className="h-4 w-4 mr-2" />Save Draft
+            </Button>
+            <Button onClick={() => saveMutation.mutate(false)} disabled={!title.trim() || !content.trim() || saveMutation.isPending} className="bg-orange-500 hover:bg-orange-600 text-white" data-testid="button-save-post">
+              <Save className="h-4 w-4 mr-2" />{isDraft ? (bypassModeration ? "Publish" : "Submit for Review") : (bypassModeration ? "Publish" : "Submit for Review")}
             </Button>
           </div>
         </div>
@@ -163,7 +189,7 @@ export default function KbEditor() {
               )}
               {tags.map(t => <Badge key={t} variant="outline" className="text-xs border-zinc-700 text-zinc-500">{t}</Badge>)}
             </div>
-            <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: renderMarkdown(content || "*No content yet*") }} />
+            <div ref={previewRef} className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: renderMarkdown(content || "*No content yet*") }} />
           </div>
         ) : (
           <div className="space-y-6">

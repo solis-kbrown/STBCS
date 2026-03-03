@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRoute, useLocation, Link } from "wouter";
 import Layout from "@/components/layout";
@@ -8,10 +8,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/lib/auth";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { useToast } from "@/hooks/use-toast";
+import { renderMarkdown, highlightCodeBlocks } from "@/lib/render-markdown";
 import {
-  ChevronUp, MessageSquare, Clock, Edit, Trash2, ArrowLeft,
+  ChevronUp, ChevronDown, MessageSquare, Clock, Edit, Trash2, ArrowLeft,
   Crown, Star, Award, Shield, Pin, Reply, Send, BookOpen,
-  Eye, Bookmark, BookmarkCheck, ArrowUpDown, Tag, Link2, Sparkles
+  Eye, Bookmark, BookmarkCheck, ArrowUpDown, Tag, Link2, Sparkles, List,
+  Share2, Linkedin, Flag, X, AlertTriangle, Check
 } from "lucide-react";
 import { KBIcon } from "@/components/branded-icons";
 
@@ -44,26 +46,52 @@ function timeAgo(date: string) {
   return new Date(date).toLocaleDateString();
 }
 
-function renderMarkdown(content: string) {
-  let html = content
-    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
-    .replace(/```(\w*)\n([\s\S]*?)```/g, (_m, lang, code) =>
-      `<pre class="bg-zinc-800 border border-zinc-700 rounded-lg p-4 overflow-x-auto my-4"><code class="text-sm text-emerald-400 font-mono">${code.trim()}</code></pre>`)
-    .replace(/`([^`]+)`/g, '<code class="bg-zinc-800 text-orange-400 px-1.5 py-0.5 rounded text-sm font-mono">$1</code>')
-    .replace(/^### (.+)$/gm, '<h3 class="text-lg font-bold text-white mt-6 mb-2">$1</h3>')
-    .replace(/^## (.+)$/gm, '<h2 class="text-xl font-bold text-white mt-8 mb-3">$1</h2>')
-    .replace(/^# (.+)$/gm, '<h1 class="text-2xl font-bold text-white mt-8 mb-4">$1</h1>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/^\- (.+)$/gm, '<li class="ml-4 text-zinc-300">• $1</li>')
-    .replace(/^\d+\. (.+)$/gm, '<li class="ml-4 text-zinc-300">$1</li>')
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, (_m, text, url) => {
-      const safeUrl = /^https?:\/\//i.test(url) ? url : "#";
-      return `<a href="${safeUrl}" target="_blank" rel="noopener noreferrer" class="text-orange-400 hover:text-orange-300 underline">${text}</a>`;
-    })
-    .replace(/^(?!<[hpuol]|<li|<pre|<code|<a|<strong|<em)(.*\S.*)$/gm, '<p class="text-zinc-300 leading-relaxed mb-3">$1</p>');
-  return html;
+function generateSlug(text: string): string {
+  return text.toLowerCase().replace(/[^\w\s-]/g, "").replace(/\s+/g, "-").replace(/-+/g, "-").trim();
 }
+
+function calculateReadingTime(content: string): number {
+  const stripped = content
+    .replace(/```[\s\S]*?```/g, "")
+    .replace(/`[^`]+`/g, "")
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+    .replace(/[#*_~>\-|]/g, "")
+    .replace(/\n+/g, " ")
+    .trim();
+  const wordCount = stripped.split(/\s+/).filter(Boolean).length;
+  return Math.max(1, Math.ceil(wordCount / 200));
+}
+
+function extractHeadings(content: string): { level: number; text: string; slug: string }[] {
+  const headings: { level: number; text: string; slug: string }[] = [];
+  const slugCounts: Record<string, number> = {};
+  const lines = content.split("\n");
+  let inCodeBlock = false;
+  for (const line of lines) {
+    if (line.trim().startsWith("```")) {
+      inCodeBlock = !inCodeBlock;
+      continue;
+    }
+    if (inCodeBlock) continue;
+    const match = line.match(/^(#{1,3})\s+(.+)$/);
+    if (match) {
+      let slug = generateSlug(match[2].trim());
+      if (slugCounts[slug] !== undefined) {
+        slugCounts[slug]++;
+        slug = `${slug}-${slugCounts[slug]}`;
+      } else {
+        slugCounts[slug] = 0;
+      }
+      headings.push({
+        level: match[1].length,
+        text: match[2].trim(),
+        slug,
+      });
+    }
+  }
+  return headings;
+}
+
 
 const COMMENT_SORTS = [
   { value: "oldest", label: "Oldest First" },
@@ -71,9 +99,91 @@ const COMMENT_SORTS = [
   { value: "best", label: "Best" },
 ];
 
+function ReportDialog({ type, targetId, postId, onClose }: { type: "post" | "comment"; targetId: number; postId: number; onClose: () => void }) {
+  const { toast } = useToast();
+  const [reason, setReason] = useState("");
+  const [details, setDetails] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!reason) { toast({ title: "Please select a reason", variant: "destructive" }); return; }
+    setSubmitting(true);
+    try {
+      const body: any = { reason, details: details.trim() || undefined };
+      if (type === "post") body.postId = targetId;
+      else body.commentId = targetId;
+      const res = await fetch("/api/kb/report", { method: "POST", headers: { "Content-Type": "application/json" }, credentials: "include", body: JSON.stringify(body) });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Failed"); }
+      toast({ title: "Report submitted", description: "We'll review this content shortly." });
+      onClose();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
+      <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-semibold text-white flex items-center gap-2"><Flag className="h-5 w-5 text-red-400" />Report {type === "post" ? "Post" : "Comment"}</h3>
+          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300" data-testid="button-close-report"><X className="h-5 w-5" /></button>
+        </div>
+        <div className="space-y-4">
+          <div>
+            <label className="text-sm font-medium text-zinc-300 mb-2 block">Reason</label>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { value: "spam", label: "Spam" },
+                { value: "harassment", label: "Harassment" },
+                { value: "misinformation", label: "Misinformation" },
+                { value: "off_topic", label: "Off Topic" },
+                { value: "other", label: "Other" },
+              ].map((r) => (
+                <button
+                  key={r.value}
+                  onClick={() => setReason(r.value)}
+                  data-testid={`button-report-reason-${r.value}`}
+                  className={`px-3 py-2 rounded-lg text-sm border transition-all ${
+                    reason === r.value
+                      ? "bg-red-500/15 text-red-400 border-red-500/30"
+                      : "bg-zinc-800/50 text-zinc-400 border-zinc-700/50 hover:border-zinc-600"
+                  }`}
+                >
+                  {r.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-zinc-300 mb-2 block">Details (optional)</label>
+            <Textarea
+              value={details}
+              onChange={(e) => setDetails(e.target.value)}
+              placeholder="Provide additional context..."
+              className="bg-zinc-800 border-zinc-700 text-zinc-300 min-h-[80px]"
+              data-testid="input-report-details"
+            />
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={onClose} className="border-zinc-700 text-zinc-400">Cancel</Button>
+            <Button onClick={handleSubmit} disabled={submitting || !reason} className="bg-red-600 hover:bg-red-700 text-white" data-testid="button-submit-report">
+              {submitting ? "Submitting..." : "Submit Report"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Comment({ comment, depth, postId, user, onReply, topContributorSet, risingStarSet }: { comment: any; depth: number; postId: number; user: any; onReply: (parentId: number) => void; topContributorSet: Set<string>; risingStarSet: Set<string> }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState(comment.content);
+  const [showReport, setShowReport] = useState(false);
 
   const voteMutation = useMutation({
     mutationFn: async () => {
@@ -97,7 +207,30 @@ function Comment({ comment, depth, postId, user, onReply, topContributorSet, ris
     },
   });
 
+  const editMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/kb/comments/${comment.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ content: editText.trim() }),
+      });
+      if (!res.ok) { const d = await res.json(); throw new Error(d.error || "Failed"); }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/kb/comments", postId] });
+      setIsEditing(false);
+      toast({ title: "Comment updated" });
+    },
+    onError: (err: Error) => { toast({ title: "Error", description: err.message, variant: "destructive" }); },
+  });
+
   const isPaid = user && user.tier !== "free";
+  const isAuthor = user?.id === comment.authorId;
+  const editWindowMs = 30 * 60 * 1000;
+  const canEdit = isAuthor && (Date.now() - new Date(comment.createdAt).getTime()) < editWindowMs;
+  const wasEdited = comment.updatedAt && comment.updatedAt !== comment.createdAt;
 
   return (
     <div className={`${depth > 0 ? "ml-6 border-l-2 border-zinc-800 pl-4" : ""}`} data-testid={`comment-${comment.id}`}>
@@ -117,8 +250,28 @@ function Comment({ comment, depth, postId, user, onReply, topContributorSet, ris
           )}
           <span className="text-xs text-zinc-600">·</span>
           <span className="text-xs text-zinc-500">{timeAgo(comment.createdAt)}</span>
+          {wasEdited && <span className="text-xs text-zinc-600 italic" data-testid={`text-edited-${comment.id}`}>(edited)</span>}
         </div>
-        <p className="text-sm text-zinc-400 whitespace-pre-wrap">{comment.content}</p>
+        {isEditing ? (
+          <div className="space-y-2">
+            <Textarea
+              value={editText}
+              onChange={(e) => setEditText(e.target.value)}
+              className="bg-zinc-800 border-zinc-700 text-zinc-300 min-h-[60px] text-sm"
+              data-testid={`input-edit-comment-${comment.id}`}
+            />
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => editMutation.mutate()} disabled={!editText.trim() || editText.trim() === comment.content} className="bg-orange-600 hover:bg-orange-700 text-white h-7 text-xs" data-testid={`button-save-edit-${comment.id}`}>
+                <Check className="h-3 w-3 mr-1" />Save
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => { setIsEditing(false); setEditText(comment.content); }} className="border-zinc-700 text-zinc-400 h-7 text-xs" data-testid={`button-cancel-edit-${comment.id}`}>
+                Cancel
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-zinc-400 whitespace-pre-wrap">{comment.content}</p>
+        )}
         <div className="flex items-center gap-3 mt-2">
           <button
             onClick={() => voteMutation.mutate()}
@@ -133,13 +286,24 @@ function Comment({ comment, depth, postId, user, onReply, topContributorSet, ris
               <Reply className="h-3.5 w-3.5" />Reply
             </button>
           )}
+          {canEdit && !isEditing && (
+            <button onClick={() => setIsEditing(true)} className="flex items-center gap-1 text-xs text-zinc-500 hover:text-orange-400 transition-colors" data-testid={`button-edit-comment-${comment.id}`}>
+              <Edit className="h-3.5 w-3.5" />Edit
+            </button>
+          )}
           {user?.isAdmin && (
             <button onClick={() => deleteMutation.mutate()} className="flex items-center gap-1 text-xs text-zinc-500 hover:text-red-400 transition-colors" data-testid={`button-delete-comment-${comment.id}`}>
               <Trash2 className="h-3.5 w-3.5" />Delete
             </button>
           )}
+          {isPaid && !isAuthor && (
+            <button onClick={() => setShowReport(true)} className="flex items-center gap-1 text-xs text-zinc-500 hover:text-red-400 transition-colors" data-testid={`button-report-comment-${comment.id}`}>
+              <Flag className="h-3.5 w-3.5" />Report
+            </button>
+          )}
         </div>
       </div>
+      {showReport && <ReportDialog type="comment" targetId={comment.id} postId={postId} onClose={() => setShowReport(false)} />}
       {comment.children?.map((child: any) => (
         <Comment key={child.id} comment={child} depth={depth + 1} postId={postId} user={user} onReply={onReply} topContributorSet={topContributorSet} risingStarSet={risingStarSet} />
       ))}
@@ -156,6 +320,9 @@ export default function KbPost() {
   const [commentText, setCommentText] = useState("");
   const [replyTo, setReplyTo] = useState<number | null>(null);
   const [commentSort, setCommentSort] = useState("oldest");
+  const [tocOpen, setTocOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
+  const [showPostReport, setShowPostReport] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
   const slug = params?.slug || "";
 
   const { data: post, isLoading } = useQuery({
@@ -295,8 +462,33 @@ export default function KbPost() {
     return roots;
   })();
 
+  useEffect(() => {
+    if (post?.content) {
+      highlightCodeBlocks(contentRef);
+    }
+  }, [post?.content]);
+
   const isPaid = isAuthenticated && user?.tier !== "free";
   const canEdit = user && (post?.authorId === user.id || user.isAdmin);
+
+  const handleShareTwitter = () => {
+    const url = encodeURIComponent(window.location.href);
+    const text = encodeURIComponent(post.title);
+    window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
+  };
+
+  const handleShareLinkedin = () => {
+    const url = encodeURIComponent(window.location.href);
+    window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      toast({ title: "Link copied to clipboard" });
+    }).catch(() => {
+      toast({ title: "Failed to copy link", variant: "destructive" });
+    });
+  };
 
   if (isLoading) {
     return (
@@ -383,9 +575,10 @@ export default function KbPost() {
               <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{timeAgo(post.createdAt)}</span>
               <span className="flex items-center gap-1"><MessageSquare className="h-3.5 w-3.5" />{post.commentCount || 0} comments</span>
               <span className="flex items-center gap-1"><Eye className="h-3.5 w-3.5" />{post.viewCount || 0} views</span>
+              <span className="flex items-center gap-1 text-zinc-500 text-sm" data-testid="text-reading-time"><Clock className="h-3.5 w-3.5" />{calculateReadingTime(post.content)} min read</span>
             </div>
 
-            <div className="flex items-center gap-2 mb-6">
+            <div className="flex items-center gap-2 mb-6 flex-wrap">
               {isPaid && (
                 <Button
                   variant="outline"
@@ -398,6 +591,42 @@ export default function KbPost() {
                   {isBookmarked ? "Bookmarked" : "Bookmark"}
                 </Button>
               )}
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handleShareTwitter}
+                  className="p-1.5 rounded hover:bg-orange-500/10 transition-colors text-zinc-400 hover:text-orange-400"
+                  title="Share on Twitter"
+                  data-testid="button-share-twitter"
+                >
+                  <Share2 className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handleShareLinkedin}
+                  className="p-1.5 rounded hover:bg-orange-500/10 transition-colors text-zinc-400 hover:text-orange-400"
+                  title="Share on LinkedIn"
+                  data-testid="button-share-linkedin"
+                >
+                  <Linkedin className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handleCopyLink}
+                  className="p-1.5 rounded hover:bg-orange-500/10 transition-colors text-zinc-400 hover:text-orange-400"
+                  title="Copy link"
+                  data-testid="button-share-copy-link"
+                >
+                  <Link2 className="h-4 w-4" />
+                </button>
+              </div>
+              {isPaid && post.authorId !== user?.id && (
+                <button
+                  onClick={() => setShowPostReport(true)}
+                  className="p-1.5 rounded hover:bg-red-500/10 transition-colors text-zinc-400 hover:text-red-400"
+                  title="Report post"
+                  data-testid="button-report-post"
+                >
+                  <Flag className="h-4 w-4" />
+                </button>
+              )}
               {canEdit && (
                 <>
                   <Button variant="outline" size="sm" onClick={() => setLocation(`/knowledge-base/${post.slug}/edit`)} className="border-zinc-700 text-zinc-400" data-testid="button-edit-post">
@@ -409,8 +638,46 @@ export default function KbPost() {
                 </>
               )}
             </div>
+            {showPostReport && <ReportDialog type="post" targetId={post.id} postId={post.id} onClose={() => setShowPostReport(false)} />}
+
+            {(() => {
+              const headings = extractHeadings(post.content);
+              if (headings.length < 3) return null;
+              return (
+                <div className="mb-6 rounded-lg border border-zinc-700 bg-zinc-800/50" data-testid="toc-section">
+                  <button
+                    onClick={() => setTocOpen(!tocOpen)}
+                    className="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold text-zinc-300 hover:text-orange-400 transition-colors"
+                    data-testid="button-toggle-toc"
+                  >
+                    <span className="flex items-center gap-2">
+                      <List className="h-4 w-4 text-orange-400" />
+                      Table of Contents
+                    </span>
+                    {tocOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+                  {tocOpen && (
+                    <nav className="px-4 pb-3 space-y-1">
+                      {headings.map((h, i) => (
+                        <a
+                          key={i}
+                          href={`#${h.slug}`}
+                          className={`block text-sm text-zinc-400 hover:text-orange-400 transition-colors ${
+                            h.level === 2 ? "pl-4" : h.level === 3 ? "pl-8" : ""
+                          }`}
+                          data-testid={`toc-link-${i}`}
+                        >
+                          {h.text}
+                        </a>
+                      ))}
+                    </nav>
+                  )}
+                </div>
+              );
+            })()}
 
             <div
+              ref={contentRef}
               className="prose prose-invert max-w-none"
               data-testid="content-post-body"
               dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }}

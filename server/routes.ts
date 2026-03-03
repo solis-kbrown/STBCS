@@ -5948,7 +5948,26 @@ Hiring: https://stbcybersecurity.com/support
         storage.getKbReports({ status, limit, offset }),
         storage.getKbReportCount({ status }),
       ]);
-      res.json({ reports, total, page, pages: Math.ceil(total / limit) });
+      const enriched = await Promise.all(reports.map(async (report: any) => {
+        const reporter = await storage.getUser(report.reporterId);
+        let post = null;
+        let comment = null;
+        if (report.postId) {
+          const p = await storage.getKbPostById(report.postId);
+          if (p) post = { id: p.id, title: p.title, slug: p.slug };
+        }
+        if (report.commentId) {
+          const c = await storage.getKbCommentById(report.commentId);
+          if (c) comment = { id: c.id, content: c.content };
+        }
+        return {
+          ...report,
+          reporter: reporter ? { username: reporter.username } : null,
+          post,
+          comment,
+        };
+      }));
+      res.json({ reports: enriched, total, page, pages: Math.ceil(total / limit) });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch reports" });
     }
