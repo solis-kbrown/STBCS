@@ -40,7 +40,7 @@ const platformFeatures = [
 ];
 
 const stats = [
-  { value: "70+", label: "Threat Intelligence Feeds", icon: Globe },
+  { value: "105+", label: "Threat Intelligence Feeds", icon: Globe },
   { value: "24/7", label: "Emergency Response", icon: Clock },
   { value: "15min", label: "Threat Data Refresh Cycle", icon: Zap },
   { value: "SMB", label: "Focused on Small Business", icon: Users },
@@ -48,7 +48,7 @@ const stats = [
 
 const whyUs = [
   "Real practitioners who handle real incidents every day",
-  "Threat intelligence from 70+ live public and commercial feeds",
+  "Threat intelligence from 105+ live public and commercial feeds",
   "No long-term contracts required for consulting engagements",
   "Free security tools and threat intelligence for everyone",
   "Subscription plans that scale — Supporter, Pro, Business, and Unlimited Everything tiers",
@@ -92,7 +92,7 @@ const consultingHighlights = [
 export default function AboutPage() {
   useDocumentTitle(
     "About Us — Incident Response & Threat Intelligence | STB Cybersecurity",
-    "Meet STB Cybersecurity: incident responders, recovery engineers, and threat hunters protecting SMBs. 70+ live threat feeds, 24/7 IR, ransomware recovery, and security consulting."
+    "Meet STB Cybersecurity: incident responders, recovery engineers, and threat hunters protecting SMBs. 105+ live threat feeds, 24/7 IR, ransomware recovery, and security consulting."
   );
 
   return (
@@ -130,7 +130,7 @@ export default function AboutPage() {
             <h2 className="text-2xl font-bold text-white" data-testid="text-about-mission-title">Our Mission</h2>
             <p className="text-zinc-400 max-w-3xl mx-auto leading-relaxed" data-testid="text-about-mission">
               Fortune 500 companies have dedicated threat intelligence teams. Most small businesses don't.
-              We built STBCS to close that gap. Our platform pulls data from 70+ live threat feeds and pairs it with
+              We built STBCS to close that gap. Our platform pulls data from 105+ live threat feeds and pairs it with
               hands-on consulting from people who handle real incidents every day.
               The goal is simple: give every business the tools and expertise to see threats coming and respond fast.
             </p>
@@ -175,7 +175,7 @@ export default function AboutPage() {
                       Real-Time Threat Intelligence
                     </h3>
                     <p className="text-sm text-zinc-400 leading-relaxed">
-                      STBCS aggregates data from over 70 public and commercial threat feeds — NVD, CISA KEV, URLhaus,
+                      STBCS aggregates data from over 105 public and commercial threat feeds — NVD, CISA KEV, URLhaus,
                       OpenPhish, Shodan, AlienVault OTX, VirusTotal, and many more — refreshed every 15 minutes.
                       Track ransomware groups, CVEs, malicious IPs, phishing URLs, and threat actors all in one place.
                     </p>
@@ -189,7 +189,7 @@ export default function AboutPage() {
                     </h3>
                     <p className="text-sm text-zinc-400 leading-relaxed">
                       Our free tools let anyone check IP/domain reputation, scan ports, analyze email headers,
-                      check SSL certificates, assess password strength, calculate subnets, search IOCs across 70+ feeds,
+                      check SSL certificates, assess password strength, calculate subnets, search IOCs across 105+ feeds,
                       and generate a cyber risk score. No account required.
                     </p>
                   </div>

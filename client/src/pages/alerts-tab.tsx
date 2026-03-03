@@ -198,7 +198,7 @@ export default function AlertsTab() {
               <h1 className="text-3xl font-display font-bold text-white">Pro Alerts Center</h1>
               <Badge className="bg-orange-500 text-white font-bold">PRO</Badge>
             </div>
-            <p className="text-zinc-400">Your watchlist monitors 70+ feeds and alerts you the moment something matches.</p>
+            <p className="text-zinc-400">Your watchlist monitors 105+ feeds and alerts you the moment something matches.</p>
           </div>
           {unreadCount > 0 && (
             <Button 

@@ -517,7 +517,7 @@ export default function SupportPage() {
               <h3 className="text-lg font-bold text-white">100% Community Funded. Zero Ads. Zero Data Selling.</h3>
               <p className="text-zinc-400 text-sm leading-relaxed">
                 Every IP lookup, every threat scan, every API call costs real money to run. There are no investors, no ad revenue, and no data harvesting.
-                Memberships, donations, and partnerships fund the hosting, the 70+ data feeds, the development, and the research. That's it.
+                Memberships, donations, and partnerships fund the hosting, the 105+ data feeds, the development, and the research. That's it.
               </p>
               <div className="flex flex-wrap justify-center gap-4 text-xs text-zinc-500 pt-2">
                 <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" aria-hidden="true" /> Hosting & Infrastructure</span>

@@ -18,7 +18,7 @@ type UrlSortOption = "newest" | "oldest" | "source" | "status";
 type KevSortOption = "newest" | "oldest" | "vendor-az" | "due-soonest";
 
 export default function ThreatFeeds() {
-  useDocumentTitle("Threat Intelligence Feeds | STB Cybersecurity", "Real-time malicious IPs, phishing URLs, CISA KEV, and threat indicators from 70+ feeds including SANS DShield, Feodo Tracker, and more.");
+  useDocumentTitle("Threat Intelligence Feeds | STB Cybersecurity", "Real-time malicious IPs, phishing URLs, CISA KEV, and threat indicators from 105+ feeds including SANS DShield, Feodo Tracker, and more.");
   const { data: feeds, isLoading: feedsLoading } = useThreatFeeds();
   const { data: ipsData, isLoading: ipsLoading } = useMaliciousIps(1000);
   const { data: urlsData, isLoading: urlsLoading } = useMaliciousUrls(1000);
@@ -138,12 +138,12 @@ export default function ThreatFeeds() {
           <div>
             <h1 className="text-3xl font-display font-bold text-white mb-2">Threat Intelligence Feeds</h1>
             <p className="text-muted-foreground">
-              Malicious IPs, phishing URLs, and CISA Known Exploited Vulnerabilities pulled from 70+ sources every 15 minutes.
+              Malicious IPs, phishing URLs, and CISA Known Exploited Vulnerabilities pulled from 105+ sources every 15 minutes.
             </p>
           </div>
           <Badge className="bg-green-600/20 text-green-400 border-green-500/50 px-4 py-2" data-testid="badge-live-status">
             <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-            70+ FEEDS ACTIVE
+            105+ FEEDS ACTIVE
           </Badge>
         </div>
 

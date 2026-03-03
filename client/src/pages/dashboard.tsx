@@ -206,7 +206,7 @@ function QuickActionsBar() {
 }
 
 export default function Dashboard() {
-  useDocumentTitle("STB Cybersecurity | Real-Time Threat Intelligence for SMBs", "Track ransomware, CVEs, and malicious IPs across 70+ live feeds. Get 24/7 incident response, ransomware recovery, and threat hunting for your business.");
+  useDocumentTitle("STB Cybersecurity | Real-Time Threat Intelligence for SMBs", "Track ransomware, CVEs, and malicious IPs across 105+ live feeds. Get 24/7 incident response, ransomware recovery, and threat hunting for your business.");
   const { data: stats, isLoading: statsLoading } = useStats();
   const { data: cvesData, isLoading: cvesLoading } = useCves(5);
   const { data: ransomwareData, isLoading: ransomwareLoading } = useRansomware(5);
@@ -265,7 +265,7 @@ export default function Dashboard() {
               KNOW THE THREAT <span className="text-primary text-shimmer">BEFORE IT HITS</span>
             </h1>
             <p className="text-muted-foreground text-lg mb-6">
-              70+ live threat feeds. Ransomware tracking. CVE monitoring. When your business faces an attack, our incident response team is one call away.
+              105+ live threat feeds. Ransomware tracking. CVE monitoring. When your business faces an attack, our incident response team is one call away.
             </p>
             <div className="flex gap-4">
               <Button className="bg-primary hover:bg-primary/90 text-white font-bold btn-press" data-testid="button-view-incidents" asChild>
@@ -529,7 +529,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             {[
               { href: "/tools", label: "Security Tools", icon: Wrench, desc: "IP lookup, port scan & more" },
-              { href: "/search?tab=ioc", label: "IOC Lookup", icon: Scan, desc: "Search 70+ threat feeds" },
+              { href: "/search?tab=ioc", label: "IOC Lookup", icon: Scan, desc: "Search 105+ threat feeds" },
               { href: "/risk-score", label: "Risk Score", icon: ShieldCheck, desc: "Free cyber risk assessment" },
               { href: "/groups", label: "Threat Actors", icon: Users, desc: "Ransomware & APT profiles" },
               { href: "/breaches", label: "Breach Database", icon: Database, desc: "Known data breaches" },
@@ -689,7 +689,7 @@ export default function Dashboard() {
                     usually comes down to one thing: visibility.
                   </p>
                   <p className="text-sm text-zinc-400 leading-relaxed">
-                    STBCS gives you that visibility. Our platform monitors over 70 threat intelligence feeds in real-time,
+                    STBCS gives you that visibility. Our platform monitors over 105 threat intelligence feeds in real-time,
                     tracking everything from zero-day CVEs to active ransomware campaigns, malicious infrastructure,
                     and dark web activity — so you can see threats before they reach your network.
                   </p>
@@ -701,8 +701,8 @@ export default function Dashboard() {
                   </h3>
                   <div className="space-y-3">
                     {[
-                      { icon: Clock, text: "15-minute refresh cycles across all 70+ threat feeds", highlight: "15 min" },
-                      { icon: Shield, text: "Automated IOC correlation across multiple intelligence sources", highlight: "70+" },
+                      { icon: Clock, text: "15-minute refresh cycles across all 105+ threat feeds", highlight: "15 min" },
+                      { icon: Shield, text: "Automated IOC correlation across multiple intelligence sources", highlight: "105+" },
                       { icon: AlertTriangle, text: "Real-time alerts for critical vulnerabilities affecting your stack", highlight: "Real-time" },
                       { icon: Globe, text: "Dark web monitoring for leaked credentials and data exposure", highlight: "24/7" },
                     ].map((item, i) => (
