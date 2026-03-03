@@ -1187,6 +1187,7 @@ export const kbComments = pgTable("kb_comments", {
   content: text("content").notNull(),
   voteCount: integer("vote_count").default(0),
   createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at"),
 }, (table) => [
   index("kb_comments_post_idx").on(table.postId),
   index("kb_comments_author_idx").on(table.authorId),
@@ -1223,10 +1224,26 @@ export const insertKbPostSchema = createInsertSchema(kbPosts).omit({
   updatedAt: true,
 });
 
+export const kbReports = pgTable("kb_reports", {
+  id: serial("id").primaryKey(),
+  reporterId: varchar("reporter_id").notNull(),
+  postId: integer("post_id"),
+  commentId: integer("comment_id"),
+  reason: text("reason").notNull(),
+  details: text("details"),
+  status: text("status").notNull().default("pending"),
+  adminNotes: text("admin_notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("kb_reports_reporter_idx").on(table.reporterId),
+  index("kb_reports_status_idx").on(table.status),
+]);
+
 export const insertKbCommentSchema = createInsertSchema(kbComments).omit({
   id: true,
   voteCount: true,
   createdAt: true,
+  updatedAt: true,
 });
 
 export const insertKbVoteSchema = createInsertSchema(kbVotes).omit({
@@ -1241,6 +1258,15 @@ export type InsertKbComment = z.infer<typeof insertKbCommentSchema>;
 export type KbVote = typeof kbVotes.$inferSelect;
 export type InsertKbVote = z.infer<typeof insertKbVoteSchema>;
 export type KbBookmark = typeof kbBookmarks.$inferSelect;
+
+export const insertKbReportSchema = createInsertSchema(kbReports).omit({
+  id: true,
+  status: true,
+  adminNotes: true,
+  createdAt: true,
+});
+export type KbReport = typeof kbReports.$inferSelect;
+export type InsertKbReport = z.infer<typeof insertKbReportSchema>;
 
 export const KB_RANKS = [
   { name: "Recruit", minPoints: 0, color: "text-zinc-400" },

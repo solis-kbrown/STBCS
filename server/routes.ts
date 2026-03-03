@@ -5452,8 +5452,9 @@ Hiring: https://stbcybersecurity.com/support
         slug = `${baseSlug}-${counter}`;
       }
 
+      const isDraft = req.body.isDraft === true;
       const bypassModeration = user.isAdmin || user.isTrusted;
-      const status = bypassModeration ? "published" : "pending_review";
+      const status = isDraft ? "draft" : (bypassModeration ? "published" : "pending_review");
 
       const post = await storage.createKbPost({
         authorId: user.id,
@@ -5466,7 +5467,9 @@ Hiring: https://stbcybersecurity.com/support
         tags: sanitizedTags,
       });
 
-      await storage.awardReputation(user.id, KB_POINTS.POST_CREATED);
+      if (!isDraft) {
+        await storage.awardReputation(user.id, KB_POINTS.POST_CREATED);
+      }
 
       res.status(201).json(post);
     } catch (error) {
@@ -5501,6 +5504,14 @@ Hiring: https://stbcybersecurity.com/support
       if (tags !== undefined) updates.tags = Array.isArray(tags) ? tags.slice(0, 10) : [];
       if (isPinned !== undefined && user.isAdmin) updates.isPinned = isPinned;
 
+      if (req.body.publish === true && post.status === "draft") {
+        const bypassModeration = user.isAdmin || user.isTrusted;
+        updates.status = bypassModeration ? "published" : "pending_review";
+        await storage.awardReputation(user.id, KB_POINTS.POST_CREATED);
+      } else if (req.body.isDraft === true && post.status === "draft") {
+        updates.status = "draft";
+      }
+
       const updated = await storage.updateKbPost(postId, updates);
       res.json(updated);
     } catch (error) {
@@ -5511,10 +5522,12 @@ Hiring: https://stbcybersecurity.com/support
   app.delete("/api/kb/posts/:id", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
     try {
       const user = req.user!;
-      if (!user.isAdmin) { res.status(403).json({ error: "Admin access required to delete posts" }); return; }
       const postId = parseInt(req.params.id);
       const post = await storage.getKbPostById(postId);
       if (!post) { res.status(404).json({ error: "Post not found" }); return; }
+      if (!user.isAdmin && !(post.authorId === user.id && post.status === "draft")) {
+        res.status(403).json({ error: "Not authorized to delete this post" }); return;
+      }
       await storage.deleteKbPost(postId);
       res.json({ success: true });
     } catch (error) {
@@ -5531,6 +5544,21 @@ Hiring: https://stbcybersecurity.com/support
       if (!post) { res.status(404).json({ error: "Post not found" }); return; }
       if (post.authorId === user.id) { res.status(403).json({ error: "Cannot vote on your own post" }); return; }
       const result = await storage.toggleKbPostVote(user.id, postId);
+      if (result.voted) {
+        try {
+          await storage.createNotification({
+            userId: post.authorId,
+            type: "kb_upvote",
+            title: "Post upvoted",
+            message: `${user.username} upvoted your post "${post.title}"`,
+            severity: "low",
+            relatedId: String(postId),
+            relatedType: "kb_post",
+            read: false,
+            dismissed: false,
+          });
+        } catch {}
+      }
       res.json(result);
     } catch (error) {
       res.status(500).json({ error: "Failed to vote" });
@@ -5575,6 +5603,39 @@ Hiring: https://stbcybersecurity.com/support
       });
 
       await storage.awardReputation(user.id, KB_POINTS.COMMENT_CREATED);
+
+      try {
+        const post = await storage.getKbPostById(postId);
+        if (post && post.authorId !== user.id) {
+          await storage.createNotification({
+            userId: post.authorId,
+            type: "kb_comment",
+            title: "New comment on your post",
+            message: `${user.username} commented on "${post.title}"`,
+            severity: "low",
+            relatedId: String(postId),
+            relatedType: "kb_post",
+            read: false,
+            dismissed: false,
+          });
+        }
+        if (parentId) {
+          const parentComment = await storage.getKbCommentById(parentId);
+          if (parentComment && parentComment.authorId !== user.id && parentComment.authorId !== post?.authorId) {
+            await storage.createNotification({
+              userId: parentComment.authorId,
+              type: "kb_reply",
+              title: "New reply to your comment",
+              message: `${user.username} replied to your comment on "${post?.title || "a post"}"`,
+              severity: "low",
+              relatedId: String(postId),
+              relatedType: "kb_post",
+              read: false,
+              dismissed: false,
+            });
+          }
+        }
+      } catch {}
 
       res.status(201).json(comment);
     } catch (error) {
@@ -5629,7 +5690,22 @@ Hiring: https://stbcybersecurity.com/support
       const postId = parseInt(req.params.id);
       const post = await storage.getKbPostById(postId);
       const updated = await storage.updateKbPost(postId, { status: "published" });
-      if (post) await storage.awardReputation(post.authorId, KB_POINTS.POST_APPROVED);
+      if (post) {
+        await storage.awardReputation(post.authorId, KB_POINTS.POST_APPROVED);
+        try {
+          await storage.createNotification({
+            userId: post.authorId,
+            type: "kb_approved",
+            title: "Post approved",
+            message: `Your post "${post.title}" has been approved and is now published`,
+            severity: "low",
+            relatedId: String(postId),
+            relatedType: "kb_post",
+            read: false,
+            dismissed: false,
+          });
+        } catch {}
+      }
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to approve post" });
@@ -5640,7 +5716,23 @@ Hiring: https://stbcybersecurity.com/support
     try {
       if (!req.user?.isAdmin) { res.status(403).json({ error: "Admin access required" }); return; }
       const postId = parseInt(req.params.id);
+      const post = await storage.getKbPostById(postId);
       const updated = await storage.updateKbPost(postId, { status: "rejected" });
+      if (post) {
+        try {
+          await storage.createNotification({
+            userId: post.authorId,
+            type: "kb_rejected",
+            title: "Post not approved",
+            message: `Your post "${post.title}" was not approved. You can edit and resubmit it.`,
+            severity: "low",
+            relatedId: String(postId),
+            relatedType: "kb_post",
+            read: false,
+            dismissed: false,
+          });
+        } catch {}
+      }
       res.json(updated);
     } catch (error) {
       res.status(500).json({ error: "Failed to reject post" });
@@ -5768,6 +5860,112 @@ Hiring: https://stbcybersecurity.com/support
       res.json(tags);
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch popular tags" });
+    }
+  });
+
+  // KB Drafts
+  app.get("/api/kb/drafts", requireAuth as any, kbLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      const page = parseInt(asString(req.query.page as string) || "1");
+      const limit = 20;
+      const offset = (page - 1) * limit;
+      const [drafts, total] = await Promise.all([
+        storage.getKbDrafts(user.id, limit, offset),
+        storage.getKbDraftCount(user.id),
+      ]);
+      res.json({ posts: drafts, total, page, pages: Math.ceil(total / limit) });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch drafts" });
+    }
+  });
+
+  // KB Comment Editing
+  app.patch("/api/kb/comments/:id", requireAuth as any, kbWriteLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      const commentId = parseInt(req.params.id);
+      const comment = await storage.getKbCommentById(commentId);
+      if (!comment) { res.status(404).json({ error: "Comment not found" }); return; }
+      if (comment.authorId !== user.id) { res.status(403).json({ error: "Not authorized" }); return; }
+
+      const editWindowMs = 30 * 60 * 1000;
+      const createdAt = comment.createdAt ? new Date(comment.createdAt).getTime() : 0;
+      if (Date.now() - createdAt > editWindowMs) {
+        res.status(403).json({ error: "Edit window has expired (30 minutes)" }); return;
+      }
+
+      const { content } = req.body;
+      if (!content || content.trim().length < 1) { res.status(400).json({ error: "Content is required" }); return; }
+      const MAX_COMMENT_LEN = 5000;
+      if (content.length > MAX_COMMENT_LEN) { res.status(400).json({ error: `Comment must be under ${MAX_COMMENT_LEN} characters` }); return; }
+
+      const updated = await storage.updateKbComment(commentId, content.trim().slice(0, MAX_COMMENT_LEN));
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update comment" });
+    }
+  });
+
+  // KB Content Reporting
+  const reportLimiter = rateLimit({ windowMs: 60 * 60 * 1000, max: 5, standardHeaders: true, legacyHeaders: false });
+
+  app.post("/api/kb/report", requireAuth as any, reportLimiter, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const user = req.user!;
+      const { postId, commentId, reason, details } = req.body;
+      if (!postId && !commentId) { res.status(400).json({ error: "Must specify a post or comment to report" }); return; }
+
+      const validReasons = ["spam", "harassment", "misinformation", "off_topic", "other"];
+      if (!reason || !validReasons.includes(reason)) {
+        res.status(400).json({ error: "Invalid reason. Must be: spam, harassment, misinformation, off_topic, or other" }); return;
+      }
+
+      const recentCount = await storage.getUserReportCount(user.id, 1);
+      if (recentCount >= 5) { res.status(429).json({ error: "Too many reports. Please try again later." }); return; }
+
+      const report = await storage.createKbReport({
+        reporterId: user.id,
+        postId: postId ? parseInt(postId) : null,
+        commentId: commentId ? parseInt(commentId) : null,
+        reason,
+        details: details ? String(details).slice(0, 1000) : null,
+      });
+      res.status(201).json(report);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to submit report" });
+    }
+  });
+
+  app.get("/api/kb/admin/reports", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user?.isAdmin) { res.status(403).json({ error: "Admin access required" }); return; }
+      const status = asString(req.query.status as string) || undefined;
+      const page = parseInt(asString(req.query.page as string) || "1");
+      const limit = 20;
+      const offset = (page - 1) * limit;
+      const [reports, total] = await Promise.all([
+        storage.getKbReports({ status, limit, offset }),
+        storage.getKbReportCount({ status }),
+      ]);
+      res.json({ reports, total, page, pages: Math.ceil(total / limit) });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch reports" });
+    }
+  });
+
+  app.post("/api/kb/admin/reports/:id/review", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user?.isAdmin) { res.status(403).json({ error: "Admin access required" }); return; }
+      const reportId = parseInt(req.params.id);
+      const { status, adminNotes } = req.body;
+      if (!status || !["reviewed", "dismissed"].includes(status)) {
+        res.status(400).json({ error: "Status must be reviewed or dismissed" }); return;
+      }
+      const updated = await storage.updateKbReportStatus(reportId, status, adminNotes);
+      res.json(updated);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update report" });
     }
   });
 

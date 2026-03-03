@@ -34,6 +34,7 @@ import {
   type KbPost, type InsertKbPost,
   type KbComment, type InsertKbComment,
   type KbVote, type KbBookmark,
+  type KbReport, type InsertKbReport,
   type FeedbackSubmission, type InsertFeedback,
   KB_POINTS,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
@@ -43,7 +44,7 @@ import {
   apiKeys, apiKeyUsage, addOns, userAddOns, monitorAlertLog,
   uptimeMonitors, uptimeChecks, uptimeIncidents, darkWebMonitors, darkWebFindings,
   dailyThreatStats, attackSurfaceScans, attackSurfaceAssets, threatReports, reportSchedules,
-  kbPosts, kbComments, kbVotes, kbBookmarks, feedbackSubmissions
+  kbPosts, kbComments, kbVotes, kbBookmarks, kbReports, feedbackSubmissions
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte, asc, count, ne, inArray } from "drizzle-orm";
@@ -331,6 +332,8 @@ export interface IStorage {
   // Knowledge Base Comments
   createKbComment(comment: InsertKbComment): Promise<KbComment>;
   getKbCommentsByPost(postId: number, sort?: string): Promise<KbComment[]>;
+  getKbCommentById(id: number): Promise<KbComment | undefined>;
+  updateKbComment(id: number, content: string): Promise<KbComment>;
   deleteKbComment(id: number): Promise<void>;
 
   // Knowledge Base Votes
@@ -354,6 +357,17 @@ export interface IStorage {
   getKbLeaderboard(limit?: number): Promise<{ userId: string; username: string; reputation: number; isTrusted: boolean; isAdmin: boolean; tier: string | null }[]>;
   checkAutoPromotion(userId: string): Promise<boolean>;
   awardReputation(userId: string, points: number): Promise<void>;
+
+  // Knowledge Base Reports
+  createKbReport(report: InsertKbReport): Promise<KbReport>;
+  getKbReports(options: { status?: string; limit?: number; offset?: number }): Promise<KbReport[]>;
+  getKbReportCount(options: { status?: string }): Promise<number>;
+  updateKbReportStatus(id: number, status: string, adminNotes?: string): Promise<KbReport>;
+  getUserReportCount(userId: string, sinceHoursAgo?: number): Promise<number>;
+
+  // Knowledge Base Drafts
+  getKbDrafts(userId: string, limit?: number, offset?: number): Promise<KbPost[]>;
+  getKbDraftCount(userId: string): Promise<number>;
 
   createFeedback(feedback: InsertFeedback): Promise<FeedbackSubmission>;
   getFeedbackSubmissions(options: { status?: string; category?: string; limit?: number; offset?: number }): Promise<FeedbackSubmission[]>;
@@ -2526,6 +2540,19 @@ export class DatabaseStorage implements IStorage {
       .orderBy(...orderClause);
   }
 
+  async getKbCommentById(id: number): Promise<KbComment | undefined> {
+    const [comment] = await db.select().from(kbComments).where(eq(kbComments.id, id));
+    return comment;
+  }
+
+  async updateKbComment(id: number, content: string): Promise<KbComment> {
+    const [updated] = await db.update(kbComments)
+      .set({ content, updatedAt: new Date() })
+      .where(eq(kbComments.id, id))
+      .returning();
+    return updated;
+  }
+
   async deleteKbComment(id: number): Promise<void> {
     const [comment] = await db.select().from(kbComments).where(eq(kbComments.id, id));
     if (!comment) return;
@@ -2691,6 +2718,60 @@ export class DatabaseStorage implements IStorage {
         .set({ kbReputation: sql`GREATEST(${users.kbReputation} + ${points}, 0)` })
         .where(eq(users.id, userId));
     }
+  }
+
+  async createKbReport(report: InsertKbReport): Promise<KbReport> {
+    const [created] = await db.insert(kbReports).values(report).returning();
+    return created;
+  }
+
+  async getKbReports(options: { status?: string; limit?: number; offset?: number }): Promise<KbReport[]> {
+    const conditions = [];
+    if (options.status) conditions.push(eq(kbReports.status, options.status));
+    return db.select().from(kbReports)
+      .where(conditions.length ? and(...conditions) : undefined)
+      .orderBy(desc(kbReports.createdAt))
+      .limit(options.limit || 20)
+      .offset(options.offset || 0);
+  }
+
+  async getKbReportCount(options: { status?: string }): Promise<number> {
+    const conditions = [];
+    if (options.status) conditions.push(eq(kbReports.status, options.status));
+    const [result] = await db.select({ count: sql<number>`count(*)::int` })
+      .from(kbReports)
+      .where(conditions.length ? and(...conditions) : undefined);
+    return result.count;
+  }
+
+  async updateKbReportStatus(id: number, status: string, adminNotes?: string): Promise<KbReport> {
+    const updates: Record<string, any> = { status };
+    if (adminNotes !== undefined) updates.adminNotes = adminNotes;
+    const [updated] = await db.update(kbReports).set(updates).where(eq(kbReports.id, id)).returning();
+    return updated;
+  }
+
+  async getUserReportCount(userId: string, sinceHoursAgo: number = 1): Promise<number> {
+    const since = new Date(Date.now() - sinceHoursAgo * 60 * 60 * 1000);
+    const [result] = await db.select({ count: sql<number>`count(*)::int` })
+      .from(kbReports)
+      .where(and(eq(kbReports.reporterId, userId), gte(kbReports.createdAt, since)));
+    return result.count;
+  }
+
+  async getKbDrafts(userId: string, limit: number = 20, offset: number = 0): Promise<KbPost[]> {
+    return db.select().from(kbPosts)
+      .where(and(eq(kbPosts.authorId, userId), eq(kbPosts.status, "draft")))
+      .orderBy(desc(kbPosts.updatedAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getKbDraftCount(userId: string): Promise<number> {
+    const [result] = await db.select({ count: sql<number>`count(*)::int` })
+      .from(kbPosts)
+      .where(and(eq(kbPosts.authorId, userId), eq(kbPosts.status, "draft")));
+    return result.count;
   }
 
   async updateUserProfile(userId: string, updates: Record<string, any>): Promise<void> {
