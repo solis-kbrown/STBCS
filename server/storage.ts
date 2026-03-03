@@ -354,7 +354,7 @@ export interface IStorage {
   // Knowledge Base User Management
   setUserAdmin(userId: string, isAdmin: boolean): Promise<void>;
   setUserTrusted(userId: string, isTrusted: boolean): Promise<void>;
-  getKbLeaderboard(limit?: number): Promise<{ userId: string; username: string; reputation: number; isTrusted: boolean; isAdmin: boolean; tier: string | null }[]>;
+  getKbLeaderboard(limit?: number): Promise<{ userId: string; username: string; reputation: number; isTrusted: boolean; isAdmin: boolean; tier: string | null; avatarUrl: string | null }[]>;
   checkAutoPromotion(userId: string): Promise<boolean>;
   awardReputation(userId: string, points: number): Promise<void>;
 
@@ -2673,7 +2673,7 @@ export class DatabaseStorage implements IStorage {
     await db.update(users).set({ isTrusted }).where(eq(users.id, userId));
   }
 
-  async getKbLeaderboard(limit = 20): Promise<{ userId: string; username: string; reputation: number; isTrusted: boolean; isAdmin: boolean; tier: string | null }[]> {
+  async getKbLeaderboard(limit = 20): Promise<{ userId: string; username: string; reputation: number; isTrusted: boolean; isAdmin: boolean; tier: string | null; avatarUrl: string | null }[]> {
     const results = await db.select({
       userId: users.id,
       username: users.username,
@@ -2681,6 +2681,7 @@ export class DatabaseStorage implements IStorage {
       isTrusted: users.isTrusted,
       isAdmin: users.isAdmin,
       tier: users.tier,
+      avatarUrl: users.avatarUrl,
     }).from(users)
       .where(sql`${users.kbReputation} > 0`)
       .orderBy(desc(users.kbReputation))
@@ -2692,6 +2693,7 @@ export class DatabaseStorage implements IStorage {
       isTrusted: r.isTrusted || false,
       isAdmin: r.isAdmin || false,
       tier: r.tier,
+      avatarUrl: r.avatarUrl || null,
     }));
   }
 

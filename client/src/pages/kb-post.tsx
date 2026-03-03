@@ -13,9 +13,11 @@ import {
   ChevronUp, ChevronDown, MessageSquare, Clock, Edit, Trash2, ArrowLeft,
   Crown, Star, Award, Shield, Pin, Reply, Send, BookOpen,
   Eye, Bookmark, BookmarkCheck, ArrowUpDown, Tag, Link2, Sparkles, List,
-  Share2, Linkedin, Flag, X, AlertTriangle, Check
+  Share2, Linkedin, Mail, Flag, X, AlertTriangle, Check, QrCode, Download
 } from "lucide-react";
 import { KBIcon } from "@/components/branded-icons";
+import UserAvatar from "@/components/user-avatar";
+import QRCode from "qrcode";
 
 function TierBadge({ tier, isTrusted, isAdmin }: { tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }) {
   if (isAdmin) return <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]"><Crown className="h-3 w-3 mr-1" />Admin</Badge>;
@@ -236,6 +238,7 @@ function Comment({ comment, depth, postId, user, onReply, topContributorSet, ris
     <div className={`${depth > 0 ? "ml-6 border-l-2 border-zinc-800 pl-4" : ""}`} data-testid={`comment-${comment.id}`}>
       <div className="py-3">
         <div className="flex items-center gap-2 mb-2">
+          <UserAvatar avatarUrl={comment.author?.avatarUrl} username={comment.author?.username} size="sm" />
           <Link href={`/user/${comment.author?.username}`}><span className="text-sm font-medium text-zinc-300 hover:text-orange-400 transition-colors cursor-pointer">{comment.author?.username || "Unknown"}</span></Link>
           {comment.author && <TierBadge tier={comment.author.tier} isTrusted={comment.author.isTrusted} isAdmin={comment.author.isAdmin} />}
           {comment.author?.username && topContributorSet.has(comment.author.username) && (
@@ -322,6 +325,8 @@ export default function KbPost() {
   const [commentSort, setCommentSort] = useState("oldest");
   const [tocOpen, setTocOpen] = useState(() => typeof window !== "undefined" && window.innerWidth >= 768);
   const [showPostReport, setShowPostReport] = useState(false);
+  const [showQrCode, setShowQrCode] = useState(false);
+  const [qrDataUrl, setQrDataUrl] = useState<string | null>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const slug = params?.slug || "";
 
@@ -482,12 +487,42 @@ export default function KbPost() {
     window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
   };
 
+  const handleShareEmail = () => {
+    const subject = encodeURIComponent(post.title);
+    const body = encodeURIComponent(window.location.href);
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
+  };
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(window.location.href).then(() => {
       toast({ title: "Link copied to clipboard" });
     }).catch(() => {
       toast({ title: "Failed to copy link", variant: "destructive" });
     });
+  };
+
+  const handleShowQrCode = async () => {
+    try {
+      const dataUrl = await QRCode.toDataURL(window.location.href, {
+        width: 256,
+        margin: 2,
+        color: { dark: "#ea580c", light: "#18181b" },
+      });
+      setQrDataUrl(dataUrl);
+      setShowQrCode(true);
+    } catch {
+      toast({ title: "Failed to generate QR code", variant: "destructive" });
+    }
+  };
+
+  const handleDownloadQr = () => {
+    if (!qrDataUrl) return;
+    const link = document.createElement("a");
+    link.download = `qr-${slug}.png`;
+    link.href = qrDataUrl;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   if (isLoading) {
@@ -558,7 +593,8 @@ export default function KbPost() {
             <h1 className="text-2xl font-bold text-white mb-4" data-testid="text-post-title">{post.title}</h1>
 
             <div className="flex items-center gap-3 mb-4 text-sm text-zinc-500 flex-wrap">
-              <span className="flex items-center gap-1">
+              <span className="flex items-center gap-1.5">
+                <UserAvatar avatarUrl={post.author?.avatarUrl} username={post.author?.username} size="md" />
                 By <Link href={`/user/${post.author?.username}`}><strong className="text-zinc-300 hover:text-orange-400 transition-colors cursor-pointer">{post.author?.username || "Unknown"}</strong></Link>
                 {post.author && <TierBadge tier={post.author.tier} isTrusted={post.author.isTrusted} isAdmin={post.author.isAdmin} />}
                 {post.author?.username && topContributorSet.has(post.author.username) && (
@@ -609,12 +645,28 @@ export default function KbPost() {
                   <Linkedin className="h-4 w-4" />
                 </button>
                 <button
+                  onClick={handleShareEmail}
+                  className="p-1.5 rounded hover:bg-orange-500/10 transition-colors text-zinc-400 hover:text-orange-400"
+                  title="Share via Email"
+                  data-testid="button-share-email"
+                >
+                  <Mail className="h-4 w-4" />
+                </button>
+                <button
                   onClick={handleCopyLink}
                   className="p-1.5 rounded hover:bg-orange-500/10 transition-colors text-zinc-400 hover:text-orange-400"
                   title="Copy link"
                   data-testid="button-share-copy-link"
                 >
                   <Link2 className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handleShowQrCode}
+                  className="p-1.5 rounded hover:bg-orange-500/10 transition-colors text-zinc-400 hover:text-orange-400"
+                  title="QR Code"
+                  data-testid="button-share-qrcode"
+                >
+                  <QrCode className="h-4 w-4" />
                 </button>
               </div>
               {isPaid && post.authorId !== user?.id && (
@@ -639,6 +691,23 @@ export default function KbPost() {
               )}
             </div>
             {showPostReport && <ReportDialog type="post" targetId={post.id} postId={post.id} onClose={() => setShowPostReport(false)} />}
+
+            {showQrCode && qrDataUrl && (
+              <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setShowQrCode(false)}>
+                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-xs mx-4 text-center" onClick={(e) => e.stopPropagation()}>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2"><QrCode className="h-5 w-5 text-orange-400" />QR Code</h3>
+                    <button onClick={() => setShowQrCode(false)} className="text-zinc-500 hover:text-zinc-300" data-testid="button-close-qr"><X className="h-5 w-5" /></button>
+                  </div>
+                  <img src={qrDataUrl} alt="QR Code" className="mx-auto rounded-lg mb-3" width={256} height={256} data-testid="img-qr-code" />
+                  <p className="text-xs text-zinc-500 mb-1">Scan to open this post</p>
+                  <p className="text-xs text-orange-400 font-semibold mb-4">STB Cybersecurity</p>
+                  <Button onClick={handleDownloadQr} variant="outline" size="sm" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-download-qr">
+                    <Download className="h-4 w-4 mr-1" />Download QR
+                  </Button>
+                </div>
+              </div>
+            )}
 
             {(() => {
               const headings = extractHeadings(post.content);

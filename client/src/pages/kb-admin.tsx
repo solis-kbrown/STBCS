@@ -14,6 +14,7 @@ import {
   Crown, Award, Star, ChevronUp, ChevronDown,
   Users, FileText, AlertTriangle, BookOpen, Flag, MessageSquare
 } from "lucide-react";
+import UserAvatar from "@/components/user-avatar";
 
 function TierBadge({ tier, isTrusted, isAdmin }: { tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }) {
   if (isAdmin) return <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]"><Crown className="h-3 w-3 mr-1" />Admin</Badge>;
@@ -285,6 +286,7 @@ export default function KbAdmin() {
                       <tr key={u.userId} className="border-b border-zinc-800/50 hover:bg-zinc-800/30" data-testid={`user-row-${u.userId}`}>
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-2">
+                            <UserAvatar avatarUrl={u.avatarUrl} username={u.username} size="sm" />
                             <span className="text-sm font-medium text-zinc-300">{u.username}</span>
                             <TierBadge tier={u.tier} isTrusted={u.isTrusted} isAdmin={u.isAdmin} />
                           </div>

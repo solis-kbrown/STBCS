@@ -9,9 +9,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, Download, ExternalLink, Globe, Loader2, ArrowUpDown, SlidersHorizontal, Calendar, RotateCcw, ChevronRight, BarChart3, TrendingUp, Users, Target, MapPin, Building2, DollarSign, Lock, Crown } from "lucide-react";
+import { Search, Filter, Download, ExternalLink, Globe, Loader2, ArrowUpDown, SlidersHorizontal, Calendar, RotateCcw, ChevronRight, BarChart3, TrendingUp, Users, Target, MapPin, Building2, DollarSign, Lock, Crown, Share2, Twitter, Linkedin, Mail, Copy, ImageDown } from "lucide-react";
+import { generateRansomwareShareImage, downloadImage } from "@/lib/share-image";
 import { useAuth } from "@/lib/auth";
+import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useMemo, useCallback, KeyboardEvent } from "react";
@@ -57,6 +60,7 @@ export default function Ransomware() {
   const { isPro, isBusiness } = useAuth();
   const canExport = isPro || isBusiness;
   const exportMutation = useExportData();
+  const { toast } = useToast();
   
   const handleSearch = (e: KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && searchQuery.trim().length >= 2) {
@@ -793,14 +797,78 @@ export default function Ransomware() {
                           <ExternalLink className="h-3 w-3" />
                         </a>
                       )}
-                      <Button 
-                        variant="link" 
-                        className="text-primary p-0 h-auto font-mono text-xs" 
-                        data-testid={`link-view-evidence-${incident.id}`}
-                        onClick={() => alert('Evidence viewing requires Pro tier access for security reasons.')}
-                      >
-                        VIEW EVIDENCE &gt;
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-muted-foreground hover:text-white"
+                              onClick={(e) => e.stopPropagation()}
+                              data-testid={`button-share-incident-${incident.id}`}
+                            >
+                              <Share2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={() => {
+                              const text = `Ransomware Alert: ${incident.victim} targeted by ${incident.groupName} — via STB Cybersecurity`;
+                              window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+                            }} data-testid={`button-share-twitter-${incident.id}`}>
+                              <Twitter className="h-4 w-4 mr-2" />
+                              Share on X
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank');
+                            }} data-testid={`button-share-linkedin-${incident.id}`}>
+                              <Linkedin className="h-4 w-4 mr-2" />
+                              Share on LinkedIn
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              const subject = `Ransomware Alert: ${incident.victim} targeted by ${incident.groupName}`;
+                              const body = `Ransomware Alert\n\nVictim: ${incident.victim}\nGroup: ${incident.groupName}\nStatus: ${incident.status || 'N/A'}\nDate: ${incident.discoveredAt ? new Date(incident.discoveredAt).toLocaleDateString() : 'N/A'}${incident.sector ? `\nSector: ${incident.sector}` : ''}${incident.country ? `\nCountry: ${incident.country}` : ''}\n\n— via STB Cybersecurity`;
+                              window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+                            }} data-testid={`button-share-email-${incident.id}`}>
+                              <Mail className="h-4 w-4 mr-2" />
+                              Share via Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              const summary = `Ransomware Alert: ${incident.victim} targeted by ${incident.groupName} | Status: ${incident.status || 'N/A'} | Date: ${incident.discoveredAt ? new Date(incident.discoveredAt).toLocaleDateString() : 'N/A'}${incident.sector ? ` | Sector: ${incident.sector}` : ''}${incident.country ? ` | Country: ${incident.country}` : ''} — via STB Cybersecurity`;
+                              navigator.clipboard.writeText(summary);
+                              toast({ title: "Copied to clipboard", description: `Summary for ${incident.victim} incident copied` });
+                            }} data-testid={`button-share-copy-${incident.id}`}>
+                              <Copy className="h-4 w-4 mr-2" />
+                              Copy Summary
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={async () => {
+                              try {
+                                const dataUrl = await generateRansomwareShareImage({
+                                  victim: incident.victim,
+                                  groupName: incident.groupName,
+                                  discoveredAt: incident.discoveredAt || new Date().toISOString(),
+                                  status: incident.status || undefined,
+                                  sector: incident.sector || undefined,
+                                });
+                                downloadImage(dataUrl, `ransomware-${incident.victim.replace(/[^a-zA-Z0-9]/g, '-')}.png`);
+                                toast({ title: "Image downloaded", description: `Branded card for ${incident.victim} saved` });
+                              } catch {
+                                toast({ title: "Failed to generate image", variant: "destructive" });
+                              }
+                            }} data-testid={`button-share-image-${incident.id}`}>
+                              <ImageDown className="h-4 w-4 mr-2" />
+                              Share as Image
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        <Button 
+                          variant="link" 
+                          className="text-primary p-0 h-auto font-mono text-xs" 
+                          data-testid={`link-view-evidence-${incident.id}`}
+                          onClick={() => alert('Evidence viewing requires Pro tier access for security reasons.')}
+                        >
+                          VIEW EVIDENCE &gt;
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

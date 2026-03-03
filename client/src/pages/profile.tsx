@@ -10,7 +10,7 @@ import {
   Calendar, BookOpen, MessageSquare, Eye, ChevronUp, TrendingUp,
   ArrowLeft, Lock, Loader2
 } from "lucide-react";
-import { ProfileIcon } from "@/components/branded-icons";
+import UserAvatar from "@/components/user-avatar";
 import { format } from "date-fns";
 
 const KB_RANKS = [
@@ -130,19 +130,9 @@ export default function ProfilePage() {
                 <div className="absolute top-4 right-4 w-px h-6 bg-orange-500/10" />
               </div>
               <CardContent className="p-6 text-center relative">
-                {profile.avatarUrl ? (
-                  <img
-                    src={profile.avatarUrl}
-                    alt={profile.username}
-                    className="h-24 w-24 rounded-full object-cover border-2 border-zinc-700 mx-auto mb-4"
-                    data-testid="img-profile-avatar"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                  />
-                ) : (
-                  <div className="h-24 w-24 rounded-full bg-zinc-800/80 border-2 border-orange-500/20 flex items-center justify-center mx-auto mb-4" style={{ boxShadow: '0 0 20px rgba(249,115,22,0.08)' }}>
-                    <ProfileIcon className="h-14 w-14" />
-                  </div>
-                )}
+                <div className="mx-auto mb-4 w-fit" data-testid="img-profile-avatar">
+                  <UserAvatar avatarUrl={profile.avatarUrl} username={profile.username} size="xl" />
+                </div>
                 <h1 className="text-xl font-bold text-white" data-testid="text-profile-name">
                   {profile.displayName || profile.username}
                 </h1>

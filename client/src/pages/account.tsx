@@ -10,10 +10,10 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { User, Crown, CreditCard, Calendar, Shield, ExternalLink, Loader2, ArrowRight, Bell, Mail, Key, Copy, Trash2, Eye, EyeOff, Plus, Camera, MapPin, Building, Globe, Award, Save, BookOpen } from "lucide-react";
+import { User, Crown, CreditCard, Calendar, Shield, ExternalLink, Loader2, ArrowRight, Bell, Mail, Key, Copy, Trash2, Eye, EyeOff, Plus, Camera, MapPin, Building, Globe, Award, Save, BookOpen, Terminal, Lock, Bug, Skull, Radar, CircuitBoard, Upload, X, Link2 } from "lucide-react";
 import { format } from "date-fns";
 import { useLocation, Link } from "wouter";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 const tierColors: Record<string, string> = {
   free: "bg-zinc-700 text-zinc-300",
@@ -30,6 +30,21 @@ const tierLabels: Record<string, string> = {
   business: "STBCS Business",
   unlimited: "STBCS Unlimited Everything",
 };
+
+const DEFAULT_AVATARS = [
+  { name: "Shield", svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="32" fill="#27272a"/><path d="M32 12L16 20v12c0 11 7 18 16 20 9-2 16-9 16-20V20L32 12z" stroke="#f97316" stroke-width="2.5" fill="#f97316" fill-opacity="0.15"/><path d="M28 32l4 4 8-8" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
+  { name: "Terminal", svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="32" fill="#27272a"/><rect x="12" y="16" width="40" height="32" rx="4" stroke="#f97316" stroke-width="2.5" fill="#f97316" fill-opacity="0.1"/><path d="M20 28l6 4-6 4M30 36h8" stroke="#f97316" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>` },
+  { name: "Lock", svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="32" fill="#27272a"/><rect x="18" y="28" width="28" height="22" rx="4" stroke="#f97316" stroke-width="2.5" fill="#f97316" fill-opacity="0.15"/><path d="M24 28v-6a8 8 0 0116 0v6" stroke="#f97316" stroke-width="2.5" stroke-linecap="round"/><circle cx="32" cy="38" r="3" fill="#f97316"/></svg>` },
+  { name: "Bug", svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="32" fill="#27272a"/><ellipse cx="32" cy="36" rx="10" ry="12" stroke="#f97316" stroke-width="2.5" fill="#f97316" fill-opacity="0.15"/><circle cx="28" cy="30" r="2" fill="#f97316"/><circle cx="36" cy="30" r="2" fill="#f97316"/><path d="M18 30h4M42 30h4M18 38h4M42 38h4M24 22l-4-4M40 22l4-4" stroke="#f97316" stroke-width="2" stroke-linecap="round"/></svg>` },
+  { name: "Skull", svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="32" fill="#27272a"/><path d="M20 32c0-8 5-16 12-16s12 8 12 16c0 4-2 7-4 9v5H24v-5c-2-2-4-5-4-9z" stroke="#f97316" stroke-width="2.5" fill="#f97316" fill-opacity="0.12"/><circle cx="27" cy="31" r="3" fill="#f97316"/><circle cx="37" cy="31" r="3" fill="#f97316"/><path d="M28 46v-4M32 46v-4M36 46v-4" stroke="#f97316" stroke-width="2" stroke-linecap="round"/></svg>` },
+  { name: "Radar", svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="32" fill="#27272a"/><circle cx="32" cy="32" r="18" stroke="#f97316" stroke-width="2" fill="#f97316" fill-opacity="0.08"/><circle cx="32" cy="32" r="12" stroke="#f97316" stroke-width="1.5" opacity="0.6"/><circle cx="32" cy="32" r="6" stroke="#f97316" stroke-width="1.5" opacity="0.4"/><line x1="32" y1="32" x2="32" y2="14" stroke="#f97316" stroke-width="2.5" stroke-linecap="round"/><circle cx="32" cy="32" r="2" fill="#f97316"/><circle cx="38" cy="26" r="2.5" fill="#f97316" opacity="0.8"/></svg>` },
+  { name: "Eye", svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="32" fill="#27272a"/><path d="M10 32s8-14 22-14 22 14 22 14-8 14-22 14S10 32 10 32z" stroke="#f97316" stroke-width="2.5" fill="#f97316" fill-opacity="0.1"/><circle cx="32" cy="32" r="7" stroke="#f97316" stroke-width="2" fill="#f97316" fill-opacity="0.2"/><circle cx="32" cy="32" r="3" fill="#f97316"/></svg>` },
+  { name: "Circuit", svg: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none"><rect width="64" height="64" rx="32" fill="#27272a"/><rect x="24" y="24" width="16" height="16" rx="2" stroke="#f97316" stroke-width="2.5" fill="#f97316" fill-opacity="0.15"/><path d="M32 14v10M32 40v10M14 32h10M40 32h10M18 18l8 8M38 38l8 8M18 46l8-8M38 26l8-8" stroke="#f97316" stroke-width="1.5" stroke-linecap="round"/><circle cx="32" cy="14" r="2" fill="#f97316"/><circle cx="32" cy="50" r="2" fill="#f97316"/><circle cx="14" cy="32" r="2" fill="#f97316"/><circle cx="50" cy="32" r="2" fill="#f97316"/></svg>` },
+];
+
+function svgToDataUrl(svg: string): string {
+  return `data:image/svg+xml;base64,${btoa(svg)}`;
+}
 
 export default function AccountPage() {
   useDocumentTitle("My Account | STB Cybersecurity");
@@ -103,10 +118,33 @@ export default function AccountPage() {
   const [revealedKey, setRevealedKey] = useState<string | null>(null);
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
+  const [avatarTab, setAvatarTab] = useState<"upload" | "defaults" | "url">("upload");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [profileForm, setProfileForm] = useState({
     displayName: "", bio: "", avatarUrl: "", location: "", website: "", company: "",
     profilePublic: true, showEmail: false,
   });
+
+  const handleAvatarUpload = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const validTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!validTypes.includes(file.type)) {
+      toast({ title: "Invalid file type", description: "Please upload a JPEG, PNG, GIF, or WebP image.", variant: "destructive" });
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast({ title: "File too large", description: "Avatar must be under 2MB.", variant: "destructive" });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      setProfileForm(f => ({ ...f, avatarUrl: dataUrl }));
+    };
+    reader.readAsDataURL(file);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  }, [toast]);
 
   const account = accountData?.user;
   const subscription = accountData?.subscription;
@@ -319,28 +357,134 @@ export default function AccountPage() {
               </div>
             ) : (
               <div className="space-y-4 pt-2 border-t border-zinc-800">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">Display Name</label>
-                    <Input
-                      data-testid="input-display-name"
-                      value={profileForm.displayName}
-                      onChange={(e) => setProfileForm(f => ({ ...f, displayName: e.target.value }))}
-                      placeholder="Your display name"
-                      className="bg-zinc-800 border-zinc-700 text-white"
-                      maxLength={100}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">Avatar URL</label>
-                    <Input
-                      data-testid="input-avatar-url"
-                      value={profileForm.avatarUrl}
-                      onChange={(e) => setProfileForm(f => ({ ...f, avatarUrl: e.target.value }))}
-                      placeholder="https://example.com/avatar.jpg"
-                      className="bg-zinc-800 border-zinc-700 text-white"
-                      maxLength={500}
-                    />
+                <div>
+                  <label className="text-xs text-zinc-500 uppercase tracking-wider mb-1 block">Display Name</label>
+                  <Input
+                    data-testid="input-display-name"
+                    value={profileForm.displayName}
+                    onChange={(e) => setProfileForm(f => ({ ...f, displayName: e.target.value }))}
+                    placeholder="Your display name"
+                    className="bg-zinc-800 border-zinc-700 text-white"
+                    maxLength={100}
+                  />
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-xs text-zinc-500 uppercase tracking-wider block">Avatar</label>
+                  <div className="flex items-start gap-4">
+                    <div className="shrink-0 relative group">
+                      {profileForm.avatarUrl ? (
+                        <img
+                          src={profileForm.avatarUrl}
+                          alt="Avatar preview"
+                          className="h-20 w-20 rounded-full object-cover border-2 border-orange-500/40"
+                          data-testid="img-avatar-preview"
+                          onError={(e) => { (e.target as HTMLImageElement).src = ""; }}
+                        />
+                      ) : (
+                        <div className="h-20 w-20 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center">
+                          <User className="h-10 w-10 text-zinc-600" />
+                        </div>
+                      )}
+                      {profileForm.avatarUrl && (
+                        <button
+                          type="button"
+                          onClick={() => setProfileForm(f => ({ ...f, avatarUrl: "" }))}
+                          className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                          data-testid="button-remove-avatar"
+                        >
+                          <X className="h-3 w-3 text-white" />
+                        </button>
+                      )}
+                    </div>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex gap-1">
+                        <button
+                          type="button"
+                          onClick={() => setAvatarTab("upload")}
+                          className={`px-2.5 py-1 text-[11px] rounded-md transition-colors ${avatarTab === "upload" ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" : "text-zinc-400 hover:text-zinc-300 border border-zinc-700"}`}
+                          data-testid="button-avatar-tab-upload"
+                        >
+                          <Upload className="h-3 w-3 inline mr-1" />Upload
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAvatarTab("defaults")}
+                          className={`px-2.5 py-1 text-[11px] rounded-md transition-colors ${avatarTab === "defaults" ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" : "text-zinc-400 hover:text-zinc-300 border border-zinc-700"}`}
+                          data-testid="button-avatar-tab-defaults"
+                        >
+                          <Shield className="h-3 w-3 inline mr-1" />Defaults
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAvatarTab("url")}
+                          className={`px-2.5 py-1 text-[11px] rounded-md transition-colors ${avatarTab === "url" ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" : "text-zinc-400 hover:text-zinc-300 border border-zinc-700"}`}
+                          data-testid="button-avatar-tab-url"
+                        >
+                          <Link2 className="h-3 w-3 inline mr-1" />URL
+                        </button>
+                      </div>
+
+                      {avatarTab === "upload" && (
+                        <div>
+                          <input
+                            ref={fileInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/gif,image/webp"
+                            onChange={handleAvatarUpload}
+                            className="hidden"
+                            data-testid="input-avatar-file"
+                          />
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            onClick={() => fileInputRef.current?.click()}
+                            className="border-zinc-700 text-zinc-400 hover:text-orange-400 text-xs w-full"
+                            data-testid="button-upload-avatar"
+                          >
+                            <Camera className="h-3.5 w-3.5 mr-1.5" />
+                            Choose Image (max 2MB)
+                          </Button>
+                          <p className="text-[10px] text-zinc-600 mt-1">JPEG, PNG, GIF, or WebP</p>
+                        </div>
+                      )}
+
+                      {avatarTab === "defaults" && (
+                        <div className="grid grid-cols-4 gap-2" data-testid="avatar-defaults-grid">
+                          {DEFAULT_AVATARS.map((a) => {
+                            const dataUrl = svgToDataUrl(a.svg);
+                            const isSelected = profileForm.avatarUrl === dataUrl;
+                            return (
+                              <button
+                                key={a.name}
+                                type="button"
+                                onClick={() => setProfileForm(f => ({ ...f, avatarUrl: dataUrl }))}
+                                className={`rounded-full p-0.5 transition-all ${isSelected ? "ring-2 ring-orange-500 ring-offset-2 ring-offset-zinc-900" : "hover:ring-2 hover:ring-zinc-600 hover:ring-offset-1 hover:ring-offset-zinc-900"}`}
+                                title={a.name}
+                                data-testid={`button-default-avatar-${a.name.toLowerCase()}`}
+                              >
+                                <img src={dataUrl} alt={a.name} className="h-10 w-10 rounded-full" />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {avatarTab === "url" && (
+                        <div>
+                          <Input
+                            data-testid="input-avatar-url"
+                            value={profileForm.avatarUrl.startsWith("data:") ? "" : profileForm.avatarUrl}
+                            onChange={(e) => setProfileForm(f => ({ ...f, avatarUrl: e.target.value }))}
+                            placeholder="https://example.com/avatar.jpg"
+                            className="bg-zinc-800 border-zinc-700 text-white text-xs"
+                            maxLength={2000}
+                          />
+                          <p className="text-[10px] text-zinc-600 mt-1">Paste an external image URL</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
                 <div>

@@ -62,6 +62,7 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import UserAvatar from "@/components/user-avatar";
 import { LanguageSelector } from "@/components/language-selector";
 import { useTranslation } from "@/lib/i18n/context";
 import { useAuth } from "@/lib/auth";
@@ -488,11 +489,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="gap-2 pl-2 pr-4 h-10 rounded-full hover:bg-zinc-800">
-                      <Avatar className="h-8 w-8 border border-orange-500/30">
-                        <AvatarFallback className="bg-orange-500/20 text-orange-400">
-                          {user?.username?.charAt(0).toUpperCase() || "U"}
-                        </AvatarFallback>
-                      </Avatar>
+                      <UserAvatar avatarUrl={user?.avatarUrl} username={user?.username} size="md" />
                       <div className="flex flex-col items-start text-xs hidden sm:flex">
                         <span className="font-bold text-white">{user?.username}</span>
                         <span className="text-zinc-500 flex items-center gap-1">

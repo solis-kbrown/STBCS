@@ -13,9 +13,12 @@ import {
   Crown, Star, Award, TrendingUp, Pin, Clock,
   Filter, ChevronLeft, ChevronRight, Users, Sparkles,
   Eye, Bookmark, BookmarkCheck, ArrowUpDown, Tag, Flame,
-  ThumbsUp, MessagesSquare, BarChart3
+  ThumbsUp, MessagesSquare, BarChart3, Share2, Linkedin, Mail, Copy
 } from "lucide-react";
 import { KBIcon } from "@/components/branded-icons";
+import UserAvatar from "@/components/user-avatar";
+import { useToast } from "@/hooks/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 const POST_TYPES = [
   { value: "", label: "All Posts", icon: BookOpen },
@@ -168,6 +171,7 @@ export default function KnowledgeBase() {
     setPage(1);
   };
 
+  const { toast } = useToast();
   const isPaid = isAuthenticated && user?.tier !== "free";
 
   const topContributorSet = new Set(
@@ -377,7 +381,8 @@ export default function KnowledgeBase() {
                           {post.content?.replace(/[#*`>\-\[\]()!]/g, "").slice(0, 200)}
                         </p>
                         <div className="flex items-center gap-4 mt-3 text-xs text-zinc-500">
-                          <span className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                          <span className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                            <UserAvatar avatarUrl={post.author?.avatarUrl} username={post.author?.username} size="sm" />
                             <Link href={`/user/${post.author?.username}`} className="hover:text-orange-400 transition-colors">
                               {post.author?.username || "Unknown"}
                             </Link>
@@ -398,20 +403,69 @@ export default function KnowledgeBase() {
                           <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{post.viewCount || 0}</span>
                         </div>
                       </Link>
-                      {isPaid && (
-                        <button
-                          onClick={(e) => { e.preventDefault(); e.stopPropagation(); bookmarkMutation.mutate(post.id); }}
-                          data-testid={`button-bookmark-${post.id}`}
-                          className="p-2 rounded-lg hover:bg-zinc-800 transition-colors shrink-0"
-                          title={bookmarkedSet.has(post.id) ? "Remove bookmark" : "Bookmark"}
-                        >
-                          {bookmarkedSet.has(post.id) ? (
-                            <BookmarkCheck className="h-4 w-4 text-orange-400" />
-                          ) : (
-                            <Bookmark className="h-4 w-4 text-zinc-600 hover:text-orange-400" />
-                          )}
-                        </button>
-                      )}
+                      <div className="flex flex-col items-center gap-1 shrink-0">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button
+                              onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                              data-testid={`button-share-${post.id}`}
+                              className="p-2 rounded-lg hover:bg-zinc-800 transition-colors"
+                              title="Share this post"
+                            >
+                              <Share2 className="h-4 w-4 text-zinc-600 hover:text-orange-400" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48" onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenuItem onClick={() => {
+                              const url = `${window.location.origin}/knowledge-base/${post.slug}`;
+                              const text = `${post.title} — via STB Cybersecurity`;
+                              window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`, '_blank');
+                            }} data-testid={`button-share-twitter-${post.id}`}>
+                              <Share2 className="h-4 w-4 mr-2" />
+                              Share on X
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              const url = `${window.location.origin}/knowledge-base/${post.slug}`;
+                              window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`, '_blank');
+                            }} data-testid={`button-share-linkedin-${post.id}`}>
+                              <Linkedin className="h-4 w-4 mr-2" />
+                              Share on LinkedIn
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              const url = `${window.location.origin}/knowledge-base/${post.slug}`;
+                              window.open(`mailto:?subject=${encodeURIComponent(post.title)}&body=${encodeURIComponent(url)}`);
+                            }} data-testid={`button-share-email-${post.id}`}>
+                              <Mail className="h-4 w-4 mr-2" />
+                              Share via Email
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => {
+                              const url = `${window.location.origin}/knowledge-base/${post.slug}`;
+                              navigator.clipboard.writeText(url).then(() => {
+                                toast({ title: "Link copied!", description: "Post URL copied to clipboard" });
+                              }).catch(() => {
+                                toast({ title: "Copy failed", variant: "destructive" });
+                              });
+                            }} data-testid={`button-share-copy-${post.id}`}>
+                              <Copy className="h-4 w-4 mr-2" />
+                              Copy Link
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                        {isPaid && (
+                          <button
+                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); bookmarkMutation.mutate(post.id); }}
+                            data-testid={`button-bookmark-${post.id}`}
+                            className="p-2 rounded-lg hover:bg-zinc-800 transition-colors"
+                            title={bookmarkedSet.has(post.id) ? "Remove bookmark" : "Bookmark"}
+                          >
+                            {bookmarkedSet.has(post.id) ? (
+                              <BookmarkCheck className="h-4 w-4 text-orange-400" />
+                            ) : (
+                              <Bookmark className="h-4 w-4 text-zinc-600 hover:text-orange-400" />
+                            )}
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))
@@ -479,6 +533,7 @@ export default function KnowledgeBase() {
                   {leaderboard?.slice(0, 10).map((u: any, i: number) => (
                     <div key={u.userId} className="flex items-center gap-3" data-testid={`leaderboard-user-${i}`}>
                       <span className="text-xs font-bold text-zinc-600 w-5">#{i + 1}</span>
+                      <UserAvatar avatarUrl={u.avatarUrl} username={u.username} size="sm" />
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium text-zinc-300 truncate">{u.username}</p>
                         <div className="flex items-center gap-1">

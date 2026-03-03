@@ -6,16 +6,18 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowRight, Globe, Share2, Search, ArrowUpDown, SlidersHorizontal, RotateCcw } from "lucide-react";
+import { ArrowRight, Globe, Search, ArrowUpDown, SlidersHorizontal, RotateCcw, Linkedin, Mail, Link2 } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useCallback, useMemo } from "react";
+import { useToast } from "@/hooks/use-toast";
 import PaginationControls from "@/components/pagination-controls";
 
 type SortOption = "newest" | "oldest" | "source-az";
 
 export default function News() {
   useDocumentTitle("Cybersecurity Intel & News | STB Cybersecurity", "Curated cybersecurity news, threat intelligence reports, policy updates, and industry analysis from trusted security sources worldwide.");
+  const { toast } = useToast();
   const { data, isLoading } = useNews(1000);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -224,25 +226,74 @@ export default function News() {
 
                       <div className="flex justify-between items-center pt-2">
                         <span className="text-xs font-bold text-white/50">{article.source}</span>
-                        <div className="flex gap-2">
-                           <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8 hover:text-white" 
-                            data-testid={`button-share-${article.id}`}
+                        <div className="flex gap-1 items-center">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:text-[#1DA1F2]"
+                            title="Share on Twitter/X"
+                            data-testid={`button-share-twitter-${article.id}`}
                             onClick={() => {
-                              navigator.clipboard.writeText(window.location.href);
-                              alert('Link copied to clipboard!');
+                              const shareUrl = article.sourceUrl || window.location.href;
+                              const text = encodeURIComponent(`${article.title} — via STB Cybersecurity`);
+                              const url = encodeURIComponent(shareUrl);
+                              window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank');
                             }}
                           >
-                            <Share2 className="h-4 w-4" />
+                            <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:text-[#0A66C2]"
+                            title="Share on LinkedIn"
+                            data-testid={`button-share-linkedin-${article.id}`}
+                            onClick={() => {
+                              const shareUrl = article.sourceUrl || window.location.href;
+                              const url = encodeURIComponent(shareUrl);
+                              window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${url}`, '_blank');
+                            }}
+                          >
+                            <Linkedin className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:text-orange-400"
+                            title="Share via Email"
+                            data-testid={`button-share-email-${article.id}`}
+                            onClick={() => {
+                              const shareUrl = article.sourceUrl || window.location.href;
+                              const subject = encodeURIComponent(article.title || 'Cybersecurity News');
+                              const body = encodeURIComponent(`${article.title}\n\n${article.summary || ''}\n\nRead more: ${shareUrl}\n\nShared via STB Cybersecurity`);
+                              window.location.href = `mailto:?subject=${subject}&body=${body}`;
+                            }}
+                          >
+                            <Mail className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 hover:text-white"
+                            title="Copy Link"
+                            data-testid={`button-share-copy-${article.id}`}
+                            onClick={() => {
+                              const shareUrl = article.sourceUrl || window.location.href;
+                              navigator.clipboard.writeText(shareUrl).then(() => {
+                                toast({ title: "Link copied to clipboard" });
+                              }).catch(() => {
+                                toast({ title: "Failed to copy link", variant: "destructive" });
+                              });
+                            }}
+                          >
+                            <Link2 className="h-3.5 w-3.5" />
                           </Button>
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="border-white/10 hover:border-primary/50 hover:text-primary text-xs" 
+                            className="border-white/10 hover:border-primary/50 hover:text-primary text-xs ml-1" 
                             data-testid={`button-read-${article.id}`}
-                            onClick={() => article.sourceUrl ? window.open(article.sourceUrl, '_blank') : alert('Source link not available for this article.')}
+                            onClick={() => article.sourceUrl ? window.open(article.sourceUrl, '_blank') : toast({ title: "Source link not available", description: "No source URL is available for this article.", variant: "destructive" })}
                           >
                             READ FULL <ArrowRight className="ml-2 h-3 w-3" />
                           </Button>

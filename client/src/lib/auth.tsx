@@ -6,6 +6,7 @@ interface User {
   username: string;
   email: string | null;
   tier: string;
+  avatarUrl?: string | null;
 }
 
 interface AuthContextType {

@@ -7,7 +7,9 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle, Wrench, Scan, ShieldCheck, Users, Database, Factory, ChevronRight, Search, FileSearch, BarChart3, Radio, TrendingUp, Zap, Eye, Clock, MonitorCheck, CheckCircle2, XCircle } from "lucide-react";
+import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle, Wrench, Scan, ShieldCheck, Users, Database, Factory, ChevronRight, Search, FileSearch, BarChart3, Radio, TrendingUp, Zap, Eye, Clock, MonitorCheck, CheckCircle2, XCircle, Share2, Twitter, Linkedin, Mail, Copy } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Area, AreaChart, CartesianGrid, XAxis, ResponsiveContainer, Tooltip, BarChart, Bar, Cell, RadialBarChart, RadialBar, PieChart, Pie } from "recharts";
 
 import { useMemo, useEffect, useState } from "react";
@@ -213,6 +215,7 @@ export default function Dashboard() {
   const { data: trends, isLoading: trendsLoading } = useTrends(14);
   const { data: refreshInfo } = useLastRefresh();
   const refreshMutation = useRefreshData();
+  const { toast } = useToast();
   const { data: heroBgData } = useQuery({
     queryKey: ["/api/site-settings/hero-bg"],
     queryFn: () => fetch("/api/site-settings/hero-bg").then(r => r.json()).catch(() => ({ value: "threat-map" })),
@@ -425,15 +428,62 @@ export default function Dashboard() {
                           </div>
                           <p className="text-xs text-muted-foreground truncate max-w-[180px]">{cve.platform}</p>
                         </div>
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-8 w-8 text-muted-foreground hover:text-white"
-                          onClick={() => window.open(`https://nvd.nist.gov/vuln/detail/${cve.cveId}`, '_blank')}
-                          aria-label="View CVE details"
-                        >
-                          <ArrowUpRight className="h-4 w-4" />
-                        </Button>
+                        <div className="flex items-center gap-1">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-7 w-7 text-muted-foreground hover:text-white"
+                                data-testid={`button-share-dash-cve-${cve.cveId}`}
+                              >
+                                <Share2 className="h-3.5 w-3.5" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem onClick={() => {
+                                const nvdUrl = `https://nvd.nist.gov/vuln/detail/${cve.cveId}`;
+                                const text = `${cve.cveId} (CVSS ${cve.score?.toFixed(1) || 'N/A'}) - ${cve.platform || 'Unknown'} — via STB Cybersecurity ${nvdUrl}`;
+                                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+                              }}>
+                                <Twitter className="h-4 w-4 mr-2" />
+                                Share on X
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                const nvdUrl = `https://nvd.nist.gov/vuln/detail/${cve.cveId}`;
+                                window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(nvdUrl)}`, '_blank');
+                              }}>
+                                <Linkedin className="h-4 w-4 mr-2" />
+                                Share on LinkedIn
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                const nvdUrl = `https://nvd.nist.gov/vuln/detail/${cve.cveId}`;
+                                const subject = `${cve.cveId} - ${cve.platform || 'Vulnerability Alert'}`;
+                                const body = `${cve.cveId} (CVSS ${cve.score?.toFixed(1) || 'N/A'}) - ${cve.platform || 'Unknown'}\n\nDetails: ${nvdUrl}\n\n— via STB Cybersecurity`;
+                                window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+                              }}>
+                                <Mail className="h-4 w-4 mr-2" />
+                                Email
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => {
+                                navigator.clipboard.writeText(`https://nvd.nist.gov/vuln/detail/${cve.cveId}`);
+                                toast({ title: "Link copied", description: `NVD link for ${cve.cveId} copied to clipboard` });
+                              }}>
+                                <Copy className="h-4 w-4 mr-2" />
+                                Copy Link
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-muted-foreground hover:text-white"
+                            onClick={() => window.open(`https://nvd.nist.gov/vuln/detail/${cve.cveId}`, '_blank')}
+                            aria-label="View CVE details"
+                          >
+                            <ArrowUpRight className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     ))
                   ) : (
@@ -486,6 +536,7 @@ export default function Dashboard() {
                         <th scope="col" className="px-6 py-3 font-mono">Victim</th>
                         <th scope="col" className="px-6 py-3 font-mono">Group</th>
                         <th scope="col" className="px-6 py-3 font-mono text-right">Status</th>
+                        <th scope="col" className="px-3 py-3 font-mono w-10"></th>
                       </tr>
                     </thead>
                     <tbody>
@@ -511,6 +562,51 @@ export default function Dashboard() {
                             }>
                               {incident.status}
                             </Badge>
+                          </td>
+                          <td className="px-3 py-4">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-7 w-7 text-muted-foreground hover:text-white"
+                                  data-testid={`button-share-dash-ransomware-${incident.id}`}
+                                >
+                                  <Share2 className="h-3.5 w-3.5" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem onClick={() => {
+                                  const text = `Ransomware Alert: ${incident.victim} targeted by ${incident.groupName} — via STB Cybersecurity`;
+                                  window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank');
+                                }}>
+                                  <Twitter className="h-4 w-4 mr-2" />
+                                  Share on X
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {
+                                  window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(window.location.href)}`, '_blank');
+                                }}>
+                                  <Linkedin className="h-4 w-4 mr-2" />
+                                  Share on LinkedIn
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {
+                                  const subject = `Ransomware Alert: ${incident.victim} targeted by ${incident.groupName}`;
+                                  const body = `Ransomware Alert\n\nVictim: ${incident.victim}\nGroup: ${incident.groupName}\nStatus: ${incident.status || 'N/A'}\nDate: ${incident.discoveredAt ? new Date(incident.discoveredAt).toLocaleDateString() : 'N/A'}\n\n— via STB Cybersecurity`;
+                                  window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`);
+                                }}>
+                                  <Mail className="h-4 w-4 mr-2" />
+                                  Email
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {
+                                  const summary = `Ransomware Alert: ${incident.victim} targeted by ${incident.groupName} | Status: ${incident.status || 'N/A'} | Date: ${incident.discoveredAt ? new Date(incident.discoveredAt).toLocaleDateString() : 'N/A'} — via STB Cybersecurity`;
+                                  navigator.clipboard.writeText(summary);
+                                  toast({ title: "Copied to clipboard", description: `Summary for ${incident.victim} incident copied` });
+                                }}>
+                                  <Copy className="h-4 w-4 mr-2" />
+                                  Copy Summary
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
                           </td>
                         </tr>
                       ))}

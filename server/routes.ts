@@ -3411,8 +3411,23 @@ Hiring: https://stbcybersecurity.com/support
       if (displayName !== undefined) updates.displayName = String(displayName || "").slice(0, 100) || null;
       if (bio !== undefined) updates.bio = String(bio || "").slice(0, 500) || null;
       if (avatarUrl !== undefined) {
-        const url = String(avatarUrl || "").slice(0, 500);
-        updates.avatarUrl = url && /^https?:\/\//i.test(url) ? url : null;
+        const raw = String(avatarUrl || "");
+        if (!raw) {
+          updates.avatarUrl = null;
+        } else if (/^https?:\/\//i.test(raw)) {
+          updates.avatarUrl = raw.slice(0, 2000);
+        } else if (/^data:image\/(png|jpeg|gif|webp|svg\+xml);base64,/i.test(raw)) {
+          if (raw.length <= 3_000_000) {
+            updates.avatarUrl = raw;
+          } else {
+            res.status(400).json({ error: "Avatar image too large (max 2MB)" });
+            return;
+          }
+        } else if (/^data:image\/svg\+xml[,;]/i.test(raw)) {
+          updates.avatarUrl = raw.slice(0, 50_000);
+        } else {
+          updates.avatarUrl = null;
+        }
       }
       if (location !== undefined) updates.location = String(location || "").slice(0, 100) || null;
       if (website !== undefined) {
@@ -5377,10 +5392,10 @@ Hiring: https://stbcybersecurity.com/support
       ]);
 
       const authorIds = [...new Set(posts.map(p => p.authorId))];
-      const authors: Record<string, { username: string; tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }> = {};
+      const authors: Record<string, { username: string; tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null; avatarUrl: string | null }> = {};
       for (const aid of authorIds) {
         const u = await storage.getUser(aid);
-        if (u) authors[aid] = { username: u.username, tier: u.tier, isTrusted: u.isTrusted, isAdmin: u.isAdmin };
+        if (u) authors[aid] = { username: u.username, tier: u.tier, isTrusted: u.isTrusted, isAdmin: u.isAdmin, avatarUrl: u.avatarUrl || null };
       }
 
       res.json({
@@ -5410,7 +5425,7 @@ Hiring: https://stbcybersecurity.com/support
       const author = await storage.getUser(post.authorId);
       res.json({
         ...post,
-        author: author ? { username: author.username, tier: author.tier, isTrusted: author.isTrusted, isAdmin: author.isAdmin } : null,
+        author: author ? { username: author.username, tier: author.tier, isTrusted: author.isTrusted, isAdmin: author.isAdmin, avatarUrl: author.avatarUrl || null } : null,
       });
     } catch (error) {
       res.status(500).json({ error: "Failed to fetch post" });
@@ -5572,10 +5587,10 @@ Hiring: https://stbcybersecurity.com/support
       const comments = await storage.getKbCommentsByPost(postId, sort);
 
       const authorIds = [...new Set(comments.map(c => c.authorId))];
-      const authors: Record<string, { username: string; tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }> = {};
+      const authors: Record<string, { username: string; tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null; avatarUrl: string | null }> = {};
       for (const aid of authorIds) {
         const u = await storage.getUser(aid);
-        if (u) authors[aid] = { username: u.username, tier: u.tier, isTrusted: u.isTrusted, isAdmin: u.isAdmin };
+        if (u) authors[aid] = { username: u.username, tier: u.tier, isTrusted: u.isTrusted, isAdmin: u.isAdmin, avatarUrl: u.avatarUrl || null };
       }
 
       res.json(comments.map(c => ({ ...c, author: authors[c.authorId] || null })));
@@ -5751,10 +5766,10 @@ Hiring: https://stbcybersecurity.com/support
       ]);
 
       const authorIds = [...new Set(posts.map(p => p.authorId))];
-      const authors: Record<string, { username: string; tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }> = {};
+      const authors: Record<string, { username: string; tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null; avatarUrl: string | null }> = {};
       for (const aid of authorIds) {
         const u = await storage.getUser(aid);
-        if (u) authors[aid] = { username: u.username, tier: u.tier, isTrusted: u.isTrusted, isAdmin: u.isAdmin };
+        if (u) authors[aid] = { username: u.username, tier: u.tier, isTrusted: u.isTrusted, isAdmin: u.isAdmin, avatarUrl: u.avatarUrl || null };
       }
 
       res.json({
@@ -5826,10 +5841,10 @@ Hiring: https://stbcybersecurity.com/support
         storage.getKbBookmarkCount(user.id),
       ]);
       const authorIds = [...new Set(posts.map(p => p.authorId))];
-      const authors: Record<string, { username: string; tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null }> = {};
+      const authors: Record<string, { username: string; tier: string | null; isTrusted: boolean | null; isAdmin: boolean | null; avatarUrl: string | null }> = {};
       for (const aid of authorIds) {
         const u = await storage.getUser(aid);
-        if (u) authors[aid] = { username: u.username, tier: u.tier, isTrusted: u.isTrusted, isAdmin: u.isAdmin };
+        if (u) authors[aid] = { username: u.username, tier: u.tier, isTrusted: u.isTrusted, isAdmin: u.isAdmin, avatarUrl: u.avatarUrl || null };
       }
       res.json({
         posts: posts.map(p => ({ ...p, author: authors[p.authorId] || null })),
