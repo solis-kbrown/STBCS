@@ -18,6 +18,7 @@ Preferred communication style: Simple, everyday language.
 - **UI Components**: shadcn/ui built on Radix UI, styled with Tailwind CSS v4.
 - **Internationalization**: Supports 10 languages with browser auto-detection.
 - **Visual Theme**: "Stealth Mode / Tactical Operations Center" featuring dark minimal background, orange/red accents, cyber-themed Lucide icons, interactive cards, and various animations (e.g., `hero-scan-line`, `skeleton-shimmer`). Typography uses Orbitron, Inter, and JetBrains Mono. Accessibility includes `prefers-reduced-motion` support. Custom branded SVG icon components (`client/src/components/branded-icons.tsx`) for SSH (terminal+shield+lock), RDP (monitor+scan line), Telnet (globe+network+pulse), SFTP (folder+arrows+lock), KB (book+shield+data stream), and Profile (hexagonal user frame) with inline SVG animations.
+- **Sidebar Navigation**: Organized into 7 collapsible sections using Radix Collapsible: Main (always open), Security Scanners, Monitoring & Reports (PRO), Remote Access (BIZ), Threat Intelligence, Community & Resources, Support & Info. Section open/closed state persists in localStorage (`sidebar-sections`). Active route auto-expands its parent section. Section headers show tier badges when all items share a tier.
 
 ### Backend
 - **Runtime**: Node.js with Express 5, TypeScript (ESM modules).

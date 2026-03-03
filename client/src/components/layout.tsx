@@ -215,9 +215,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const [openSections, setOpenSections] = useState<Record<string, boolean>>(getSavedSections);
 
   useEffect(() => {
+    const currentPath = location.split('?')[0];
     for (const section of navSections) {
       if (!section.collapsible) continue;
-      const hasActiveItem = section.items.some(item => location === item.href);
+      const hasActiveItem = section.items.some(item => currentPath === item.href || currentPath.startsWith(item.href + '/'));
       if (hasActiveItem && !openSections[section.id]) {
         setOpenSections(prev => {
           const next = { ...prev, [section.id]: true };
@@ -255,7 +256,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   };
 
   const NavItemRow = ({ item }: { item: NavItem }) => {
-    const isActive = location === item.href;
+    const currentPath = location.split('?')[0];
+    const isActive = currentPath === item.href;
     return (
       <Link href={item.href}>
         <div 
@@ -306,10 +308,17 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             )}
 
             {!section.collapsible ? (
-              <div className="space-y-0.5">
-                {section.items.map(item => (
-                  <NavItemRow key={item.href} item={item} />
-                ))}
+              <div>
+                <div className="px-4 py-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-zinc-600">
+                    {t(section.labelKey)}
+                  </span>
+                </div>
+                <div className="space-y-0.5">
+                  {section.items.map(item => (
+                    <NavItemRow key={item.href} item={item} />
+                  ))}
+                </div>
               </div>
             ) : (
               <Collapsible
