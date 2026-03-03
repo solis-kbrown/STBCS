@@ -443,6 +443,13 @@ export async function registerRoutes(
   </url>
 
   <url>
+    <loc>https://stbcybersecurity.com/compliance</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
     <loc>https://stbcybersecurity.com/service-status</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
@@ -500,6 +507,7 @@ Allow: /email-analyzer
 Allow: /encoding-tools
 Allow: /playbooks
 Allow: /ransomware-calculator
+Allow: /compliance
 Allow: /service-status
 
 Disallow: /account
