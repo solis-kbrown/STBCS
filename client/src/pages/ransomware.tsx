@@ -21,17 +21,20 @@ import { useState, useMemo, useCallback, KeyboardEvent } from "react";
 import PaginationControls from "@/components/pagination-controls";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import RansomwarePaymentsTab from "./ransomware-payments-tab";
+import ThreatHeatmap from "@/components/threat-heatmap";
 
 type SortOption = "newest" | "oldest" | "group-az" | "group-za" | "status";
 
 export default function Ransomware() {
   const initialTab = typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("tab") || "tracker" : "tracker";
-  const [activeTab, setActiveTab] = useState(initialTab === "payments" ? "payments" : "tracker");
+  const [activeTab, setActiveTab] = useState(["payments", "heatmap"].includes(initialTab) ? initialTab : "tracker");
   useDocumentTitle(
-    activeTab === "payments" ? "Ransomware Payments Dashboard | STB Cybersecurity" : "Ransomware Tracker | STB Cybersecurity",
+    activeTab === "payments" ? "Ransomware Payments Dashboard | STB Cybersecurity" : activeTab === "heatmap" ? "Global Threat Heatmap | STB Cybersecurity" : "Ransomware Tracker | STB Cybersecurity",
     activeTab === "payments"
       ? "Track ransomware payment demands, bitcoin wallets, and payment statuses across threat groups. Data from publicly available leak site information."
-      : "Monitor active ransomware groups, victim postings, and attack analytics in real-time. Track LockBit, BlackCat, Cl0p with profiles, TTPs, and targeting data."
+      : activeTab === "heatmap"
+        ? "Interactive world heatmap showing ransomware attack concentration by country with drill-down to incident details."
+        : "Monitor active ransomware groups, victim postings, and attack analytics in real-time. Track LockBit, BlackCat, Cl0p with profiles, TTPs, and targeting data."
   );
   const [selectedGroup, setSelectedGroup] = useState<string | undefined>();
   const [searchQuery, setSearchQuery] = useState("");
@@ -205,10 +208,27 @@ export default function Ransomware() {
             <TabsTrigger value="payments" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400" data-testid="tab-payments">
               Payments
             </TabsTrigger>
+            <TabsTrigger value="heatmap" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400" data-testid="tab-heatmap">
+              <MapPin className="h-3.5 w-3.5 mr-1.5" />
+              Heatmap
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="payments">
             <RansomwarePaymentsTab />
+          </TabsContent>
+
+          <TabsContent value="heatmap">
+            <ThreatHeatmap
+              topCountries={analytics?.topCountries || []}
+              topGroups={analytics?.topGroups || []}
+              onCountryClick={(country) => {
+                setCountryFilter(country);
+                setActiveTab("tracker");
+                setLocation("/ransomware");
+                setCurrentPage(1);
+              }}
+            />
           </TabsContent>
 
           <TabsContent value="tracker" className="space-y-6">

@@ -9,8 +9,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { 
   ArrowLeft, Shield, Globe, Calendar, Users, Target, AlertTriangle, 
   ExternalLink, Skull, FileText, Lock, Eye, TrendingUp, MapPin, 
-  Building2, DollarSign, Wrench, Link2, Download
+  Building2, DollarSign, Wrench, Link2, Download, Share2, Copy, QrCode
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useParams, useLocation } from "wouter";
 import { useMemo, useEffect, useCallback } from "react";
 import { getActorTechniques, getTacticBreakdown, MITRE_TACTICS, TACTIC_COLORS } from "@shared/mitre-attack";
@@ -43,6 +45,7 @@ export default function GroupProfile() {
   const params = useParams<{ name: string }>();
   const groupSlug = decodeURIComponent(params.name || "");
   const [, setLocation] = useLocation();
+  const { toast } = useToast();
   
   const { data: profile, isLoading } = useGroupProfile(groupSlug || undefined);
   
@@ -194,6 +197,38 @@ export default function GroupProfile() {
               {actor?.ransomwareAsService && <Badge className="bg-purple-700/50 text-purple-300 border-purple-500/30">RaaS</Badge>}
               {actor?.doubleExtortion && <Badge className="bg-red-700/50 text-red-300 border-red-500/30">Double Extortion</Badge>}
               {actor?.dataExfiltration && <Badge className="bg-yellow-700/50 text-yellow-300 border-yellow-500/30">Data Exfiltration</Badge>}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-400 hover:text-white" data-testid="button-share-group">
+                    <Share2 className="h-4 w-4 mr-2" /> Share
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-zinc-900 border-zinc-800">
+                  <DropdownMenuItem onClick={() => {
+                    const url = window.location.href;
+                    navigator.clipboard.writeText(url);
+                    toast({ title: "Link copied", description: `Profile link for ${groupName}`, action: <button className="text-xs text-orange-400 hover:underline whitespace-nowrap" onClick={() => window.open(url, "_blank")}>Open in new tab</button> });
+                  }} data-testid="button-share-copy-group">
+                    <Copy className="h-4 w-4 mr-2" /> Copy Link
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={async () => {
+                    try {
+                      const QRCodeLib = (await import("qrcode")).default;
+                      const url = window.location.href;
+                      const qrUrl = await QRCodeLib.toDataURL(url, { width: 256, margin: 2, color: { dark: "#ea580c", light: "#18181b" } });
+                      const link = document.createElement("a");
+                      link.download = `${toSlug(groupName)}-qr.png`;
+                      link.href = qrUrl;
+                      link.click();
+                      toast({ title: "QR code downloaded", description: `QR for ${groupName} profile` });
+                    } catch {
+                      toast({ title: "Failed to generate QR", variant: "destructive" });
+                    }
+                  }} data-testid="button-share-qr-group">
+                    <QrCode className="h-4 w-4 mr-2" /> QR Code
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               <Button variant="outline" size="sm" onClick={handleDownloadDossier} className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-download-dossier">
                 <Download className="h-4 w-4 mr-2" /> Download Dossier
               </Button>

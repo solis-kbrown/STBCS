@@ -436,6 +436,13 @@ export async function registerRoutes(
   </url>
 
   <url>
+    <loc>https://stbcybersecurity.com/ransomware-calculator</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
     <loc>https://stbcybersecurity.com/service-status</loc>
     <lastmod>${today}</lastmod>
     <changefreq>daily</changefreq>
@@ -492,6 +499,7 @@ Allow: /file-scanner
 Allow: /email-analyzer
 Allow: /encoding-tools
 Allow: /playbooks
+Allow: /ransomware-calculator
 Allow: /service-status
 
 Disallow: /account
@@ -775,6 +783,94 @@ Hiring: https://stbcybersecurity.com/support
       return;
     }
     res.json({ user: req.user });
+  });
+
+  app.get("/api/threat-ticker", async (req: Request, res: Response) => {
+    try {
+      const key = "threat-ticker";
+      if (cachedJson(res, key, TTL.STATS)) return;
+
+      const [cves, ransomware, kevs, ips] = await Promise.all([
+        storage.getCves(10, 0),
+        storage.getRansomwareIncidents(10, 0),
+        storage.getCisaKev(5, 0),
+        storage.getMaliciousIps(5, 0),
+      ]);
+
+      const now = Date.now();
+      function timeAgo(dateStr: string | null): string {
+        if (!dateStr) return "";
+        const diff = now - new Date(dateStr).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return "just now";
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        const days = Math.floor(hrs / 24);
+        return `${days}d ago`;
+      }
+
+      const events: any[] = [];
+
+      for (const c of cves) {
+        events.push({
+          id: `cve-${c.id}`,
+          type: "cve",
+          icon: "🔴",
+          label: "CVE",
+          detail: `${c.cveId} (CVSS ${c.score?.toFixed(1) || 'N/A'}) ${c.platform ? `affecting ${c.platform}` : ''}`.trim(),
+          timeAgo: timeAgo(c.publishedDate || c.createdAt),
+          href: "/exploits",
+          _ts: new Date(c.publishedDate || c.createdAt || 0).getTime(),
+        });
+      }
+
+      for (const r of ransomware) {
+        events.push({
+          id: `rw-${r.id}`,
+          type: "ransomware",
+          icon: "⚠️",
+          label: "RANSOMWARE",
+          detail: `${r.groupName} claims ${r.victim}${r.sector ? ` in ${r.sector}` : ''}`,
+          timeAgo: timeAgo(r.discoveredAt || r.createdAt),
+          href: "/ransomware",
+          _ts: new Date(r.discoveredAt || r.createdAt || 0).getTime(),
+        });
+      }
+
+      for (const k of kevs) {
+        events.push({
+          id: `kev-${k.id}`,
+          type: "kev",
+          icon: "🟢",
+          label: "KEV UPDATE",
+          detail: `CISA adds ${k.cveId} to Known Exploited list${k.product ? ` — ${k.vendorProject} ${k.product}` : ''}`,
+          timeAgo: timeAgo(k.dateAdded || k.createdAt),
+          href: "/exploits",
+          _ts: new Date(k.dateAdded || k.createdAt || 0).getTime(),
+        });
+      }
+
+      for (const ip of ips) {
+        events.push({
+          id: `mal-${ip.id}`,
+          type: "malware",
+          icon: "🟡",
+          label: "MALICIOUS IP",
+          detail: `Threat detected at ${ip.ipAddress}${ip.threatType ? ` — ${ip.threatType}` : ''}`,
+          timeAgo: timeAgo(ip.lastSeen || ip.createdAt),
+          href: "/search?tab=ioc",
+          _ts: new Date(ip.lastSeen || ip.createdAt || 0).getTime(),
+        });
+      }
+
+      events.sort((a, b) => b._ts - a._ts);
+      const result = events.slice(0, 20).map(({ _ts, ...rest }) => rest);
+      cacheAndSend(res, key, result, TTL.STATS);
+    } catch (error) {
+      console.error("Error fetching threat ticker:", error);
+      res.status(500).json({ error: "Failed to fetch threat ticker data" });
+    }
   });
 
   // Dashboard Stats
@@ -6078,6 +6174,304 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // ===================== END FEEDBACK ROUTES =====================
+
+  // ===================== OG IMAGE ROUTES =====================
+  app.get("/api/og/kb/:slug", async (req: Request, res: Response) => {
+    try {
+      const { generateKbOgImage } = await import("./og-image");
+      const slug = req.params.slug;
+      const png = await generateKbOgImage(slug);
+      if (!png) { res.status(404).send("Not found"); return; }
+      res.set({ "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" });
+      res.send(png);
+    } catch (error) {
+      res.status(500).send("Failed to generate image");
+    }
+  });
+
+  app.get("/api/og/cve/:cveId", async (req: Request, res: Response) => {
+    try {
+      const { generateCveOgImage } = await import("./og-image");
+      const png = await generateCveOgImage(req.params.cveId);
+      if (!png) { res.status(404).send("Not found"); return; }
+      res.set({ "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" });
+      res.send(png);
+    } catch (error) {
+      res.status(500).send("Failed to generate image");
+    }
+  });
+
+  app.get("/api/og/group/:slug", async (req: Request, res: Response) => {
+    try {
+      const { generateGroupOgImage } = await import("./og-image");
+      const png = await generateGroupOgImage(req.params.slug);
+      if (!png) { res.status(404).send("Not found"); return; }
+      res.set({ "Content-Type": "image/png", "Cache-Control": "public, max-age=86400" });
+      res.send(png);
+    } catch (error) {
+      res.status(500).send("Failed to generate image");
+    }
+  });
+
+  // ===================== COMPLIANCE ROUTES =====================
+  app.get("/api/compliance/frameworks", async (_req: Request, res: Response) => {
+    try {
+      const { ALL_FRAMEWORKS } = await import("./compliance-mappings");
+      const summary = ALL_FRAMEWORKS.map(f => ({
+        id: f.id, name: f.name, version: f.version, description: f.description,
+        totalControls: f.categories.reduce((sum, c) => sum + c.controls.length, 0),
+      }));
+      res.json(summary);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch frameworks" });
+    }
+  });
+
+  app.get("/api/compliance/framework/:id", async (req: Request, res: Response) => {
+    try {
+      const { getFramework } = await import("./compliance-mappings");
+      const framework = getFramework(req.params.id);
+      if (!framework) { res.status(404).json({ error: "Framework not found" }); return; }
+      res.json(framework);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch framework" });
+    }
+  });
+
+  app.get("/api/compliance/posture", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const [watchlistCount, uptimeMonitors, darkWebMonitors] = await Promise.all([
+        storage.getUserWatchlistItems ? storage.getUserWatchlistItems(userId).then(items => items.length).catch(() => 0) : Promise.resolve(0),
+        storage.getUserUptimeMonitors ? storage.getUserUptimeMonitors(userId).then(m => m.length).catch(() => 0) : Promise.resolve(0),
+        storage.getUserDarkWebMonitors ? storage.getUserDarkWebMonitors(userId).then(m => m.length).catch(() => 0) : Promise.resolve(0),
+      ]);
+      const user = await storage.getUser(userId);
+      res.json({
+        hasWatchlist: watchlistCount > 0,
+        hasUptimeMonitors: uptimeMonitors > 0,
+        hasDarkWebMonitors: darkWebMonitors > 0,
+        hasDigestOptIn: user?.digestOptIn ?? false,
+        hasEmail: !!user?.email,
+        emailVerified: user?.emailVerified ?? false,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch posture" });
+    }
+  });
+
+
+  // ===================== EPSS ROUTES =====================
+  app.get("/api/epss/matrix", async (_req: Request, res: Response) => {
+    try {
+      const cves = await storage.getCves(500, 0);
+      const matrixData = cves
+        .filter(c => c.score != null && c.epssScore != null)
+        .map(c => ({
+          cveId: c.cveId,
+          cvss: c.score,
+          epss: c.epssScore,
+          severity: c.severity,
+          inKev: c.inCisaKev || false,
+          platform: c.platform || c.vendor || "",
+        }));
+      cachedJson(res, "epss-matrix", matrixData, TTL.MEDIUM);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch EPSS matrix" });
+    }
+  });
+
+  // ===================== BADGES ROUTES =====================
+  app.get("/api/badges/definitions", (_req: Request, res: Response) => {
+    res.json([
+      { id: "first_post", name: "First Post", description: "Published your first KB article", icon: "BookOpen", rarity: "common", requirement: "Publish 1 KB post" },
+      { id: "commentator", name: "Commentator", description: "Left 10+ comments on KB posts", icon: "MessageSquare", rarity: "common", requirement: "Post 10 comments" },
+      { id: "upvote_magnet", name: "Upvote Magnet", description: "Received 25+ total upvotes on your posts", icon: "TrendingUp", rarity: "rare", requirement: "Get 25 upvotes" },
+      { id: "threat_reporter", name: "Threat Reporter", description: "Published 5+ threat intel articles", icon: "ShieldAlert", rarity: "rare", requirement: "Publish 5 threat intel posts" },
+      { id: "prolific_writer", name: "Prolific Writer", description: "Published 10+ KB articles", icon: "PenTool", rarity: "epic", requirement: "Publish 10 posts" },
+      { id: "community_guardian", name: "Community Guardian", description: "Helped moderate the community", icon: "Shield", rarity: "epic", requirement: "File 5 helpful reports" },
+      { id: "streak", name: "On Fire", description: "Posted in 3+ consecutive weeks", icon: "Flame", rarity: "rare", requirement: "Post 3 weeks straight" },
+      { id: "mentor", name: "Mentor", description: "Had 3+ highly upvoted replies", icon: "Award", rarity: "legendary", requirement: "Get 3 top-voted replies" },
+      { id: "spotlight", name: "Spotlight", description: "Named Contributor of the Week", icon: "Star", rarity: "legendary", requirement: "Earn Contributor of the Week" },
+    ]);
+  });
+
+  app.get("/api/badges/check/:userId", async (req: Request, res: Response) => {
+    try {
+      const userId = req.params.userId;
+      const user = await storage.getUser(userId);
+      if (!user) { res.status(404).json({ error: "User not found" }); return; }
+      const currentBadges = user.badges || [];
+      const posts = await storage.getKbPosts();
+      const userPosts = posts.filter(p => p.authorId === userId);
+      const allComments = await storage.getKbComments(undefined as any);
+      const userComments = Array.isArray(allComments) ? allComments.filter((c: any) => c.authorId === userId) : [];
+      const totalUpvotes = userPosts.reduce((sum, p) => sum + (p.votes || 0), 0);
+      const threatIntelPosts = userPosts.filter(p => p.type === "threat_intel");
+
+      const earned: string[] = [...currentBadges];
+      if (userPosts.length >= 1 && !earned.includes("first_post")) earned.push("first_post");
+      if (userComments.length >= 10 && !earned.includes("commentator")) earned.push("commentator");
+      if (totalUpvotes >= 25 && !earned.includes("upvote_magnet")) earned.push("upvote_magnet");
+      if (threatIntelPosts.length >= 5 && !earned.includes("threat_reporter")) earned.push("threat_reporter");
+      if (userPosts.length >= 10 && !earned.includes("prolific_writer")) earned.push("prolific_writer");
+
+      if (earned.length !== currentBadges.length) {
+        await db.update(users).set({ badges: earned }).where(eq(users.id, userId));
+      }
+      res.json({ badges: earned });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to check badges" });
+    }
+  });
+
+  // ===================== CONTRIBUTOR OF THE WEEK =====================
+  app.get("/api/kb/contributor-of-the-week", async (_req: Request, res: Response) => {
+    try {
+      const cached = await storage.getSiteSetting("contributor_of_the_week");
+      if (cached) {
+        const data = JSON.parse(cached);
+        const weekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        if (data.calculatedAt && data.calculatedAt > weekAgo) {
+          res.json(data);
+          return;
+        }
+      }
+
+      const posts = await storage.getKbPosts();
+      const now = new Date();
+      const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const recentPosts = posts.filter(p => p.createdAt && new Date(p.createdAt) >= weekAgo);
+
+      const scores: Record<string, { userId: string; username: string; avatarUrl: string | null; posts: number; votes: number; comments: number }> = {};
+      for (const post of recentPosts) {
+        if (!post.authorId) continue;
+        if (!scores[post.authorId]) {
+          scores[post.authorId] = { userId: post.authorId, username: post.authorName || "Anonymous", avatarUrl: (post as any).authorAvatarUrl || null, posts: 0, votes: 0, comments: 0 };
+        }
+        scores[post.authorId].posts++;
+        scores[post.authorId].votes += post.votes || 0;
+        scores[post.authorId].comments += post.commentCount || 0;
+      }
+
+      const ranked = Object.values(scores).sort((a, b) =>
+        (b.posts * 10 + b.votes * 3 + b.comments) - (a.posts * 10 + a.votes * 3 + a.comments)
+      );
+
+      const winner = ranked[0] || null;
+      if (winner) {
+        const user = await storage.getUser(winner.userId);
+        if (user) {
+          winner.avatarUrl = user.avatarUrl || null;
+          winner.username = user.displayName || user.username;
+          const badges = user.badges || [];
+          if (!badges.includes("spotlight")) {
+            badges.push("spotlight");
+            await db.update(users).set({ badges }).where(eq(users.id, winner.userId));
+          }
+        }
+      }
+
+      const result = { ...winner, calculatedAt: Date.now() };
+      await storage.setSiteSetting("contributor_of_the_week", JSON.stringify(result));
+      res.json(result);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to calculate" });
+    }
+  });
+
+  // ===================== SECURITY POSTURE CHECKLIST =====================
+  app.get("/api/security-posture", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const userId = req.user!.id;
+      const user = await storage.getUser(userId);
+      if (!user) { res.status(404).json({ error: "User not found" }); return; }
+
+      const [watchlistItems, uptimeMonitors, darkWebMonitors] = await Promise.all([
+        storage.getUserWatchlistItems ? storage.getUserWatchlistItems(userId).catch(() => []) : Promise.resolve([]),
+        storage.getUserUptimeMonitors ? storage.getUserUptimeMonitors(userId).catch(() => []) : Promise.resolve([]),
+        storage.getUserDarkWebMonitors ? storage.getUserDarkWebMonitors(userId).catch(() => []) : Promise.resolve([]),
+      ]);
+
+      const checklist = [
+        { id: "watchlist", label: "Set up threat watchlist alerts", completed: (watchlistItems as any[]).length > 0, link: "/monitors", icon: "Bell" },
+        { id: "email", label: "Verify your email address", completed: !!user.emailVerified, link: "/account", icon: "Mail" },
+        { id: "digest", label: "Subscribe to Weekly Threat Digest", completed: !!user.digestOptIn, link: "/account", icon: "Newspaper" },
+        { id: "darkweb", label: "Enable dark web monitoring", completed: (darkWebMonitors as any[]).length > 0, link: "/monitors", icon: "Eye" },
+        { id: "uptime", label: "Set up uptime monitoring", completed: (uptimeMonitors as any[]).length > 0, link: "/monitors", icon: "MonitorCheck" },
+        { id: "password", label: "Strong account password", completed: true, link: "/account", icon: "Lock" },
+      ];
+
+      const completed = checklist.filter(c => c.completed).length;
+      const total = checklist.length;
+      res.json({ checklist, completed, total, percentage: Math.round((completed / total) * 100) });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch posture" });
+    }
+  });
+
+  // ===================== RANSOMWARE COST ESTIMATOR =====================
+  app.post("/api/ransomware-estimator", async (req: Request, res: Response) => {
+    try {
+      const { employees, sector, revenue, dataSensitivity } = req.body;
+      const empCount = parseInt(employees) || 50;
+      const revRange = revenue || "1m-10m";
+
+      const ransomware = await storage.getRansomwareIncidents(5000, 0);
+      const sectorIncidents = sector ? ransomware.filter(r => r.sector?.toLowerCase() === sector.toLowerCase()) : [];
+      const sectorCount = sectorIncidents.length;
+      const totalIncidents = ransomware.length;
+
+      let baseRansom = 50000;
+      if (empCount > 500) baseRansom = 500000;
+      else if (empCount > 100) baseRansom = 200000;
+      else if (empCount > 50) baseRansom = 100000;
+
+      const sensitivityMultiplier = dataSensitivity === "high" ? 2.5 : dataSensitivity === "medium" ? 1.5 : 1;
+      const estimatedRansom = Math.round(baseRansom * sensitivityMultiplier);
+      const downtimeDays = empCount > 200 ? 21 : empCount > 50 ? 14 : 7;
+      const hourlyLoss = empCount * 50;
+      const downtimeCost = hourlyLoss * downtimeDays * 8;
+      const notificationCost = empCount * 150;
+      const totalEstimate = estimatedRansom + downtimeCost + notificationCost;
+
+      const topGroups = new Map<string, number>();
+      for (const incident of sectorIncidents) {
+        topGroups.set(incident.groupName, (topGroups.get(incident.groupName) || 0) + 1);
+      }
+      const topTargetingGroups = Array.from(topGroups.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([name, count]) => ({ name, count }));
+
+      res.json({
+        estimatedRansom,
+        downtimeCost,
+        notificationCost,
+        totalEstimate,
+        downtimeDays,
+        sectorIncidents: sectorCount,
+        totalIncidents,
+        topTargetingGroups,
+        riskLevel: sectorCount > 50 ? "Critical" : sectorCount > 20 ? "High" : sectorCount > 5 ? "Medium" : "Low",
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to estimate" });
+    }
+  });
+
+  // ===================== DIGEST OPT-IN ROUTES =====================
+  app.post("/api/account/digest", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const { digestOptIn } = req.body;
+      await db.update(users).set({ digestOptIn: !!digestOptIn }).where(eq(users.id, req.user!.id));
+      res.json({ success: true, digestOptIn: !!digestOptIn });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to update digest preference" });
+    }
+  });
+
+  // ===================== END NEW ROUTES =====================
 
   function generateRecommendations(stats: any, scanSummaries: any[]): string[] {
     const recs: string[] = [];

@@ -69,6 +69,8 @@ const BrandBackgrounds = lazy(() => import("@/pages/brand-kit/backgrounds"));
 const BrandReportCovers = lazy(() => import("@/pages/brand-kit/report-covers"));
 const BrandPitchDecks = lazy(() => import("@/pages/brand-kit/pitch-decks"));
 const BrandCertificates = lazy(() => import("@/pages/brand-kit/certificates"));
+const Compliance = lazy(() => import("@/pages/compliance"));
+const RansomwareCalculator = lazy(() => import("@/pages/ransomware-calculator"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -150,6 +152,8 @@ function Router() {
         <Route path="/brand-kit/report-covers" component={BrandReportCovers}/>
         <Route path="/brand-kit/pitch-decks" component={BrandPitchDecks}/>
         <Route path="/brand-kit/certificates" component={BrandCertificates}/>
+        <Route path="/compliance" component={Compliance}/>
+        <Route path="/ransomware-calculator" component={RansomwareCalculator}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

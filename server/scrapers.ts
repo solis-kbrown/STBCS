@@ -3232,6 +3232,134 @@ export async function fetchMalwareBazaarRecent(): Promise<number> {
 }
 
 // ============================================
+// THREATFOX API - POST-based IOC Feed
+// ============================================
+export async function scrapeThreatFox(): Promise<number> {
+  try {
+    log.debug("Fetching ThreatFox IOCs via API...");
+
+    const response = await secureFetch("https://threatfox-api.abuse.ch/api/v1/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query: "get_iocs", days: 1 }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`ThreatFox API error: ${response.status}`);
+    }
+
+    const json = await response.json();
+    const entries = Array.isArray(json?.data) ? json.data : [];
+    let ipCount = 0;
+    let urlCount = 0;
+
+    for (const ioc of entries.slice(0, 500)) {
+      try {
+        const iocValue = String(ioc.ioc_value || "").trim();
+        if (!iocValue) continue;
+
+        const threatType = ioc.threat_type || "malware";
+        const malware = ioc.malware || "unknown";
+        const confidence = ioc.confidence_level ?? null;
+        const tags = Array.isArray(ioc.tags) ? ioc.tags.join(", ") : (ioc.tags || null);
+
+        if (ioc.ioc_type === "ip:port" || ioc.ioc_type === "ip") {
+          const ip = iocValue.split(":")[0];
+          if (ip && /^[\d.]+$/.test(ip)) {
+            await storage.upsertMaliciousIp({
+              ipAddress: ip,
+              source: "threatfox",
+              threatType,
+              tags: [malware, tags].filter(Boolean).join(", "),
+              abuseConfidenceScore: confidence,
+              lastSeen: ioc.first_seen_utc ? new Date(ioc.first_seen_utc) : new Date(),
+            });
+            ipCount++;
+          }
+        } else if (ioc.ioc_type === "url" || ioc.ioc_type === "domain") {
+          await storage.upsertMaliciousUrl({
+            url: iocValue.slice(0, 500),
+            source: "threatfox",
+            threatType,
+            malwareFamily: malware,
+            status: "active",
+            reportedAt: ioc.first_seen_utc ? new Date(ioc.first_seen_utc) : new Date(),
+          });
+          urlCount++;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    const total = ipCount + urlCount;
+    if (total > 0) {
+      log.info(`ThreatFox API: ${total} IOCs (${ipCount} IPs, ${urlCount} URLs/domains)`);
+    }
+    await storage.updateFeedLastFetched("ThreatFox API");
+    return total;
+  } catch (error) {
+    logScraperError("ThreatFox API", error);
+    return 0;
+  }
+}
+
+// ============================================
+// MALWAREBAZAAR API - POST-based Recent Samples
+// ============================================
+export async function scrapeMalwareBazaar(): Promise<number> {
+  try {
+    log.debug("Fetching MalwareBazaar recent samples via API...");
+
+    const response = await secureFetch("https://mb-api.abuse.ch/api/v1/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "query=get_recent&selector=100",
+    });
+
+    if (!response.ok) {
+      throw new Error(`MalwareBazaar API error: ${response.status}`);
+    }
+
+    const json = await response.json();
+    const entries = Array.isArray(json?.data) ? json.data : [];
+    let count = 0;
+
+    for (const sample of entries) {
+      try {
+        const hash = sample.sha256_hash;
+        if (!hash) continue;
+
+        const signature = sample.signature || "unknown";
+        const fileType = sample.file_type || "unknown";
+        const tags = Array.isArray(sample.tags) ? sample.tags.join(", ") : (sample.tags || null);
+
+        await storage.upsertMaliciousUrl({
+          url: hash,
+          source: "malwarebazaar",
+          threatType: signature,
+          malwareFamily: [fileType, tags].filter(Boolean).join(" | "),
+          status: "active",
+          reportedAt: sample.first_seen ? new Date(sample.first_seen) : new Date(),
+        });
+        count++;
+      } catch {
+        continue;
+      }
+    }
+
+    if (count > 0) {
+      log.info(`MalwareBazaar API: ${count} malware samples stored`);
+    }
+    await storage.updateFeedLastFetched("MalwareBazaar API");
+    return count;
+  } catch (error) {
+    logScraperError("MalwareBazaar API", error);
+    return 0;
+  }
+}
+
+// ============================================
 // THREATFEEDS.IO AGGREGATOR (FREE)
 // Aggregated threat intelligence feeds
 // ============================================
@@ -4686,6 +4814,12 @@ export async function fetchAllData(): Promise<void> {
   try { scraperLog.recordFeed("MalwareBazaar", await fetchMalwareBazaarRecent()); } catch(e) { scraperLog.recordError("MalwareBazaar", e); }
   await delay(1000);
   
+  try { scraperLog.recordFeed("ThreatFox API", await scrapeThreatFox()); } catch(e) { scraperLog.recordError("ThreatFox API", e); }
+  await delay(1000);
+  
+  try { scraperLog.recordFeed("MalwareBazaar API", await scrapeMalwareBazaar()); } catch(e) { scraperLog.recordError("MalwareBazaar API", e); }
+  await delay(1000);
+  
   // ===========================================
   // COMMUNITY APIS (Free Tier - Require API Keys)
   // ===========================================
@@ -4732,6 +4866,9 @@ export async function fetchAllData(): Promise<void> {
   // EPSS ENRICHMENT (FIRST.org - No API key)
   // ===========================================
   try { scraperLog.recordFeed("EPSS", await fetchEPSSScores()); } catch(e) { scraperLog.recordError("EPSS", e); }
+  await delay(1000);
+  
+  try { scraperLog.recordFeed("EPSS Bulk", await scrapeEpssScores()); } catch(e) { scraperLog.recordError("EPSS Bulk", e); }
   await delay(1000);
   
   // ===========================================
@@ -5178,6 +5315,107 @@ export async function fetchEPSSScores(): Promise<number> {
     return enriched;
   } catch (error) {
     log.error("EPSS enrichment failed:", error);
+    return 0;
+  }
+}
+
+// ============================================
+// EPSS BULK SCRAPER (FIRST.org API - No API key required)
+// Fetches ALL CVEs with EPSS scores from the bulk endpoint
+// and updates matching CVEs in our database
+// ============================================
+export async function scrapeEpssScores(): Promise<number> {
+  try {
+    log.debug("Fetching bulk EPSS scores from FIRST.org...");
+
+    const response = await secureFetch("https://api.first.org/data/v1/epss?envelope=true&pretty=true");
+
+    if (!response.ok) {
+      throw new Error(`EPSS bulk API error: ${response.status}`);
+    }
+
+    const result = await response.json() as {
+      status: string;
+      "status-code": number;
+      total: number;
+      data: Array<{ cve: string; epss: string; percentile: string; date: string }>;
+    };
+
+    if (!result.data || !Array.isArray(result.data)) {
+      log.debug("EPSS bulk API returned no data array");
+      return 0;
+    }
+
+    let updated = 0;
+
+    for (const item of result.data) {
+      const epssScore = parseFloat(item.epss);
+      const epssPercentile = parseFloat(item.percentile);
+
+      if (isNaN(epssScore) || isNaN(epssPercentile)) continue;
+
+      try {
+        const result = await db.update(cves)
+          .set({ epssScore, epssPercentile })
+          .where(eq(cves.cveId, item.cve));
+        if (result.rowCount && result.rowCount > 0) {
+          updated++;
+        }
+      } catch {}
+    }
+
+    if (updated > 0) {
+      log.info(`EPSS bulk scraper: ${updated} CVEs updated with EPSS scores`);
+    } else {
+      log.debug("EPSS bulk scraper: no matching CVEs found to update");
+    }
+    await storage.updateFeedLastFetched("EPSS Bulk");
+    return updated;
+  } catch (error) {
+    logScraperError("EPSS Bulk", error);
+    return 0;
+  }
+}
+
+export async function checkPocAvailability(): Promise<number> {
+  try {
+    log.debug("Checking PoC availability for top CVEs...");
+
+    const { desc } = await import("drizzle-orm");
+    const topCves = await db
+      .select({ cveId: cves.cveId })
+      .from(cves)
+      .orderBy(desc(cves.score))
+      .limit(50);
+
+    if (topCves.length === 0) return 0;
+
+    let updated = 0;
+    for (const row of topCves) {
+      const year = row.cveId.match(/CVE-(\d{4})/)?.[1];
+      if (!year) continue;
+
+      try {
+        const url = `https://raw.githubusercontent.com/nomi-sec/PoC-in-GitHub/master/${year}/${row.cveId}.json`;
+        const response = await secureFetch(url);
+
+        if (response.ok) {
+          await db.update(cves)
+            .set({ pocAvailable: true })
+            .where(eq(cves.cveId, row.cveId));
+          updated++;
+        }
+
+        await delay(300);
+      } catch {
+        // skip individual CVE errors
+      }
+    }
+
+    log.info(`PoC availability: ${updated} CVEs marked with known PoCs`);
+    return updated;
+  } catch (error) {
+    logScraperError("PoCCheck", error);
     return 0;
   }
 }

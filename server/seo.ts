@@ -8,6 +8,7 @@ interface PageMeta {
   keywords?: string;
   canonical?: string;
   noindex?: boolean;
+  ogImage?: string;
 }
 
 const PAGE_META: Record<string, PageMeta> = {
@@ -231,6 +232,16 @@ const PAGE_META: Record<string, PageMeta> = {
     description: 'Professional brand assets for STB Cybersecurity — email signatures, letterheads, business cards, invoices, social media banners, presentations, and more. 107 styles across 10 categories.',
     keywords: 'brand kit, brand assets, cybersecurity branding, logo templates, business card templates, email signature templates, professional branding',
   },
+  '/compliance': {
+    title: 'Compliance Mapper | STB Cybersecurity',
+    description: 'Map your security posture to NIST CSF 2.0, CIS Controls v8, and ISO 27001. See which compliance controls you address with STBCS tools and get actionable gap analysis.',
+    keywords: 'compliance mapping, NIST CSF, CIS Controls, ISO 27001, cybersecurity compliance, security framework, compliance gap analysis, audit preparation, SMB compliance',
+  },
+  '/ransomware-calculator': {
+    title: 'Ransomware Cost Estimator | STB Cybersecurity',
+    description: 'Estimate the potential financial impact of a ransomware attack on your business. See ransom demands, downtime costs, and which groups target your industry.',
+    keywords: 'ransomware cost calculator, ransomware impact estimator, ransomware risk assessment, cyber attack cost, ransomware financial impact, business risk calculator',
+  },
 };
 
 const MAX_TITLE_LENGTH = 60;
@@ -264,6 +275,17 @@ export function getPageMeta(path: string): PageMeta {
     return PAGE_META[cleanPath];
   }
 
+  if (cleanPath.startsWith('/knowledge-base/') && cleanPath !== '/knowledge-base/new' && cleanPath !== '/knowledge-base/admin' && !cleanPath.endsWith('/edit')) {
+    const slug = decodeURIComponent(cleanPath.replace('/knowledge-base/', ''));
+    const displayTitle = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    return {
+      title: `${displayTitle} | Knowledge Base | STBCS`,
+      description: `Read "${displayTitle}" on the STB Cybersecurity Knowledge Base — community-driven cybersecurity insights, threat intel, and expert guidance.`,
+      keywords: `${displayTitle}, cybersecurity, knowledge base, threat intel, security article`,
+      ogImage: `${DOMAIN}/api/og/kb/${slug}`,
+    };
+  }
+
   if (cleanPath.startsWith('/group/')) {
     const slug = decodeURIComponent(cleanPath.replace('/group/', ''));
     const displayName = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
@@ -282,6 +304,7 @@ export function getPageMeta(path: string): PageMeta {
       title,
       description,
       keywords: `${displayName}, ransomware group, threat actor, cyber attacks, threat profile, APT, ransomware, ${displayName} victims, ${displayName} TTPs`,
+      ogImage: `${DOMAIN}/api/og/group/${slug}`,
     };
   }
 
@@ -339,6 +362,21 @@ export function injectMetaTags(html: string, path: string): string {
     /<meta name="twitter:description" content="[^"]*"/,
     `<meta name="twitter:description" content="${escapeAttr(meta.description)}"`
   );
+
+  if (meta.ogImage) {
+    html = html.replace(
+      /<meta property="og:image" content="[^"]*"/,
+      `<meta property="og:image" content="${escapeAttr(meta.ogImage)}"`
+    );
+    html = html.replace(
+      /<meta name="twitter:image" content="[^"]*"/,
+      `<meta name="twitter:image" content="${escapeAttr(meta.ogImage)}"`
+    );
+    html = html.replace(
+      /<meta name="twitter:card" content="[^"]*"/,
+      `<meta name="twitter:card" content="summary_large_image"`
+    );
+  }
 
   if (meta.noindex) {
     html = html.replace(

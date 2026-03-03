@@ -8,7 +8,7 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import {
   User, Crown, Star, Award, Shield, MapPin, Building, Globe, Mail,
   Calendar, BookOpen, MessageSquare, Eye, ChevronUp, TrendingUp,
-  ArrowLeft, Lock, Loader2
+  ArrowLeft, Lock, Loader2, Flame, PenTool, ShieldAlert
 } from "lucide-react";
 import UserAvatar from "@/components/user-avatar";
 import { format } from "date-fns";
@@ -50,6 +50,17 @@ function TypeBadge({ type }: { type: string }) {
   return <Badge className={`${c.className} text-[10px]`}>{c.label}</Badge>;
 }
 
+const BADGE_ICONS: Record<string, any> = {
+  BookOpen, MessageSquare, TrendingUp, ShieldAlert, PenTool, Shield, Flame, Award, Star,
+};
+
+const RARITY_COLORS: Record<string, { bg: string; text: string; border: string }> = {
+  common: { bg: "bg-zinc-500/20", text: "text-zinc-300", border: "border-zinc-500/30" },
+  rare: { bg: "bg-blue-500/20", text: "text-blue-400", border: "border-blue-500/30" },
+  epic: { bg: "bg-purple-500/20", text: "text-purple-400", border: "border-purple-500/30" },
+  legendary: { bg: "bg-orange-500/20", text: "text-orange-400", border: "border-orange-500/30" },
+};
+
 function timeAgo(date: string) {
   const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000);
   if (seconds < 60) return "just now";
@@ -71,6 +82,15 @@ export default function ProfilePage() {
       return res.json();
     },
     enabled: !!username,
+  });
+
+  const { data: badgeDefinitions } = useQuery({
+    queryKey: ["/api/badges/definitions"],
+    queryFn: async () => {
+      const res = await fetch("/api/badges/definitions");
+      if (!res.ok) throw new Error("Failed to fetch badges");
+      return res.json();
+    },
   });
 
   useDocumentTitle(profile ? `${profile.displayName || profile.username} | STB Cybersecurity` : "Profile | STB Cybersecurity");
@@ -215,6 +235,46 @@ export default function ProfilePage() {
                 </div>
               </CardContent>
             </Card>
+
+            {badgeDefinitions && (
+              <Card className="border-zinc-800 bg-zinc-900/50" data-testid="section-badges">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm text-white flex items-center gap-2">
+                    <Award className="h-4 w-4 text-orange-400" />Badges
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  {badgeDefinitions.map((badge: any) => {
+                    const earned = (profile.badges || []).includes(badge.id);
+                    const rarity = RARITY_COLORS[badge.rarity] || RARITY_COLORS.common;
+                    const IconComponent = BADGE_ICONS[badge.icon] || Award;
+                    return (
+                      <div
+                        key={badge.id}
+                        data-testid={`badge-${badge.id}`}
+                        className={`p-3 rounded-lg border transition-all ${
+                          earned
+                            ? `${rarity.bg} ${rarity.border} ${rarity.text}`
+                            : "bg-zinc-800/30 border-zinc-800 text-zinc-600"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {earned ? (
+                            <IconComponent className="h-4 w-4 shrink-0" />
+                          ) : (
+                            <Lock className="h-4 w-4 shrink-0 text-zinc-600" />
+                          )}
+                          <div className="min-w-0">
+                            <p className={`text-xs font-medium ${earned ? "text-white" : "text-zinc-500"}`}>{badge.name}</p>
+                            <p className={`text-[10px] ${earned ? rarity.text : "text-zinc-600"}`}>{badge.description}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </CardContent>
+              </Card>
+            )}
           </div>
 
           <div className="md:col-span-2">

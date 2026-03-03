@@ -224,6 +224,26 @@ export default function AccountPage() {
     },
   });
 
+  const digestMutation = useMutation({
+    mutationFn: async (optIn: boolean) => {
+      const res = await fetch("/api/account/digest", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ digestOptIn: optIn }),
+      });
+      if (!res.ok) throw new Error("Failed to update digest preference");
+      return res.json();
+    },
+    onSuccess: (_data, optIn) => {
+      queryClient.invalidateQueries({ queryKey: ["account"] });
+      toast({ title: optIn ? "Digest enabled" : "Digest disabled", description: optIn ? "You'll receive weekly threat digests." : "You've been unsubscribed from weekly digests." });
+    },
+    onError: (error: Error) => {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    },
+  });
+
   const revokeKeyMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/account/api-keys/${id}`, {
@@ -675,6 +695,34 @@ export default function AccountPage() {
                 </Button>
               </div>
             )}
+          </CardContent>
+        </Card>
+
+        <Card className="border-zinc-800 bg-zinc-900/50" data-testid="card-notifications-digest">
+          <CardHeader>
+            <CardTitle className="text-lg text-white flex items-center gap-2">
+              <Bell className="h-5 w-5 text-orange-400" />
+              Notifications & Digest
+            </CardTitle>
+            <CardDescription>
+              Manage your email notification preferences.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-700 bg-zinc-800/50">
+              <div className="space-y-0.5 flex-1 min-w-0 mr-4">
+                <p className="text-sm font-medium text-white" data-testid="text-digest-label">Weekly Threat Digest</p>
+                <p className="text-xs text-zinc-400" data-testid="text-digest-description">
+                  Receive a weekly email summary of top CVEs, ransomware incidents, and threat landscape changes
+                </p>
+              </div>
+              <Switch
+                checked={!!account?.digestOptIn}
+                onCheckedChange={(checked: boolean) => digestMutation.mutate(checked)}
+                disabled={digestMutation.isPending}
+                data-testid="switch-digest-optin"
+              />
+            </div>
           </CardContent>
         </Card>
 

@@ -18,6 +18,8 @@ import AnimatedMap from "@/components/animated-map";
 import HeroParticles from "@/components/hero-particles";
 import AnimatedSection, { AnimatedList } from "@/components/animated-section";
 import { useInView, useCountUp } from "@/hooks/use-in-view";
+import ThreatTicker from "@/components/threat-ticker";
+import { useAuth } from "@/lib/auth";
 
 const iconColorMap: Record<string, string> = {
   "text-primary": "icon-primary",
@@ -207,6 +209,103 @@ function QuickActionsBar() {
   );
 }
 
+interface PostureData {
+  hasWatchlist: boolean;
+  hasUptimeMonitors: boolean;
+  hasDarkWebMonitors: boolean;
+  hasDigestOptIn: boolean;
+  hasEmail: boolean;
+  emailVerified: boolean;
+}
+
+function SecurityPostureWidget() {
+  const { isAuthenticated } = useAuth();
+  const { data: posture, isLoading } = useQuery<PostureData>({
+    queryKey: ["/api/compliance/posture"],
+    queryFn: async () => {
+      const res = await fetch("/api/compliance/posture", { credentials: "include" });
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+    enabled: isAuthenticated,
+    staleTime: 60000,
+  });
+
+  if (!isAuthenticated || isLoading || !posture) return null;
+
+  const items = [
+    { label: "Set up watchlist alerts", done: posture.hasWatchlist, href: "/watchlist", key: "watchlist" },
+    { label: "Enable email notifications", done: posture.hasEmail, href: "/account", key: "email" },
+    { label: "Complete risk assessment", done: posture.emailVerified, href: "/risk-assessment", key: "risk" },
+    { label: "Subscribe to weekly digest", done: posture.hasDigestOptIn, href: "/account", key: "digest" },
+    { label: "Enable dark web monitoring", done: posture.hasDarkWebMonitors, href: "/dark-web", key: "darkweb" },
+    { label: "Set up uptime monitoring", done: posture.hasUptimeMonitors, href: "/monitors", key: "uptime" },
+  ];
+
+  const completed = items.filter(i => i.done).length;
+  const total = items.length;
+  const percentage = Math.round((completed / total) * 100);
+
+  const radius = 40;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <AnimatedSection animation="fade-up">
+      <Card className="border-white/5 bg-card/50 backdrop-blur-sm" data-testid="card-security-posture">
+        <CardHeader className="pb-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="h-5 w-5 text-primary" />
+            <CardTitle className="font-display text-lg">Your Security Posture</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-6 items-center">
+            <div className="relative flex-shrink-0" data-testid="posture-progress-ring">
+              <svg width="100" height="100" viewBox="0 0 100 100" className="-rotate-90">
+                <circle cx="50" cy="50" r={radius} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="8" />
+                <circle
+                  cx="50" cy="50" r={radius} fill="none"
+                  stroke="hsl(var(--primary))"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  className="transition-all duration-700"
+                />
+              </svg>
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="text-xl font-bold text-white" data-testid="text-posture-percentage">{percentage}%</span>
+              </div>
+            </div>
+            <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2 w-full">
+              {items.map((item) => (
+                <a
+                  key={item.key}
+                  href={item.done ? undefined : item.href}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 ${
+                    item.done
+                      ? "border-green-500/20 bg-green-500/5 cursor-default"
+                      : "border-white/10 bg-white/5 hover:border-primary/30 hover:bg-primary/10 cursor-pointer"
+                  }`}
+                  data-testid={`posture-item-${item.key}`}
+                >
+                  {item.done ? (
+                    <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
+                  ) : (
+                    <XCircle className="h-4 w-4 text-zinc-500 flex-shrink-0" />
+                  )}
+                  <span className={`text-sm ${item.done ? "text-green-400" : "text-zinc-400"}`}>{item.label}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </AnimatedSection>
+  );
+}
+
 export default function Dashboard() {
   useDocumentTitle("STB Cybersecurity | Real-Time Threat Intelligence for SMBs", "Track ransomware, CVEs, and malicious IPs across 105+ live feeds. Get 24/7 incident response, ransomware recovery, and threat hunting for your business.");
   const { data: stats, isLoading: statsLoading } = useStats();
@@ -288,6 +387,8 @@ export default function Dashboard() {
           </div>
         </div>
 
+        <ThreatTicker />
+
         <QuickActionsBar />
 
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-7 gap-4">
@@ -334,6 +435,8 @@ export default function Dashboard() {
             })()}
           </div>
         )}
+
+        <SecurityPostureWidget />
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <AnimatedSection animation="fade-up" className="col-span-2">

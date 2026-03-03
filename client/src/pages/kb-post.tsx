@@ -13,7 +13,7 @@ import {
   ChevronUp, ChevronDown, MessageSquare, Clock, Edit, Trash2, ArrowLeft,
   Crown, Star, Award, Shield, Pin, Reply, Send, BookOpen,
   Eye, Bookmark, BookmarkCheck, ArrowUpDown, Tag, Link2, Sparkles, List,
-  Share2, Linkedin, Mail, Flag, X, AlertTriangle, Check, QrCode, Download
+  Share2, Linkedin, Mail, Flag, X, AlertTriangle, Check, QrCode, Download, FileCode
 } from "lucide-react";
 import { KBIcon } from "@/components/branded-icons";
 import UserAvatar from "@/components/user-avatar";
@@ -494,10 +494,22 @@ export default function KbPost() {
   };
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(window.location.href).then(() => {
-      toast({ title: "Link copied to clipboard" });
+    const url = window.location.href;
+    navigator.clipboard.writeText(url).then(() => {
+      toast({ title: "Link copied to clipboard", description: "Ready to paste anywhere", action: <button className="text-xs text-orange-400 hover:underline whitespace-nowrap" onClick={() => window.open(url, "_blank")}>Open in new tab</button> });
     }).catch(() => {
       toast({ title: "Failed to copy link", variant: "destructive" });
+    });
+  };
+
+  const handleCopyMarkdown = () => {
+    const url = window.location.href;
+    const excerpt = (post.content || "").replace(/[#*_`>\[\]]/g, "").slice(0, 120).trim();
+    const md = `## [${post.title}](${url})\n\n> ${excerpt}…\n\n*via STB Cybersecurity*`;
+    navigator.clipboard.writeText(md).then(() => {
+      toast({ title: "Copied as Markdown", description: "Paste into Slack, Discord, or GitHub" });
+    }).catch(() => {
+      toast({ title: "Failed to copy", variant: "destructive" });
     });
   };
 
@@ -659,6 +671,14 @@ export default function KbPost() {
                   data-testid="button-share-copy-link"
                 >
                   <Link2 className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handleCopyMarkdown}
+                  className="p-1.5 rounded hover:bg-orange-500/10 transition-colors text-zinc-400 hover:text-orange-400"
+                  title="Copy as Markdown"
+                  data-testid="button-share-markdown"
+                >
+                  <FileCode className="h-4 w-4" />
                 </button>
                 <button
                   onClick={handleShowQrCode}

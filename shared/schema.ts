@@ -42,6 +42,8 @@ export const users = pgTable("users", {
   company: text("company"),
   profilePublic: boolean("profile_public").default(true),
   showEmail: boolean("show_email").default(false),
+  digestOptIn: boolean("digest_opt_in").default(false),
+  badges: text("badges").array(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   index("users_email_idx").on(table.email),
@@ -77,6 +79,7 @@ export const cves = pgTable("cves", {
   cweId: text("cwe_id"),
   cweName: text("cwe_name"),
   inCisaKev: boolean("in_cisa_kev").default(false),
+  pocAvailable: boolean("poc_available").default(false),
   affectedProducts: text("affected_products"),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [

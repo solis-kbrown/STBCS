@@ -13,7 +13,7 @@ import {
   Crown, Star, Award, TrendingUp, Pin, Clock,
   Filter, ChevronLeft, ChevronRight, Users, Sparkles,
   Eye, Bookmark, BookmarkCheck, ArrowUpDown, Tag, Flame,
-  ThumbsUp, MessagesSquare, BarChart3, Share2, Linkedin, Mail, Copy
+  ThumbsUp, MessagesSquare, BarChart3, Share2, Linkedin, Mail, Copy, Trophy
 } from "lucide-react";
 import { KBIcon } from "@/components/branded-icons";
 import UserAvatar from "@/components/user-avatar";
@@ -153,6 +153,16 @@ export default function KnowledgeBase() {
     },
   });
 
+  const { data: contributorOfTheWeek } = useQuery({
+    queryKey: ["/api/kb/contributor-of-the-week"],
+    queryFn: async () => {
+      const res = await fetch("/api/kb/contributor-of-the-week");
+      if (res.status === 404) return null;
+      if (!res.ok) throw new Error("Failed");
+      return res.json();
+    },
+  });
+
   const handleSearch = () => {
     setSearchQuery(searchInput.trim());
     setActiveTag("");
@@ -234,6 +244,36 @@ export default function KnowledgeBase() {
         </div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+          {contributorOfTheWeek && (
+            <div
+              data-testid="card-contributor-of-the-week"
+              className="mb-6 rounded-xl border-2 border-orange-500/30 bg-gradient-to-r from-orange-500/5 via-zinc-900/50 to-orange-500/5 p-5"
+            >
+              <div className="flex items-center gap-4 flex-wrap">
+                <div className="flex items-center gap-2">
+                  <Trophy className="h-6 w-6 text-orange-400" data-testid="icon-trophy" />
+                  <h3 className="text-lg font-semibold text-orange-400" data-testid="text-contributor-heading">Contributor of the Week</h3>
+                </div>
+                <div className="flex items-center gap-3 ml-auto">
+                  <UserAvatar avatarUrl={contributorOfTheWeek.avatarUrl} username={contributorOfTheWeek.username} size="lg" />
+                  <div>
+                    <p className="text-white font-semibold text-base" data-testid="text-contributor-name">{contributorOfTheWeek.displayName || contributorOfTheWeek.username}</p>
+                    <div className="flex items-center gap-3 mt-1 text-xs text-zinc-400">
+                      <span data-testid="text-contributor-posts" className="flex items-center gap-1"><FileText className="h-3 w-3" />{contributorOfTheWeek.postCount} posts</span>
+                      <span data-testid="text-contributor-comments" className="flex items-center gap-1"><MessageSquare className="h-3 w-3" />{contributorOfTheWeek.commentCount} comments</span>
+                      <span data-testid="text-contributor-upvotes" className="flex items-center gap-1"><ThumbsUp className="h-3 w-3" />{contributorOfTheWeek.totalUpvotes} upvotes</span>
+                    </div>
+                  </div>
+                  <Link href={`/user/${contributorOfTheWeek.username}`} data-testid="link-contributor-profile">
+                    <Button variant="outline" size="sm" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10 ml-2">
+                      View Profile
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className="flex flex-wrap gap-2 mb-4">
             {POST_TYPES.map((t) => {
               const Icon = t.icon;
