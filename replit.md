@@ -1,11 +1,9 @@
 # STB Cybersecurity (STBCS) - Frontline Threat Intelligence & Security Services
 
 ## Overview
-
-STB Cybersecurity delivers professional cybersecurity services and real-time threat intelligence by aggregating data from over 105 free public threat intelligence feeds. The platform tracks ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news. STBCS offers Cybersecurity Consulting, Incident Response, Ransomware Recovery & Restoration, and Threat Hunting services, primarily for small to medium-sized businesses. The project aims to be a comprehensive hub for cybersecurity insights and professional services, striving to become a leader in SMB cybersecurity.
+STB Cybersecurity provides professional cybersecurity services and real-time threat intelligence by aggregating data from over 105 free public threat intelligence feeds. The platform tracks ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news. STBCS offers Cybersecurity Consulting, Incident Response, Ransomware Recovery & Restoration, and Threat Hunting services, primarily for small to medium-sized businesses, aiming to be a comprehensive hub for cybersecurity insights and professional services.
 
 ## User Preferences
-
 Preferred communication style: Simple, everyday language.
 - Export/download features (CSV, JSON, STIX) are Pro/Business tier only — always gate behind auth check on both frontend and backend.
 
@@ -17,59 +15,56 @@ Preferred communication style: Simple, everyday language.
 - **State Management**: TanStack React Query.
 - **UI Components**: shadcn/ui built on Radix UI, styled with Tailwind CSS v4.
 - **Internationalization**: Supports 10 languages with browser auto-detection.
-- **Visual Theme**: "Stealth Mode / Tactical Operations Center" featuring dark minimal background, orange/red accents, cyber-themed Lucide icons, interactive cards, and various animations (e.g., `hero-scan-line`, `skeleton-shimmer`). Typography uses Orbitron, Inter, and JetBrains Mono. Accessibility includes `prefers-reduced-motion` support. Custom branded SVG icon components (`client/src/components/branded-icons.tsx`) for SSH (terminal+shield+lock), RDP (monitor+scan line), Telnet (globe+network+pulse), SFTP (folder+arrows+lock), KB (book+shield+data stream), and Profile (hexagonal user frame) with inline SVG animations.
-- **Sidebar Navigation**: Organized into 7 collapsible sections using Radix Collapsible: Main (always open), Security Scanners, Monitoring & Reports (PRO), Remote Access (BIZ), Threat Intelligence, Community & Resources, Support & Info. Section open/closed state persists in localStorage (`sidebar-sections`). Active route auto-expands its parent section. Section headers show tier badges when all items share a tier.
+- **Visual Theme**: "Stealth Mode / Tactical Operations Center" with dark minimal background, orange/red accents, cyber-themed Lucide icons, and interactive elements. Typography uses Orbitron, Inter, and JetBrains Mono. Custom branded SVG icon components for various security-related services.
+- **Sidebar Navigation**: Organized into 7 collapsible sections using Radix Collapsible with state persistence in localStorage.
 
 ### Backend
 - **Runtime**: Node.js with Express 5, TypeScript (ESM modules).
 - **API Design**: RESTful JSON API (`/api/*`) with Zod validation.
-- **Security**: Rate limiting, input validation, login timing attack protection, CSRF protection.
+- **Security**: Rate limiting, input validation, CSRF protection.
 - **Data Scraping**: Server-side scrapers for threat intelligence.
-- **Caching**: In-memory response cache with TTL, startup warm-up, session auth caching.
+- **Caching**: In-memory response cache with TTL and session auth caching.
 - **Performance**: Parallelized DB queries, in-memory `index.html` caching.
 
 ### Data Storage
-- **Database**: PostgreSQL via Drizzle ORM with an optimized connection pool (max 20, idle 20s, connection timeout 20s, statement timeout 60s).
+- **Database**: PostgreSQL via Drizzle ORM with an optimized connection pool.
 - **Schema**: Defined for CVEs, ransomware, threat actors, and user data.
-- **Integrity**: Unique constraints and atomic upserts (`onConflictDoUpdate`) for race-condition-free writes.
+- **Integrity**: Unique constraints and atomic upserts.
 - **Transactions**: Multi-step operations use `db.transaction()` for atomicity.
-- **Startup**: Two-stage ESM launcher (`dist/start.js`) opens port 5000 instantly, serves health checks immediately before loading app bundle (100ms delay before dynamic import). `/health` returns JSON `{"status":"ok"}` (application/json), `/__repl` returns plain text `ok`. Once Express is ready, launcher delegates ALL requests (including `/`) to Express — no more intercepting `/` at the launcher level. Express `/` is handled by the SPA catch-all with SEO meta tag injection. `express.static` uses `index: false`. App init retries indefinitely, never calls `process.exit(1)`. Fully non-blocking staggered service initialization: Digest (+5s), Maintenance (+8s), KB Scraper (+11s), Uptime (+14s), Dark Web (+17s), Stripe (+20s), Scrapers (+23s), Cache warm-up (+26s). Server bundle uses ESM format with esbuild banner for `__dirname`/`require` polyfills. PostgreSQL SSL warnings suppressed via `uselibpqcompat=true`.
 
 ### Key Design Patterns
-- Shared Types, Storage Abstraction, API Hooks (for React Query), Path Aliases (`@/`, `@shared/`).
+- Shared Types, Storage Abstraction, API Hooks (for React Query), Path Aliases.
 
 ### Features
 - **Threat Intelligence Aggregation**: 15-minute refresh cycles from diverse sources.
-- **Security Tools**: IP/Domain WHOIS, Port Scanner, Threat Database Check, Password Strength, Subnet Calculator, Email Header Analyzer, Encoding/Decoding, File Scanner, SSL/TLS Checker, Web Server Fingerprinter, Exchange Server Checker, DNS Security Analyzer, HTTP Security Headers Scanner.
-- **Pro/Business Features**: Monitoring Suite (uptime with Recharts response time area charts and 24h/7d/30d stats, SSL certificate tracking, dark web scanning), Incidents tab with type/status filtering and summary stats (total, ongoing, resolved, SSL, total downtime), Attack Surface Discovery, Threat Intelligence Reports (on-demand/scheduled), Remote Desktop, SSH Terminal, Telnet Client, SFTP Client.
+- **Security Tools**: Comprehensive suite including WHOIS, Port Scanner, Threat Database Check, Password Strength, Subnet Calculator, Email Header Analyzer, Encoding/Decoding, File Scanner, SSL/TLS Checker, Web Server Fingerprinter, DNS Security Analyzer, HTTP Security Headers Scanner.
+- **Pro/Business Features**: Monitoring Suite (uptime, SSL certificate tracking, dark web scanning), Incidents tab, Attack Surface Discovery, Threat Intelligence Reports, Remote Desktop, SSH Terminal, Telnet Client, SFTP Client.
 - **Core Security Capabilities**: IOC Search, Cyber Risk Score Calculator, ICS-CERT Advisories, MITRE ATT&CK Mapping, STIX 2.1 Export, Groups Directory, Compliance Mapper (NIST CSF 2.0, CIS Controls v8, ISO 27001), Ransomware Cost Estimator, EPSS Exploit Prediction Scoring.
-- **User & Subscription Management**: Authentication, subscription tiers (Supporter, Pro, Business, Unlimited Everything), API Key System, Monitor Alert Engine. Dedicated `/pricing` page with full feature comparison matrix (9 categories, 105+ features), monthly/annual toggle, collapsible sections, FAQ accordion, and Stripe billing portal integration for upgrades/downgrades. All upgrade links across the app route to `/pricing`.
-- **Communication & Support**: Newsletter, Quo Phone System integration, email notifications, Contact Page, About Page, Live Chat Widget, Knowledge Base & Community Hub (with RBAC, content scraping, moderation, gamification ranks, post sorting [newest/popular/discussed/trending/views], comment sorting [oldest/newest/best], popular tag cloud sidebar, bookmarks for paid users, view count tracking, related posts, contributor badges [Top Contributor/Rising Star], draft saving with auto-save to localStorage, code syntax highlighting via highlight.js (atom-one-dark theme), improved markdown rendering (tables/blockquotes/images/horizontal rules/strikethrough), reading time estimates, collapsible table of contents for long posts, social sharing (Twitter/LinkedIn/Email/Copy Link/QR Code on posts, full share dropdown on listings), comment editing within 30-minute window with "(edited)" indicator, content reporting/flagging system with admin review dashboard, KB activity notifications (comments/replies/upvotes/approvals/rejections)).
-- **Platform-Wide Social Sharing**: All content shareable by all users (no auth gate). KB posts: Twitter/LinkedIn/Email/Copy Link/QR Code/Copy as Markdown buttons. KB listings, news, CVEs, ransomware, dashboard: share dropdown menus with Twitter/LinkedIn/Email/Copy Link. CVE and ransomware items include "Share as Image" option generating branded PNG cards via HTML Canvas (`client/src/lib/share-image.ts`). QR codes generated client-side via `qrcode` npm package. Group profiles have Share + QR Code dropdowns. Toast notifications include contextual action buttons (Open in new tab, Share on X, Copy link).
-- **Dynamic OG Images**: Server-side SVG→PNG generation via `@resvg/resvg-js` for KB posts (`/api/og/kb/:slug`), CVEs (`/api/og/cve/:cveId`), and group profiles (`/api/og/group/:slug`). Branded preview cards with dark theme and orange accents for social media sharing.
-- **Live Threat Ticker**: Real-time scrolling ticker on dashboard showing latest CVEs, ransomware incidents, KEV additions, and malicious IPs. Auto-refreshes every 60s, collapsible, click-to-navigate.
-- **EPSS Scoring**: Exploit Prediction Scoring System integration from FIRST.org. Shows exploitation probability (0-100%) on CVE cards with color-coded indicators. EPSS vs CVSS priority matrix visualization with 4 quadrants (Act Now/Watch/Plan/Monitor).
-- **CVE Exploit Maturity Timeline**: Visual 4-stage lifecycle tracker per CVE: Disclosed → PoC Available → Weaponized → Active Exploitation. Based on NVD data, GitHub PoC repos, EPSS scores, and CISA KEV.
-- **Badges & Achievements**: Achievement system for KB contributors with 9 badge types (First Post, Commentator, Upvote Magnet, Threat Reporter, Prolific Writer, Community Guardian, Streak, Mentor, Spotlight). Auto-awarded, displayed on profiles.
-- **Contributor of the Week**: Auto-calculated weekly spotlight on KB landing page.
-- **Security Posture Widget**: Dashboard checklist showing personalized security coverage with progress ring.
-- **Compliance Mapper**: Maps STBCS activity to NIST CSF 2.0, CIS Controls v8, ISO 27001 frameworks with coverage percentages.
-- **Ransomware Cost Estimator**: Interactive calculator estimating financial impact based on industry, size, revenue, and data sensitivity.
-- **Threat Heatmap**: Global SVG world map on ransomware page with country-level heat coloring based on victim count.
-- **Avatar System**: Full avatar management in account settings with upload (max 2MB, base64 data URL), 8 cybersecurity-themed SVG defaults (shield/terminal/lock/bug/skull/radar/eye/circuit), URL input, and live preview. Reusable `UserAvatar` component (`client/src/components/user-avatar.tsx`) with sm/md/lg/xl sizes and initials fallback. Avatars displayed in KB posts/comments/listings, leaderboard, admin tables, profile pages, and header navigation.
-- **User Profiles**: Public profile pages at `/user/:username` with avatar, display name, bio, location, website, company, tier badge, KB reputation rank/progress bar, post/comment stats, recent posts. Profile editing on account page with privacy toggles (profilePublic, showEmail). Author names linked to profiles throughout KB listing and post pages.
-- **Admin KB Reporting**: Daily health check and weekly admin report include KB activity stats (new posts, comments, votes, views, top posts, top contributors, pending moderation).
-- **Feedback & Bug Reports**: Public feedback system at `/feedback` — any user (even unauthenticated) can report bugs, site issues, feature requests, recommendations, or security concerns. Rate-limited. Admin dashboard for review/status tracking.
-- **Security & Compliance**: Robust security headers, secure cookies, API logging, rate limiting, consent flows (CCPA/CPRA, COPPA, CAN-SPAM), legal pages. KB anti-cheat: self-vote prevention, transaction-wrapped voting, SQL injection hardened (inArray), content length limits (200/50K/5K chars), tag limits (10 tags, 50 chars each), reputation cap (10,000), admin-only delete for posts/comments.
-- **Brand Kit**: Comprehensive brand asset hub at `/brand-kit` with 10 categories (107 total styles) — Email Signatures (15 styles), PDF Letterheads (12 styles), Business Cards (12 styles, front+back), Invoice/Quote Templates (10 styles), Social Media Banners (12 styles across Twitter/LinkedIn/YouTube/Facebook/Instagram/Discord/Twitch), Presentation Headers (10 styles, 16:9), Meeting Backgrounds (10 styles, CSS art), Report Covers (10 styles), Pitch Deck Covers (8 styles), Certificate Templates (8 styles). All with live preview, customizable fields, copy HTML, and print/PDF support. Visual Customization section links to Logo Themes, Hero Backgrounds, and Style Preview pages.
+- **User & Subscription Management**: Authentication, subscription tiers, API Key System, Monitor Alert Engine, dedicated `/pricing` page with Stripe integration.
+- **Communication & Support**: Newsletter, Quo Phone System integration, email notifications, Live Chat Widget, Knowledge Base & Community Hub with RBAC, content moderation, gamification, and advanced markdown rendering.
+- **Platform-Wide Social Sharing**: All content shareable with options like "Share as Image" for CVEs and ransomware.
+- **Dynamic OG Images**: Server-side SVG→PNG generation for social media preview cards.
+- **Live Threat Ticker**: Real-time scrolling ticker on dashboard.
+- **EPSS Scoring**: Integration of Exploit Prediction Scoring System for CVEs.
+- **CVE Exploit Maturity Timeline**: Visual 4-stage lifecycle tracker per CVE.
+- **Badges & Achievements**: System for KB contributors.
+- **Contributor of the Week**: Auto-calculated weekly spotlight.
+- **Security Posture Widget**: Dashboard checklist with progress ring.
+- **Threat Heatmap**: Global SVG world map on ransomware page.
+- **Avatar System**: Full avatar management with defaults and upload options.
+- **User Profiles**: Public profiles with stats and privacy toggles.
+- **Admin KB Reporting**: Daily health checks and weekly reports.
+- **Feedback & Bug Reports**: Public system for issues and feature requests.
+- **Security & Compliance**: Robust security headers, secure cookies, API logging, rate limiting, consent flows, legal pages.
+- **Brand Kit**: Comprehensive brand asset hub at `/brand-kit` with customizable templates.
 - **Interactive Playbooks**: 5 incident response guides.
-- **Service Status Dashboard**: Monitors 37+ services across 8 categories — STBCS services (Platform, API, Feeds, Monitoring, KB), cloud providers (AWS, Azure, GCP, DigitalOcean, Oracle, IBM), CDN/DNS (Cloudflare, Fastly, Akamai), security (CrowdStrike, Okta, SentinelOne, Datadog, Splunk, PagerDuty, Let's Encrypt), communication (Slack, Twilio, M365, Google Workspace, Zoom), development (GitHub, Atlassian, HashiCorp, Docker Hub, npm), hosting (Vercel, Netlify, Render), and infrastructure (Stripe, Equinix). Live status checks via Statuspage.io APIs with 60s auto-refresh. Dashboard widget shows compact infrastructure health at a glance. Embedded in monitors page as "Service Status" tab.
-- **Threat Feed Deduplication**: In-memory Set per feed (skip duplicates within a feed before DB calls) + database-level unique constraints (ipAddress+source for IPs, url+source for URLs). Cross-feed overlap is intentional for multi-source corroboration.
+- **Service Status Dashboard**: Monitors 37+ services across various categories using Statuspage.io APIs.
+- **Threat Feed Deduplication**: In-memory and database-level deduplication for threat feeds.
 
 ## External Dependencies
 
 ### Data Sources (Free Public Feeds)
-- NVD API, CISA KEV, URLhaus, OpenPhish, Feodo Tracker, SANS DShield, Tor Exit Nodes, SSL Blacklist, Shodan InternetDB, Phishing Database (IPs/Domains/URLs), CriticalPath Security (Cobalt Strike/abuse.ch), C2IntelFeeds, ThreatFox CSV + API, MalwareBazaar API, AlienVault Reputation, StopForumSpam, Team Cymru Bogons, CESNET NERD, FireHOL Level2/Abusers/DShield, NormShield, NixSpam, Bruteforce Blocker, Cybercrime IPs, CERT.PL, Malware Filter (Phishing/URLhaus), Inversion DNSBL, Hagezi TIF, Prigent Malware, AdGuard DNS, Red Flag Domains, Maltrail (Suspicious/Malware), TweetFeed, APT Notes, Targeted Threats, Sophos/ESET/Talos IOC repos, FIRST.org EPSS API.
+- NVD API, CISA KEV, URLhaus, OpenPhish, Feodo Tracker, SANS DShield, Tor Exit Nodes, SSL Blacklist, Shodan InternetDB, Phishing Database, CriticalPath Security, C2IntelFeeds, ThreatFox, MalwareBazaar, AlienVault Reputation, StopForumSpam, Team Cymru Bogons, CESNET NERD, FireHOL, NormShield, NixSpam, Bruteforce Blocker, Cybercrime IPs, CERT.PL, Malware Filter, Inversion DNSBL, Hagezi TIF, Prigent Malware, AdGuard DNS, Red Flag Domains, Maltrail, TweetFeed, APT Notes, Targeted Threats, Sophos/ESET/Talos IOC repos, FIRST.org EPSS API.
 - API Key-based integrations: AlienVault OTX, VirusTotal, Hybrid Analysis, GreyNoise, CrowdSec, Shodan, Pulsedive, HoneyDB, AbuseIPDB.
 
 ### Database
@@ -84,23 +79,18 @@ Preferred communication style: Simple, everyday language.
 - `zod`
 - `date-fns`
 - `stripe`, `stripe-replit-sync`
-- `ssh2`, `xterm.js` (for SSH/SFTP)
-- `node-rdpjs` (for RDP)
-- `qrcode` (client-side QR code generation)
-- `highlight.js` (code syntax highlighting)
-- `@resvg/resvg-js` (SVG to PNG for OG images)
-- `satori` (HTML to SVG for OG images)
+- `ssh2`, `xterm.js`
+- `node-rdpjs`
+- `qrcode`
+- `highlight.js`
+- `@resvg/resvg-js`
+- `satori`
 
 ### Payment Gateway
 - Stripe (subscriptions and donations).
 
 ### SEO
-- Server-Side Meta Injection with per-page keywords (`server/seo.ts` PageMeta `keywords` field), Dynamic Routes, `noindex` for transactional/private pages only (account, checkout, messages, style-preview, monitors, remote-access tools). File Scanner and Email Analyzer are now indexed.
-- Hreflang tags for 10 languages (en, es, fr, de, pt, zh, ja, ko, ar, ru) plus x-default injected on every page via `injectMetaTags`.
-- Structured Data: 7 JSON-LD blocks (Organization, WebSite with SearchAction, ProfessionalService, FAQPage, ItemList with 30 navigation elements, WebApplication with 25 features and 5 pricing tiers, Dataset, BreadcrumbList).
-- Dynamic XML sitemap with 35+ static pages + dynamic threat actor group pages (~500). All public tool pages included (SSL Checker, DNS Analyzer, Headers Scanner, Web Fingerprinter, Exchange Checker, File Scanner, Email Analyzer, Encoding Tools, Playbooks, Service Status).
-- `robots.txt` explicitly allows all public pages, disallows private/transactional pages and /monitors.
-- `useDocumentTitle` hook for client-side title updates.
+- Server-Side Meta Injection, Dynamic Routes, Hreflang tags for 10 languages, Structured Data (7 JSON-LD blocks), Dynamic XML sitemap, `robots.txt` configuration.
 
 ### Security & US Compliance
 - Security Headers (CSP, HSTS, etc.), bcrypt for authentication, strong password policies, account lockout, time-limited cryptographic session tokens, tiered rate limiting, consent flows, legal pages, SMS compliance.

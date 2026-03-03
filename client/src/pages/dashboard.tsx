@@ -347,9 +347,9 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="space-y-10 page-transition">
+      <div className="space-y-6 sm:space-y-10 page-transition">
         
-        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-card h-72 flex items-center hero-scan-line animated-border">
+        <div className="relative overflow-hidden rounded-xl border border-white/10 bg-card h-48 sm:h-72 flex items-center hero-scan-line animated-border">
           <div className="absolute inset-0 z-0">
             {heroBgId === "threat-map" ? <AnimatedMap /> : getHeroBackground(heroBgId)}
             <div className="absolute inset-0 z-[1]">
@@ -358,18 +358,18 @@ export default function Dashboard() {
             <div className="absolute inset-0 z-[2] bg-gradient-to-r from-background via-background/85 to-transparent"></div>
           </div>
           
-          <div className="relative z-10 p-8 max-w-2xl">
-            <Badge className="mb-4 bg-primary/20 text-primary border-primary/50 hover:bg-primary/30 glow-pulse" data-testid="badge-threat-level">
+          <div className="relative z-10 p-4 sm:p-8 max-w-2xl">
+            <Badge className="mb-2 sm:mb-4 bg-primary/20 text-primary border-primary/50 hover:bg-primary/30 glow-pulse" data-testid="badge-threat-level">
               <span className="w-2 h-2 rounded-full bg-primary mr-2 animate-pulse motion-reduce:animate-none"></span>
               <TypingText text="LIVE THREAT LEVEL: ELEVATED" />
             </Badge>
-            <h1 className="text-4xl font-display font-bold text-white mb-2 tracking-wide">
+            <h1 className="text-2xl sm:text-4xl font-display font-bold text-white mb-1 sm:mb-2 tracking-wide">
               KNOW THE THREAT <span className="text-primary text-shimmer">BEFORE IT HITS</span>
             </h1>
-            <p className="text-muted-foreground text-lg mb-6">
+            <p className="text-muted-foreground text-sm sm:text-lg mb-3 sm:mb-6 hidden sm:block">
               105+ live threat feeds. Ransomware tracking. CVE monitoring. When your business faces an attack, our incident response team is one call away.
             </p>
-            <div className="flex gap-4">
+            <div className="flex gap-2 sm:gap-4">
               <Button className="bg-primary hover:bg-primary/90 text-white font-bold btn-press" data-testid="button-view-incidents" asChild>
                 <a href="/ransomware">SEE ACTIVE THREATS</a>
               </Button>
@@ -735,7 +735,7 @@ export default function Dashboard() {
               { href: "/ics-advisories", label: "ICS Advisories", icon: Factory, desc: "CISA ICS-CERT alerts" },
               { href: "/intel", label: "Intel & Feeds", icon: AlertTriangle, desc: "News & live threat data" },
             ].map((item, i) => (
-              <a key={item.href} href={item.href} className={`group anim-fade-up stagger-${Math.min(i + 1, 7)}`} data-testid={`card-quicklink-${item.href.slice(1)}`}>
+              <a key={item.href} href={item.href} className="group" data-testid={`card-quicklink-${item.href.slice(1)}`}>
                 <Card className="border-white/5 bg-card/50 hover:border-orange-500/30 hover:bg-orange-500/5 card-3d transition-all duration-300 h-full">
                   <CardContent className="p-4 flex flex-col items-center text-center gap-2">
                     <div className="p-2 rounded-lg bg-zinc-800/50 border border-white/5 group-hover:border-orange-500/20 group-hover:bg-orange-500/10 transition-all duration-300">
