@@ -253,13 +253,6 @@ export async function registerRoutes(
   </url>
 
   <url>
-    <loc>https://stbcybersecurity.com/monitors</loc>
-    <lastmod>${today}</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
-  </url>
-
-  <url>
     <loc>https://stbcybersecurity.com/support</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
@@ -379,6 +372,76 @@ export async function registerRoutes(
     <priority>0.6</priority>
   </url>
 
+  <url>
+    <loc>https://stbcybersecurity.com/ssl-checker</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/dns-analyzer</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/headers-scanner</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/web-fingerprint</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/exchange-checker</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/file-scanner</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/email-analyzer</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/encoding-tools</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/playbooks</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/service-status</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+
 ${groupEntries}
 </urlset>`;
       res.setHeader("Content-Type", "application/xml; charset=utf-8");
@@ -401,7 +464,6 @@ Allow: /ransomware
 Allow: /exploits
 Allow: /intel
 Allow: /search
-Allow: /monitors
 Allow: /support
 Allow: /privacy
 Allow: /terms
@@ -421,6 +483,16 @@ Allow: /knowledge-base
 Allow: /pricing
 Allow: /brand-kit
 Allow: /feedback
+Allow: /ssl-checker
+Allow: /dns-analyzer
+Allow: /headers-scanner
+Allow: /web-fingerprint
+Allow: /exchange-checker
+Allow: /file-scanner
+Allow: /email-analyzer
+Allow: /encoding-tools
+Allow: /playbooks
+Allow: /service-status
 
 Disallow: /account
 Disallow: /checkout
@@ -428,6 +500,7 @@ Disallow: /checkout/return
 
 Disallow: /api/
 Disallow: /admin/
+Disallow: /monitors
 Disallow: /messages
 Disallow: /style-preview
 

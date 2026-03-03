@@ -79,7 +79,12 @@ Preferred communication style: Simple, everyday language.
 - Stripe (subscriptions and donations).
 
 ### SEO
-- Server-Side Meta Injection, Dynamic Routes, `noindex` for transactional pages, Structured Data, `useDocumentTitle` hook, Dynamic XML sitemap, `robots.txt`.
+- Server-Side Meta Injection with per-page keywords (`server/seo.ts` PageMeta `keywords` field), Dynamic Routes, `noindex` for transactional/private pages only (account, checkout, messages, style-preview, monitors, remote-access tools). File Scanner and Email Analyzer are now indexed.
+- Hreflang tags for 10 languages (en, es, fr, de, pt, zh, ja, ko, ar, ru) plus x-default injected on every page via `injectMetaTags`.
+- Structured Data: 7 JSON-LD blocks (Organization, WebSite with SearchAction, ProfessionalService, FAQPage, ItemList with 30 navigation elements, WebApplication with 25 features and 5 pricing tiers, Dataset, BreadcrumbList).
+- Dynamic XML sitemap with 35+ static pages + dynamic threat actor group pages (~500). All public tool pages included (SSL Checker, DNS Analyzer, Headers Scanner, Web Fingerprinter, Exchange Checker, File Scanner, Email Analyzer, Encoding Tools, Playbooks, Service Status).
+- `robots.txt` explicitly allows all public pages, disallows private/transactional pages and /monitors.
+- `useDocumentTitle` hook for client-side title updates.
 
 ### Security & US Compliance
 - Security Headers (CSP, HSTS, etc.), bcrypt for authentication, strong password policies, account lockout, time-limited cryptographic session tokens, tiered rate limiting, consent flows, legal pages, SMS compliance.
