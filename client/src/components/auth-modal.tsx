@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,17 +17,25 @@ import { Loader2, User, Lock, Mail } from "lucide-react";
 interface AuthModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  defaultTab?: "login" | "signup";
+  onSuccess?: () => void;
 }
 
-export function AuthModal({ open, onOpenChange }: AuthModalProps) {
+export function AuthModal({ open, onOpenChange, defaultTab = "login", onSuccess }: AuthModalProps) {
   const { login, signup } = useAuth();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"login" | "signup">("login");
+  const [activeTab, setActiveTab] = useState<"login" | "signup">(defaultTab);
 
   const [loginForm, setLoginForm] = useState({ username: "", password: "" });
   const [signupForm, setSignupForm] = useState({ username: "", email: "", password: "", confirmPassword: "" });
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+
+  useEffect(() => {
+    if (open) {
+      setActiveTab(defaultTab);
+    }
+  }, [open, defaultTab]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +46,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
       toast({ title: "Welcome back!", description: "You have been logged in." });
       onOpenChange(false);
       setLoginForm({ username: "", password: "" });
+      onSuccess?.();
     } catch (error: any) {
       toast({ title: "Login failed", description: error.message, variant: "destructive" });
     } finally {
@@ -76,6 +85,7 @@ export function AuthModal({ open, onOpenChange }: AuthModalProps) {
       onOpenChange(false);
       setSignupForm({ username: "", email: "", password: "", confirmPassword: "" });
       setAgreedToTerms(false);
+      onSuccess?.();
     } catch (error: any) {
       toast({ title: "Signup failed", description: error.message, variant: "destructive" });
     } finally {

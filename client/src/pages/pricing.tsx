@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { useAuth } from "@/lib/auth";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import AnimatedSection from "@/components/animated-section";
+import { AuthModal } from "@/components/auth-modal";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -345,9 +346,40 @@ export default function PricingPage() {
     return 0;
   })();
 
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const pendingCheckoutRef = useRef<string | null>(null);
+
+  const openSignupForFree = useCallback(() => {
+    pendingCheckoutRef.current = null;
+    setShowAuthModal(true);
+  }, []);
+
+  const openSignupForPlan = useCallback((checkoutUrl: string) => {
+    pendingCheckoutRef.current = checkoutUrl;
+    setShowAuthModal(true);
+  }, []);
+
+  const handleAuthSuccess = useCallback(() => {
+    const pending = pendingCheckoutRef.current;
+    pendingCheckoutRef.current = null;
+    if (pending) {
+      navigate(pending);
+    }
+  }, [navigate]);
+
   const handleSelectPlan = (tier: typeof PAID_TIERS[0]) => {
     if (!isAuthenticated) {
-      navigate("/support");
+      const products = productsData?.products || [];
+      const product = products.find((p: any) => p.name?.includes(tier.stripeName));
+      if (product) {
+        const matchedPrice = product?.prices?.find((p: any) => p.recurring?.interval === billingInterval);
+        const price = matchedPrice || product?.prices?.[0];
+        if (price?.id) {
+          openSignupForPlan(`/checkout?type=subscription&priceId=${encodeURIComponent(price.id)}&tier=${encodeURIComponent(tier.stripeName!)}`);
+          return;
+        }
+      }
+      openSignupForFree();
       return;
     }
 
@@ -484,7 +516,10 @@ export default function PricingPage() {
                       variant={isCurrentPlan ? "outline" : tier.buttonVariant}
                       onClick={() => {
                         if (isCurrentPlan) return;
-                        if (tier.name === "Free") { navigate("/support"); return; }
+                        if (tier.name === "Free") {
+                          if (!isAuthenticated) { openSignupForFree(); } else { navigate("/account"); }
+                          return;
+                        }
                         handleSelectPlan(tier as typeof PAID_TIERS[0]);
                       }}
                       disabled={isCurrentPlan}
@@ -718,6 +753,12 @@ export default function PricingPage() {
 
       </div>
       <Footer />
+      <AuthModal
+        open={showAuthModal}
+        onOpenChange={setShowAuthModal}
+        defaultTab="signup"
+        onSuccess={handleAuthSuccess}
+      />
     </Layout>
   );
 }
