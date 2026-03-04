@@ -43,7 +43,8 @@ import {
   MessageSquareText,
   Palette,
   ChevronRight,
-  Calculator
+  Calculator,
+  Radio
 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -122,6 +123,7 @@ const navSections: NavSection[] = [
       { href: "/monitors", labelKey: "nav.monitors", icon: MonitorCheck, isPro: true },
       { href: "/attack-surface", labelKey: "nav.attackSurface", icon: Radar, isPro: true },
       { href: "/reports", labelKey: "nav.reports", icon: FileText, isPro: true },
+      { href: "/stb-sync", labelKey: "nav.stbSync", icon: Radio, isBusiness: true },
     ],
   },
   {

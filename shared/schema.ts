@@ -1323,3 +1323,32 @@ export const insertFeedbackSchema = createInsertSchema(feedbackSubmissions).omit
 
 export type FeedbackSubmission = typeof feedbackSubmissions.$inferSelect;
 export type InsertFeedback = z.infer<typeof insertFeedbackSchema>;
+
+// ===== STB-Sync: Dynamic Firewall Block Lists =====
+export const syncTokens = pgTable("sync_tokens", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: integer("user_id").notNull(),
+  token: varchar("token", { length: 64 }).notNull().unique(),
+  name: text("name").notNull(),
+  listType: text("list_type").notNull().default("ips"),
+  maxEntries: integer("max_entries").notNull().default(10000),
+  includeMetadata: boolean("include_metadata").default(false),
+  status: text("status").notNull().default("active"),
+  lastPolledAt: timestamp("last_polled_at"),
+  pollCount: integer("poll_count").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("sync_tokens_user_idx").on(table.userId),
+  index("sync_tokens_token_idx").on(table.token),
+  index("sync_tokens_status_idx").on(table.status),
+]);
+
+export const insertSyncTokenSchema = createInsertSchema(syncTokens).omit({
+  id: true,
+  lastPolledAt: true,
+  pollCount: true,
+  createdAt: true,
+});
+
+export type SyncToken = typeof syncTokens.$inferSelect;
+export type InsertSyncToken = z.infer<typeof insertSyncTokenSchema>;

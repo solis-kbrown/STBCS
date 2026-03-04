@@ -6479,6 +6479,198 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
+  // ===================== STB-SYNC: DYNAMIC FIREWALL BLOCK LISTS =====================
+
+  const syncEdlLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 30,
+    keyGenerator: (req: Request) => req.params.token || "unknown",
+    validate: { xForwardedForHeader: false, ip: false },
+    message: { error: "Rate limit exceeded. Firewalls should poll every 5-60 minutes." },
+  });
+
+  const syncListCache = new Map<string, { data: string; timestamp: number; count: number }>();
+  const SYNC_CACHE_TTL = 5 * 60 * 1000;
+
+  async function generateBlocklist(listType: string, maxEntries: number, includeMetadata: boolean): Promise<{ text: string; count: number }> {
+    const cacheKey = `${listType}-${maxEntries}-${includeMetadata}`;
+    const cached = syncListCache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < SYNC_CACHE_TTL) {
+      return { text: cached.data, count: cached.count };
+    }
+
+    const lines: string[] = [];
+    const now = new Date().toISOString();
+
+    lines.push("# STB-Sync Dynamic Block List");
+    lines.push(`# Generated: ${now}`);
+    lines.push("# https://stbcybersecurity.com");
+    lines.push(`# Type: ${listType}`);
+    lines.push("");
+
+    let entryCount = 0;
+
+    if (listType === "ips" || listType === "combined") {
+      const ipLimit = listType === "combined" ? Math.floor(maxEntries * 0.7) : maxEntries;
+      const ips = await storage.getTopMaliciousIps(ipLimit);
+      for (const ip of ips) {
+        if (includeMetadata && ip.threatType) {
+          lines.push(`# ${ip.threatType} | risk: ${ip.riskScore || "N/A"}`);
+        }
+        lines.push(ip.ipAddress);
+        entryCount++;
+      }
+    }
+
+    if (listType === "domains" || listType === "combined") {
+      if (listType === "combined" && entryCount > 0) {
+        lines.push("");
+        lines.push("# --- Malicious Domains ---");
+      }
+      const domainLimit = listType === "combined" ? maxEntries - entryCount : maxEntries;
+      const domains = await storage.getTopMaliciousDomains(domainLimit);
+      for (const d of domains) {
+        if (includeMetadata && d.threatType) {
+          lines.push(`# ${d.threatType}`);
+        }
+        lines.push(d.domain);
+        entryCount++;
+      }
+    }
+
+    lines.push("");
+    lines.push(`# Total entries: ${entryCount}`);
+
+    const text = lines.join("\n");
+    syncListCache.set(cacheKey, { data: text, timestamp: Date.now(), count: entryCount });
+    return { text, count: entryCount };
+  }
+
+  const createSyncTokenBodySchema = z.object({
+    name: z.string().min(1).max(64).transform(s => s.trim()),
+    listType: z.enum(["ips", "domains", "combined"]).default("ips"),
+    maxEntries: z.number().int().min(100).max(10000).default(10000),
+    includeMetadata: z.boolean().default(false),
+  });
+
+  app.post("/api/sync/tokens", requireAuth as any, requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const parsed = createSyncTokenBodySchema.safeParse(req.body);
+      if (!parsed.success) {
+        return res.status(400).json({ error: parsed.error.issues.map(i => i.message).join(", ") });
+      }
+      const { name, listType, maxEntries, includeMetadata } = parsed.data;
+
+      const existing = await storage.getSyncTokensByUser(parseInt(req.user!.id));
+      const activeTokens = existing.filter(t => t.status === "active");
+      if (activeTokens.length >= 10) {
+        return res.status(400).json({ error: "Maximum 10 active sync tokens per account" });
+      }
+
+      const token = crypto.randomBytes(32).toString("hex");
+      const syncToken = await storage.createSyncToken({
+        userId: parseInt(req.user!.id),
+        token,
+        name,
+        listType,
+        maxEntries,
+        includeMetadata,
+        status: "active",
+      });
+
+      res.json({
+        ...syncToken,
+        urls: {
+          ips: `/api/sync/${token}/ips.txt`,
+          domains: `/api/sync/${token}/domains.txt`,
+          combined: `/api/sync/${token}/combined.txt`,
+        },
+      });
+    } catch (error) {
+      console.error("[STB-Sync] Error creating token:", error);
+      res.status(500).json({ error: "Failed to create sync token" });
+    }
+  });
+
+  app.get("/api/sync/tokens", requireAuth as any, requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const tokens = await storage.getSyncTokensByUser(parseInt(req.user!.id));
+      res.json(tokens);
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch sync tokens" });
+    }
+  });
+
+  app.delete("/api/sync/tokens/:id", requireAuth as any, requireBusiness as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      await storage.revokeSyncToken(req.params.id, parseInt(req.user!.id));
+      res.json({ success: true });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to revoke sync token" });
+    }
+  });
+
+  app.get("/api/sync/stats", async (_req: AuthenticatedRequest, res: Response) => {
+    try {
+      const ipCount = await storage.getMaliciousIpCount();
+      const urlCount = await storage.getMaliciousUrlCount();
+      res.json({ totalIps: ipCount, totalDomains: urlCount });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch sync stats" });
+    }
+  });
+
+  app.get("/api/sync/:token/:listFile", syncEdlLimiter, async (req: Request, res: Response) => {
+    try {
+      const { token, listFile } = req.params;
+      const validFiles: Record<string, string> = { "ips.txt": "ips", "domains.txt": "domains", "combined.txt": "combined" };
+      const listType = validFiles[listFile];
+      if (!listType) {
+        return res.status(404).set("Content-Type", "text/plain").send("# Error: Invalid list type\n# Valid: ips.txt, domains.txt, combined.txt\n");
+      }
+
+      const syncToken = await storage.getSyncTokenByToken(token);
+      if (!syncToken || syncToken.status !== "active") {
+        return res.status(403).set("Content-Type", "text/plain").send("# Error: Invalid or revoked sync token\n# Contact support@stbcybersecurity.com\n");
+      }
+
+      const allowedTypes: Record<string, string[]> = {
+        ips: ["ips"],
+        domains: ["domains"],
+        combined: ["ips", "domains", "combined"],
+      };
+      const permitted = allowedTypes[syncToken.listType] || [syncToken.listType];
+      if (!permitted.includes(listType)) {
+        return res.status(403).set("Content-Type", "text/plain").send(`# Error: This token is configured for "${syncToken.listType}" lists only\n# Create a new token for "${listType}" lists\n`);
+      }
+
+      const user = await storage.getUser(String(syncToken.userId));
+      if (!user) {
+        return res.status(403).set("Content-Type", "text/plain").send("# Error: Account not found\n");
+      }
+      const businessTiers = ["business", "enterprise", "unlimited"];
+      if (!businessTiers.includes(user.tier)) {
+        return res.status(403).set("Content-Type", "text/plain").send("# Error: Business subscription required\n# Upgrade at https://stbcybersecurity.com/pricing\n");
+      }
+
+      const { text, count } = await generateBlocklist(listType, syncToken.maxEntries, syncToken.includeMetadata ?? false);
+
+      storage.updateSyncTokenPoll(syncToken.id).catch(() => {});
+
+      res.set({
+        "Content-Type": "text/plain; charset=utf-8",
+        "Cache-Control": "public, max-age=300",
+        "X-STBSync-Count": String(count),
+        "X-STBSync-Updated": new Date().toISOString(),
+        "X-STBSync-Token-Name": syncToken.name,
+      });
+      res.send(text);
+    } catch (error) {
+      console.error("[STB-Sync] Error serving blocklist:", error);
+      res.status(500).set("Content-Type", "text/plain").send("# Error: Internal server error\n# Try again later\n");
+    }
+  });
+
   // ===================== END NEW ROUTES =====================
 
   function generateRecommendations(stats: any, scanSummaries: any[]): string[] {

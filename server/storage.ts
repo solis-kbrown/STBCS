@@ -36,6 +36,7 @@ import {
   type KbVote, type KbBookmark,
   type KbReport, type InsertKbReport,
   type FeedbackSubmission, type InsertFeedback,
+  type SyncToken, type InsertSyncToken,
   KB_POINTS,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
@@ -44,7 +45,7 @@ import {
   apiKeys, apiKeyUsage, addOns, userAddOns, monitorAlertLog,
   uptimeMonitors, uptimeChecks, uptimeIncidents, darkWebMonitors, darkWebFindings,
   dailyThreatStats, attackSurfaceScans, attackSurfaceAssets, threatReports, reportSchedules,
-  kbPosts, kbComments, kbVotes, kbBookmarks, kbReports, feedbackSubmissions
+  kbPosts, kbComments, kbVotes, kbBookmarks, kbReports, feedbackSubmissions, syncTokens
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte, asc, count, ne, inArray } from "drizzle-orm";
@@ -373,6 +374,15 @@ export interface IStorage {
   getFeedbackSubmissions(options: { status?: string; category?: string; limit?: number; offset?: number }): Promise<FeedbackSubmission[]>;
   getFeedbackCount(options: { status?: string; category?: string }): Promise<number>;
   updateFeedbackStatus(id: number, status: string, adminNotes?: string): Promise<FeedbackSubmission>;
+
+  // STB-Sync
+  createSyncToken(token: InsertSyncToken): Promise<SyncToken>;
+  getSyncTokenByToken(token: string): Promise<SyncToken | undefined>;
+  getSyncTokensByUser(userId: number): Promise<SyncToken[]>;
+  revokeSyncToken(id: string, userId: number): Promise<void>;
+  updateSyncTokenPoll(id: string): Promise<void>;
+  getTopMaliciousIps(limit: number): Promise<{ ipAddress: string; threatType: string | null; riskScore: number | null }[]>;
+  getTopMaliciousDomains(limit: number): Promise<{ domain: string; threatType: string | null }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -2967,6 +2977,65 @@ export class DatabaseStorage implements IStorage {
     if (adminNotes !== undefined) updates.adminNotes = adminNotes;
     const [updated] = await db.update(feedbackSubmissions).set(updates).where(eq(feedbackSubmissions.id, id)).returning();
     return updated;
+  }
+
+  // STB-Sync
+  async createSyncToken(token: InsertSyncToken): Promise<SyncToken> {
+    const [result] = await db.insert(syncTokens).values(token).returning();
+    return result;
+  }
+
+  async getSyncTokenByToken(token: string): Promise<SyncToken | undefined> {
+    const [result] = await db.select().from(syncTokens).where(eq(syncTokens.token, token));
+    return result;
+  }
+
+  async getSyncTokensByUser(userId: number): Promise<SyncToken[]> {
+    return db.select().from(syncTokens)
+      .where(eq(syncTokens.userId, userId))
+      .orderBy(desc(syncTokens.createdAt));
+  }
+
+  async revokeSyncToken(id: string, userId: number): Promise<void> {
+    await db.update(syncTokens)
+      .set({ status: "revoked" })
+      .where(and(eq(syncTokens.id, id), eq(syncTokens.userId, userId)));
+  }
+
+  async updateSyncTokenPoll(id: string): Promise<void> {
+    await db.update(syncTokens)
+      .set({ lastPolledAt: new Date(), pollCount: sql`${syncTokens.pollCount} + 1` })
+      .where(eq(syncTokens.id, id));
+  }
+
+  async getTopMaliciousIps(limit: number): Promise<{ ipAddress: string; threatType: string | null; riskScore: number | null }[]> {
+    const results = await db.execute(sql`
+      SELECT DISTINCT ON (ip_address)
+        ip_address as "ipAddress",
+        threat_type as "threatType",
+        COALESCE(risk_score, abuse_confidence_score, 50) as "riskScore"
+      FROM malicious_ips
+      WHERE ip_address IS NOT NULL AND ip_address != ''
+      ORDER BY ip_address, COALESCE(risk_score, abuse_confidence_score, 50) DESC NULLS LAST, last_seen DESC NULLS LAST
+    `);
+    const deduped = (results.rows as any[])
+      .sort((a, b) => (b.riskScore || 0) - (a.riskScore || 0))
+      .slice(0, limit);
+    return deduped;
+  }
+
+  async getTopMaliciousDomains(limit: number): Promise<{ domain: string; threatType: string | null }[]> {
+    const results = await db.execute(sql`
+      SELECT DISTINCT ON (url)
+        url as "domain",
+        threat_type as "threatType"
+      FROM malicious_urls
+      WHERE url IS NOT NULL AND url != ''
+        AND url NOT LIKE 'http://%' AND url NOT LIKE 'https://%'
+      ORDER BY url, last_seen DESC NULLS LAST
+      LIMIT ${limit}
+    `);
+    return results.rows as any[];
   }
 }
 

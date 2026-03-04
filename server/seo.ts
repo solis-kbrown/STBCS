@@ -242,6 +242,11 @@ const PAGE_META: Record<string, PageMeta> = {
     description: 'Estimate the potential financial impact of a ransomware attack on your business. See ransom demands, downtime costs, and which groups target your industry.',
     keywords: 'ransomware cost calculator, ransomware impact estimator, ransomware risk assessment, cyber attack cost, ransomware financial impact, business risk calculator',
   },
+  '/stb-sync': {
+    title: 'STB-Sync Dynamic Firewall Block Lists | STB Cybersecurity',
+    description: 'Generate authenticated EDL URLs from 130+ threat intelligence feeds. Paste directly into Palo Alto, pfSense, Fortinet, and SonicWall firewalls for automatic IP and domain blocking.',
+    keywords: 'external dynamic list, EDL, firewall block list, threat intelligence feed, IP blocklist, domain blocklist, Palo Alto EDL, pfSense URL table, Fortinet threat feed, SonicWall dynamic list, automated threat blocking',
+  },
 };
 
 const MAX_TITLE_LENGTH = 60;

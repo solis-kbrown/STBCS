@@ -58,6 +58,7 @@ Preferred communication style: Simple, everyday language.
 - **Security & Compliance**: Robust security headers, secure cookies, API logging, rate limiting, consent flows, legal pages.
 - **Brand Kit**: Comprehensive brand asset hub at `/brand-kit` with customizable templates.
 - **Interactive Playbooks**: 5 incident response guides.
+- **STB-Sync Block Lists**: BIZ-tier feature generating authenticated EDL URLs for enterprise firewalls (Palo Alto, pfSense, Fortinet, SonicWall). Serves top 10K malicious IPs/domains as plain-text lists from 130+ threat feeds. Token-based URL auth (firewalls can't send headers), 5-min server cache, 30 req/hr rate limit per token. Schema: `sync_tokens` table. Routes: `POST/GET/DELETE /api/sync/tokens`, `GET /api/sync/:token/{ips|domains|combined}.txt`. Frontend: `/stb-sync` management page.
 - **Service Status Dashboard**: Monitors 37+ services across various categories using Statuspage.io APIs.
 - **Threat Feed Deduplication**: In-memory and database-level deduplication for threat feeds.
 
