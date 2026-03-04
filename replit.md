@@ -1,7 +1,7 @@
 # STB Cybersecurity (STBCS) - Frontline Threat Intelligence & Security Services
 
 ## Overview
-STB Cybersecurity provides professional cybersecurity services and real-time threat intelligence by aggregating data from over 105 free public threat intelligence feeds. The platform tracks ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news. STBCS offers Cybersecurity Consulting, Incident Response, Ransomware Recovery & Restoration, and Threat Hunting services, primarily for small to medium-sized businesses, aiming to be a comprehensive hub for cybersecurity insights and professional services.
+STB Cybersecurity provides professional cybersecurity services and real-time threat intelligence by aggregating data from over 130 free public threat intelligence feeds. The platform tracks ransomware incidents, CVEs/vulnerabilities, exploits, zero-days, malicious IPs/URLs, and security news. STBCS offers Cybersecurity Consulting, Incident Response, Ransomware Recovery & Restoration, and Threat Hunting services, primarily for small to medium-sized businesses, aiming to be a comprehensive hub for cybersecurity insights and professional services.
 
 ## User Preferences
 Preferred communication style: Simple, everyday language.
@@ -63,8 +63,15 @@ Preferred communication style: Simple, everyday language.
 
 ## External Dependencies
 
-### Data Sources (Free Public Feeds)
-- NVD API, CISA KEV, URLhaus, OpenPhish, Feodo Tracker, SANS DShield, Tor Exit Nodes, SSL Blacklist, Shodan InternetDB, Phishing Database, CriticalPath Security, C2IntelFeeds, ThreatFox, MalwareBazaar, AlienVault Reputation, StopForumSpam, Team Cymru Bogons, CESNET NERD, FireHOL, NormShield, NixSpam, Bruteforce Blocker, Cybercrime IPs, CERT.PL, Malware Filter, Inversion DNSBL, Hagezi TIF, Prigent Malware, AdGuard DNS, Red Flag Domains, Maltrail, TweetFeed, APT Notes, Targeted Threats, Sophos/ESET/Talos IOC repos, FIRST.org EPSS API.
+### Data Sources (130+ Free Public Feeds)
+- **Core Vulnerability**: NVD API, CISA KEV, CIRCL CVE, GitHub GHSA, FIRST.org EPSS API.
+- **Exploit & Zero-Day Intelligence**: Exploit-DB CSV, InTheWild.io, trickest/cve PoC, Nuclei Templates CVE, VulnCheck KEV, Metasploit Modules.
+- **IP Blocklists**: IPsum, Feodo Tracker, SANS DShield, Tor Exit Nodes, SSL Blacklist, Blocklist.de (all/apache/ssh/mail), CINS, GreenSnow, EmergingThreats, Spamhaus DROP/EDROP, FireHOL (L1/L2/Abusers), C2Tracker, CleanTalk, C2IntelFeeds, Dataplane (SSH/VNC/DNS/SIP), BinaryDefense, Turris Sentinel, AlienVault Reputation, StopForumSpam, Team Cymru Bogons, CESNET NERD, CriticalPath (Cobalt Strike/abuse.ch), NormShield, NixSpam, Bruteforce Blocker, Cybercrime IPs, CyberCure, Botvrij.eu, Rutgers SSH, DigitalSide Threat-Intel, SecRecon C2.
+- **URL/Domain Threat Feeds**: URLhaus (CSV), OpenPhish, PhishTank, C2IntelFeeds Domains, CERT.PL, Malware Filter (Phishing/URLhaus), Inversion DNSBL, Hagezi TIF, Prigent Malware, AdGuard DNS, Red Flag Domains, Maltrail (Suspicious/Malware), Disconnect Malvertising, Phishing Database (IPs/Domains/URLs), Stamparm Blackbook, Bambenek C2.
+- **Malware & C2 Infrastructure**: ThreatFox (API/CSV), MalwareBazaar (Recent/Tags), YARAify Recent, Malpedia Families, SSLBL Certs.
+- **Ransomware Intelligence**: ransomware.live, RansomLook.io, RansomWatch (standard/extended), Ransomwhere, CISA #StopRansomware, DarkFeed.io, Ransomware IOC Repos, Feodo Ransomware Loaders.
+- **Threat Actor & APT**: MITRE ATT&CK Groups, MISP Threat Actor Galaxy, TweetFeed, APT Notes, Targeted Threats, Sophos/ESET/Talos IOC repos.
+- **News & Research RSS**: Google Project Zero, Google Security Blog, MSRC, NCSC UK, CERT-EU, Packet Storm, Sophos News, Schneier on Security, WeLiveSecurity, Cisco Talos Blog, SentinelOne, Microsoft Security, US-CERT, Check Point Research, Mandiant, Recorded Future, Unit 42, Google Cloud Threat Intel, Microsoft Threat Intel, CrowdStrike Blog.
 - API Key-based integrations: AlienVault OTX, VirusTotal, Hybrid Analysis, GreyNoise, CrowdSec, Shodan, Pulsedive, HoneyDB, AbuseIPDB.
 
 ### Database

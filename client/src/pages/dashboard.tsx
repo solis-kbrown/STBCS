@@ -308,7 +308,7 @@ function SecurityPostureWidget() {
 }
 
 export default function Dashboard() {
-  useDocumentTitle("STB Cybersecurity | Real-Time Threat Intelligence for SMBs", "Track ransomware, CVEs, and malicious IPs across 105+ live feeds. Get 24/7 incident response, ransomware recovery, and threat hunting for your business.");
+  useDocumentTitle("STB Cybersecurity | Real-Time Threat Intelligence for SMBs", "Track ransomware, CVEs, and malicious IPs across 130+ live feeds. Get 24/7 incident response, ransomware recovery, and threat hunting for your business.");
   const { data: stats, isLoading: statsLoading } = useStats();
   const { data: cvesData, isLoading: cvesLoading } = useCves(5);
   const { data: ransomwareData, isLoading: ransomwareLoading } = useRansomware(5);
@@ -926,7 +926,7 @@ export default function Dashboard() {
                   <div className="space-y-3">
                     {[
                       { icon: Clock, text: "15-minute refresh cycles across all 130+ threat feeds", highlight: "15 min" },
-                      { icon: Shield, text: "Automated IOC correlation across multiple intelligence sources", highlight: "105+" },
+                      { icon: Shield, text: "Automated IOC correlation across multiple intelligence sources", highlight: "130+" },
                       { icon: AlertTriangle, text: "Real-time alerts for critical vulnerabilities affecting your stack", highlight: "Real-time" },
                       { icon: Globe, text: "Dark web monitoring for leaked credentials and data exposure", highlight: "24/7" },
                     ].map((item, i) => (
