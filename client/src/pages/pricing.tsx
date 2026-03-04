@@ -28,9 +28,9 @@ const FREE_FEATURES = {
   yearlyOriginal: null,
   discount: null,
   color: "from-zinc-800/50 to-zinc-900/50",
-  borderColor: "border-zinc-700",
+  borderColor: "border-zinc-500",
   accentColor: "text-zinc-400",
-  buttonClass: "border-zinc-600 text-zinc-300 hover:bg-zinc-800",
+  buttonClass: "border-zinc-500 text-zinc-300 hover:bg-zinc-800",
   buttonVariant: "outline" as const,
   cta: "Get Started Free",
   stripeName: null,
@@ -47,9 +47,9 @@ const PAID_TIERS = [
     yearlyOriginal: "$149.90",
     discount: "50% OFF",
     color: "from-zinc-800/50 to-zinc-900/50",
-    borderColor: "border-zinc-700",
+    borderColor: "border-zinc-500",
     accentColor: "text-blue-400",
-    buttonClass: "border-zinc-600 text-zinc-300 hover:bg-zinc-800",
+    buttonClass: "border-zinc-500 text-zinc-300 hover:bg-zinc-800",
     buttonVariant: "outline" as const,
     cta: "Start Supporter Plan",
     stripeName: "Supporter",
@@ -688,7 +688,7 @@ export default function PricingPage() {
               {FAQ_ITEMS.map((item, i) => (
                 <Card
                   key={i}
-                  className={`bg-zinc-900/50 border-zinc-800 cursor-pointer transition-colors hover:border-zinc-700 ${expandedFaq === i ? 'border-orange-500/30' : ''}`}
+                  className={`bg-zinc-900/50 border-zinc-800 cursor-pointer transition-colors hover:border-zinc-500 ${expandedFaq === i ? 'border-orange-500/30' : ''}`}
                   onClick={() => setExpandedFaq(expandedFaq === i ? null : i)}
                   data-testid={`faq-item-${i}`}
                 >
@@ -737,7 +737,7 @@ export default function PricingPage() {
                   Contact Sales
                 </a>
               </Button>
-              <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800" asChild>
+              <Button variant="outline" className="border-zinc-500 text-zinc-300 hover:bg-zinc-800" asChild>
                 <a href="/support" data-testid="link-support-page">
                   Donate & Support
                 </a>

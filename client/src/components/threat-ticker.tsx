@@ -96,6 +96,7 @@ export default function ThreatTicker() {
           className="h-6 w-6 text-zinc-500 hover:text-white"
           onClick={() => setCollapsed(false)}
           data-testid="button-expand-ticker"
+          aria-label="Expand threat ticker"
         >
           <ChevronDown className="h-3.5 w-3.5" />
         </Button>
@@ -148,6 +149,7 @@ export default function ThreatTicker() {
             className="h-7 w-7 text-zinc-500 hover:text-white"
             onClick={() => setCollapsed(true)}
             data-testid="button-collapse-ticker"
+            aria-label="Collapse threat ticker"
           >
             <ChevronUp className="h-3.5 w-3.5" />
           </Button>

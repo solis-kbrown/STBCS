@@ -327,7 +327,7 @@ export default function AlertsTab() {
                     value={newWatchItem.type} 
                     onValueChange={(v) => setNewWatchItem(prev => ({ ...prev, type: v }))}
                   >
-                    <SelectTrigger className="w-full sm:w-48 bg-background/50 border-white/10" data-testid="select-watchlist-type">
+                    <SelectTrigger className="w-full sm:w-48 bg-background/50 border-zinc-500" data-testid="select-watchlist-type">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -345,7 +345,7 @@ export default function AlertsTab() {
                     placeholder={`Enter ${WATCHLIST_TYPES.find(t => t.value === newWatchItem.type)?.label.toLowerCase() || 'value'} to watch…`}
                     value={newWatchItem.value}
                     onChange={(e) => setNewWatchItem(prev => ({ ...prev, value: e.target.value }))}
-                    className="flex-1 bg-background/50 border-white/10"
+                    className="flex-1 bg-background/50 border-zinc-500"
                     name="watchlist-value"
                     autoComplete="off"
                     data-testid="input-watchlist-value"
@@ -488,7 +488,7 @@ export default function AlertsTab() {
                   placeholder="Search breaches by name, domain, or description…"
                   value={breachSearch}
                   onChange={(e) => setBreachSearch(e.target.value)}
-                  className="pl-10 bg-background/50 border-white/10"
+                  className="pl-10 bg-background/50 border-zinc-500"
                   name="breach-search"
                   autoComplete="off"
                   aria-label="Search breaches"
@@ -597,7 +597,7 @@ export default function AlertsTab() {
       </div>
       {smsConsentDialog && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" data-testid="dialog-sms-consent">
-          <Card className="max-w-md w-full mx-4 border-zinc-700 bg-zinc-900">
+          <Card className="max-w-md w-full mx-4 border-zinc-500 bg-zinc-900">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-white">
                 <MessageSquare className="h-5 w-5 text-purple-400" />
@@ -619,7 +619,7 @@ export default function AlertsTab() {
                   id="sms-consent-checkbox"
                   checked={smsConsentChecked}
                   onChange={(e) => setSmsConsentChecked(e.target.checked)}
-                  className="mt-0.5 h-4 w-4 rounded border-zinc-600 bg-zinc-800 accent-orange-500"
+                  className="mt-0.5 h-4 w-4 rounded border-zinc-500 bg-zinc-800 accent-orange-500"
                   data-testid="checkbox-sms-consent"
                 />
                 <label htmlFor="sms-consent-checkbox" className="text-xs text-zinc-400 leading-relaxed">
@@ -633,7 +633,7 @@ export default function AlertsTab() {
               <div className="flex gap-3 pt-2">
                 <Button
                   variant="outline"
-                  className="flex-1 border-zinc-700"
+                  className="flex-1 border-zinc-500"
                   onClick={() => { setSmsConsentDialog(null); setSmsConsentChecked(false); }}
                   data-testid="button-sms-consent-cancel"
                 >

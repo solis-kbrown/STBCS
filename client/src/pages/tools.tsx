@@ -127,7 +127,7 @@ function IpLookupTool() {
             value={ip}
             onChange={(e) => { setIp(e.target.value); reset(); }}
             onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
-            className="bg-background border-white/10"
+            className="bg-background border-zinc-500"
             data-testid="input-ip-lookup"
           />
           <Button onClick={handleLookup} disabled={isPending || !ip.trim()} data-testid="button-ip-lookup">
@@ -223,7 +223,7 @@ function DomainLookupTool() {
             value={domain}
             onChange={(e) => { setDomain(e.target.value); reset(); }}
             onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
-            className="bg-background border-white/10"
+            className="bg-background border-zinc-500"
             data-testid="input-domain-lookup"
           />
           <Button onClick={handleLookup} disabled={isPending || !domain.trim()} data-testid="button-domain-lookup">
@@ -320,7 +320,7 @@ function PortScanTool() {
             value={target}
             onChange={(e) => { setTarget(e.target.value); reset(); }}
             onKeyDown={(e) => e.key === 'Enter' && handleScan()}
-            className="bg-background border-white/10 flex-1"
+            className="bg-background border-zinc-500 flex-1"
             data-testid="input-port-scan"
           />
           <Button onClick={handleScan} disabled={isPending || !target.trim()} data-testid="button-port-scan">
@@ -450,7 +450,7 @@ function NmapScanTool() {
                 value={target}
                 onChange={(e) => { setTarget(e.target.value); reset(); }}
                 onKeyDown={(e) => e.key === 'Enter' && handleScan()}
-                className="bg-background/50 border-white/10"
+                className="bg-background/50 border-zinc-500"
                 data-testid="input-nmap-target"
               />
               <Button 
@@ -465,7 +465,7 @@ function NmapScanTool() {
 
             <div className="flex flex-wrap gap-2 items-center">
               <Select value={scanType} onValueChange={(v) => setScanType(v as any)}>
-                <SelectTrigger className="w-40 bg-background/50 border-white/10">
+                <SelectTrigger className="w-40 bg-background/50 border-zinc-500">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -494,7 +494,7 @@ function NmapScanTool() {
                 placeholder="Custom ports: 22,80,443 or 1-1000 or 22,80,100-200"
                 value={customPorts}
                 onChange={(e) => setCustomPorts(e.target.value)}
-                className="bg-background/50 border-white/10 text-sm"
+                className="bg-background/50 border-zinc-500 text-sm"
                 data-testid="input-custom-ports"
               />
             )}
@@ -592,7 +592,7 @@ function ThreatCheckTool() {
             value={ip}
             onChange={(e) => { setIp(e.target.value); reset(); }}
             onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
-            className="bg-background border-white/10"
+            className="bg-background border-zinc-500"
             data-testid="input-threat-check"
           />
           <Button onClick={handleCheck} disabled={isPending || !ip.trim()} data-testid="button-threat-check">
@@ -674,7 +674,7 @@ function ShodanLookupTool() {
             value={ip}
             onChange={(e) => { setIp(e.target.value); reset(); }}
             onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
-            className="bg-background border-white/10"
+            className="bg-background border-zinc-500"
             data-testid="input-shodan-lookup"
           />
           <Button onClick={handleLookup} disabled={isPending || !ip.trim()} data-testid="button-shodan-lookup">
@@ -1029,7 +1029,7 @@ function NewsletterSubscribeTool() {
             placeholder="Your name (optional)"
             value={name}
             onChange={(e) => { setName(e.target.value); reset(); }}
-            className="bg-background border-white/10"
+            className="bg-background border-zinc-500"
             data-testid="input-newsletter-name"
           />
           <Input
@@ -1038,7 +1038,7 @@ function NewsletterSubscribeTool() {
             value={email}
             onChange={(e) => { setEmail(e.target.value); reset(); }}
             onKeyDown={(e) => e.key === 'Enter' && handleSubscribe()}
-            className="bg-background border-white/10"
+            className="bg-background border-zinc-500"
             data-testid="input-newsletter-email"
           />
         </div>
@@ -1096,7 +1096,7 @@ function ThreatFoxTool() {
       <div className="space-y-4">
         <div className="flex gap-2">
           <Select value={iocType} onValueChange={(v) => setIocType(v as any)}>
-            <SelectTrigger className="w-24 bg-background border-white/10">
+            <SelectTrigger className="w-24 bg-background border-zinc-500">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -1111,7 +1111,7 @@ function ThreatFoxTool() {
             value={ioc}
             onChange={(e) => { setIoc(e.target.value); reset(); }}
             onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
-            className="bg-background border-white/10 flex-1"
+            className="bg-background border-zinc-500 flex-1"
             data-testid="input-threatfox-ioc"
           />
           <Button onClick={handleLookup} disabled={isPending || !ioc.trim()} data-testid="button-threatfox-lookup">
@@ -1192,7 +1192,7 @@ function MalwareBazaarTool() {
             value={hash}
             onChange={(e) => { setHash(e.target.value); reset(); }}
             onKeyDown={(e) => e.key === 'Enter' && handleLookup()}
-            className="bg-background border-white/10 font-mono text-sm"
+            className="bg-background border-zinc-500 font-mono text-sm"
             data-testid="input-malwarebazaar-hash"
           />
           <Button onClick={handleLookup} disabled={isPending || !/^[a-fA-F0-9]{32,64}$/.test(hash.trim())} data-testid="button-malwarebazaar-lookup">
@@ -1287,7 +1287,7 @@ function SSLLabsTool() {
             value={host}
             onChange={(e) => { setHost(e.target.value); reset(); }}
             onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
-            className="bg-background border-white/10"
+            className="bg-background border-zinc-500"
             data-testid="input-ssllabs-host"
           />
           <Button onClick={handleCheck} disabled={isPending || !host.trim()} data-testid="button-ssllabs-check">
@@ -1367,7 +1367,7 @@ function URLScanTool() {
             value={query}
             onChange={(e) => { setQuery(e.target.value); reset(); }}
             onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            className="bg-background border-white/10"
+            className="bg-background border-zinc-500"
             data-testid="input-urlscan-query"
           />
           <Button onClick={handleSearch} disabled={isPending || !query.trim()} data-testid="button-urlscan-search">
@@ -1456,7 +1456,7 @@ function PhishTankTool() {
             value={url}
             onChange={(e) => { setUrl(e.target.value); reset(); }}
             onKeyDown={(e) => e.key === 'Enter' && handleCheck()}
-            className="bg-background border-white/10"
+            className="bg-background border-zinc-500"
             data-testid="input-phishtank-url"
           />
           <Button onClick={handleCheck} disabled={isPending || !url.includes('://')} data-testid="button-phishtank-check">
@@ -1565,7 +1565,7 @@ function CVEPriorityTool() {
             value={cveInput}
             onChange={(e) => setCveInput(e.target.value)}
             placeholder="CVE-2024-1234, CVE-2024-5678&#10;CVE-2023-9999"
-            className="w-full h-24 px-3 py-2 bg-background border border-white/10 rounded-md text-sm text-white placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/50"
+            className="w-full h-24 px-3 py-2 bg-background border border-zinc-500 rounded-md text-sm text-white placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/50"
             data-testid="input-cve-priority"
           />
         </div>
@@ -1662,7 +1662,7 @@ function IPReputationAggregator() {
             value={ipInput}
             onChange={(e) => setIpInput(e.target.value)}
             placeholder="Enter IP address (e.g., 8.8.8.8)"
-            className="bg-background border-white/10"
+            className="bg-background border-zinc-500"
             data-testid="input-ip-reputation"
           />
           <Button 
@@ -1790,7 +1790,7 @@ function EmailHeaderAnalyzerTool() {
           value={headers}
           onChange={(e) => { setHeaders(e.target.value); reset(); }}
           placeholder={"Paste raw email headers here...\n\nReceived: from mail.example.com (10.0.0.1)\n  by mx.recipient.com; Mon, 1 Jan 2024 12:00:00 +0000\nFrom: sender@example.com\nTo: recipient@example.com\nSubject: Test Email"}
-          className="w-full h-40 px-3 py-2 bg-background border border-white/10 rounded-md text-sm text-white font-mono placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/50 resize-y"
+          className="w-full h-40 px-3 py-2 bg-background border border-zinc-500 rounded-md text-sm text-white font-mono placeholder:text-muted-foreground focus:ring-2 focus:ring-primary/50 resize-y"
           data-testid="input-email-headers"
         />
         <Button
@@ -1977,7 +1977,7 @@ export default function ToolsPage() {
         </Card>
 
         <Tabs defaultValue="all" className="space-y-4">
-          <TabsList className="bg-background border border-white/10" data-testid="tabs-tools">
+          <TabsList className="bg-background border border-zinc-500" data-testid="tabs-tools">
             <TabsTrigger value="all" className="data-[state=active]:bg-primary/20">All Tools</TabsTrigger>
             <TabsTrigger value="network" className="data-[state=active]:bg-primary/20">Network</TabsTrigger>
             <TabsTrigger value="email" className="data-[state=active]:bg-primary/20">Email Security</TabsTrigger>

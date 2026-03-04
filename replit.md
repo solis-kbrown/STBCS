@@ -92,5 +92,10 @@ Preferred communication style: Simple, everyday language.
 ### SEO
 - Server-Side Meta Injection, Dynamic Routes, Hreflang tags for 10 languages, Structured Data (7 JSON-LD blocks), Dynamic XML sitemap, `robots.txt` configuration.
 
+### Accessibility (WCAG 2.1)
+- **Non-text Contrast (SC 1.4.11)**: All interactive element borders meet 3:1+ contrast ratio. CSS custom properties `--border`, `--input`, `--sidebar-border` set to `220 10% 42%`. Hardcoded Tailwind borders on interactive elements use `border-zinc-500` (minimum). Slider thumb uses `border-2 border-primary`.
+- **Button Accessible Names**: All icon-only buttons have `aria-label` attributes across the platform (25+ buttons in 15+ files).
+- **Focus Indicators**: `--ring` uses full-opacity primary red for 3:1+ focus ring contrast.
+
 ### Security & US Compliance
 - Security Headers (CSP, HSTS, etc.), bcrypt for authentication, strong password policies, account lockout, time-limited cryptographic session tokens, tiered rate limiting, consent flows, legal pages, SMS compliance.

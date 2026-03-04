@@ -244,7 +244,7 @@ export default function IOCSearch() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="pl-11 h-12 text-lg bg-background/50 border-white/10"
+                  className="pl-11 h-12 text-lg bg-background/50 border-zinc-500"
                   data-testid="input-ioc-search"
                 />
               </div>
@@ -302,6 +302,7 @@ export default function IOCSearch() {
                           size="icon"
                           className="h-6 w-6"
                           onClick={() => copyToClipboard(searchMutation.data!.query, "query")}
+                          aria-label="Copy query"
                         >
                           <Copy className="h-3 w-3" />
                         </Button>
@@ -376,7 +377,7 @@ export default function IOCSearch() {
                       </div>
                       {result.url && (
                         <a href={result.url} target="_blank" rel="noopener noreferrer">
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-orange-400">
+                          <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-orange-400" aria-label="Open in new tab">
                             <ExternalLink className="h-3.5 w-3.5" />
                           </Button>
                         </a>

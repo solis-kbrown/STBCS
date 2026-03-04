@@ -169,7 +169,7 @@ function ConnectionModal({
               data-testid="select-rdp-security"
               value={config.security}
               onChange={(e) => setConfig({ ...config, security: e.target.value })}
-              className="w-full h-9 rounded-md border border-zinc-700 bg-zinc-900 px-3 text-sm text-white"
+              className="w-full h-9 rounded-md border border-zinc-500 bg-zinc-900 px-3 text-sm text-white"
             >
               <option value="nla">NLA</option>
               <option value="tls">TLS</option>
@@ -370,7 +370,7 @@ function RDPViewer({
         <p className="text-sm text-zinc-400 text-center max-w-md">
           {errorMessage || "Unable to establish an RDP connection. Verify the target is reachable, credentials are correct, and RDP is enabled on the remote host."}
         </p>
-        <Button onClick={onDisconnect} variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800" data-testid="button-rdp-retry">
+        <Button onClick={onDisconnect} variant="outline" className="border-zinc-500 text-zinc-300 hover:bg-zinc-800" data-testid="button-rdp-retry">
           <RefreshCw className="h-4 w-4 mr-2" /> Try Again
         </Button>
       </div>
@@ -847,7 +847,7 @@ export default function RemoteDesktop() {
             <Button
               variant="outline"
               onClick={handleAddTab}
-              className="border-zinc-700 text-zinc-400 hover:text-orange-400 hover:border-orange-500/50"
+              className="border-zinc-500 text-zinc-400 hover:text-orange-400 hover:border-orange-500/50"
               data-testid="button-rdp-add-session"
             >
               <Plus className="h-4 w-4 mr-2" /> Add Another Session

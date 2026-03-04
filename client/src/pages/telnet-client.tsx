@@ -347,7 +347,7 @@ function TelnetTerminalViewer({
         <p className="text-sm text-zinc-400 text-center max-w-md">
           {errorMessage || "Unable to establish a connection. Verify the target is reachable and the port is open."}
         </p>
-        <Button onClick={onDisconnect} variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800" data-testid="button-telnet-retry">
+        <Button onClick={onDisconnect} variant="outline" className="border-zinc-500 text-zinc-300 hover:bg-zinc-800" data-testid="button-telnet-retry">
           <RefreshCw className="h-4 w-4 mr-2" /> Try Again
         </Button>
       </div>

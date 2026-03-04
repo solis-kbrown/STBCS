@@ -206,7 +206,7 @@ export default function StylePreviewPage() {
                 <Card 
                   key={style.id} 
                   className={`bg-zinc-900/80 border-zinc-800 transition-all duration-300 cursor-pointer ${
-                    selectedStyle === style.id ? 'ring-2 ring-primary shadow-lg shadow-primary/20' : 'hover:border-zinc-700'
+                    selectedStyle === style.id ? 'ring-2 ring-primary shadow-lg shadow-primary/20' : 'hover:border-zinc-500'
                   }`}
                   onClick={() => setSelectedStyle(style.id === selectedStyle ? null : style.id)}
                 >

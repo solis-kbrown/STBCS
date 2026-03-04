@@ -168,18 +168,18 @@ function AddUptimeMonitorForm({ onClose }: { onClose: () => void }) {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <Label>Name</Label>
-              <Input placeholder="My Website" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="bg-zinc-800 border-zinc-700" data-testid="input-monitor-name" />
+              <Input placeholder="My Website" value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} className="bg-zinc-800 border-zinc-500" data-testid="input-monitor-name" />
             </div>
             <div>
               <Label>URL / Domain</Label>
-              <Input placeholder="example.com or https://api.example.com/health" value={form.url} onChange={e => setForm(f => ({ ...f, url: e.target.value }))} className="bg-zinc-800 border-zinc-700" data-testid="input-monitor-url" />
+              <Input placeholder="example.com or https://api.example.com/health" value={form.url} onChange={e => setForm(f => ({ ...f, url: e.target.value }))} className="bg-zinc-800 border-zinc-500" data-testid="input-monitor-url" />
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div>
               <Label>Protocol</Label>
               <Select value={form.protocol} onValueChange={v => setForm(f => ({ ...f, protocol: v }))}>
-                <SelectTrigger className="bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="bg-zinc-800 border-zinc-500"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="https">HTTPS</SelectItem>
                   <SelectItem value="http">HTTP</SelectItem>
@@ -190,7 +190,7 @@ function AddUptimeMonitorForm({ onClose }: { onClose: () => void }) {
             <div>
               <Label>Check Interval</Label>
               <Select value={String(form.checkInterval)} onValueChange={v => setForm(f => ({ ...f, checkInterval: parseInt(v) }))}>
-                <SelectTrigger className="bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="bg-zinc-800 border-zinc-500"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   <SelectItem value="60">1 minute</SelectItem>
                   <SelectItem value="300">5 minutes</SelectItem>
@@ -202,11 +202,11 @@ function AddUptimeMonitorForm({ onClose }: { onClose: () => void }) {
             </div>
             <div>
               <Label>Timeout (sec)</Label>
-              <Input type="number" value={form.timeout} onChange={e => setForm(f => ({ ...f, timeout: parseInt(e.target.value) || 30 }))} className="bg-zinc-800 border-zinc-700" />
+              <Input type="number" value={form.timeout} onChange={e => setForm(f => ({ ...f, timeout: parseInt(e.target.value) || 30 }))} className="bg-zinc-800 border-zinc-500" />
             </div>
             <div>
               <Label>Expected Status</Label>
-              <Input type="number" value={form.expectedStatusCode} onChange={e => setForm(f => ({ ...f, expectedStatusCode: parseInt(e.target.value) || 200 }))} className="bg-zinc-800 border-zinc-700" />
+              <Input type="number" value={form.expectedStatusCode} onChange={e => setForm(f => ({ ...f, expectedStatusCode: parseInt(e.target.value) || 200 }))} className="bg-zinc-800 border-zinc-500" />
             </div>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -602,7 +602,7 @@ function AddDarkWebForm({ onClose }: { onClose: () => void }) {
             <div>
               <Label>Target Type</Label>
               <Select value={form.targetType} onValueChange={v => setForm(f => ({ ...f, targetType: v, targetValue: "" }))}>
-                <SelectTrigger className="bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
+                <SelectTrigger className="bg-zinc-800 border-zinc-500"><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {targetTypeOptions.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}
                 </SelectContent>
@@ -610,11 +610,11 @@ function AddDarkWebForm({ onClose }: { onClose: () => void }) {
             </div>
             <div>
               <Label>Target Value</Label>
-              <Input placeholder={selected?.placeholder} value={form.targetValue} onChange={e => setForm(f => ({ ...f, targetValue: e.target.value }))} className="bg-zinc-800 border-zinc-700" data-testid="input-darkweb-target" />
+              <Input placeholder={selected?.placeholder} value={form.targetValue} onChange={e => setForm(f => ({ ...f, targetValue: e.target.value }))} className="bg-zinc-800 border-zinc-500" data-testid="input-darkweb-target" />
             </div>
             <div>
               <Label>Label (optional)</Label>
-              <Input placeholder="Main website" value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} className="bg-zinc-800 border-zinc-700" />
+              <Input placeholder="Main website" value={form.label} onChange={e => setForm(f => ({ ...f, label: e.target.value }))} className="bg-zinc-800 border-zinc-500" />
             </div>
           </div>
           {selected && <p className="text-xs text-zinc-500">{selected.desc}</p>}
@@ -803,7 +803,7 @@ function IncidentsTab() {
         {allIncidents.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
             <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[130px] h-8 text-xs bg-zinc-800 border-zinc-700" data-testid="select-incident-type"><SelectValue placeholder="Type" /></SelectTrigger>
+              <SelectTrigger className="w-[130px] h-8 text-xs bg-zinc-800 border-zinc-500" data-testid="select-incident-type"><SelectValue placeholder="Type" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="down">Downtime</SelectItem>
@@ -812,7 +812,7 @@ function IncidentsTab() {
               </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[130px] h-8 text-xs bg-zinc-800 border-zinc-700" data-testid="select-incident-status"><SelectValue placeholder="Status" /></SelectTrigger>
+              <SelectTrigger className="w-[130px] h-8 text-xs bg-zinc-800 border-zinc-500" data-testid="select-incident-status"><SelectValue placeholder="Status" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
                 <SelectItem value="ongoing">Ongoing</SelectItem>
@@ -883,7 +883,7 @@ function IncidentsTab() {
                   <div className="flex items-center gap-2">
                     <span className="text-white font-medium">{inc.title}</span>
                     <Badge className={inc.status === "ongoing" ? "bg-red-500/20 text-red-400" : "bg-green-500/20 text-green-400"}>{inc.status}</Badge>
-                    <Badge variant="outline" className="text-[9px] border-zinc-700 text-zinc-400">{inc.type === "ssl_expiry" ? "SSL" : inc.type || "Downtime"}</Badge>
+                    <Badge variant="outline" className="text-[9px] border-zinc-500 text-zinc-400">{inc.type === "ssl_expiry" ? "SSL" : inc.type || "Downtime"}</Badge>
                   </div>
                   {inc.description && <div className="text-xs text-zinc-500 mt-1">{inc.description}</div>}
                 </div>
@@ -1033,7 +1033,7 @@ function MonitorsContent() {
     <div className="space-y-6">
       <OverviewPanel />
       <Tabs defaultValue="uptime" className="w-full">
-        <TabsList className="bg-zinc-900 border border-white/10 w-full md:w-auto">
+        <TabsList className="bg-zinc-900 border border-zinc-500 w-full md:w-auto">
           <TabsTrigger value="uptime" className="flex items-center gap-2 data-[state=active]:bg-primary/20 data-[state=active]:text-primary" data-testid="tab-uptime">
             <MonitorCheck className="h-4 w-4" /> Uptime
           </TabsTrigger>
@@ -1110,7 +1110,7 @@ export default function MonitorsPage() {
         </div>
 
         <Tabs value={activeTopTab} onValueChange={handleTopTabChange} className="w-full">
-          <TabsList className="bg-zinc-900/50 border border-white/10">
+          <TabsList className="bg-zinc-900/50 border border-zinc-500">
             <TabsTrigger value="monitors" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400" data-testid="tab-top-monitors">
               <MonitorCheck className="h-4 w-4 mr-2" /> Monitors
             </TabsTrigger>

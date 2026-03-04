@@ -334,7 +334,7 @@ export default function Alerts() {
                     value={newWatchItem.type} 
                     onValueChange={(v) => setNewWatchItem(prev => ({ ...prev, type: v }))}
                   >
-                    <SelectTrigger className="w-full sm:w-48 bg-background/50 border-white/10" data-testid="select-watchlist-type">
+                    <SelectTrigger className="w-full sm:w-48 bg-background/50 border-zinc-500" data-testid="select-watchlist-type">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -352,7 +352,7 @@ export default function Alerts() {
                     placeholder={`Enter ${WATCHLIST_TYPES.find(t => t.value === newWatchItem.type)?.label.toLowerCase() || 'value'} to watch\u2026`}
                     value={newWatchItem.value}
                     onChange={(e) => setNewWatchItem(prev => ({ ...prev, value: e.target.value }))}
-                    className="flex-1 bg-background/50 border-white/10"
+                    className="flex-1 bg-background/50 border-zinc-500"
                     name="watchlist-value"
                     autoComplete="off"
                     data-testid="input-watchlist-value"
@@ -495,7 +495,7 @@ export default function Alerts() {
                   placeholder="Search breaches by name, domain, or description\u2026"
                   value={breachSearch}
                   onChange={(e) => setBreachSearch(e.target.value)}
-                  className="pl-10 bg-background/50 border-white/10"
+                  className="pl-10 bg-background/50 border-zinc-500"
                   name="breach-search"
                   autoComplete="off"
                   aria-label="Search breaches"

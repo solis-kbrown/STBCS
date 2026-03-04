@@ -120,7 +120,7 @@ export default function SearchPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="bg-zinc-900/50 border border-white/10" data-testid="tabs-page-mode">
+          <TabsList className="bg-zinc-900/50 border border-zinc-500" data-testid="tabs-page-mode">
             <TabsTrigger value="search" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400" data-testid="tab-global-search">
               Global Search
             </TabsTrigger>
@@ -139,7 +139,7 @@ export default function SearchPage() {
                 <Input
                   type="text"
                   placeholder="Search CVEs, IPs, URLs, ransomware groups, vendors..."
-                  className="pl-10 h-12 text-lg bg-background border-white/10"
+                  className="pl-10 h-12 text-lg bg-background border-zinc-500"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   data-testid="input-global-search"
@@ -172,7 +172,7 @@ export default function SearchPage() {
                   <div className="space-y-2">
                     <label className="text-sm text-muted-foreground">Severity</label>
                     <Select value={severityFilter} onValueChange={setSeverityFilter} disabled={!isPro}>
-                      <SelectTrigger className="bg-background border-white/10" data-testid="select-severity">
+                      <SelectTrigger className="bg-background border-zinc-500" data-testid="select-severity">
                         <SelectValue placeholder="All Severities" />
                       </SelectTrigger>
                       <SelectContent>
@@ -188,7 +188,7 @@ export default function SearchPage() {
                   <div className="space-y-2">
                     <label className="text-sm text-muted-foreground">Date Range</label>
                     <Select value={dateRangeFilter} onValueChange={setDateRangeFilter} disabled={!isPro}>
-                      <SelectTrigger className="bg-background border-white/10" data-testid="select-date-range">
+                      <SelectTrigger className="bg-background border-zinc-500" data-testid="select-date-range">
                         <SelectValue placeholder="All Time" />
                       </SelectTrigger>
                       <SelectContent>
@@ -204,7 +204,7 @@ export default function SearchPage() {
                   <div className="space-y-2">
                     <label className="text-sm text-muted-foreground">Source Type</label>
                     <Select value={sourceFilter} onValueChange={setSourceFilter} disabled={!isPro}>
-                      <SelectTrigger className="bg-background border-white/10" data-testid="select-source">
+                      <SelectTrigger className="bg-background border-zinc-500" data-testid="select-source">
                         <SelectValue placeholder="All Sources" />
                       </SelectTrigger>
                       <SelectContent>
@@ -233,7 +233,7 @@ export default function SearchPage() {
 
         {debouncedQuery.length >= 2 && (
           <Tabs defaultValue="all" className="space-y-4">
-            <TabsList className="bg-background border border-white/10 flex-wrap h-auto gap-1" data-testid="tabs-search-results">
+            <TabsList className="bg-background border border-zinc-500 flex-wrap h-auto gap-1" data-testid="tabs-search-results">
               <TabsTrigger value="all" className="data-[state=active]:!bg-orange-500 data-[state=active]:!text-white" data-testid="tab-all-results">
                 All ({filteredResults?.totalResults || 0})
               </TabsTrigger>
@@ -285,7 +285,7 @@ export default function SearchPage() {
                                 <Button 
                                   variant="outline" 
                                   size="sm" 
-                                  className="border-white/10 text-xs shrink-0"
+                                  className="border-zinc-500 text-xs shrink-0"
                                   onClick={() => window.open(`https://nvd.nist.gov/vuln/detail/${cve.cveId}`, '_blank')}
                                 >
                                   View
@@ -439,7 +439,7 @@ export default function SearchPage() {
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="border-white/10 text-xs shrink-0"
+                            className="border-zinc-500 text-xs shrink-0"
                             onClick={() => window.open(`https://nvd.nist.gov/vuln/detail/${cve.cveId}`, '_blank')}
                           >
                             View
@@ -537,7 +537,7 @@ export default function SearchPage() {
                           <Button 
                             variant="outline" 
                             size="sm" 
-                            className="border-white/10 text-xs"
+                            className="border-zinc-500 text-xs"
                             onClick={() => window.open(`https://nvd.nist.gov/vuln/detail/${kev.cveId}`, '_blank')}
                           >
                             View CVE
@@ -579,7 +579,7 @@ export default function SearchPage() {
                             <Button 
                               variant="outline" 
                               size="sm" 
-                              className="border-white/10 text-xs shrink-0"
+                              className="border-zinc-500 text-xs shrink-0"
                               onClick={() => window.open(article.sourceUrl!, '_blank')}
                             >
                               Read

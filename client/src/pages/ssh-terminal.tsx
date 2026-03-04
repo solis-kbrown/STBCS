@@ -211,7 +211,7 @@ function ConnectionForm({
                 value={config.privateKey}
                 onChange={(e) => setConfig({ ...config, privateKey: e.target.value })}
                 placeholder={"Paste your private key here (PEM format)"}
-                className="w-full h-32 rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600 font-mono resize-none focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500"
+                className="w-full h-32 rounded-md border border-zinc-500 bg-zinc-900 px-3 py-2 text-sm text-white placeholder:text-zinc-600 font-mono resize-none focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500"
               />
               <div className="flex items-center gap-2 mt-2">
                 <input
@@ -226,7 +226,7 @@ function ConnectionForm({
                   variant="outline"
                   size="sm"
                   onClick={() => fileInputRef.current?.click()}
-                  className="border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+                  className="border-zinc-500 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
                   data-testid="button-upload-key"
                 >
                   <Upload className="h-3.5 w-3.5 mr-1.5" /> Upload Key File
@@ -498,7 +498,7 @@ function SSHTerminalInstance({
         <p className="text-sm text-zinc-400 text-center max-w-md">
           {tab.errorMessage || "Unable to establish an SSH connection. Verify the target is reachable, credentials are correct, and SSH is enabled on the remote host."}
         </p>
-        <Button onClick={onDisconnect} variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800" data-testid="button-ssh-retry">
+        <Button onClick={onDisconnect} variant="outline" className="border-zinc-500 text-zinc-300 hover:bg-zinc-800" data-testid="button-ssh-retry">
           <RefreshCw className="h-4 w-4 mr-2" /> Try Again
         </Button>
       </div>

@@ -226,10 +226,10 @@ export default function KnowledgeBase() {
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
-                  className="pl-10 bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500"
+                  className="pl-10 bg-zinc-800/50 border-zinc-500 text-white placeholder:text-zinc-500"
                 />
               </div>
-              <Button onClick={handleSearch} variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800" data-testid="button-kb-search">
+              <Button onClick={handleSearch} variant="outline" className="border-zinc-500 text-zinc-300 hover:bg-zinc-800" data-testid="button-kb-search">
                 <Search className="h-4 w-4 mr-2" />Search
               </Button>
               {canParticipate ? (
@@ -293,7 +293,7 @@ export default function KnowledgeBase() {
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     isActive
                       ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
-                      : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-zinc-800 hover:text-zinc-200"
+                      : "bg-zinc-800/50 text-zinc-400 border border-zinc-500/50 hover:bg-zinc-800 hover:text-zinc-200"
                   }`}
                 >
                   <Icon className="h-4 w-4" />{t.label}
@@ -308,7 +308,7 @@ export default function KnowledgeBase() {
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     showBookmarks
                       ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
-                      : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-zinc-800 hover:text-zinc-200"
+                      : "bg-zinc-800/50 text-zinc-400 border border-zinc-500/50 hover:bg-zinc-800 hover:text-zinc-200"
                   }`}
                 >
                   <BookmarkCheck className="h-4 w-4" />My Bookmarks
@@ -319,7 +319,7 @@ export default function KnowledgeBase() {
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     showDrafts
                       ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
-                      : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-zinc-800 hover:text-zinc-200"
+                      : "bg-zinc-800/50 text-zinc-400 border border-zinc-500/50 hover:bg-zinc-800 hover:text-zinc-200"
                   }`}
                 >
                   <FileText className="h-4 w-4" />My Drafts
@@ -411,7 +411,7 @@ export default function KnowledgeBase() {
                             <Badge
                               key={tag}
                               variant="outline"
-                              className="text-[10px] border-zinc-700 text-zinc-500 hover:border-orange-500/30 hover:text-orange-400 cursor-pointer"
+                              className="text-[10px] border-zinc-500 text-zinc-500 hover:border-orange-500/30 hover:text-orange-400 cursor-pointer"
                               onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleTagClick(tag); }}
                             >
                               {tag}
@@ -525,7 +525,7 @@ export default function KnowledgeBase() {
                     size="sm"
                     onClick={() => setPage(p => Math.max(1, p - 1))}
                     disabled={page === 1}
-                    className="border-zinc-700 text-zinc-400"
+                    className="border-zinc-500 text-zinc-400"
                     data-testid="button-prev-page"
                   >
                     <ChevronLeft className="h-4 w-4" />
@@ -536,7 +536,7 @@ export default function KnowledgeBase() {
                     size="sm"
                     onClick={() => setPage(p => Math.min(data.pages, p + 1))}
                     disabled={page >= data.pages}
-                    className="border-zinc-700 text-zinc-400"
+                    className="border-zinc-500 text-zinc-400"
                     data-testid="button-next-page"
                   >
                     <ChevronRight className="h-4 w-4" />
@@ -560,7 +560,7 @@ export default function KnowledgeBase() {
                         className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all ${
                           activeTag === t.tag
                             ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
-                            : "bg-zinc-800/70 text-zinc-400 border border-zinc-700/50 hover:border-orange-500/30 hover:text-orange-400"
+                            : "bg-zinc-800/70 text-zinc-400 border border-zinc-500/50 hover:border-orange-500/30 hover:text-orange-400"
                         }`}
                       >
                         {t.tag}

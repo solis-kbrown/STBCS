@@ -482,7 +482,7 @@ export default function Compliance() {
           </div>
         ) : frameworks && frameworks.length > 0 ? (
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-zinc-900 border border-white/5 w-full justify-start overflow-x-auto" data-testid="tabs-frameworks">
+            <TabsList className="bg-zinc-900 border border-zinc-500 w-full justify-start overflow-x-auto" data-testid="tabs-frameworks">
               {frameworks.map((f) => (
                 <TabsTrigger
                   key={f.id}

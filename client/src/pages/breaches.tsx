@@ -210,7 +210,7 @@ export default function Breaches() {
                 </Button>
               </>
             ) : (
-              <Button variant="outline" className="border-zinc-700 text-zinc-500 cursor-not-allowed" disabled data-testid="button-export-breaches-locked">
+              <Button variant="outline" className="border-zinc-500 text-zinc-500 cursor-not-allowed" disabled data-testid="button-export-breaches-locked">
                 <Lock className="h-4 w-4 mr-2" />
                 Export (Pro)
               </Button>
@@ -343,7 +343,7 @@ export default function Breaches() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search breaches by name..."
-                  className="pl-10 bg-background/50 border-white/10 h-10"
+                  className="pl-10 bg-background/50 border-zinc-500 h-10"
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                   data-testid="input-search-breaches"
@@ -351,7 +351,7 @@ export default function Breaches() {
               </div>
               <div className="flex gap-2">
                 <Select value={sortBy} onValueChange={(v) => { setSortBy(v as SortOption); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[180px] bg-background/50 border-white/10 h-10" data-testid="select-sort-breaches">
+                  <SelectTrigger className="w-[180px] bg-background/50 border-zinc-500 h-10" data-testid="select-sort-breaches">
                     <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
@@ -364,7 +364,7 @@ export default function Breaches() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className={`border-white/10 h-10 px-3 ${showFilters ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "text-muted-foreground hover:text-white"}`}
+                  className={`border-zinc-500 h-10 px-3 ${showFilters ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "text-muted-foreground hover:text-white"}`}
                   onClick={() => setShowFilters(!showFilters)}
                   data-testid="button-toggle-filters"
                 >
@@ -393,7 +393,7 @@ export default function Breaches() {
                 </Button>
 
                 <Select value={dataTypeFilter} onValueChange={(v) => { setDataTypeFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[180px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-data-type-filter">
+                  <SelectTrigger className="w-[180px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-data-type-filter">
                     <ShieldOff className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Data Type" />
                   </SelectTrigger>
@@ -406,7 +406,7 @@ export default function Breaches() {
                 </Select>
 
                 <Select value={dateRange} onValueChange={(v) => { setDateRange(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[150px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-date-range">
+                  <SelectTrigger className="w-[150px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-date-range">
                     <Calendar className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Date Range" />
                   </SelectTrigger>

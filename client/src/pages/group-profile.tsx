@@ -179,7 +179,7 @@ export default function GroupProfile() {
         <AnimatedSection animation="fade-down">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" onClick={() => setLocation("/ransomware")} className="text-muted-foreground hover:text-white" data-testid="button-back">
+              <Button variant="ghost" size="icon" onClick={() => setLocation("/ransomware")} className="text-muted-foreground hover:text-white" data-testid="button-back" aria-label="Back to ransomware">
                 <ArrowLeft className="h-5 w-5" />
               </Button>
               <div>
@@ -199,7 +199,7 @@ export default function GroupProfile() {
               {actor?.dataExfiltration && <Badge className="bg-yellow-700/50 text-yellow-300 border-yellow-500/30">Data Exfiltration</Badge>}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-400 hover:text-white" data-testid="button-share-group">
+                  <Button variant="outline" size="sm" className="border-zinc-500 text-zinc-400 hover:text-white" data-testid="button-share-group">
                     <Share2 className="h-4 w-4 mr-2" /> Share
                   </Button>
                 </DropdownMenuTrigger>

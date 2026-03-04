@@ -198,7 +198,7 @@ function QuickActionsBar() {
           <Button 
             variant="outline" 
             size="sm" 
-            className="border-white/10 bg-card/60 backdrop-blur-sm hover:border-primary/30 hover:bg-primary/10 hover:text-primary transition-all duration-300 gap-2 btn-press"
+            className="border-zinc-500 bg-card/60 backdrop-blur-sm hover:border-primary/30 hover:bg-primary/10 hover:text-primary transition-all duration-300 gap-2 btn-press"
             data-testid={`button-quick-${a.label.toLowerCase().replace(/\s/g, '-')}`}
           >
             <a.icon className="h-3.5 w-3.5" />
@@ -543,6 +543,7 @@ export default function Dashboard() {
                                 size="icon"
                                 className="h-7 w-7 text-muted-foreground hover:text-white"
                                 data-testid={`button-share-dash-cve-${cve.cveId}`}
+                                aria-label="Share CVE"
                               >
                                 <Share2 className="h-3.5 w-3.5" />
                               </Button>
@@ -612,7 +613,7 @@ export default function Dashboard() {
                 <CardTitle className="font-display">Recent Ransomware Incidents</CardTitle>
                 <CardDescription>Live feed tracking new victims claimed by ransomware groups</CardDescription>
               </div>
-              <Button variant="outline" className="border-white/10 hover:bg-white/5 text-xs btn-press" data-testid="button-export-csv" asChild>
+              <Button variant="outline" className="border-zinc-500 hover:bg-white/5 text-xs btn-press" data-testid="button-export-csv" asChild>
                 <a href="/support"><ExternalLink className="h-3 w-3 mr-2" aria-hidden="true" />EXPORT CSV (PRO)</a>
               </Button>
             </CardHeader>
@@ -678,6 +679,7 @@ export default function Dashboard() {
                                   size="icon"
                                   className="h-7 w-7 text-muted-foreground hover:text-white"
                                   data-testid={`button-share-dash-ransomware-${incident.id}`}
+                                  aria-label="Share incident"
                                 >
                                   <Share2 className="h-3.5 w-3.5" />
                                 </Button>

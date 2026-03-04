@@ -287,7 +287,7 @@ export default function AccountPage() {
                   variant="outline"
                   size="sm"
                   onClick={() => setEditingProfile(!editingProfile)}
-                  className="border-zinc-700 text-zinc-400 hover:text-orange-400 text-xs"
+                  className="border-zinc-500 text-zinc-400 hover:text-orange-400 text-xs"
                   data-testid="button-edit-profile"
                 >
                   {editingProfile ? "Cancel" : "Edit Profile"}
@@ -302,12 +302,12 @@ export default function AccountPage() {
                   <img
                     src={editingProfile ? profileForm.avatarUrl : account?.avatarUrl}
                     alt="Avatar"
-                    className="h-16 w-16 rounded-full object-cover border-2 border-zinc-700"
+                    className="h-16 w-16 rounded-full object-cover border-2 border-zinc-500"
                     data-testid="img-avatar"
                     onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                   />
                 ) : (
-                  <div className="h-16 w-16 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center">
+                  <div className="h-16 w-16 rounded-full bg-zinc-800 border-2 border-zinc-500 flex items-center justify-center">
                     <User className="h-8 w-8 text-zinc-600" />
                   </div>
                 )}
@@ -384,7 +384,7 @@ export default function AccountPage() {
                     value={profileForm.displayName}
                     onChange={(e) => setProfileForm(f => ({ ...f, displayName: e.target.value }))}
                     placeholder="Your display name"
-                    className="bg-zinc-800 border-zinc-700 text-white"
+                    className="bg-zinc-800 border-zinc-500 text-white"
                     maxLength={100}
                   />
                 </div>
@@ -402,7 +402,7 @@ export default function AccountPage() {
                           onError={(e) => { (e.target as HTMLImageElement).src = ""; }}
                         />
                       ) : (
-                        <div className="h-20 w-20 rounded-full bg-zinc-800 border-2 border-zinc-700 flex items-center justify-center">
+                        <div className="h-20 w-20 rounded-full bg-zinc-800 border-2 border-zinc-500 flex items-center justify-center">
                           <User className="h-10 w-10 text-zinc-600" />
                         </div>
                       )}
@@ -422,7 +422,7 @@ export default function AccountPage() {
                         <button
                           type="button"
                           onClick={() => setAvatarTab("upload")}
-                          className={`px-2.5 py-1 text-[11px] rounded-md transition-colors ${avatarTab === "upload" ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" : "text-zinc-400 hover:text-zinc-300 border border-zinc-700"}`}
+                          className={`px-2.5 py-1 text-[11px] rounded-md transition-colors ${avatarTab === "upload" ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" : "text-zinc-400 hover:text-zinc-300 border border-zinc-500"}`}
                           data-testid="button-avatar-tab-upload"
                         >
                           <Upload className="h-3 w-3 inline mr-1" />Upload
@@ -430,7 +430,7 @@ export default function AccountPage() {
                         <button
                           type="button"
                           onClick={() => setAvatarTab("defaults")}
-                          className={`px-2.5 py-1 text-[11px] rounded-md transition-colors ${avatarTab === "defaults" ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" : "text-zinc-400 hover:text-zinc-300 border border-zinc-700"}`}
+                          className={`px-2.5 py-1 text-[11px] rounded-md transition-colors ${avatarTab === "defaults" ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" : "text-zinc-400 hover:text-zinc-300 border border-zinc-500"}`}
                           data-testid="button-avatar-tab-defaults"
                         >
                           <Shield className="h-3 w-3 inline mr-1" />Defaults
@@ -438,7 +438,7 @@ export default function AccountPage() {
                         <button
                           type="button"
                           onClick={() => setAvatarTab("url")}
-                          className={`px-2.5 py-1 text-[11px] rounded-md transition-colors ${avatarTab === "url" ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" : "text-zinc-400 hover:text-zinc-300 border border-zinc-700"}`}
+                          className={`px-2.5 py-1 text-[11px] rounded-md transition-colors ${avatarTab === "url" ? "bg-orange-500/20 text-orange-400 border border-orange-500/30" : "text-zinc-400 hover:text-zinc-300 border border-zinc-500"}`}
                           data-testid="button-avatar-tab-url"
                         >
                           <Link2 className="h-3 w-3 inline mr-1" />URL
@@ -460,7 +460,7 @@ export default function AccountPage() {
                             variant="outline"
                             size="sm"
                             onClick={() => fileInputRef.current?.click()}
-                            className="border-zinc-700 text-zinc-400 hover:text-orange-400 text-xs w-full"
+                            className="border-zinc-500 text-zinc-400 hover:text-orange-400 text-xs w-full"
                             data-testid="button-upload-avatar"
                           >
                             <Camera className="h-3.5 w-3.5 mr-1.5" />
@@ -498,7 +498,7 @@ export default function AccountPage() {
                             value={profileForm.avatarUrl.startsWith("data:") ? "" : profileForm.avatarUrl}
                             onChange={(e) => setProfileForm(f => ({ ...f, avatarUrl: e.target.value }))}
                             placeholder="https://example.com/avatar.jpg"
-                            className="bg-zinc-800 border-zinc-700 text-white text-xs"
+                            className="bg-zinc-800 border-zinc-500 text-white text-xs"
                             maxLength={2000}
                           />
                           <p className="text-[10px] text-zinc-600 mt-1">Paste an external image URL</p>
@@ -514,7 +514,7 @@ export default function AccountPage() {
                     value={profileForm.bio}
                     onChange={(e) => setProfileForm(f => ({ ...f, bio: e.target.value }))}
                     placeholder="Tell others about yourself..."
-                    className="bg-zinc-800 border-zinc-700 text-white min-h-[80px]"
+                    className="bg-zinc-800 border-zinc-500 text-white min-h-[80px]"
                     maxLength={500}
                   />
                   <p className="text-[10px] text-zinc-600 mt-1">{profileForm.bio.length}/500</p>
@@ -527,7 +527,7 @@ export default function AccountPage() {
                       value={profileForm.location}
                       onChange={(e) => setProfileForm(f => ({ ...f, location: e.target.value }))}
                       placeholder="City, Country"
-                      className="bg-zinc-800 border-zinc-700 text-white"
+                      className="bg-zinc-800 border-zinc-500 text-white"
                       maxLength={100}
                     />
                   </div>
@@ -538,7 +538,7 @@ export default function AccountPage() {
                       value={profileForm.company}
                       onChange={(e) => setProfileForm(f => ({ ...f, company: e.target.value }))}
                       placeholder="Your organization"
-                      className="bg-zinc-800 border-zinc-700 text-white"
+                      className="bg-zinc-800 border-zinc-500 text-white"
                       maxLength={100}
                     />
                   </div>
@@ -549,7 +549,7 @@ export default function AccountPage() {
                       value={profileForm.website}
                       onChange={(e) => setProfileForm(f => ({ ...f, website: e.target.value }))}
                       placeholder="https://yoursite.com"
-                      className="bg-zinc-800 border-zinc-700 text-white"
+                      className="bg-zinc-800 border-zinc-500 text-white"
                       maxLength={200}
                     />
                   </div>
@@ -584,7 +584,7 @@ export default function AccountPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => setEditingProfile(false)}
-                    className="border-zinc-700 text-zinc-400"
+                    className="border-zinc-500 text-zinc-400"
                     data-testid="button-cancel-profile"
                   >
                     Cancel
@@ -709,7 +709,7 @@ export default function AccountPage() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-700 bg-zinc-800/50">
+            <div className="flex items-center justify-between p-3 rounded-lg border border-zinc-500 bg-zinc-800/50">
               <div className="space-y-0.5 flex-1 min-w-0 mr-4">
                 <p className="text-sm font-medium text-white" data-testid="text-digest-label">Weekly Threat Digest</p>
                 <p className="text-xs text-zinc-400" data-testid="text-digest-description">
@@ -765,7 +765,7 @@ export default function AccountPage() {
               ) : apiKeysData?.keys?.length > 0 ? (
                 <div className="space-y-3">
                   {apiKeysData.keys.map((key: any) => (
-                    <div key={key.id} className={`flex items-center justify-between p-3 rounded-lg border ${key.status === "active" ? "border-zinc-700 bg-zinc-800/50" : "border-zinc-800 bg-zinc-900/30 opacity-60"}`} data-testid={`api-key-${key.id}`}>
+                    <div key={key.id} className={`flex items-center justify-between p-3 rounded-lg border ${key.status === "active" ? "border-zinc-500 bg-zinc-800/50" : "border-zinc-800 bg-zinc-900/30 opacity-60"}`} data-testid={`api-key-${key.id}`}>
                       <div className="space-y-1 flex-1 min-w-0">
                         <div className="flex items-center gap-2">
                           <span className="text-white font-medium text-sm">{key.name}</span>
@@ -805,7 +805,7 @@ export default function AccountPage() {
                     placeholder="Key name (e.g., 'Production Server')"
                     value={newKeyName}
                     onChange={(e) => setNewKeyName(e.target.value)}
-                    className="bg-zinc-800 border-zinc-700 text-white"
+                    className="bg-zinc-800 border-zinc-500 text-white"
                     data-testid="input-key-name"
                   />
                   <Button
@@ -861,7 +861,7 @@ export default function AccountPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Button
                 variant="outline"
-                className="justify-start border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                className="justify-start border-zinc-500 text-zinc-300 hover:bg-zinc-800"
                 onClick={() => setLocation("/monitors?tab=alerts")}
                 data-testid="button-go-alerts"
               >
@@ -870,7 +870,7 @@ export default function AccountPage() {
               </Button>
               <Button
                 variant="outline"
-                className="justify-start border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                className="justify-start border-zinc-500 text-zinc-300 hover:bg-zinc-800"
                 onClick={() => setLocation("/pricing")}
                 data-testid="button-go-support"
               >
@@ -880,7 +880,7 @@ export default function AccountPage() {
               <a href="/contact?category=support&subject=Account%20Support" className="w-full">
                 <Button
                   variant="outline"
-                  className="w-full justify-start border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                  className="w-full justify-start border-zinc-500 text-zinc-300 hover:bg-zinc-800"
                   data-testid="button-contact-support"
                 >
                   <Mail className="h-4 w-4 mr-2 text-orange-400" />
@@ -889,7 +889,7 @@ export default function AccountPage() {
               </a>
               <Button
                 variant="outline"
-                className="justify-start border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                className="justify-start border-zinc-500 text-zinc-300 hover:bg-zinc-800"
                 onClick={() => setLocation("/api-docs")}
                 data-testid="button-go-api-docs"
               >

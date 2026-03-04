@@ -41,7 +41,7 @@ const membershipTiers = [
       "5 uptime & dark web monitors included",
     ],
     color: "from-zinc-800/50 to-zinc-900/50",
-    borderColor: "border-zinc-700",
+    borderColor: "border-zinc-500",
   },
   {
     name: "Pro",
@@ -92,7 +92,7 @@ const membershipTiers = [
       "On-call support for active incidents",
     ],
     color: "from-zinc-800/50 to-zinc-900/50",
-    borderColor: "border-zinc-700",
+    borderColor: "border-zinc-500",
   },
   {
     name: "Unlimited Everything",
@@ -279,7 +279,7 @@ export default function SupportPage() {
                         setSelectedAmount(d.amount);
                         setCustomAmount("");
                       }}
-                      className={`font-bold ${selectedAmount === d.amount && !customAmount ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border-zinc-700 text-zinc-300 hover:bg-zinc-800'}`}
+                      className={`font-bold ${selectedAmount === d.amount && !customAmount ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border-zinc-500 text-zinc-300 hover:bg-zinc-800'}`}
                       data-testid={`button-amount-${d.amount}`}
                     >
                       {d.label}
@@ -302,7 +302,7 @@ export default function SupportPage() {
                     autoComplete="off"
                     value={customAmount}
                     onChange={(e) => setCustomAmount(e.target.value)}
-                    className="pl-8 bg-zinc-800 border-zinc-700 text-white"
+                    className="pl-8 bg-zinc-800 border-zinc-500 text-white"
                     data-testid="input-custom-amount"
                   />
                 </div>
@@ -318,7 +318,7 @@ export default function SupportPage() {
                     autoComplete="name"
                     value={donorName}
                     onChange={(e) => setDonorName(e.target.value)}
-                    className="bg-zinc-800 border-zinc-700 text-white"
+                    className="bg-zinc-800 border-zinc-500 text-white"
                     data-testid="input-donor-name"
                   />
                 </div>
@@ -333,7 +333,7 @@ export default function SupportPage() {
                     spellCheck={false}
                     value={donorEmail}
                     onChange={(e) => setDonorEmail(e.target.value)}
-                    className="bg-zinc-800 border-zinc-700 text-white"
+                    className="bg-zinc-800 border-zinc-500 text-white"
                     data-testid="input-donor-email"
                   />
                 </div>
@@ -455,7 +455,7 @@ export default function SupportPage() {
                     ))}
                   </ul>
                   <Button 
-                    className={`w-full font-bold ${tier.popular ? 'bg-orange-500 hover:bg-orange-600 text-white' : isUnlimited ? 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black' : 'border-zinc-700 text-zinc-300 hover:bg-zinc-800'}`}
+                    className={`w-full font-bold ${tier.popular ? 'bg-orange-500 hover:bg-orange-600 text-white' : isUnlimited ? 'bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-black' : 'border-zinc-500 text-zinc-300 hover:bg-zinc-800'}`}
                     variant={tier.popular || isUnlimited ? "default" : "outline"}
                     onClick={() => handleSubscribe(tier.stripeName)}
                     disabled={!subscriptionAgreed}

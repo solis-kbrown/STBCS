@@ -307,7 +307,7 @@ export default function RansomwarePayments() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 <Input
                   placeholder="Search by victim, group, or wallet…"
-                  className="pl-10 bg-background/50 border-white/10 h-10"
+                  className="pl-10 bg-background/50 border-zinc-500 h-10"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   data-testid="input-search-payments"
@@ -316,7 +316,7 @@ export default function RansomwarePayments() {
               <Button
                 variant="outline"
                 size="sm"
-                className={`border-white/10 h-10 px-3 ${showFilters ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'text-muted-foreground hover:text-white'}`}
+                className={`border-zinc-500 h-10 px-3 ${showFilters ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'text-muted-foreground hover:text-white'}`}
                 onClick={() => setShowFilters(!showFilters)}
                 data-testid="button-toggle-filters"
               >
@@ -333,7 +333,7 @@ export default function RansomwarePayments() {
             {showFilters && (
               <div className="flex flex-wrap gap-3 pt-2 border-t border-white/5 animate-in slide-in-from-top-2 duration-200">
                 <Select value={groupFilter} onValueChange={setGroupFilter}>
-                  <SelectTrigger className="w-[180px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-group-filter">
+                  <SelectTrigger className="w-[180px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-group-filter">
                     <Users className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Group" />
                   </SelectTrigger>
@@ -345,7 +345,7 @@ export default function RansomwarePayments() {
                   </SelectContent>
                 </Select>
                 <Select value={sectorFilter} onValueChange={setSectorFilter}>
-                  <SelectTrigger className="w-[170px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-sector-filter">
+                  <SelectTrigger className="w-[170px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-sector-filter">
                     <Building2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Sector" />
                   </SelectTrigger>
@@ -357,7 +357,7 @@ export default function RansomwarePayments() {
                   </SelectContent>
                 </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                  <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-status-filter">
+                  <SelectTrigger className="w-[160px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-status-filter">
                     <DollarSign className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Payment Status" />
                   </SelectTrigger>
@@ -370,7 +370,7 @@ export default function RansomwarePayments() {
                   </SelectContent>
                 </Select>
                 <Select value={dateRange} onValueChange={setDateRange}>
-                  <SelectTrigger className="w-[150px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-date-range">
+                  <SelectTrigger className="w-[150px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-date-range">
                     <Calendar className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Date Range" />
                   </SelectTrigger>
@@ -593,7 +593,7 @@ export default function RansomwarePayments() {
             <CardTitle className="text-base font-medium text-zinc-200 flex items-center gap-2">
               <Wallet className="h-4 w-4 text-orange-500" aria-hidden="true" />
               Recent Payment Activity
-              <Badge variant="outline" className="ml-auto text-xs border-zinc-700 text-zinc-400">
+              <Badge variant="outline" className="ml-auto text-xs border-zinc-500 text-zinc-400">
                 {recentPayments.length} records
               </Badge>
             </CardTitle>
@@ -636,7 +636,7 @@ export default function RansomwarePayments() {
                                 status === "paid" ? "border-red-500/30 text-red-400" :
                                 status === "unpaid" ? "border-green-500/30 text-green-400" :
                                 status === "negotiating" ? "border-yellow-500/30 text-yellow-400" :
-                                "border-zinc-600 text-zinc-500"
+                                "border-zinc-500 text-zinc-500"
                               }`}
                               data-testid={`badge-status-${idx}`}
                             >

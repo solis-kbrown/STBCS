@@ -206,7 +206,7 @@ export default function RansomwareCalculator() {
                 </CardHeader>
                 <CardContent>
                   <Select value={industry} onValueChange={setIndustry}>
-                    <SelectTrigger className="bg-zinc-900/50 border-white/10" data-testid="select-industry">
+                    <SelectTrigger className="bg-zinc-900/50 border-zinc-500" data-testid="select-industry">
                       <SelectValue placeholder="Select your industry" />
                     </SelectTrigger>
                     <SelectContent>
@@ -228,7 +228,7 @@ export default function RansomwareCalculator() {
                 </CardHeader>
                 <CardContent>
                   <Select value={companySize} onValueChange={setCompanySize}>
-                    <SelectTrigger className="bg-zinc-900/50 border-white/10" data-testid="select-company-size">
+                    <SelectTrigger className="bg-zinc-900/50 border-zinc-500" data-testid="select-company-size">
                       <SelectValue placeholder="Select company size" />
                     </SelectTrigger>
                     <SelectContent>
@@ -250,7 +250,7 @@ export default function RansomwareCalculator() {
                 </CardHeader>
                 <CardContent>
                   <Select value={revenue} onValueChange={setRevenue}>
-                    <SelectTrigger className="bg-zinc-900/50 border-white/10" data-testid="select-revenue">
+                    <SelectTrigger className="bg-zinc-900/50 border-zinc-500" data-testid="select-revenue">
                       <SelectValue placeholder="Select revenue range" />
                     </SelectTrigger>
                     <SelectContent>
@@ -272,7 +272,7 @@ export default function RansomwareCalculator() {
                 </CardHeader>
                 <CardContent>
                   <Select value={sensitivity} onValueChange={setSensitivity}>
-                    <SelectTrigger className="bg-zinc-900/50 border-white/10" data-testid="select-sensitivity">
+                    <SelectTrigger className="bg-zinc-900/50 border-zinc-500" data-testid="select-sensitivity">
                       <SelectValue placeholder="Select data sensitivity" />
                     </SelectTrigger>
                     <SelectContent>

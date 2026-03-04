@@ -228,7 +228,7 @@ export default function ThreatActors() {
                 </Button>
               </>
             ) : (
-              <Button variant="outline" className="border-zinc-700 text-zinc-500 cursor-not-allowed" disabled data-testid="button-export-actors-locked">
+              <Button variant="outline" className="border-zinc-500 text-zinc-500 cursor-not-allowed" disabled data-testid="button-export-actors-locked">
                 <Lock className="h-4 w-4 mr-2" />
                 Export (Pro)
               </Button>
@@ -309,7 +309,7 @@ export default function ThreatActors() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search by name, alias, or description..."
-                  className="pl-10 bg-background/50 border-white/10 h-10"
+                  className="pl-10 bg-background/50 border-zinc-500 h-10"
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                   data-testid="input-search-actors"
@@ -317,7 +317,7 @@ export default function ThreatActors() {
               </div>
               <div className="flex gap-2">
                 <Select value={sortBy} onValueChange={(v) => { setSortBy(v as SortOption); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[180px] bg-background/50 border-white/10 h-10" data-testid="select-sort-actors">
+                  <SelectTrigger className="w-[180px] bg-background/50 border-zinc-500 h-10" data-testid="select-sort-actors">
                     <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
@@ -349,7 +349,7 @@ export default function ThreatActors() {
             {showFilters && (
               <div className="flex flex-wrap gap-3 pt-2 border-t border-white/5 animate-in slide-in-from-top-2 duration-200">
                 <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-type-filter">
+                  <SelectTrigger className="w-[160px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-type-filter">
                     <Shield className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Type" />
                   </SelectTrigger>
@@ -363,7 +363,7 @@ export default function ThreatActors() {
                 </Select>
 
                 <Select value={originFilter} onValueChange={(v) => { setOriginFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-origin-filter">
+                  <SelectTrigger className="w-[160px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-origin-filter">
                     <Globe className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Origin" />
                   </SelectTrigger>
@@ -376,7 +376,7 @@ export default function ThreatActors() {
                 </Select>
 
                 <Select value={activeFilter} onValueChange={(v) => { setActiveFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[140px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-active-filter">
+                  <SelectTrigger className="w-[140px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-active-filter">
                     <Activity className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
@@ -388,7 +388,7 @@ export default function ThreatActors() {
                 </Select>
 
                 <Select value={raasFilter} onValueChange={(v) => { setRaasFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[140px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-raas-filter">
+                  <SelectTrigger className="w-[140px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-raas-filter">
                     <Skull className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="RaaS" />
                   </SelectTrigger>
@@ -464,7 +464,7 @@ export default function ThreatActors() {
               <Users className="h-10 w-10 text-zinc-500 mx-auto mb-3" />
               <h3 className="text-lg font-bold text-white mb-1">No Threat Actors Found</h3>
               <p className="text-sm text-muted-foreground">Try adjusting your search or filters.</p>
-              <Button variant="outline" size="sm" className="mt-4 border-white/10" onClick={clearAllFilters} data-testid="button-clear-empty">
+              <Button variant="outline" size="sm" className="mt-4 border-zinc-500" onClick={clearAllFilters} data-testid="button-clear-empty">
                 Clear Filters
               </Button>
             </CardContent>
@@ -523,7 +523,7 @@ export default function ThreatActors() {
                           )}
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground shrink-0" data-testid={`button-expand-${actor.id}`}>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground shrink-0" data-testid={`button-expand-${actor.id}`} aria-label="Toggle details">
                         {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                       </Button>
                     </div>
@@ -558,12 +558,12 @@ export default function ThreatActors() {
                     {sectors.length > 0 && (
                       <div className="flex flex-wrap gap-1.5 mb-2">
                         {(isExpanded ? sectors : sectors.slice(0, 4)).map((s, i) => (
-                          <Badge key={i} variant="outline" className="text-[10px] border-zinc-700 text-zinc-400">
+                          <Badge key={i} variant="outline" className="text-[10px] border-zinc-500 text-zinc-400">
                             {s}
                           </Badge>
                         ))}
                         {!isExpanded && sectors.length > 4 && (
-                          <Badge variant="outline" className="text-[10px] border-zinc-700 text-zinc-500">
+                          <Badge variant="outline" className="text-[10px] border-zinc-500 text-zinc-500">
                             +{sectors.length - 4} more
                           </Badge>
                         )}

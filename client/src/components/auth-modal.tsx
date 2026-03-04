@@ -127,7 +127,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", onSuccess 
                     placeholder="Enter username or email…"
                     value={loginForm.username}
                     onChange={(e) => setLoginForm({ ...loginForm, username: e.target.value })}
-                    className="pl-10 bg-zinc-800 border-zinc-700 text-white"
+                    className="pl-10 bg-zinc-800 border-zinc-500 text-white"
                     required
                     name="username"
                     autoComplete="username"
@@ -146,7 +146,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", onSuccess 
                     placeholder="Enter password…"
                     value={loginForm.password}
                     onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                    className="pl-10 bg-zinc-800 border-zinc-700 text-white"
+                    className="pl-10 bg-zinc-800 border-zinc-500 text-white"
                     required
                     name="password"
                     autoComplete="current-password"
@@ -176,7 +176,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", onSuccess 
                     placeholder="Choose a username…"
                     value={signupForm.username}
                     onChange={(e) => setSignupForm({ ...signupForm, username: e.target.value })}
-                    className="pl-10 bg-zinc-800 border-zinc-700 text-white"
+                    className="pl-10 bg-zinc-800 border-zinc-500 text-white"
                     required
                     name="username"
                     autoComplete="username"
@@ -195,7 +195,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", onSuccess 
                     placeholder="Enter your email…"
                     value={signupForm.email}
                     onChange={(e) => setSignupForm({ ...signupForm, email: e.target.value })}
-                    className="pl-10 bg-zinc-800 border-zinc-700 text-white"
+                    className="pl-10 bg-zinc-800 border-zinc-500 text-white"
                     required
                     name="email"
                     autoComplete="email"
@@ -214,7 +214,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", onSuccess 
                     placeholder="Min 12 chars, upper + lower + number"
                     value={signupForm.password}
                     onChange={(e) => setSignupForm({ ...signupForm, password: e.target.value })}
-                    className="pl-10 bg-zinc-800 border-zinc-700 text-white"
+                    className="pl-10 bg-zinc-800 border-zinc-500 text-white"
                     required
                     name="new-password"
                     autoComplete="new-password"
@@ -232,7 +232,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", onSuccess 
                     placeholder="Confirm your password…"
                     value={signupForm.confirmPassword}
                     onChange={(e) => setSignupForm({ ...signupForm, confirmPassword: e.target.value })}
-                    className="pl-10 bg-zinc-800 border-zinc-700 text-white"
+                    className="pl-10 bg-zinc-800 border-zinc-500 text-white"
                     required
                     name="confirm-password"
                     autoComplete="new-password"
@@ -247,7 +247,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", onSuccess 
                   id="agree-terms"
                   checked={agreedToTerms}
                   onChange={(e) => setAgreedToTerms(e.target.checked)}
-                  className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-800 text-orange-500 focus:ring-orange-500 accent-orange-500"
+                  className="mt-1 h-4 w-4 rounded border-zinc-500 bg-zinc-800 text-orange-500 focus:ring-orange-500 accent-orange-500"
                   data-testid="checkbox-agree-terms"
                 />
                 <label htmlFor="agree-terms" className="text-xs text-zinc-400 leading-relaxed">

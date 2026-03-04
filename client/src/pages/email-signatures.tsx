@@ -834,14 +834,14 @@ export default function EmailSignatures() {
 
           <div className="lg:col-span-2 space-y-4">
             <div className="flex items-center justify-between">
-              <Button variant="outline" size="sm" onClick={prev} className="border-zinc-700 text-zinc-300 hover:bg-zinc-800" data-testid="button-prev">
+              <Button variant="outline" size="sm" onClick={prev} className="border-zinc-500 text-zinc-300 hover:bg-zinc-800" data-testid="button-prev">
                 <ChevronLeft className="h-4 w-4 mr-1" /> Prev
               </Button>
               <div className="text-center">
                 <h2 className="text-white font-bold text-lg" data-testid="text-active-style">{active.name}</h2>
                 <p className="text-zinc-500 text-xs">{activeIdx + 1} of {signatures.length}</p>
               </div>
-              <Button variant="outline" size="sm" onClick={next} className="border-zinc-700 text-zinc-300 hover:bg-zinc-800" data-testid="button-next">
+              <Button variant="outline" size="sm" onClick={next} className="border-zinc-500 text-zinc-300 hover:bg-zinc-800" data-testid="button-next">
                 Next <ChevronRight className="h-4 w-4 ml-1" />
               </Button>
             </div>
@@ -909,7 +909,7 @@ export default function EmailSignatures() {
                   className={`p-3 rounded-lg border transition-all text-left ${
                     i === activeIdx
                       ? "border-orange-500 bg-orange-500/10"
-                      : "border-zinc-800 bg-zinc-900/50 hover:border-zinc-700"
+                      : "border-zinc-800 bg-zinc-900/50 hover:border-zinc-500"
                   }`}
                 >
                   <div className="text-xs font-semibold text-white mb-1">{s.name}</div>

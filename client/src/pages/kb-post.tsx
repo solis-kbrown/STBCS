@@ -127,10 +127,10 @@ function ReportDialog({ type, targetId, postId, onClose }: { type: "post" | "com
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={onClose}>
-      <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-zinc-900 border border-zinc-500 rounded-xl p-6 w-full max-w-md mx-4" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-white flex items-center gap-2"><Flag className="h-5 w-5 text-red-400" />Report {type === "post" ? "Post" : "Comment"}</h3>
-          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300" data-testid="button-close-report"><X className="h-5 w-5" /></button>
+          <button onClick={onClose} className="text-zinc-500 hover:text-zinc-300" data-testid="button-close-report" aria-label="Close report"><X className="h-5 w-5" /></button>
         </div>
         <div className="space-y-4">
           <div>
@@ -164,12 +164,12 @@ function ReportDialog({ type, targetId, postId, onClose }: { type: "post" | "com
               value={details}
               onChange={(e) => setDetails(e.target.value)}
               placeholder="Provide additional context..."
-              className="bg-zinc-800 border-zinc-700 text-zinc-300 min-h-[80px]"
+              className="bg-zinc-800 border-zinc-500 text-zinc-300 min-h-[80px]"
               data-testid="input-report-details"
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={onClose} className="border-zinc-700 text-zinc-400">Cancel</Button>
+            <Button variant="outline" onClick={onClose} className="border-zinc-500 text-zinc-400">Cancel</Button>
             <Button onClick={handleSubmit} disabled={submitting || !reason} className="bg-red-600 hover:bg-red-700 text-white" data-testid="button-submit-report">
               {submitting ? "Submitting..." : "Submit Report"}
             </Button>
@@ -260,14 +260,14 @@ function Comment({ comment, depth, postId, user, onReply, topContributorSet, ris
             <Textarea
               value={editText}
               onChange={(e) => setEditText(e.target.value)}
-              className="bg-zinc-800 border-zinc-700 text-zinc-300 min-h-[60px] text-sm"
+              className="bg-zinc-800 border-zinc-500 text-zinc-300 min-h-[60px] text-sm"
               data-testid={`input-edit-comment-${comment.id}`}
             />
             <div className="flex gap-2">
               <Button size="sm" onClick={() => editMutation.mutate()} disabled={!editText.trim() || editText.trim() === comment.content} className="bg-orange-600 hover:bg-orange-700 text-white h-7 text-xs" data-testid={`button-save-edit-${comment.id}`}>
                 <Check className="h-3 w-3 mr-1" />Save
               </Button>
-              <Button size="sm" variant="outline" onClick={() => { setIsEditing(false); setEditText(comment.content); }} className="border-zinc-700 text-zinc-400 h-7 text-xs" data-testid={`button-cancel-edit-${comment.id}`}>
+              <Button size="sm" variant="outline" onClick={() => { setIsEditing(false); setEditText(comment.content); }} className="border-zinc-500 text-zinc-400 h-7 text-xs" data-testid={`button-cancel-edit-${comment.id}`}>
                 Cancel
               </Button>
             </div>
@@ -557,7 +557,7 @@ export default function KbPost() {
         <div className="max-w-4xl mx-auto px-4 py-12 text-center">
           <BookOpen className="h-12 w-12 text-zinc-600 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">Post Not Found</h2>
-          <Link href="/knowledge-base"><Button variant="outline" className="border-zinc-700 text-zinc-400">Back to KB</Button></Link>
+          <Link href="/knowledge-base"><Button variant="outline" className="border-zinc-500 text-zinc-400">Back to KB</Button></Link>
         </div>
       </Layout>
     );
@@ -595,7 +595,7 @@ export default function KbPost() {
               {post.status === "rejected" && <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-xs">Rejected</Badge>}
               {post.tags?.map((tag: string) => (
                 <Link key={tag} href={`/knowledge-base?tag=${encodeURIComponent(tag)}`}>
-                  <Badge variant="outline" className="text-xs border-zinc-700 text-zinc-500 hover:border-orange-500/30 hover:text-orange-400 cursor-pointer">
+                  <Badge variant="outline" className="text-xs border-zinc-500 text-zinc-500 hover:border-orange-500/30 hover:text-orange-400 cursor-pointer">
                     <Tag className="h-3 w-3 mr-1" />{tag}
                   </Badge>
                 </Link>
@@ -632,7 +632,7 @@ export default function KbPost() {
                   variant="outline"
                   size="sm"
                   onClick={() => bookmarkMutation.mutate()}
-                  className={`${isBookmarked ? "border-orange-500/30 text-orange-400 bg-orange-500/5" : "border-zinc-700 text-zinc-400"} hover:bg-orange-500/10`}
+                  className={`${isBookmarked ? "border-orange-500/30 text-orange-400 bg-orange-500/5" : "border-zinc-500 text-zinc-400"} hover:bg-orange-500/10`}
                   data-testid="button-bookmark-post"
                 >
                   {isBookmarked ? <BookmarkCheck className="h-4 w-4 mr-1" /> : <Bookmark className="h-4 w-4 mr-1" />}
@@ -701,7 +701,7 @@ export default function KbPost() {
               )}
               {canEdit && (
                 <>
-                  <Button variant="outline" size="sm" onClick={() => setLocation(`/knowledge-base/${post.slug}/edit`)} className="border-zinc-700 text-zinc-400" data-testid="button-edit-post">
+                  <Button variant="outline" size="sm" onClick={() => setLocation(`/knowledge-base/${post.slug}/edit`)} className="border-zinc-500 text-zinc-400" data-testid="button-edit-post">
                     <Edit className="h-4 w-4 mr-1" />Edit
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => { if (confirm("Delete this post?")) deleteMutation.mutate(); }} className="border-red-500/30 text-red-400 hover:bg-red-500/10" data-testid="button-delete-post">
@@ -714,10 +714,10 @@ export default function KbPost() {
 
             {showQrCode && qrDataUrl && (
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60" onClick={() => setShowQrCode(false)}>
-                <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-xs mx-4 text-center" onClick={(e) => e.stopPropagation()}>
+                <div className="bg-zinc-900 border border-zinc-500 rounded-xl p-6 w-full max-w-xs mx-4 text-center" onClick={(e) => e.stopPropagation()}>
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2"><QrCode className="h-5 w-5 text-orange-400" />QR Code</h3>
-                    <button onClick={() => setShowQrCode(false)} className="text-zinc-500 hover:text-zinc-300" data-testid="button-close-qr"><X className="h-5 w-5" /></button>
+                    <button onClick={() => setShowQrCode(false)} className="text-zinc-500 hover:text-zinc-300" data-testid="button-close-qr" aria-label="Close QR code"><X className="h-5 w-5" /></button>
                   </div>
                   <img src={qrDataUrl} alt="QR Code" className="mx-auto rounded-lg mb-3" width={256} height={256} data-testid="img-qr-code" />
                   <p className="text-xs text-zinc-500 mb-1">Scan to open this post</p>
@@ -733,7 +733,7 @@ export default function KbPost() {
               const headings = extractHeadings(post.content);
               if (headings.length < 3) return null;
               return (
-                <div className="mb-6 rounded-lg border border-zinc-700 bg-zinc-800/50" data-testid="toc-section">
+                <div className="mb-6 rounded-lg border border-zinc-500 bg-zinc-800/50" data-testid="toc-section">
                   <button
                     onClick={() => setTocOpen(!tocOpen)}
                     className="flex items-center justify-between w-full px-4 py-3 text-sm font-semibold text-zinc-300 hover:text-orange-400 transition-colors"

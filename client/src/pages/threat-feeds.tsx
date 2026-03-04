@@ -214,7 +214,7 @@ export default function ThreatFeeds() {
 
         {/* Threat Data Tabs */}
         <Tabs defaultValue="ips" className="space-y-4">
-          <TabsList className="bg-background border border-white/10" data-testid="tabs-threat-data">
+          <TabsList className="bg-background border border-zinc-500" data-testid="tabs-threat-data">
             <TabsTrigger value="ips" className="data-[state=active]:bg-primary/20" data-testid="tab-malicious-ips">
               Malicious IPs ({ipsData?.total || 0})
             </TabsTrigger>
@@ -256,7 +256,7 @@ export default function ThreatFeeds() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search IPs, sources, threat types..."
-                      className="pl-10 bg-background/50 border-white/10 h-9 text-sm"
+                      className="pl-10 bg-background/50 border-zinc-500 h-9 text-sm"
                       value={ipSearch}
                       onChange={(e) => { setIpSearch(e.target.value); setIpPage(1); }}
                       data-testid="input-search-ips"
@@ -264,7 +264,7 @@ export default function ThreatFeeds() {
                   </div>
                   <div className="flex gap-2">
                     <Select value={ipSort} onValueChange={(v) => { setIpSort(v as IpSortOption); setIpPage(1); }}>
-                      <SelectTrigger className="w-[150px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-sort-ips">
+                      <SelectTrigger className="w-[150px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-sort-ips">
                         <ArrowUpDown className="h-3 w-3 mr-2 text-muted-foreground" />
                         <SelectValue />
                       </SelectTrigger>
@@ -276,7 +276,7 @@ export default function ThreatFeeds() {
                       </SelectContent>
                     </Select>
                     <Select value={ipSourceFilter} onValueChange={(v) => { setIpSourceFilter(v); setIpPage(1); }}>
-                      <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-source-ips">
+                      <SelectTrigger className="w-[160px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-source-ips">
                         <SelectValue placeholder="All Sources" />
                       </SelectTrigger>
                       <SelectContent>
@@ -377,7 +377,7 @@ export default function ThreatFeeds() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search URLs, sources, threat types..."
-                      className="pl-10 bg-background/50 border-white/10 h-9 text-sm"
+                      className="pl-10 bg-background/50 border-zinc-500 h-9 text-sm"
                       value={urlSearch}
                       onChange={(e) => { setUrlSearch(e.target.value); setUrlPage(1); }}
                       data-testid="input-search-urls"
@@ -385,7 +385,7 @@ export default function ThreatFeeds() {
                   </div>
                   <div className="flex gap-2">
                     <Select value={urlSort} onValueChange={(v) => { setUrlSort(v as UrlSortOption); setUrlPage(1); }}>
-                      <SelectTrigger className="w-[150px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-sort-urls">
+                      <SelectTrigger className="w-[150px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-sort-urls">
                         <ArrowUpDown className="h-3 w-3 mr-2 text-muted-foreground" />
                         <SelectValue />
                       </SelectTrigger>
@@ -397,7 +397,7 @@ export default function ThreatFeeds() {
                       </SelectContent>
                     </Select>
                     <Select value={urlSourceFilter} onValueChange={(v) => { setUrlSourceFilter(v); setUrlPage(1); }}>
-                      <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-source-urls">
+                      <SelectTrigger className="w-[160px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-source-urls">
                         <SelectValue placeholder="All Sources" />
                       </SelectTrigger>
                       <SelectContent>
@@ -408,7 +408,7 @@ export default function ThreatFeeds() {
                       </SelectContent>
                     </Select>
                     <Select value={urlStatusFilter} onValueChange={(v) => { setUrlStatusFilter(v); setUrlPage(1); }}>
-                      <SelectTrigger className="w-[140px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-status-urls">
+                      <SelectTrigger className="w-[140px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-status-urls">
                         <SelectValue placeholder="All Statuses" />
                       </SelectTrigger>
                       <SelectContent>
@@ -504,7 +504,7 @@ export default function ThreatFeeds() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                     <Input
                       placeholder="Search CVEs, vendors, products..."
-                      className="pl-10 bg-background/50 border-white/10 h-9 text-sm"
+                      className="pl-10 bg-background/50 border-zinc-500 h-9 text-sm"
                       value={kevSearch}
                       onChange={(e) => { setKevSearch(e.target.value); setKevPage(1); }}
                       data-testid="input-search-kev"
@@ -512,7 +512,7 @@ export default function ThreatFeeds() {
                   </div>
                   <div className="flex gap-2">
                     <Select value={kevSort} onValueChange={(v) => { setKevSort(v as KevSortOption); setKevPage(1); }}>
-                      <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-sort-kev">
+                      <SelectTrigger className="w-[160px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-sort-kev">
                         <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                         <SelectValue placeholder="Sort by" />
                       </SelectTrigger>
@@ -524,7 +524,7 @@ export default function ThreatFeeds() {
                       </SelectContent>
                     </Select>
                     <Select value={kevVendorFilter} onValueChange={(v) => { setKevVendorFilter(v); setKevPage(1); }}>
-                      <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-vendor-kev">
+                      <SelectTrigger className="w-[160px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-vendor-kev">
                         <SlidersHorizontal className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                         <SelectValue placeholder="Vendor" />
                       </SelectTrigger>

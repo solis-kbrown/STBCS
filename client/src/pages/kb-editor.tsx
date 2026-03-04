@@ -162,10 +162,10 @@ export default function KbEditor() {
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-2xl font-bold text-white">{isEditMode ? "Edit Post" : "New Post"}</h1>
           <div className="flex gap-2">
-            <Button variant="outline" onClick={() => setPreview(!preview)} className="border-zinc-700 text-zinc-400" data-testid="button-toggle-preview">
+            <Button variant="outline" onClick={() => setPreview(!preview)} className="border-zinc-500 text-zinc-400" data-testid="button-toggle-preview">
               {preview ? <><Edit className="h-4 w-4 mr-2" />Edit</> : <><Eye className="h-4 w-4 mr-2" />Preview</>}
             </Button>
-            <Button variant="outline" onClick={() => saveMutation.mutate(true)} disabled={!title.trim() || saveMutation.isPending} className="border-zinc-700 text-zinc-400" data-testid="button-save-draft">
+            <Button variant="outline" onClick={() => saveMutation.mutate(true)} disabled={!title.trim() || saveMutation.isPending} className="border-zinc-500 text-zinc-400" data-testid="button-save-draft">
               <Save className="h-4 w-4 mr-2" />Save Draft
             </Button>
             <Button onClick={() => saveMutation.mutate(false)} disabled={!title.trim() || !content.trim() || saveMutation.isPending} className="bg-orange-500 hover:bg-orange-600 text-white" data-testid="button-save-post">
@@ -187,7 +187,7 @@ export default function KbEditor() {
               {POST_TYPES.find(t => t.value === type) && (
                 <Badge className="bg-orange-500/20 text-orange-400 text-xs">{POST_TYPES.find(t => t.value === type)?.label}</Badge>
               )}
-              {tags.map(t => <Badge key={t} variant="outline" className="text-xs border-zinc-700 text-zinc-500">{t}</Badge>)}
+              {tags.map(t => <Badge key={t} variant="outline" className="text-xs border-zinc-500 text-zinc-500">{t}</Badge>)}
             </div>
             <div ref={previewRef} className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: renderMarkdown(content || "*No content yet*") }} />
           </div>
@@ -200,7 +200,7 @@ export default function KbEditor() {
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="Enter a descriptive title..."
-                className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-600"
+                className="bg-zinc-800/50 border-zinc-500 text-white placeholder:text-zinc-600"
               />
             </div>
 
@@ -217,7 +217,7 @@ export default function KbEditor() {
                       className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-all ${
                         type === t.value
                           ? "bg-orange-500/15 text-orange-400 border border-orange-500/30"
-                          : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50 hover:bg-zinc-800"
+                          : "bg-zinc-800/50 text-zinc-400 border border-zinc-500/50 hover:bg-zinc-800"
                       }`}
                     >
                       <Icon className="h-4 w-4" />{t.label}
@@ -234,7 +234,7 @@ export default function KbEditor() {
                 value={content}
                 onChange={(e) => setContent(e.target.value)}
                 placeholder="Write your content using Markdown... Supports code blocks, headers, links, and more."
-                className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-600 font-mono text-sm min-h-[400px]"
+                className="bg-zinc-800/50 border-zinc-500 text-white placeholder:text-zinc-600 font-mono text-sm min-h-[400px]"
               />
               <p className="text-xs text-zinc-600 mt-2">Supports Markdown: **bold**, *italic*, `code`, ```code blocks```, ## headers, - lists, [links](url)</p>
             </div>
@@ -243,9 +243,9 @@ export default function KbEditor() {
               <Label className="text-zinc-300 mb-2 block">Tags</Label>
               <div className="flex flex-wrap gap-2 mb-2">
                 {tags.map(t => (
-                  <Badge key={t} className="bg-zinc-800 text-zinc-300 border-zinc-700 text-xs flex items-center gap-1">
+                  <Badge key={t} className="bg-zinc-800 text-zinc-300 border-zinc-500 text-xs flex items-center gap-1">
                     {t}
-                    <button onClick={() => removeTag(t)} className="hover:text-red-400"><X className="h-3 w-3" /></button>
+                    <button onClick={() => removeTag(t)} className="hover:text-red-400" aria-label={`Remove tag ${t}`}><X className="h-3 w-3" /></button>
                   </Badge>
                 ))}
               </div>
@@ -256,9 +256,9 @@ export default function KbEditor() {
                   onChange={(e) => setTagInput(e.target.value)}
                   onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())}
                   placeholder="Add a tag..."
-                  className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-600 max-w-xs"
+                  className="bg-zinc-800/50 border-zinc-500 text-white placeholder:text-zinc-600 max-w-xs"
                 />
-                <Button variant="outline" onClick={addTag} className="border-zinc-700 text-zinc-400" data-testid="button-add-tag">
+                <Button variant="outline" onClick={addTag} className="border-zinc-500 text-zinc-400" data-testid="button-add-tag" aria-label="Add tag">
                   <Plus className="h-4 w-4" />
                 </Button>
               </div>

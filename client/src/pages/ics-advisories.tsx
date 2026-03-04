@@ -203,12 +203,12 @@ export default function ICSAdvisories() {
               placeholder="Search advisories, CVEs, vendors..."
               value={search}
               onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
-              className="pl-10 bg-background/50 border-white/10 h-10"
+              className="pl-10 bg-background/50 border-zinc-500 h-10"
               data-testid="input-search-ics"
             />
           </div>
           <Select value={severityFilter} onValueChange={(v) => { setSeverityFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger className="w-[150px] bg-background/50 border-white/10 h-10" data-testid="select-severity">
+            <SelectTrigger className="w-[150px] bg-background/50 border-zinc-500 h-10" data-testid="select-severity">
               <SelectValue placeholder="Severity" />
             </SelectTrigger>
             <SelectContent>
@@ -220,7 +220,7 @@ export default function ICSAdvisories() {
             </SelectContent>
           </Select>
           <Select value={vendorFilter} onValueChange={(v) => { setVendorFilter(v); setCurrentPage(1); }}>
-            <SelectTrigger className="w-[180px] bg-background/50 border-white/10 h-10" data-testid="select-vendor">
+            <SelectTrigger className="w-[180px] bg-background/50 border-zinc-500 h-10" data-testid="select-vendor">
               <SelectValue placeholder="Vendor" />
             </SelectTrigger>
             <SelectContent>
@@ -231,7 +231,7 @@ export default function ICSAdvisories() {
             </SelectContent>
           </Select>
           <Select value={sortBy} onValueChange={(v) => { setSortBy(v as SortOption); setCurrentPage(1); }}>
-            <SelectTrigger className="w-[150px] bg-background/50 border-white/10 h-10" data-testid="select-sort">
+            <SelectTrigger className="w-[150px] bg-background/50 border-zinc-500 h-10" data-testid="select-sort">
               <SelectValue placeholder="Sort" />
             </SelectTrigger>
             <SelectContent>
@@ -241,7 +241,7 @@ export default function ICSAdvisories() {
               <SelectItem value="cvss">By CVSS Score</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="ghost" size="icon" onClick={resetFilters} className="h-10 w-10" data-testid="button-reset-filters">
+          <Button variant="ghost" size="icon" onClick={resetFilters} className="h-10 w-10" data-testid="button-reset-filters" aria-label="Reset filters">
             <RotateCcw className="h-4 w-4" />
           </Button>
         </div>
@@ -317,7 +317,7 @@ export default function ICSAdvisories() {
                       </div>
                       {advisory.sourceUrl && (
                         <a href={advisory.sourceUrl} target="_blank" rel="noopener noreferrer" className="shrink-0">
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-orange-400" data-testid={`button-link-${advisory.id}`}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-orange-400" data-testid={`button-link-${advisory.id}`} aria-label="Open advisory">
                             <ExternalLink className="h-4 w-4" />
                           </Button>
                         </a>

@@ -212,13 +212,13 @@ function LogoThemePicker() {
               className={`bg-zinc-900 transition-all cursor-pointer group ${
                 isActive
                   ? "ring-2 ring-orange-500/50 border-orange-500/40"
-                  : "border-zinc-800 hover:border-zinc-600 hover:ring-1 hover:ring-orange-500/20"
+                  : "border-zinc-800 hover:border-zinc-400 hover:ring-1 hover:ring-orange-500/20"
               }`}
               onClick={() => !isActive && setTheme.mutate(theme.id)}
               data-testid={`theme-card-${theme.id}`}
             >
               <CardContent className="p-3">
-                <div className="aspect-square bg-zinc-950 rounded-lg overflow-hidden mb-2 flex items-center justify-center relative border border-zinc-800 group-hover:border-zinc-600">
+                <div className="aspect-square bg-zinc-950 rounded-lg overflow-hidden mb-2 flex items-center justify-center relative border border-zinc-800 group-hover:border-zinc-400">
                   <img
                     src={theme.fullLogo}
                     alt={theme.name}
@@ -322,7 +322,7 @@ function IconThemePicker() {
               className={`bg-zinc-900 transition-all cursor-pointer group ${
                 isActive
                   ? "ring-2 ring-orange-500/50 border-orange-500/40"
-                  : "border-zinc-800 hover:border-zinc-600 hover:ring-1 hover:ring-orange-500/20"
+                  : "border-zinc-800 hover:border-zinc-400 hover:ring-1 hover:ring-orange-500/20"
               }`}
               onClick={() => !isActive && setTheme.mutate(theme.id)}
               data-testid={`icon-theme-card-${theme.id}`}
@@ -447,7 +447,7 @@ export default function LogoGallery() {
       <div className="max-w-6xl mx-auto space-y-10">
         <div className="flex items-center gap-4 mb-2">
           <Link href="/brand-kit">
-            <Button variant="ghost" size="icon" data-testid="button-back-brand-kit">
+            <Button variant="ghost" size="icon" data-testid="button-back-brand-kit" aria-label="Back to Brand Kit">
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
@@ -474,7 +474,7 @@ export default function LogoGallery() {
             </button>
           </Link>
           <Link href="/hero-backgrounds">
-            <button className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 rounded-t-lg transition-colors" data-testid="tab-backgrounds">
+            <button className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-400 rounded-t-lg transition-colors" data-testid="tab-backgrounds">
               <Monitor className="h-4 w-4 inline mr-1.5 -mt-0.5" />Hero Backgrounds
             </button>
           </Link>
@@ -543,7 +543,7 @@ export default function LogoGallery() {
               return (
                 <Card
                   key={v.id}
-                  className={`bg-zinc-900 transition-all ${hasVoted ? "border-orange-500/50 ring-1 ring-orange-500/20" : "border-zinc-800 hover:border-zinc-600"}`}
+                  className={`bg-zinc-900 transition-all ${hasVoted ? "border-orange-500/50 ring-1 ring-orange-500/20" : "border-zinc-800 hover:border-zinc-400"}`}
                   data-testid={`vote-card-${v.id}`}
                 >
                   <CardContent className="p-5">
@@ -603,7 +603,7 @@ export default function LogoGallery() {
               {section.items.map((item) => (
                 <Card
                   key={item.file}
-                  className={`bg-zinc-900 border-zinc-800 hover:border-zinc-600 transition-colors ${item.active ? "ring-2 ring-orange-500/30 border-orange-500/40" : ""}`}
+                  className={`bg-zinc-900 border-zinc-800 hover:border-zinc-400 transition-colors ${item.active ? "ring-2 ring-orange-500/30 border-orange-500/40" : ""}`}
                   data-testid={`card-asset-${item.name.toLowerCase().replace(/\s+/g, "-")}`}
                 >
                   <CardContent className="p-3">

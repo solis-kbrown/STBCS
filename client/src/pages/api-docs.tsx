@@ -368,7 +368,7 @@ export default function ApiDocsPage() {
             <Button className="bg-orange-500 hover:bg-orange-600 text-white" onClick={() => setLocation("/support")} data-testid="button-subscribe-cta">
               Subscribe Now <ArrowRight className="h-4 w-4 ml-2" />
             </Button>
-            <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:bg-zinc-800" onClick={() => setLocation("/contact")} data-testid="button-contact-sales">
+            <Button variant="outline" className="border-zinc-500 text-zinc-300 hover:bg-zinc-800" onClick={() => setLocation("/contact")} data-testid="button-contact-sales">
               Contact Sales
             </Button>
           </div>

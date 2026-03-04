@@ -113,7 +113,7 @@ export default function ProfilePage() {
           <h2 className="text-xl font-bold text-white">User Not Found</h2>
           <p className="text-zinc-400">This user doesn't exist or their profile is private.</p>
           <Link href="/knowledge-base">
-            <Button variant="outline" className="border-zinc-700 text-zinc-400">
+            <Button variant="outline" className="border-zinc-500 text-zinc-400">
               <ArrowLeft className="h-4 w-4 mr-2" />Back to Knowledge Base
             </Button>
           </Link>
@@ -193,7 +193,7 @@ export default function ProfilePage() {
                 </div>
 
                 {!profile.profilePublic && (
-                  <div className="mt-4 p-3 rounded-lg bg-zinc-800/50 border border-zinc-700 flex items-center gap-2 text-xs text-zinc-500">
+                  <div className="mt-4 p-3 rounded-lg bg-zinc-800/50 border border-zinc-500 flex items-center gap-2 text-xs text-zinc-500">
                     <Lock className="h-3.5 w-3.5" />This user has a private profile
                   </div>
                 )}

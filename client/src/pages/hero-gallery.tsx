@@ -47,7 +47,7 @@ export default function HeroGallery() {
     <Layout>
       <div className="space-y-8 page-transition">
         <div className="flex items-center gap-4 mb-2">
-          <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white" asChild data-testid="link-back">
+          <Button variant="ghost" size="icon" className="text-zinc-400 hover:text-white" asChild data-testid="link-back" aria-label="Back to Brand Kit">
             <Link href="/brand-kit"><ArrowLeft className="h-5 w-5" /></Link>
           </Button>
           <div className="flex-1">
@@ -58,12 +58,12 @@ export default function HeroGallery() {
 
         <div className="flex items-center gap-2 border-b border-zinc-800 pb-0" data-testid="brand-tabs">
           <Link href="/logos">
-            <button className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 rounded-t-lg transition-colors" data-testid="tab-logos">
+            <button className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-400 rounded-t-lg transition-colors" data-testid="tab-logos">
               <Copyright className="h-4 w-4 inline mr-1.5 -mt-0.5" />Logos
             </button>
           </Link>
           <Link href="/logos#icon-themes">
-            <button className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 rounded-t-lg transition-colors" data-testid="tab-icon-themes">
+            <button className="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-zinc-400 hover:text-zinc-200 hover:border-zinc-400 rounded-t-lg transition-colors" data-testid="tab-icon-themes">
               <Paintbrush className="h-4 w-4 inline mr-1.5 -mt-0.5" />Icon Themes
             </button>
           </Link>
@@ -78,13 +78,13 @@ export default function HeroGallery() {
           <Badge variant="outline" className="border-orange-500/30 text-orange-400">
             <Monitor className="h-3 w-3 mr-1" /> {HERO_BACKGROUNDS.length} Options
           </Badge>
-          <Badge variant="outline" className="border-zinc-700 text-zinc-400">
+          <Badge variant="outline" className="border-zinc-500 text-zinc-400">
             <Zap className="h-3 w-3 mr-1" /> {HERO_BACKGROUNDS.filter(b => (b.tags as readonly string[]).includes("animated")).length} Animated
           </Badge>
-          <Badge variant="outline" className="border-zinc-700 text-zinc-400">
+          <Badge variant="outline" className="border-zinc-500 text-zinc-400">
             <Layers className="h-3 w-3 mr-1" /> {HERO_BACKGROUNDS.filter(b => (b.tags as readonly string[]).includes("static")).length} Static
           </Badge>
-          <Badge variant="outline" className="border-zinc-700 text-zinc-400">
+          <Badge variant="outline" className="border-zinc-500 text-zinc-400">
             <Image className="h-3 w-3 mr-1" /> {HERO_BACKGROUNDS.filter(b => (b.tags as readonly string[]).includes("image")).length} HD Images
           </Badge>
         </div>
@@ -117,7 +117,7 @@ export default function HeroGallery() {
                 <p className="text-zinc-500 text-sm">Full-size preview with hero overlay</p>
               </div>
               <div className="flex gap-2">
-                <Button variant="outline" className="border-zinc-700 text-zinc-400" onClick={() => setPreview(null)} data-testid="button-close-preview">Close Preview</Button>
+                <Button variant="outline" className="border-zinc-500 text-zinc-400" onClick={() => setPreview(null)} data-testid="button-close-preview">Close Preview</Button>
                 {preview !== currentBg && (
                   <Button
                     className="bg-primary hover:bg-primary/90"
@@ -156,7 +156,7 @@ export default function HeroGallery() {
                   )}
                   <div className="absolute bottom-2 left-2 z-10 flex gap-1">
                     {bg.tags.map(tag => (
-                      <Badge key={tag} variant="outline" className="bg-zinc-950/80 border-zinc-700 text-zinc-400 text-[10px] px-1.5 py-0">{tag}</Badge>
+                      <Badge key={tag} variant="outline" className="bg-zinc-950/80 border-zinc-500 text-zinc-400 text-[10px] px-1.5 py-0">{tag}</Badge>
                     ))}
                   </div>
                   <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity bg-black/30 z-10">
@@ -174,7 +174,7 @@ export default function HeroGallery() {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1 border-zinc-700 text-zinc-400 hover:text-white text-xs"
+                      className="flex-1 border-zinc-500 text-zinc-400 hover:text-white text-xs"
                       onClick={() => setPreview(bg.id)}
                       data-testid={`button-preview-${bg.id}`}
                     >

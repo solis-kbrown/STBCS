@@ -163,6 +163,7 @@ function MessageThread({
           onClick={onBack}
           className="md:hidden"
           data-testid="button-back"
+          aria-label="Go back"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
@@ -232,6 +233,7 @@ function MessageThread({
             disabled={!message.trim() || sendSms.isPending}
             className="bg-orange-500 hover:bg-orange-600 px-4"
             data-testid="button-send"
+            aria-label="Send message"
           >
             <Send className="h-4 w-4" />
           </Button>

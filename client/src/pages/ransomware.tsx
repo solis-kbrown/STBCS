@@ -182,7 +182,7 @@ export default function Ransomware() {
                 Export JSON
               </Button>
             ) : (
-              <Button variant="outline" className="border-zinc-700 text-zinc-500 cursor-not-allowed" disabled data-testid="button-export-locked">
+              <Button variant="outline" className="border-zinc-500 text-zinc-500 cursor-not-allowed" disabled data-testid="button-export-locked">
                 <Lock className="h-4 w-4 mr-2" />
                 Export (Pro)
               </Button>
@@ -201,7 +201,7 @@ export default function Ransomware() {
         </AnimatedSection>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
-          <TabsList className="bg-zinc-900/50 border border-white/10">
+          <TabsList className="bg-zinc-900/50 border border-zinc-500">
             <TabsTrigger value="tracker" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400" data-testid="tab-tracker">
               Tracker
             </TabsTrigger>
@@ -491,7 +491,7 @@ export default function Ransomware() {
                 <Input 
                   name="search"
                   placeholder="Search victims, groups, countries\u2026 (press Enter)" 
-                  className="pl-10 bg-background/50 border-white/10 h-10"
+                  className="pl-10 bg-background/50 border-zinc-500 h-10"
                   autoComplete="off"
                   aria-label="Search ransomware incidents"
                   value={searchQuery}
@@ -513,7 +513,7 @@ export default function Ransomware() {
               </div>
               <div className="flex gap-2">
                 <Select value={sortBy} onValueChange={(v) => { setSortBy(v as SortOption); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[170px] bg-background/50 border-white/10 h-10" data-testid="select-sort-ransomware">
+                  <SelectTrigger className="w-[170px] bg-background/50 border-zinc-500 h-10" data-testid="select-sort-ransomware">
                     <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Sort by" />
                   </SelectTrigger>
@@ -528,7 +528,7 @@ export default function Ransomware() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className={`border-white/10 h-10 px-3 ${showFilters ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'text-muted-foreground hover:text-white'}`}
+                  className={`border-zinc-500 h-10 px-3 ${showFilters ? 'bg-orange-500/20 text-orange-400 border-orange-500/30' : 'text-muted-foreground hover:text-white'}`}
                   onClick={() => setShowFilters(!showFilters)}
                   data-testid="button-toggle-filters"
                 >
@@ -546,7 +546,7 @@ export default function Ransomware() {
             {showFilters && (
               <div className="flex flex-wrap gap-3 pt-2 border-t border-white/5 animate-in slide-in-from-top-2 duration-200">
                 <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-status-filter">
+                  <SelectTrigger className="w-[160px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-status-filter">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
@@ -558,7 +558,7 @@ export default function Ransomware() {
                 </Select>
 
                 <Select value={dateRange} onValueChange={(v) => { setDateRange(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[150px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-date-range">
+                  <SelectTrigger className="w-[150px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-date-range">
                     <Calendar className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Date Range" />
                   </SelectTrigger>
@@ -572,7 +572,7 @@ export default function Ransomware() {
                 </Select>
 
                 <Select value={countryFilter} onValueChange={(v) => { setCountryFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-country-filter">
+                  <SelectTrigger className="w-[160px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-country-filter">
                     <MapPin className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Country" />
                   </SelectTrigger>
@@ -585,7 +585,7 @@ export default function Ransomware() {
                 </Select>
 
                 <Select value={sectorFilter} onValueChange={(v) => { setSectorFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-sector-filter">
+                  <SelectTrigger className="w-[160px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-sector-filter">
                     <Building2 className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue placeholder="Sector" />
                   </SelectTrigger>
@@ -616,7 +616,7 @@ export default function Ransomware() {
               <Button 
                 variant={!selectedGroup ? "default" : "ghost"} 
                 size="sm" 
-                className={`h-7 text-xs ${!selectedGroup ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border border-white/10 bg-white/5 text-muted-foreground hover:text-white'}`}
+                className={`h-7 text-xs ${!selectedGroup ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border border-zinc-500 bg-white/5 text-muted-foreground hover:text-white'}`}
                 onClick={() => { setSelectedGroup(undefined); setCurrentPage(1); }}
                 data-testid="button-filter-all"
               >
@@ -627,7 +627,7 @@ export default function Ransomware() {
                   key={g.name}
                   variant={selectedGroup === g.name ? "default" : "ghost"} 
                   size="sm" 
-                  className={`h-7 text-xs ${selectedGroup === g.name ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border border-white/10 bg-white/5 text-muted-foreground hover:text-white'}`}
+                  className={`h-7 text-xs ${selectedGroup === g.name ? 'bg-orange-500 hover:bg-orange-600 text-white' : 'border border-zinc-500 bg-white/5 text-muted-foreground hover:text-white'}`}
                   onClick={() => { setSelectedGroup(g.name); setCurrentPage(1); }}
                   data-testid={`button-filter-${g.name.replace(/[^a-zA-Z0-9]/g, '')}`}
                 >
@@ -826,6 +826,7 @@ export default function Ransomware() {
                               className="h-7 w-7 text-muted-foreground hover:text-white"
                               onClick={(e) => e.stopPropagation()}
                               data-testid={`button-share-incident-${incident.id}`}
+                              aria-label="Share incident"
                             >
                               <Share2 className="h-3.5 w-3.5" />
                             </Button>

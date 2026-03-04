@@ -164,7 +164,7 @@ export default function ContactPage() {
                             className={`flex flex-col items-center gap-1.5 p-3 rounded-lg border text-xs font-medium transition-all ${
                               form.category === cat.value
                                 ? "border-orange-500 bg-orange-500/10 text-orange-400"
-                                : "border-zinc-700 bg-zinc-800/50 text-zinc-400 hover:border-zinc-600 hover:text-zinc-300"
+                                : "border-zinc-500 bg-zinc-800/50 text-zinc-400 hover:border-zinc-400 hover:text-zinc-300"
                             }`}
                             data-testid={`button-category-${cat.value}`}
                           >
@@ -187,7 +187,7 @@ export default function ContactPage() {
                           value={form.name}
                           onChange={(e) => updateField("name", e.target.value)}
                           placeholder="John Smith"
-                          className="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30"
+                          className="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-500 rounded-lg text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30"
                           data-testid="input-contact-name"
                         />
                       </div>
@@ -202,7 +202,7 @@ export default function ContactPage() {
                           value={form.email}
                           onChange={(e) => updateField("email", e.target.value)}
                           placeholder="john@company.com"
-                          className="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30"
+                          className="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-500 rounded-lg text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30"
                           data-testid="input-contact-email"
                         />
                       </div>
@@ -219,7 +219,7 @@ export default function ContactPage() {
                         value={form.subject}
                         onChange={(e) => updateField("subject", e.target.value)}
                         placeholder="Brief description of your inquiry"
-                        className="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30"
+                        className="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-500 rounded-lg text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30"
                         data-testid="input-contact-subject"
                       />
                     </div>
@@ -235,7 +235,7 @@ export default function ContactPage() {
                         value={form.message}
                         onChange={(e) => updateField("message", e.target.value)}
                         placeholder="Tell us about your situation, what you need, or how we can help..."
-                        className="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-700 rounded-lg text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30 resize-none"
+                        className="w-full px-3 py-2.5 bg-zinc-800 border border-zinc-500 rounded-lg text-white text-sm placeholder:text-zinc-500 focus:outline-none focus:border-orange-500/50 focus:ring-1 focus:ring-orange-500/30 resize-none"
                         data-testid="input-contact-message"
                       />
                     </div>

@@ -241,7 +241,7 @@ export default function GroupsDirectory() {
                   </Button>
                 </>
               ) : (
-                <Button variant="outline" className="border-zinc-700 text-zinc-500 cursor-not-allowed" disabled data-testid="button-export-groups-locked">
+                <Button variant="outline" className="border-zinc-500 text-zinc-500 cursor-not-allowed" disabled data-testid="button-export-groups-locked">
                   <Lock className="h-4 w-4 mr-2" />
                   Export (Pro)
                 </Button>
@@ -282,7 +282,7 @@ export default function GroupsDirectory() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search groups, aliases, sectors, countries, malware, affiliations..."
-                  className="pl-10 bg-background/50 border-white/10 h-10"
+                  className="pl-10 bg-background/50 border-zinc-500 h-10"
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setCurrentPage(1); }}
                   data-testid="input-search-groups"
@@ -290,7 +290,7 @@ export default function GroupsDirectory() {
               </div>
               <div className="flex gap-2">
                 <Select value={sortBy} onValueChange={(v) => { setSortBy(v as SortOption); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[180px] bg-background/50 border-white/10 h-10" data-testid="select-sort">
+                  <SelectTrigger className="w-[180px] bg-background/50 border-zinc-500 h-10" data-testid="select-sort">
                     <ArrowUpDown className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue />
                   </SelectTrigger>
@@ -305,7 +305,7 @@ export default function GroupsDirectory() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className={`border-white/10 h-10 px-3 ${showFilters ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "text-muted-foreground hover:text-white"}`}
+                  className={`border-zinc-500 h-10 px-3 ${showFilters ? "bg-orange-500/20 text-orange-400 border-orange-500/30" : "text-muted-foreground hover:text-white"}`}
                   onClick={() => setShowFilters(!showFilters)}
                   data-testid="button-toggle-filters"
                 >
@@ -321,7 +321,7 @@ export default function GroupsDirectory() {
             {showFilters && (
               <div className="flex flex-wrap gap-3 pt-2 border-t border-white/5 animate-in slide-in-from-top-2 duration-200">
                 <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[140px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-status-filter">
+                  <SelectTrigger className="w-[140px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-status-filter">
                     <Activity className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue />
                   </SelectTrigger>
@@ -333,7 +333,7 @@ export default function GroupsDirectory() {
                   </SelectContent>
                 </Select>
                 <Select value={raasFilter} onValueChange={(v) => { setRaasFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[140px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-raas-filter">
+                  <SelectTrigger className="w-[140px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-raas-filter">
                     <Skull className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue />
                   </SelectTrigger>
@@ -344,7 +344,7 @@ export default function GroupsDirectory() {
                   </SelectContent>
                 </Select>
                 <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-type-filter">
+                  <SelectTrigger className="w-[160px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-type-filter">
                     <Shield className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue />
                   </SelectTrigger>
@@ -357,7 +357,7 @@ export default function GroupsDirectory() {
                   </SelectContent>
                 </Select>
                 <Select value={originFilter} onValueChange={(v) => { setOriginFilter(v); setCurrentPage(1); }}>
-                  <SelectTrigger className="w-[160px] bg-background/50 border-white/10 h-9 text-sm" data-testid="select-origin-filter">
+                  <SelectTrigger className="w-[160px] bg-background/50 border-zinc-500 h-9 text-sm" data-testid="select-origin-filter">
                     <Globe className="h-3.5 w-3.5 mr-2 text-muted-foreground" />
                     <SelectValue />
                   </SelectTrigger>
@@ -404,7 +404,7 @@ export default function GroupsDirectory() {
               <Skull className="h-10 w-10 text-zinc-500 mx-auto mb-3" />
               <h3 className="text-lg font-bold text-white mb-1">No Groups Found</h3>
               <p className="text-sm text-muted-foreground">Try adjusting your search or filters.</p>
-              <Button variant="outline" size="sm" className="mt-4 border-white/10" onClick={clearAllFilters} data-testid="button-clear-empty">Clear Filters</Button>
+              <Button variant="outline" size="sm" className="mt-4 border-zinc-500" onClick={clearAllFilters} data-testid="button-clear-empty">Clear Filters</Button>
             </CardContent>
           </Card>
         )}

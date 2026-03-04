@@ -44,7 +44,7 @@ export default function IntelPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">
-          <TabsList className="bg-zinc-900/50 border border-white/10" data-testid="tabs-intel">
+          <TabsList className="bg-zinc-900/50 border border-zinc-500" data-testid="tabs-intel">
             <TabsTrigger value="news" className="data-[state=active]:bg-orange-500/20 data-[state=active]:text-orange-400" data-testid="tab-news">
               News
             </TabsTrigger>

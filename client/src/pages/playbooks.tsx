@@ -512,7 +512,7 @@ function PlaybookCard({ playbook }: { playbook: Playbook }) {
               </div>
             </div>
           </div>
-          <Button variant="ghost" size="icon" className="shrink-0 text-zinc-400">
+          <Button variant="ghost" size="icon" className="shrink-0 text-zinc-400" aria-label="Toggle section">
             {expanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
           </Button>
         </div>

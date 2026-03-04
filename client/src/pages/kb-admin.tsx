@@ -141,7 +141,7 @@ export default function KbAdmin() {
         <div className="max-w-4xl mx-auto px-4 py-12 text-center">
           <Shield className="h-12 w-12 text-red-400 mx-auto mb-4" />
           <h2 className="text-xl font-bold text-white mb-2">Admin Access Required</h2>
-          <Link href="/knowledge-base"><Button variant="outline" className="border-zinc-700 text-zinc-400">Back to KB</Button></Link>
+          <Link href="/knowledge-base"><Button variant="outline" className="border-zinc-500 text-zinc-400">Back to KB</Button></Link>
         </div>
       </Layout>
     );
@@ -169,7 +169,7 @@ export default function KbAdmin() {
             onClick={() => setTab("pending")}
             data-testid="tab-pending"
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              tab === "pending" ? "bg-orange-500/15 text-orange-400 border border-orange-500/30" : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50"
+              tab === "pending" ? "bg-orange-500/15 text-orange-400 border border-orange-500/30" : "bg-zinc-800/50 text-zinc-400 border border-zinc-500/50"
             }`}
           >
             <Clock className="h-4 w-4" />Pending Review
@@ -179,7 +179,7 @@ export default function KbAdmin() {
             onClick={() => setTab("users")}
             data-testid="tab-users"
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              tab === "users" ? "bg-orange-500/15 text-orange-400 border border-orange-500/30" : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50"
+              tab === "users" ? "bg-orange-500/15 text-orange-400 border border-orange-500/30" : "bg-zinc-800/50 text-zinc-400 border border-zinc-500/50"
             }`}
           >
             <Users className="h-4 w-4" />User Management
@@ -188,7 +188,7 @@ export default function KbAdmin() {
             onClick={() => setTab("reports")}
             data-testid="tab-reports"
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              tab === "reports" ? "bg-orange-500/15 text-orange-400 border border-orange-500/30" : "bg-zinc-800/50 text-zinc-400 border border-zinc-700/50"
+              tab === "reports" ? "bg-orange-500/15 text-orange-400 border border-orange-500/30" : "bg-zinc-800/50 text-zinc-400 border border-zinc-500/50"
             }`}
           >
             <Flag className="h-4 w-4" />Reports
@@ -220,7 +220,7 @@ export default function KbAdmin() {
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
                         <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/30 text-[10px]">{post.type}</Badge>
-                        {post.tags?.map((t: string) => <Badge key={t} variant="outline" className="text-[10px] border-zinc-700 text-zinc-500">{t}</Badge>)}
+                        {post.tags?.map((t: string) => <Badge key={t} variant="outline" className="text-[10px] border-zinc-500 text-zinc-500">{t}</Badge>)}
                       </div>
                       <h3 className="text-lg font-semibold text-white mb-1">{post.title}</h3>
                       <p className="text-sm text-zinc-500 line-clamp-2">{post.content?.replace(/[#*`>\-\[\]()!]/g, "").slice(0, 200)}</p>
@@ -232,7 +232,7 @@ export default function KbAdmin() {
                     </div>
                     <div className="flex gap-2 shrink-0">
                       <Link href={`/knowledge-base/${post.slug}`}>
-                        <Button variant="outline" size="sm" className="border-zinc-700 text-zinc-400" data-testid={`button-preview-${post.id}`}>
+                        <Button variant="outline" size="sm" className="border-zinc-500 text-zinc-400" data-testid={`button-preview-${post.id}`}>
                           <Eye className="h-4 w-4" />
                         </Button>
                       </Link>
@@ -368,7 +368,7 @@ export default function KbAdmin() {
                         <Badge className="bg-red-500/20 text-red-400 border-red-500/30 text-[10px]">
                           {report.reason?.replace("_", " ")}
                         </Badge>
-                        <Badge variant="outline" className="text-[10px] border-zinc-700 text-zinc-500">
+                        <Badge variant="outline" className="text-[10px] border-zinc-500 text-zinc-500">
                           {report.postId ? "Post" : "Comment"}
                         </Badge>
                       </div>
@@ -395,7 +395,7 @@ export default function KbAdmin() {
                           size="sm"
                           onClick={() => reviewReportMutation.mutate({ reportId: report.id, status: "dismissed" })}
                           disabled={reviewReportMutation.isPending}
-                          className="border-zinc-700 text-zinc-400"
+                          className="border-zinc-500 text-zinc-400"
                           data-testid={`button-dismiss-${report.id}`}
                         >
                           <X className="h-4 w-4 mr-1" />Dismiss
