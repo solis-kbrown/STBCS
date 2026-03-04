@@ -132,7 +132,7 @@ const FEATURE_CATEGORIES: FeatureCategory[] = [
     icon: Eye,
     rows: [
       { label: "Real-time threat dashboard", free: true, supporter: true, pro: true, business: true, unlimited: true },
-      { label: "105+ threat intelligence feeds", free: true, supporter: true, pro: true, business: true, unlimited: true },
+      { label: "130+ threat intelligence feeds", free: true, supporter: true, pro: true, business: true, unlimited: true },
       { label: "Ransomware group tracker", free: true, supporter: true, pro: true, business: true, unlimited: true },
       { label: "CVE & exploit database", free: true, supporter: true, pro: true, business: true, unlimited: true },
       { label: "Data breach database", free: true, supporter: true, pro: true, business: true, unlimited: true },
@@ -266,7 +266,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Is there a free trial?",
-    a: "We don't offer traditional free trials because our Free tier already gives you access to 20+ security tools, the full threat intelligence dashboard, and 105+ data feeds — permanently, no credit card required. Upgrade when you're ready for monitoring, exports, and advanced tools.",
+    a: "We don't offer traditional free trials because our Free tier already gives you access to 20+ security tools, the full threat intelligence dashboard, and 130+ data feeds — permanently, no credit card required. Upgrade when you're ready for monitoring, exports, and advanced tools.",
   },
   {
     q: "How does annual billing work?",
@@ -438,7 +438,7 @@ export default function PricingPage() {
               Security Intelligence Built for Your Budget
             </h1>
             <p className="text-xl text-zinc-400 leading-relaxed max-w-3xl mx-auto">
-              From free threat feeds to unlimited enterprise coverage. Every plan includes access to our real-time threat intelligence dashboard and 105+ data feeds. Upgrade when you need monitoring, exports, and advanced tools.
+              From free threat feeds to unlimited enterprise coverage. Every plan includes access to our real-time threat intelligence dashboard and 130+ data feeds. Upgrade when you need monitoring, exports, and advanced tools.
             </p>
           </div>
         </AnimatedSection>
@@ -640,7 +640,7 @@ export default function PricingPage() {
                 <Shield className="h-10 w-10 mx-auto text-orange-400" aria-hidden="true" />
                 <h3 className="font-bold text-white">No Credit Card for Free Tier</h3>
                 <p className="text-sm text-zinc-400">
-                  Sign up and start using 20+ security tools, the threat dashboard, and all 105+ data feeds immediately. No payment info required.
+                  Sign up and start using 20+ security tools, the threat dashboard, and all 130+ data feeds immediately. No payment info required.
                 </p>
               </CardContent>
             </Card>
@@ -714,7 +714,7 @@ export default function PricingPage() {
                 <h3 className="text-lg font-bold text-white">100% Community Funded — Zero Ads, Zero Data Selling</h3>
                 <p className="text-zinc-400 text-sm leading-relaxed">
                   Every scan, every API call, every threat feed costs real money. There are no investors, no ad revenue, and no data harvesting.
-                  Memberships, donations, and partnerships fund everything — hosting, 105+ data feeds, development, and research.
+                  Memberships, donations, and partnerships fund everything — hosting, 130+ data feeds, development, and research.
                 </p>
                 <div className="flex flex-wrap justify-center gap-4 text-xs text-zinc-500 pt-2">
                   <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" /> Hosting & Infrastructure</span>

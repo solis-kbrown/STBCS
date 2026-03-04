@@ -90,7 +90,7 @@ function getRiskLabel(score: number): string {
 export default function IOCSearch() {
   useDocumentTitle(
     "IOC Search | STB Cybersecurity",
-    "Search Indicators of Compromise across 105+ threat intelligence feeds. Check IPs, domains, hashes, URLs, and CVEs against multiple threat databases."
+    "Search Indicators of Compromise across 130+ threat intelligence feeds. Check IPs, domains, hashes, URLs, and CVEs against multiple threat databases."
   );
 
   const [query, setQuery] = useState("");
@@ -230,7 +230,7 @@ export default function IOCSearch() {
             IOC Search
           </h1>
           <p className="text-muted-foreground">
-            Search Indicators of Compromise across 105+ threat intelligence feeds. Enter an IP address, domain, file hash, URL, or CVE ID.
+            Search Indicators of Compromise across 130+ threat intelligence feeds. Enter an IP address, domain, file hash, URL, or CVE ID.
           </p>
         </div>
 

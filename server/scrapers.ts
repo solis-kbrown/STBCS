@@ -2,7 +2,7 @@ import { storage } from "./storage";
 import type { InsertCve, InsertRansomware, InsertNews, InsertMaliciousIp, InsertMaliciousUrl, InsertCisaKev, InsertNotification, InsertIcsAdvisory } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { watchlistItems, cves } from "@shared/schema";
+import { watchlistItems, cves, threatActors } from "@shared/schema";
 import { createLogger, scraperLog } from "./logger";
 import Parser from "rss-parser";
 const log = createLogger("Scraper");
@@ -91,7 +91,7 @@ async function triggerWatchlistNotifications(
 // ============================================
 // THREAT INTELLIGENCE FEED SOURCES
 // ============================================
-// This system integrates 105+ free and premium threat intel feeds
+// This system integrates 130+ free and premium threat intel feeds
 // to provide comprehensive, real-time threat data
 
 const USER_AGENT = "STBCS/1.0 (STB Cybersecurity Threat Intelligence Platform)";
@@ -4399,6 +4399,106 @@ export async function fetchResearchIOCRepos(): Promise<number> {
 }
 
 // ============================================
+// ADDITIONAL NETWORK & INFRASTRUCTURE INTELLIGENCE
+// ============================================
+
+export async function fetchStamparmBlackbook(): Promise<number> {
+  try {
+    log.debug("Fetching Stamparm Blackbook IOCs...");
+    const response = await secureFetch("https://raw.githubusercontent.com/stamparm/blackbook/master/blackbook.json");
+    if (!response.ok) throw new Error(`Stamparm Blackbook error: ${response.status}`);
+    const data = await response.json();
+    let count = 0;
+    const entries = Array.isArray(data) ? data : [];
+    for (const entry of entries.slice(0, 1000)) {
+      const value = typeof entry === "string" ? entry.trim() : (entry?.value || entry?.indicator || "").trim();
+      if (!value) continue;
+      if (/^\d+\.\d+\.\d+\.\d+$/.test(value)) {
+        await storage.upsertMaliciousIp({
+          ipAddress: value,
+          source: "Stamparm Blackbook",
+          threatType: "blackbook_malware",
+          lastSeen: new Date(),
+        });
+        count++;
+      } else if (value.includes(".") && !value.includes(" ") && value.length > 3) {
+        await storage.upsertMaliciousUrl({
+          url: value,
+          source: "Stamparm Blackbook",
+          threatType: "blackbook_malware",
+          lastSeen: new Date(),
+        });
+        count++;
+      }
+    }
+    log.debug(`Processed ${count} Stamparm Blackbook IOCs`);
+    await storage.updateFeedLastFetched("Stamparm Blackbook");
+    return count;
+  } catch (error) {
+    logScraperError("Feed", error);
+    return 0;
+  }
+}
+
+export async function fetchDigitalSideIPs(): Promise<number> {
+  return fetchSimpleIPList("https://raw.githubusercontent.com/davidonzo/Threat-Intel/master/lists/latestips.txt", "DigitalSide IPs", "digitalside_threat", 500);
+}
+
+export async function fetchDigitalSideDomains(): Promise<number> {
+  return fetchSimpleDomainList("https://raw.githubusercontent.com/davidonzo/Threat-Intel/master/lists/latestdomains.txt", "DigitalSide Domains", "digitalside_threat", 1000);
+}
+
+export async function fetchBlocklistDeApache(): Promise<number> {
+  return fetchSimpleIPList("https://lists.blocklist.de/lists/apache.txt", "Blocklist.de Apache", "web_attack", 500);
+}
+
+export async function fetchBlocklistDeSsh(): Promise<number> {
+  return fetchSimpleIPList("https://lists.blocklist.de/lists/ssh.txt", "Blocklist.de SSH", "ssh_bruteforce", 500);
+}
+
+export async function fetchBlocklistDeMail(): Promise<number> {
+  return fetchSimpleIPList("https://lists.blocklist.de/lists/mail.txt", "Blocklist.de Mail", "email_abuse", 500);
+}
+
+export async function fetchSecReconC2IPs(): Promise<number> {
+  return fetchSimpleIPList("https://raw.githubusercontent.com/jstrosch/malware-samples/master/indicators/c2_ips.txt", "SecRecon C2", "c2_sandbox", 500);
+}
+
+export async function fetchOpenBugBountyRSS(): Promise<number> {
+  try {
+    log.debug("Fetching OpenBugBounty RSS...");
+    const parsed = await rssParser.parseURL("https://www.openbugbounty.org/rss/latest.xml");
+    let count = 0;
+    const items = (parsed.items || []).slice(0, 20);
+    for (const item of items) {
+      if (!item.title || !item.link) continue;
+      const title = item.title.replace(/<[^>]*>/g, "").slice(0, 500);
+      const summary = (item.contentSnippet || item.content || item.summary || "").replace(/<[^>]*>/g, "").slice(0, 1000);
+      const publishedAt = item.pubDate ? new Date(item.pubDate) : new Date();
+      if (isNaN(publishedAt.getTime())) continue;
+      try {
+        const result = await storage.upsertNews({
+          title,
+          summary: summary || null,
+          source: "OpenBugBounty",
+          sourceUrl: item.link,
+          category: "Vulnerability",
+          tags: "vulnerability,disclosure,bugbounty",
+          publishedAt,
+        });
+        if (result.isNew) count++;
+      } catch { /* skip */ }
+    }
+    log.debug(`Processed ${count} OpenBugBounty articles`);
+    await storage.updateFeedLastFetched("OpenBugBounty");
+    return count;
+  } catch (error) {
+    logScraperError("Feed", error);
+    return 0;
+  }
+}
+
+// ============================================
 // CYBERSECURITY NEWS - Real RSS Feed Scraper
 // Sources: BleepingComputer, The Hacker News, Krebs on Security,
 // CISA Alerts, SANS ISC, Dark Reading, SecurityWeek, Naked Security,
@@ -4448,6 +4548,9 @@ const CYBERSECURITY_RSS_FEEDS: RSSFeedConfig[] = [
   { name: "Mandiant", url: "https://www.mandiant.com/resources/blog/rss.xml", category: "Research" },
   { name: "Recorded Future", url: "https://www.recordedfuture.com/feed", category: "Research" },
   { name: "Unit 42", url: "https://unit42.paloaltonetworks.com/feed/", category: "Research" },
+  { name: "Google Cloud Threat Intel", url: "https://cloud.google.com/blog/topics/threat-intelligence/rss/", category: "Research" },
+  { name: "Microsoft Threat Intel", url: "https://www.microsoft.com/en-us/security/blog/topic/threat-intelligence/feed/", category: "Research" },
+  { name: "CrowdStrike Blog", url: "https://www.crowdstrike.com/blog/feed/", category: "Research" },
 ];
 
 function categorizeArticle(title: string, summary: string): string {
@@ -4540,6 +4643,586 @@ export async function fetchCybersecurityNews(): Promise<number> {
     return totalNew;
   } catch (error) {
     log.warn(`News fetch failed: ${error instanceof Error ? error.message : "Unknown error"}`);
+    return 0;
+  }
+}
+
+// ============================================
+// MISP THREAT ACTOR GALAXY ENRICHMENT
+// Comprehensive threat actor profiles from MISP Galaxy
+// ============================================
+const MISP_GALAXY_URL = "https://raw.githubusercontent.com/MISP/misp-galaxy/main/clusters/threat-actor.json";
+
+export async function fetchMISPThreatActorGalaxy(): Promise<number> {
+  try {
+    log.debug("Fetching MISP Threat Actor Galaxy for enrichment...");
+    const response = await secureFetch(MISP_GALAXY_URL);
+    if (!response.ok) {
+      throw new Error(`MISP Galaxy error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const values = data?.values || [];
+    let enrichedCount = 0;
+
+    for (const entry of values) {
+      const name = entry.value;
+      if (!name) continue;
+
+      const meta = entry.meta || {};
+      const synonyms = (meta.synonyms || []).join(", ");
+      const country = meta.country || null;
+      const targetSectors = (meta["cfr-target-category"] || []).join(", ");
+      const refs = (meta.refs || []).slice(0, 5).join(", ");
+      const description = entry.description || null;
+
+      const existingActor = await storage.getThreatActorByName(name);
+
+      if (!existingActor) {
+        let matchedByAlias = false;
+        if (synonyms) {
+          const aliasList = synonyms.split(", ");
+          for (const alias of aliasList) {
+            const actorByAlias = await storage.getThreatActorByName(alias.trim());
+            if (actorByAlias) {
+              const updates: Record<string, string | null> = {};
+              if (!actorByAlias.aliases && synonyms) updates.aliases = synonyms;
+              if (!actorByAlias.origin && country) updates.origin = country;
+              if (!actorByAlias.targetSectors && targetSectors) updates.targetSectors = targetSectors;
+              if (!actorByAlias.description && description) updates.description = description;
+
+              if (Object.keys(updates).length > 0) {
+                await db.update(threatActors).set(updates).where(eq(threatActors.name, actorByAlias.name));
+                enrichedCount++;
+              }
+              matchedByAlias = true;
+              break;
+            }
+          }
+        }
+
+        if (!matchedByAlias && description) {
+          await storage.upsertThreatActor({
+            name,
+            aliases: synonyms || null,
+            description,
+            origin: country,
+            targetSectors: targetSectors || null,
+            type: meta["cfr-type-of-incident"] ? String(meta["cfr-type-of-incident"]) : "threat-actor",
+            active: true,
+          });
+          enrichedCount++;
+        }
+      } else {
+        const updates: Record<string, string | null> = {};
+        if (!existingActor.aliases && synonyms) updates.aliases = synonyms;
+        if (!existingActor.origin && country) updates.origin = country;
+        if (!existingActor.targetSectors && targetSectors) updates.targetSectors = targetSectors;
+        if (!existingActor.description && description) updates.description = description;
+
+        if (Object.keys(updates).length > 0) {
+          await db.update(threatActors).set(updates).where(eq(threatActors.name, name));
+          enrichedCount++;
+        }
+      }
+    }
+
+    if (enrichedCount > 0) {
+      log.info(`MISP Galaxy: enriched ${enrichedCount} threat actor profiles`);
+    } else {
+      log.debug("MISP Galaxy: no new enrichment data");
+    }
+    await storage.updateFeedLastFetched("MISP Threat Actor Galaxy");
+    return enrichedCount;
+  } catch (error) {
+    logScraperError("MISP Galaxy", error);
+    return 0;
+  }
+}
+
+// ============================================
+// MALWARE & C2 INFRASTRUCTURE FEEDS
+// ============================================
+
+export async function fetchYARAifyRecent(): Promise<number> {
+  try {
+    log.debug("Fetching YARAify recent YARA rule matches...");
+    const response = await secureFetch("https://yaraify-api.abuse.ch/api/v1/", {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "query=get_recent&limit=100",
+    });
+    if (!response.ok) throw new Error(`YARAify error: ${response.status}`);
+    const data = await response.json();
+    let count = 0;
+    if (data.data && Array.isArray(data.data)) {
+      for (const entry of data.data.slice(0, 200)) {
+        const sha256 = entry.sha256_hash || entry.sha256 || "";
+        const yaraRule = entry.yara_rule || entry.rule_name || "";
+        const malwareFamily = entry.malware || entry.family || yaraRule || "unknown";
+        if (!sha256) continue;
+        const urlData: InsertMaliciousUrl = {
+          url: `sha256:${sha256}`,
+          source: "YARAify",
+          threatType: "yara_match",
+          status: "active",
+          malwareFamily: malwareFamily.slice(0, 200),
+          reportedAt: entry.first_seen ? new Date(entry.first_seen) : new Date(),
+        };
+        await storage.upsertMaliciousUrl(urlData);
+        count++;
+      }
+    }
+    log.debug(`Processed ${count} YARAify YARA rule matches`);
+    await storage.updateFeedLastFetched("YARAify");
+    return count;
+  } catch (error) {
+    logScraperError("YARAify", error);
+    return 0;
+  }
+}
+
+export async function fetchURLhausCSV(): Promise<number> {
+  try {
+    log.debug("Fetching URLhaus recent CSV...");
+    const response = await secureFetch("https://urlhaus.abuse.ch/downloads/csv_recent/");
+    if (!response.ok) throw new Error(`URLhaus CSV error: ${response.status}`);
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#"));
+    let count = 0;
+    for (const line of lines.slice(0, 500)) {
+      const parts = line.split('","').map(p => p.replace(/^"|"$/g, ""));
+      if (parts.length < 6) continue;
+      const url = parts[2] || "";
+      const urlStatus = parts[3] || "";
+      const threat = parts[5] || "malware";
+      const tags = parts[6] || "";
+      if (!url || !url.startsWith("http")) continue;
+      const urlData: InsertMaliciousUrl = {
+        url,
+        source: "URLhaus CSV",
+        threatType: threat || "malware",
+        status: urlStatus === "online" ? "active" : "offline",
+        malwareFamily: tags || null,
+        reportedAt: parts[1] ? new Date(parts[1]) : new Date(),
+      };
+      await storage.upsertMaliciousUrl(urlData);
+      count++;
+    }
+    log.debug(`Processed ${count} URLhaus CSV malicious URLs`);
+    await storage.updateFeedLastFetched("URLhaus CSV");
+    return count;
+  } catch (error) {
+    logScraperError("URLhaus CSV", error);
+    return 0;
+  }
+}
+
+export async function fetchMalwareBazaarTags(): Promise<number> {
+  try {
+    log.debug("Fetching MalwareBazaar tagged samples...");
+    const tags = ["ransomware", "stealer", "loader", "rat"];
+    let totalCount = 0;
+    for (const tag of tags) {
+      try {
+        const response = await secureFetch("https://mb-api.abuse.ch/api/v1/", {
+          method: "POST",
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+          body: `query=get_taginfo&tag=${tag}&limit=50`,
+        });
+        if (!response.ok) continue;
+        const data = await response.json();
+        if (data.data && Array.isArray(data.data)) {
+          for (const sample of data.data.slice(0, 50)) {
+            const sha256 = sample.sha256_hash || "";
+            if (!sha256) continue;
+            const urlData: InsertMaliciousUrl = {
+              url: `sha256:${sha256}`,
+              source: "MalwareBazaar Tags",
+              threatType: `malware_${tag}`,
+              status: "active",
+              malwareFamily: sample.signature || sample.malware || tag,
+              reportedAt: sample.first_seen ? new Date(sample.first_seen) : new Date(),
+            };
+            await storage.upsertMaliciousUrl(urlData);
+            totalCount++;
+          }
+        }
+        await delay(1000);
+      } catch (err) {
+        continue;
+      }
+    }
+    log.debug(`Processed ${totalCount} MalwareBazaar tagged samples`);
+    await storage.updateFeedLastFetched("MalwareBazaar Tags");
+    return totalCount;
+  } catch (error) {
+    logScraperError("MalwareBazaar Tags", error);
+    return 0;
+  }
+}
+
+export async function fetchMalpediaFamilies(): Promise<number> {
+  try {
+    log.debug("Fetching Malpedia malware families...");
+    const response = await secureFetch("https://malpedia.caad.fkie.fraunhofer.de/api/list/families");
+    if (!response.ok) throw new Error(`Malpedia error: ${response.status}`);
+    const data = await response.json();
+    let count = 0;
+    if (data && typeof data === "object") {
+      const families = Object.entries(data);
+      for (const [familyName, familyData] of families.slice(0, 500)) {
+        const info = familyData as any;
+        const altNames = info.alt_names || [];
+        const actors = info.attribution || [];
+        if (actors.length > 0) {
+          for (const actorName of actors) {
+            try {
+              const existingActors = await db.select().from(threatActors)
+                .where(eq(threatActors.name, actorName))
+                .limit(1);
+              if (existingActors.length > 0) {
+                const actor = existingActors[0];
+                const currentFamilies = actor.malwareFamilies || "";
+                if (!currentFamilies.toLowerCase().includes(familyName.toLowerCase())) {
+                  const updatedFamilies = currentFamilies
+                    ? `${currentFamilies}, ${familyName}`
+                    : familyName;
+                  await db.update(threatActors).set({
+                    malwareFamilies: updatedFamilies.slice(0, 2000),
+                  }).where(eq(threatActors.name, actorName));
+                  count++;
+                }
+              }
+            } catch {
+              continue;
+            }
+          }
+        }
+      }
+    }
+    log.debug(`Enriched ${count} threat actors with Malpedia malware family data`);
+    await storage.updateFeedLastFetched("Malpedia");
+    return count;
+  } catch (error) {
+    logScraperError("Malpedia", error);
+    return 0;
+  }
+}
+
+export async function fetchBambenekC2(): Promise<number> {
+  try {
+    log.debug("Fetching Bambenek C2 master list...");
+    const response = await secureFetch("https://osint.bambenekconsulting.com/feeds/c2-masterlist.txt");
+    if (!response.ok) throw new Error(`Bambenek error: ${response.status}`);
+    const text = await response.text();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#"));
+    let ipCount = 0;
+    let domainCount = 0;
+    const seenIps = new Set<string>();
+    const seenDomains = new Set<string>();
+    for (const line of lines.slice(0, 1000)) {
+      const parts = line.split(",");
+      const domain = parts[0]?.trim();
+      const ip = parts[1]?.trim();
+      const malwareFamily = parts[3]?.trim() || "dga_malware";
+      if (domain && domain.includes(".") && !seenDomains.has(domain)) {
+        seenDomains.add(domain);
+        await storage.upsertMaliciousUrl({
+          url: domain,
+          source: "Bambenek C2",
+          threatType: "c2_domain",
+          status: "active",
+          malwareFamily,
+        });
+        domainCount++;
+      }
+      if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip) && !seenIps.has(ip)) {
+        seenIps.add(ip);
+        await storage.upsertMaliciousIp({
+          ipAddress: ip,
+          source: "Bambenek C2",
+          threatType: "c2_server",
+          lastSeen: new Date(),
+        });
+        ipCount++;
+      }
+    }
+    const total = ipCount + domainCount;
+    log.debug(`Processed ${total} Bambenek C2 indicators (${ipCount} IPs, ${domainCount} domains)`);
+    await storage.updateFeedLastFetched("Bambenek C2");
+    return total;
+  } catch (error) {
+    logScraperError("Bambenek C2", error);
+    return 0;
+  }
+}
+
+// ============================================
+// RANSOMWARE & DARK WEB INTELLIGENCE (T002)
+// ============================================
+
+export async function fetchCISAStopRansomware(): Promise<number> {
+  try {
+    log.debug("Fetching CISA #StopRansomware advisories...");
+    const parsed = await rssParser.parseURL("https://www.cisa.gov/news-events/cybersecurity-advisories/all.xml");
+    let count = 0;
+    const items = (parsed.items || []).filter(item => {
+      const title = (item.title || "").toLowerCase();
+      const content = (item.contentSnippet || item.content || "").toLowerCase();
+      return title.includes("stopransomware") || title.includes("stop ransomware") ||
+        content.includes("#stopransomware") || content.includes("stop ransomware");
+    });
+
+    for (const item of items.slice(0, 30)) {
+      if (!item.title || !item.link) continue;
+      const title = stripHtml(item.title).slice(0, 500);
+      const summary = stripHtml(item.contentSnippet || item.content || item.summary || "").slice(0, 1000);
+      const publishedAt = item.pubDate ? new Date(item.pubDate) : new Date();
+      if (isNaN(publishedAt.getTime())) continue;
+
+      try {
+        await storage.upsertNews({
+          title,
+          summary: summary || null,
+          source: "CISA StopRansomware",
+          sourceUrl: item.link,
+          category: "ransomware_advisory",
+          tags: "ransomware,advisory,cisa,stopransomware",
+          publishedAt,
+        });
+        count++;
+      } catch {}
+    }
+
+    log.debug(`Processed ${count} CISA #StopRansomware advisories`);
+    await storage.updateFeedLastFetched("CISA StopRansomware");
+    return count;
+  } catch (error) {
+    logScraperError("Feed", error);
+    return 0;
+  }
+}
+
+export async function fetchDarkFeedVictims(): Promise<number> {
+  try {
+    log.debug("Fetching DarkFeed.io ransomware victims...");
+    const response = await secureFetch("https://darkfeed.io/json", {
+      headers: { "Accept": "application/json" },
+    });
+
+    if (!response.ok) {
+      log.debug(`DarkFeed.io API not publicly accessible (${response.status}), skipping gracefully`);
+      await storage.updateFeedLastFetched("DarkFeed.io");
+      return 0;
+    }
+
+    const data = await response.json();
+    const victims = Array.isArray(data) ? data : data?.victims || data?.data || [];
+    let count = 0;
+
+    for (const victim of victims.slice(0, 200)) {
+      const victimName = (victim.victim || victim.name || victim.title || "").trim();
+      const groupName = (victim.group || victim.group_name || victim.actor || "").trim();
+      if (!victimName || !groupName) continue;
+
+      try {
+        const incident: InsertRansomware = {
+          victim: victimName,
+          groupName: groupName.toLowerCase(),
+          country: victim.country || null,
+          sector: victim.sector || victim.industry || null,
+          description: victim.description || `Ransomware victim reported by DarkFeed.io - ${groupName}`,
+          status: "claimed",
+          discoveredAt: victim.date ? new Date(victim.date) : new Date(),
+          sourceApi: "darkfeed.io",
+        };
+        await storage.upsertRansomwareIncidentWithFlag(incident);
+        count++;
+      } catch {}
+    }
+
+    log.debug(`Processed ${count} DarkFeed.io victims`);
+    await storage.updateFeedLastFetched("DarkFeed.io");
+    return count;
+  } catch (error) {
+    logScraperError("Feed", error);
+    return 0;
+  }
+}
+
+export async function fetchRansomwareIOCRepos(): Promise<number> {
+  try {
+    log.debug("Fetching ransomware IOCs from GitHub repos...");
+    let totalCount = 0;
+
+    const sophosSources = [
+      "https://raw.githubusercontent.com/sophoslabs/IoCs/master/Ransomware/LockBit.csv",
+      "https://raw.githubusercontent.com/sophoslabs/IoCs/master/Ransomware/BlackCat-ALPHV.csv",
+      "https://raw.githubusercontent.com/sophoslabs/IoCs/master/Ransomware/Conti.csv",
+    ];
+
+    for (const url of sophosSources) {
+      try {
+        const response = await secureFetch(url);
+        if (!response.ok) continue;
+        const text = await response.text();
+        const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#") && !line.startsWith("ioc"));
+        const seen = new Set<string>();
+
+        for (const line of lines.slice(0, 300)) {
+          const parts = line.split(",");
+          const iocValue = (parts[0] || "").trim().replace(/"/g, "");
+          const iocType = (parts[1] || "").trim().toLowerCase();
+          if (!iocValue || seen.has(iocValue)) continue;
+          seen.add(iocValue);
+
+          if ((iocType.includes("ip") || /^\d+\.\d+\.\d+\.\d+$/.test(iocValue)) && /^\d+\.\d+\.\d+\.\d+$/.test(iocValue)) {
+            await storage.upsertMaliciousIp({
+              ipAddress: iocValue,
+              source: "Sophos Ransomware IOCs",
+              threatType: "ransomware_c2",
+              lastSeen: new Date(),
+            });
+            totalCount++;
+          } else if (iocType.includes("domain") || iocType.includes("url") || (iocValue.includes(".") && !iocValue.includes(" ") && iocValue.length > 3)) {
+            await storage.upsertMaliciousUrl({
+              url: iocValue.toLowerCase().slice(0, 2048),
+              source: "Sophos Ransomware IOCs",
+              threatType: "ransomware_c2",
+              reportedAt: new Date(),
+            });
+            totalCount++;
+          }
+        }
+        await delay(300);
+      } catch {}
+    }
+
+    log.debug(`Processed ${totalCount} ransomware IOCs from GitHub repos`);
+    await storage.updateFeedLastFetched("Ransomware IOC Repos");
+    return totalCount;
+  } catch (error) {
+    logScraperError("Feed", error);
+    return 0;
+  }
+}
+
+export async function fetchFeodoRansomware(): Promise<number> {
+  try {
+    log.debug("Fetching Feodo Tracker ransomware-linked C2s...");
+    const response = await secureFetch("https://feodotracker.abuse.ch/downloads/ipblocklist.json");
+    if (!response.ok) throw new Error(`Feodo ransomware error: ${response.status}`);
+
+    const entries: FeodoEntry[] = await response.json();
+    let count = 0;
+
+    const ransomwareFamilies = ["dridex", "trickbot", "emotet", "qakbot", "bumblebee", "icedid", "pikabot"];
+    const ransomwareEntries = entries.filter(e =>
+      ransomwareFamilies.some(f => (e.malware || "").toLowerCase().includes(f))
+    );
+
+    for (const entry of ransomwareEntries.slice(0, 500)) {
+      await storage.upsertMaliciousIp({
+        ipAddress: entry.ip_address,
+        source: "Feodo Ransomware",
+        threatType: "ransomware_loader_c2",
+        country: entry.country || null,
+        asn: entry.as_name || null,
+        firstSeen: entry.first_seen ? new Date(entry.first_seen) : null,
+        lastSeen: entry.last_online ? new Date(entry.last_online) : new Date(),
+        tags: entry.malware || null,
+      });
+      count++;
+    }
+
+    log.debug(`Processed ${count} ransomware-linked Feodo C2 IPs`);
+    await storage.updateFeedLastFetched("Feodo Ransomware");
+    return count;
+  } catch (error) {
+    logScraperError("Feed", error);
+    return 0;
+  }
+}
+
+export async function fetchRansomWatchExtended(): Promise<number> {
+  try {
+    log.debug("Fetching extended RansomWatch data...");
+    let totalCount = 0;
+
+    const postsResponse = await secureFetch(RANSOMWATCH_POSTS_URL, {
+      headers: { "Accept": "application/json" },
+    });
+
+    if (postsResponse.ok) {
+      const posts: RansomWatchPost[] = await postsResponse.json();
+      log.debug(`RansomWatch extended: ${posts.length} total posts`);
+
+      const ninetyDaysAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
+      const extendedPosts = posts.filter(p => {
+        try {
+          const d = new Date(p.discovered);
+          return d >= ninetyDaysAgo;
+        } catch { return false; }
+      });
+
+      for (const post of extendedPosts) {
+        if (!post.post_title || !post.group_name) continue;
+        try {
+          await storage.upsertRansomwareIncidentWithFlag({
+            victim: post.post_title.trim(),
+            groupName: post.group_name.toLowerCase().trim(),
+            discoveredAt: new Date(post.discovered),
+            description: `Victim posted by ${post.group_name} ransomware group`,
+            status: "claimed",
+            sourceApi: "ransomwatch",
+          });
+          totalCount++;
+        } catch {}
+      }
+    }
+
+    await delay(500);
+
+    const groupsResponse = await secureFetch(RANSOMWATCH_GROUPS_URL, {
+      headers: { "Accept": "application/json" },
+    });
+
+    if (groupsResponse.ok) {
+      const groups: RansomWatchGroup[] = await groupsResponse.json();
+
+      for (const group of groups) {
+        if (!group.name) continue;
+        const activeSites = group.locations?.filter(l => l.available)?.length || 0;
+        const totalSites = group.locations?.length || 0;
+        const onionUrls = group.locations?.map(l => l.fqdn).filter(Boolean) || [];
+        const mirrorUrls = onionUrls.join(" | ");
+        const lastUpdated = group.locations
+          ?.map(l => l.updated)
+          .filter(Boolean)
+          .sort()
+          .pop();
+
+        try {
+          await storage.upsertThreatActor({
+            name: group.name.toLowerCase().trim(),
+            description: group.meta || `Ransomware group tracked by RansomWatch`,
+            type: "Ransomware Operator",
+            active: activeSites > 0,
+            infrastructure: mirrorUrls ? `Dark web sites: ${mirrorUrls} (${activeSites}/${totalSites} active)` : undefined,
+            websiteUrl: onionUrls[0] || undefined,
+            mirrorUrls: mirrorUrls || undefined,
+            lastActive: lastUpdated ? new Date(lastUpdated) : undefined,
+          });
+        } catch {}
+      }
+    }
+
+    log.debug(`RansomWatch extended: processed ${totalCount} posts with enhanced group profiles`);
+    await storage.updateFeedLastFetched("RansomWatch Extended");
+    return totalCount;
+  } catch (error) {
+    logScraperError("Feed", error);
     return 0;
   }
 }
@@ -4662,6 +5345,14 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "Maltrail Suspicious", url: "https://raw.githubusercontent.com/stamparm/maltrail/master/trails/static/suspicious/domain.txt", feedType: "url", updateFrequency: "daily", requiresProTier: false, description: "Maltrail curated suspicious domains" },
     { name: "Maltrail Malware", url: "https://raw.githubusercontent.com/stamparm/maltrail/master/trails/static/malware/generic.txt", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "Maltrail known malware IOCs" },
 
+    // Exploit & Zero-Day Intelligence Feeds
+    { name: "Exploit-DB CSV", url: "https://gitlab.com/exploit-database/exploitdb/-/raw/main/files_exploits.csv", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "Full exploit database with CVE mappings, platform, and type" },
+    { name: "InTheWild.io", url: "https://raw.githubusercontent.com/gmatuz/inthewilddb/main/exploited.json", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "CVEs confirmed exploited in the wild with timestamps" },
+    { name: "Trickest CVE PoC", url: "https://raw.githubusercontent.com/trickest/cve/main/README.md", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "Large curated PoC collection mapped to CVE IDs" },
+    { name: "Nuclei Templates CVE", url: "https://raw.githubusercontent.com/projectdiscovery/nuclei-templates/main/cves.json", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "CVEs mapped to Nuclei detection templates" },
+    { name: "VulnCheck KEV", url: "https://api.vulncheck.com/v3/index/initial-access", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "Extended KEV with exploit metadata and initial access vectors" },
+    { name: "Metasploit Modules", url: "https://raw.githubusercontent.com/rapid7/metasploit-framework/master/db/modules_metadata_base.json", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "CVEs mapped to weaponized Metasploit exploit modules" },
+
     // 2026 Expansion - IOC/Research Intelligence Feeds
     { name: "TweetFeed", url: "https://raw.githubusercontent.com/0xDanielLopez/TweetFeed/master/today.csv", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "IOCs shared by security researchers on Twitter/X" },
     { name: "APT Notes", url: "https://raw.githubusercontent.com/aptnotes/data/master/APTnotes.csv", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "APT campaign research paper catalog" },
@@ -4675,6 +5366,36 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "Mandiant", url: "https://www.mandiant.com/resources/blog/rss.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Mandiant/Google Cloud threat research" },
     { name: "Recorded Future", url: "https://www.recordedfuture.com/feed", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Recorded Future threat intelligence blog" },
     { name: "Unit 42", url: "https://unit42.paloaltonetworks.com/feed/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Palo Alto Unit 42 threat research" },
+
+    // Threat Actor & APT Enrichment Feeds
+    { name: "MISP Threat Actor Galaxy", url: "https://raw.githubusercontent.com/MISP/misp-galaxy/main/clusters/threat-actor.json", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "Comprehensive threat actor profiles with aliases, origin, and target sectors" },
+    { name: "Google Cloud Threat Intel", url: "https://cloud.google.com/blog/topics/threat-intelligence/rss/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Google/Mandiant threat intelligence research blog" },
+    { name: "Microsoft Threat Intel", url: "https://www.microsoft.com/en-us/security/blog/topic/threat-intelligence/feed/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Microsoft threat actor tracking and APT campaign reports" },
+    { name: "CrowdStrike Blog", url: "https://www.crowdstrike.com/blog/feed/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "CrowdStrike threat research with named threat actors" },
+
+    // Additional Network & Infrastructure Intelligence
+    { name: "Stamparm Blackbook", url: "https://raw.githubusercontent.com/stamparm/blackbook/master/blackbook.json", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "Curated malware research IOC collection from IPsum/Maltrail creator" },
+    { name: "DigitalSide IPs", url: "https://raw.githubusercontent.com/davidonzo/Threat-Intel/master/lists/latestips.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "OSINT-sourced threat IPs with daily updates" },
+    { name: "DigitalSide Domains", url: "https://raw.githubusercontent.com/davidonzo/Threat-Intel/master/lists/latestdomains.txt", feedType: "url", updateFrequency: "daily", requiresProTier: false, description: "OSINT-sourced threat domains with daily updates" },
+    { name: "Blocklist.de Apache", url: "https://lists.blocklist.de/lists/apache.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Web server attack source IPs" },
+    { name: "Blocklist.de SSH", url: "https://lists.blocklist.de/lists/ssh.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "SSH brute force attack source IPs" },
+    { name: "Blocklist.de Mail", url: "https://lists.blocklist.de/lists/mail.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Email abuse source IPs" },
+    { name: "SecRecon C2", url: "https://raw.githubusercontent.com/jstrosch/malware-samples/master/indicators/c2_ips.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "C2 IPs from malware sandbox analysis" },
+    { name: "OpenBugBounty", url: "https://www.openbugbounty.org/rss/latest.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Disclosed web vulnerabilities and XSS/SQLi reports" },
+
+    // Malware & C2 Infrastructure Feeds
+    { name: "YARAify", url: "https://yaraify-api.abuse.ch/api/v1/", feedType: "ioc", updateFrequency: "15min", requiresProTier: false, description: "Recent YARA rule matches with malware family data" },
+    { name: "URLhaus CSV", url: "https://urlhaus.abuse.ch/downloads/csv_recent/", feedType: "url", updateFrequency: "15min", requiresProTier: false, description: "Recent malware distribution URLs (public CSV)" },
+    { name: "MalwareBazaar Tags", url: "https://mb-api.abuse.ch/api/v1/", feedType: "ioc", updateFrequency: "15min", requiresProTier: false, description: "Malware samples tagged by category (ransomware, stealer, loader, rat)" },
+    { name: "Malpedia", url: "https://malpedia.caad.fkie.fraunhofer.de/api/list/families", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "Comprehensive malware family encyclopedia with actor attribution" },
+    { name: "Bambenek C2", url: "https://osint.bambenekconsulting.com/feeds/c2-masterlist.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Curated C2 domain and IP list across DGA-based malware families" },
+
+    // Ransomware & Dark Web Intelligence (T002)
+    { name: "CISA StopRansomware", url: "https://www.cisa.gov/news-events/cybersecurity-advisories/all.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "CISA #StopRansomware dedicated advisories" },
+    { name: "DarkFeed.io", url: "https://darkfeed.io", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "DarkFeed.io recent ransomware victims" },
+    { name: "Ransomware IOC Repos", url: "https://github.com/sophoslabs/IoCs/tree/master/Ransomware", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "Sophos ransomware IOC collections from GitHub" },
+    { name: "Feodo Ransomware", url: "https://feodotracker.abuse.ch/downloads/ipblocklist.json", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Feodo Tracker ransomware-linked C2 infrastructure" },
+    { name: "RansomWatch Extended", url: "https://github.com/joshhighet/ransomwatch", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "Extended RansomWatch data with full historical posts and enhanced group profiles" },
   ];
   
   for (const feed of feeds) {
@@ -4690,6 +5411,203 @@ export async function initializeThreatFeeds(): Promise<void> {
   }
   
   log.info(`Initialized ${feeds.length} threat feed sources`);
+}
+
+// ============================================
+// EXPLOIT & ZERO-DAY INTELLIGENCE FEEDS
+// ============================================
+
+export async function fetchExploitDB(): Promise<number> {
+  try {
+    log.debug("Fetching Exploit-DB CSV for CVE enrichment...");
+    const response = await secureFetch("https://gitlab.com/exploit-database/exploitdb/-/raw/main/files_exploits.csv");
+    if (!response.ok) throw new Error(`Exploit-DB error: ${response.status}`);
+    const text = await response.text();
+    const lines = text.split("\n").filter(l => l.trim() && !l.startsWith("id,"));
+    let count = 0;
+    for (const line of lines.slice(0, 2000)) {
+      const cveMatch = line.match(/CVE-\d{4}-\d{4,}/gi);
+      if (!cveMatch) continue;
+      for (const cveId of cveMatch) {
+        const normalized = cveId.toUpperCase();
+        try {
+          await db.update(cves).set({
+            exploitAvailable: true,
+            pocAvailable: true,
+            status: "PoC Available",
+          }).where(eq(cves.cveId, normalized));
+          count++;
+        } catch { /* CVE may not exist yet */ }
+      }
+    }
+    if (count > 0) log.info(`Exploit-DB: enriched ${count} CVEs with exploit availability`);
+    await storage.updateFeedLastFetched("Exploit-DB CSV");
+    return count;
+  } catch (error) {
+    logScraperError("Exploit-DB", error);
+    return 0;
+  }
+}
+
+export async function fetchInTheWild(): Promise<number> {
+  try {
+    log.debug("Fetching InTheWild.io exploited CVEs...");
+    const response = await secureFetch("https://raw.githubusercontent.com/gmatuz/inthewilddb/main/exploited.json");
+    if (!response.ok) throw new Error(`InTheWild error: ${response.status}`);
+    const data = await response.json();
+    let count = 0;
+    const entries = Array.isArray(data) ? data : [];
+    for (const entry of entries.slice(0, 2000)) {
+      const cveId = (entry.cve || entry.id || "").toUpperCase();
+      if (!cveId.startsWith("CVE-")) continue;
+      try {
+        await db.update(cves).set({
+          exploitAvailable: true,
+          status: "Active",
+        }).where(eq(cves.cveId, cveId));
+        count++;
+      } catch { /* CVE may not exist yet */ }
+    }
+    if (count > 0) log.info(`InTheWild: flagged ${count} CVEs as actively exploited`);
+    await storage.updateFeedLastFetched("InTheWild.io");
+    return count;
+  } catch (error) {
+    logScraperError("InTheWild", error);
+    return 0;
+  }
+}
+
+export async function fetchTrickestPoC(): Promise<number> {
+  try {
+    log.debug("Fetching Trickest CVE PoC repository index...");
+    const response = await secureFetch("https://raw.githubusercontent.com/trickest/cve/main/README.md");
+    if (!response.ok) throw new Error(`Trickest PoC error: ${response.status}`);
+    const text = await response.text();
+    const cveMatches = text.match(/CVE-\d{4}-\d{4,}/gi);
+    if (!cveMatches) return 0;
+    const uniqueCves = [...new Set(cveMatches.map(c => c.toUpperCase()))];
+    let count = 0;
+    for (const cveId of uniqueCves.slice(0, 2000)) {
+      try {
+        await db.update(cves).set({
+          pocAvailable: true,
+        }).where(eq(cves.cveId, cveId));
+        count++;
+      } catch { /* CVE may not exist yet */ }
+    }
+    if (count > 0) log.info(`Trickest PoC: marked ${count} CVEs with PoC availability`);
+    await storage.updateFeedLastFetched("Trickest CVE PoC");
+    return count;
+  } catch (error) {
+    logScraperError("Trickest PoC", error);
+    return 0;
+  }
+}
+
+export async function fetchNucleiTemplatesCVE(): Promise<number> {
+  try {
+    log.debug("Fetching Nuclei Templates CVE index...");
+    let text = "";
+    const jsonResponse = await secureFetch("https://raw.githubusercontent.com/projectdiscovery/nuclei-templates/main/cves.json");
+    if (jsonResponse.ok) {
+      text = await jsonResponse.text();
+    } else {
+      const mdResponse = await secureFetch("https://raw.githubusercontent.com/projectdiscovery/nuclei-templates/main/README.md");
+      if (!mdResponse.ok) throw new Error(`Nuclei Templates error: ${mdResponse.status}`);
+      text = await mdResponse.text();
+    }
+    const cveMatches = text.match(/CVE-\d{4}-\d{4,}/gi);
+    if (!cveMatches) return 0;
+    const uniqueCves = [...new Set(cveMatches.map(c => c.toUpperCase()))];
+    let count = 0;
+    for (const cveId of uniqueCves.slice(0, 2000)) {
+      try {
+        await db.update(cves).set({
+          pocAvailable: true,
+          exploitAvailable: true,
+        }).where(eq(cves.cveId, cveId));
+        count++;
+      } catch { /* CVE may not exist yet */ }
+    }
+    if (count > 0) log.info(`Nuclei Templates: enriched ${count} CVEs with detection template availability`);
+    await storage.updateFeedLastFetched("Nuclei Templates CVE");
+    return count;
+  } catch (error) {
+    logScraperError("Nuclei Templates", error);
+    return 0;
+  }
+}
+
+export async function fetchVulnCheckKEV(): Promise<number> {
+  try {
+    log.debug("Fetching VulnCheck Community KEV...");
+    const apiKey = process.env.VULNCHECK_API_KEY;
+    const headers: Record<string, string> = {};
+    if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
+    const response = await secureFetch("https://api.vulncheck.com/v3/index/initial-access", { headers });
+    if (!response.ok) {
+      log.debug(`VulnCheck API returned ${response.status} - may need API key or free tier exhausted`);
+      return 0;
+    }
+    const data = await response.json();
+    const vulns = data?.data || data?.vulnerabilities || (Array.isArray(data) ? data : []);
+    let count = 0;
+    for (const entry of vulns.slice(0, 1000)) {
+      const cveId = (entry.cve || entry.cveId || entry.id || "").toUpperCase();
+      if (!cveId.startsWith("CVE-")) continue;
+      try {
+        await db.update(cves).set({
+          exploitAvailable: true,
+          inCisaKev: true,
+          status: "Active",
+        }).where(eq(cves.cveId, cveId));
+        count++;
+      } catch { /* CVE may not exist yet */ }
+    }
+    if (count > 0) log.info(`VulnCheck KEV: enriched ${count} CVEs with initial access data`);
+    await storage.updateFeedLastFetched("VulnCheck KEV");
+    return count;
+  } catch (error) {
+    logScraperError("VulnCheck KEV", error);
+    return 0;
+  }
+}
+
+export async function fetchMetasploitModules(): Promise<number> {
+  try {
+    log.debug("Fetching Metasploit module metadata for CVE enrichment...");
+    const response = await secureFetch("https://raw.githubusercontent.com/rapid7/metasploit-framework/master/db/modules_metadata_base.json");
+    if (!response.ok) throw new Error(`Metasploit error: ${response.status}`);
+    const data = await response.json();
+    const modules = typeof data === "object" && data !== null ? Object.values(data) : [];
+    let count = 0;
+    const seen = new Set<string>();
+    for (const mod of modules as any[]) {
+      const refs = mod?.references || mod?.ref || [];
+      if (!Array.isArray(refs)) continue;
+      for (const ref of refs) {
+        const refStr = String(ref).toUpperCase();
+        const cveMatch = refStr.match(/CVE-\d{4}-\d{4,}/);
+        if (!cveMatch || seen.has(cveMatch[0])) continue;
+        seen.add(cveMatch[0]);
+        try {
+          await db.update(cves).set({
+            exploitAvailable: true,
+            pocAvailable: true,
+            status: "Active",
+          }).where(eq(cves.cveId, cveMatch[0]));
+          count++;
+        } catch { /* CVE may not exist yet */ }
+      }
+      if (count >= 2000) break;
+    }
+    if (count > 0) log.info(`Metasploit: enriched ${count} CVEs with weaponized module data`);
+    await storage.updateFeedLastFetched("Metasploit Modules");
+    return count;
+  } catch (error) {
+    logScraperError("Metasploit Modules", error);
+    return 0;
+  }
 }
 
 // ============================================
@@ -5013,6 +5931,96 @@ export async function fetchAllData(): Promise<void> {
   await delay(1000);
 
   try { scraperLog.recordFeed("Sophos Labs IOCs", 0); scraperLog.recordFeed("ESET Malware IOCs", 0); scraperLog.recordFeed("Cisco Talos IOCs", 0); await fetchResearchIOCRepos(); } catch(e) { scraperLog.recordError("Sophos Labs IOCs", e); }
+  await delay(1000);
+
+  // ===========================================
+  // EXPLOIT & ZERO-DAY INTELLIGENCE
+  // ===========================================
+  try { scraperLog.recordFeed("Exploit-DB", await fetchExploitDB()); } catch(e) { scraperLog.recordError("Exploit-DB", e); }
+  await delay(2000);
+
+  try { scraperLog.recordFeed("InTheWild", await fetchInTheWild()); } catch(e) { scraperLog.recordError("InTheWild", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Trickest PoC", await fetchTrickestPoC()); } catch(e) { scraperLog.recordError("Trickest PoC", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Nuclei Templates", await fetchNucleiTemplatesCVE()); } catch(e) { scraperLog.recordError("Nuclei Templates", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("VulnCheck KEV", await fetchVulnCheckKEV()); } catch(e) { scraperLog.recordError("VulnCheck KEV", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Metasploit Modules", await fetchMetasploitModules()); } catch(e) { scraperLog.recordError("Metasploit Modules", e); }
+  await delay(2000);
+
+  // ===========================================
+  // ADDITIONAL NETWORK & INFRASTRUCTURE INTELLIGENCE
+  // ===========================================
+  try { scraperLog.recordFeed("Stamparm Blackbook", await fetchStamparmBlackbook()); } catch(e) { scraperLog.recordError("Stamparm Blackbook", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("DigitalSide IPs", await fetchDigitalSideIPs()); } catch(e) { scraperLog.recordError("DigitalSide IPs", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("DigitalSide Domains", await fetchDigitalSideDomains()); } catch(e) { scraperLog.recordError("DigitalSide Domains", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Blocklist.de Apache", await fetchBlocklistDeApache()); } catch(e) { scraperLog.recordError("Blocklist.de Apache", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Blocklist.de SSH", await fetchBlocklistDeSsh()); } catch(e) { scraperLog.recordError("Blocklist.de SSH", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Blocklist.de Mail", await fetchBlocklistDeMail()); } catch(e) { scraperLog.recordError("Blocklist.de Mail", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("SecRecon C2", await fetchSecReconC2IPs()); } catch(e) { scraperLog.recordError("SecRecon C2", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("OpenBugBounty", await fetchOpenBugBountyRSS()); } catch(e) { scraperLog.recordError("OpenBugBounty", e); }
+  await delay(1000);
+
+  // ===========================================
+  // THREAT ACTOR & APT ENRICHMENT
+  // ===========================================
+  try { scraperLog.recordFeed("MISP Threat Actor Galaxy", await fetchMISPThreatActorGalaxy()); } catch(e) { scraperLog.recordError("MISP Threat Actor Galaxy", e); }
+  await delay(1000);
+
+  // ===========================================
+  // MALWARE & C2 INFRASTRUCTURE (T003)
+  // ===========================================
+  try { scraperLog.recordFeed("YARAify", await fetchYARAifyRecent()); } catch(e) { scraperLog.recordError("YARAify", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("URLhaus CSV", await fetchURLhausCSV()); } catch(e) { scraperLog.recordError("URLhaus CSV", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("MalwareBazaar Tags", await fetchMalwareBazaarTags()); } catch(e) { scraperLog.recordError("MalwareBazaar Tags", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Malpedia", await fetchMalpediaFamilies()); } catch(e) { scraperLog.recordError("Malpedia", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Bambenek C2", await fetchBambenekC2()); } catch(e) { scraperLog.recordError("Bambenek C2", e); }
+  await delay(1000);
+
+  // ===========================================
+  // RANSOMWARE & DARK WEB INTELLIGENCE (T002)
+  // ===========================================
+  try { scraperLog.recordFeed("CISA StopRansomware", await fetchCISAStopRansomware()); } catch(e) { scraperLog.recordError("CISA StopRansomware", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("DarkFeed.io", await fetchDarkFeedVictims()); } catch(e) { scraperLog.recordError("DarkFeed.io", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Ransomware IOC Repos", await fetchRansomwareIOCRepos()); } catch(e) { scraperLog.recordError("Ransomware IOC Repos", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("Feodo Ransomware", await fetchFeodoRansomware()); } catch(e) { scraperLog.recordError("Feodo Ransomware", e); }
+  await delay(1000);
+
+  try { scraperLog.recordFeed("RansomWatch Extended", await fetchRansomWatchExtended()); } catch(e) { scraperLog.recordError("RansomWatch Extended", e); }
   await delay(1000);
 
   // ===========================================
