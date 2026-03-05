@@ -101,7 +101,13 @@ export class StripeService {
     const result = await db.execute(
       sql`SELECT * FROM stripe.products WHERE id = ${productId} AND livemode = true`
     );
-    return result.rows[0] || null;
+    if (result.rows[0]) return result.rows[0];
+    try {
+      const stripe = await getUncachableStripeClient();
+      const product = await stripe.products.retrieve(productId);
+      if (product && product.active && product.livemode) return product;
+    } catch {}
+    return null;
   }
 
   async listProducts(active = true) {
@@ -140,7 +146,13 @@ export class StripeService {
     const result = await db.execute(
       sql`SELECT * FROM stripe.prices WHERE id = ${priceId} AND livemode = true`
     );
-    return result.rows[0] || null;
+    if (result.rows[0]) return result.rows[0];
+    try {
+      const stripe = await getUncachableStripeClient();
+      const price = await stripe.prices.retrieve(priceId);
+      if (price && price.active && price.livemode) return price;
+    } catch {}
+    return null;
   }
 
   async listPrices(active = true) {

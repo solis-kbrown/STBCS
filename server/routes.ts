@@ -17,7 +17,7 @@ function asString(val: string | string[] | undefined): string {
 import { lookupIp, lookupDomain, scanPorts, isValidIp, isValidDomain, isPrivateIp, COMMON_PORTS, lookupShodanInternetDB } from "./tools";
 import crypto from "crypto";
 import { stripeService } from "./stripeService";
-import { getStripePublishableKey } from "./stripeClient";
+import { getStripePublishableKey, getUncachableStripeClient } from "./stripeClient";
 import { getQuoService, isQuoConfigured } from "./quoService";
 import { reportCriticalError, sendAdminNotification } from "./maintenance";
 import { sendAccountLockoutEmail } from "./email";
@@ -790,7 +790,33 @@ Hiring: https://stbcybersecurity.com/support
       res.status(401).json({ error: "Not authenticated" });
       return;
     }
-    res.json({ user: req.user });
+    const fullUser = await storage.getUser(req.user.id);
+    if (!fullUser) {
+      res.json({ user: req.user });
+      return;
+    }
+    res.json({
+      user: {
+        id: fullUser.id,
+        username: fullUser.username,
+        email: fullUser.email,
+        tier: fullUser.tier || "free",
+        stripeCustomerId: fullUser.stripeCustomerId,
+        stripeSubscriptionId: fullUser.stripeSubscriptionId,
+        createdAt: fullUser.createdAt,
+        isAdmin: fullUser.isAdmin || false,
+        isTrusted: fullUser.isTrusted || false,
+        kbReputation: fullUser.kbReputation || 0,
+        displayName: fullUser.displayName,
+        avatarUrl: fullUser.avatarUrl,
+        bio: fullUser.bio,
+        location: fullUser.location,
+        website: fullUser.website,
+        company: fullUser.company,
+        profilePublic: fullUser.profilePublic,
+        showEmail: fullUser.showEmail,
+      }
+    });
   });
 
   app.get("/api/threat-ticker", async (req: Request, res: Response) => {
@@ -3301,9 +3327,9 @@ Hiring: https://stbcybersecurity.com/support
   // List available products and prices (for donation/membership tiers)
   app.get("/api/stripe/products", async (req: Request, res: Response) => {
     try {
+      const validNames = ['STBCS Supporter', 'STBCS Pro', 'STBCS Business', 'STBCS Unlimited Everything'];
       const products = await stripeService.listProductsWithPrices();
       
-      // Group by product
       const productsMap = new Map();
       for (const row of products) {
         const r = row as any;
@@ -3326,8 +3352,40 @@ Hiring: https://stbcybersecurity.com/support
         }
       }
       
-      const validNames = ['STBCS Supporter', 'STBCS Pro', 'STBCS Business', 'STBCS Unlimited Everything'];
-      const filtered = Array.from(productsMap.values()).filter((p: any) => validNames.includes(p.name));
+      let filtered = Array.from(productsMap.values()).filter((p: any) => validNames.includes(p.name));
+      
+      const foundNames = new Set(filtered.map((p: any) => p.name));
+      const missingNames = validNames.filter(n => !foundNames.has(n));
+      if (missingNames.length > 0) {
+        try {
+          const stripe = await getUncachableStripeClient();
+          for (const name of missingNames) {
+            const searchResult = await stripe.products.search({ query: `name~'${name}'` });
+            for (const product of searchResult.data) {
+              if (product.active && product.name === name) {
+                const prices = await stripe.prices.list({ product: product.id, active: true });
+                filtered.push({
+                  id: product.id,
+                  name: product.name,
+                  description: product.description,
+                  metadata: product.metadata,
+                  prices: prices.data
+                    .sort((a, b) => (a.unit_amount || 0) - (b.unit_amount || 0))
+                    .map(pr => ({
+                      id: pr.id,
+                      unit_amount: pr.unit_amount,
+                      currency: pr.currency,
+                      recurring: pr.recurring,
+                    })),
+                });
+              }
+            }
+          }
+        } catch (fallbackErr) {
+          console.error("Stripe API fallback error:", fallbackErr);
+        }
+      }
+      
       res.json({ products: filtered });
     } catch (error) {
       console.error("Products error:", error);

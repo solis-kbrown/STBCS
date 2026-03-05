@@ -23,7 +23,7 @@ Preferred communication style: Simple, everyday language.
 - **API Design**: RESTful JSON API (`/api/*`) with Zod validation.
 - **Security**: Rate limiting, input validation, CSRF protection.
 - **Data Scraping**: Server-side scrapers for threat intelligence.
-- **Caching**: In-memory response cache with TTL and session auth caching.
+- **Caching**: In-memory response cache with TTL and session auth caching. Note: Session cache (`server/auth.ts`) only stores core auth fields. `/api/auth/me` fetches full user from DB including profile fields (displayName, avatarUrl, bio, etc.) for frontend display. `/api/account` also fetches fresh from DB.
 - **Performance**: Parallelized DB queries, in-memory `index.html` caching.
 
 ### Data Storage
@@ -96,7 +96,7 @@ Preferred communication style: Simple, everyday language.
 - `satori`
 
 ### Payment Gateway
-- Stripe (subscriptions and donations).
+- Stripe (subscriptions and donations). 4 products: STBCS Supporter, STBCS Pro, STBCS Business, STBCS Unlimited Everything. Products endpoint has Stripe API fallback when stripe-replit-sync doesn't have all products. getProduct/getPrice also fall back to Stripe API with livemode enforcement.
 
 ### SEO
 - Server-Side Meta Injection, Dynamic Routes, Hreflang tags for 10 languages, Structured Data (7 JSON-LD blocks), Dynamic XML sitemap, `robots.txt` configuration.

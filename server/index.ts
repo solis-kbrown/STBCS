@@ -106,6 +106,23 @@ async function staggeredStartup(port: number) {
 
   setTimeout(async () => {
     try {
+      const adminEmail = process.env.ADMIN_EMAIL;
+      if (!adminEmail) return;
+      const { storage } = await import("./storage");
+      const adminUser = await storage.getUserByEmail(adminEmail);
+      if (adminUser && (adminUser.tier === "free" || !adminUser.isAdmin)) {
+        const { db } = await import("./db");
+        const { sql } = await import("drizzle-orm");
+        await db.execute(sql`UPDATE users SET is_admin = true, is_trusted = true, tier = 'unlimited' WHERE id = ${adminUser.id}`);
+        console.log(`[Admin] Upgraded ${adminUser.username} (${adminEmail}) to unlimited/admin`);
+      }
+    } catch (err) {
+      console.error("Admin upgrade check failed:", err);
+    }
+  }, 2000);
+
+  setTimeout(async () => {
+    try {
       const { startDigestScheduler } = await import("./digest");
       startDigestScheduler();
     } catch (err) {
