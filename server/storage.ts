@@ -37,6 +37,7 @@ import {
   type KbReport, type InsertKbReport,
   type FeedbackSubmission, type InsertFeedback,
   type SyncToken, type InsertSyncToken,
+  type PhishingBulletin, type InsertPhishingBulletin,
   KB_POINTS,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
@@ -45,7 +46,8 @@ import {
   apiKeys, apiKeyUsage, addOns, userAddOns, monitorAlertLog,
   uptimeMonitors, uptimeChecks, uptimeIncidents, darkWebMonitors, darkWebFindings,
   dailyThreatStats, attackSurfaceScans, attackSurfaceAssets, threatReports, reportSchedules,
-  kbPosts, kbComments, kbVotes, kbBookmarks, kbReports, feedbackSubmissions, syncTokens
+  kbPosts, kbComments, kbVotes, kbBookmarks, kbReports, feedbackSubmissions, syncTokens,
+  phishingBulletins
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte, asc, count, ne, inArray } from "drizzle-orm";
@@ -383,6 +385,14 @@ export interface IStorage {
   updateSyncTokenPoll(id: string): Promise<void>;
   getTopMaliciousIps(limit: number): Promise<{ ipAddress: string; threatType: string | null; riskScore: number | null }[]>;
   getTopMaliciousDomains(limit: number): Promise<{ domain: string; threatType: string | null }[]>;
+
+  // Phishing Awareness Bulletins
+  createPhishingBulletin(bulletin: InsertPhishingBulletin): Promise<PhishingBulletin>;
+  getLatestBulletin(period?: string): Promise<PhishingBulletin | undefined>;
+  getBulletins(limit: number, offset: number, period?: string): Promise<PhishingBulletin[]>;
+  getBulletinById(id: string): Promise<PhishingBulletin | undefined>;
+  getBulletinCount(period?: string): Promise<number>;
+  getRecentPhishingUrls(hours: number): Promise<MaliciousUrl[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3036,6 +3046,56 @@ export class DatabaseStorage implements IStorage {
       LIMIT ${limit}
     `);
     return results.rows as any[];
+  }
+
+  async createPhishingBulletin(bulletin: InsertPhishingBulletin): Promise<PhishingBulletin> {
+    const [result] = await db.insert(phishingBulletins).values(bulletin).returning();
+    return result;
+  }
+
+  async getLatestBulletin(period?: string): Promise<PhishingBulletin | undefined> {
+    const conditions = period ? eq(phishingBulletins.period, period) : undefined;
+    const [result] = await db.select().from(phishingBulletins)
+      .where(conditions)
+      .orderBy(desc(phishingBulletins.date))
+      .limit(1);
+    return result;
+  }
+
+  async getBulletins(limit: number, offset: number, period?: string): Promise<PhishingBulletin[]> {
+    const conditions = period ? eq(phishingBulletins.period, period) : undefined;
+    return db.select().from(phishingBulletins)
+      .where(conditions)
+      .orderBy(desc(phishingBulletins.date))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getBulletinById(id: string): Promise<PhishingBulletin | undefined> {
+    const [result] = await db.select().from(phishingBulletins)
+      .where(eq(phishingBulletins.id, id));
+    return result;
+  }
+
+  async getBulletinCount(period?: string): Promise<number> {
+    const conditions = period ? eq(phishingBulletins.period, period) : undefined;
+    const [result] = await db.select({ count: sql<number>`count(*)::int` })
+      .from(phishingBulletins)
+      .where(conditions);
+    return result?.count || 0;
+  }
+
+  async getRecentPhishingUrls(hours: number): Promise<MaliciousUrl[]> {
+    const cutoff = new Date(Date.now() - hours * 60 * 60 * 1000);
+    return db.select().from(maliciousUrls)
+      .where(and(
+        or(
+          eq(maliciousUrls.threatType, "phishing"),
+          eq(maliciousUrls.threatType, "verified_phishing")
+        ),
+        gte(maliciousUrls.createdAt, cutoff)
+      ))
+      .orderBy(desc(maliciousUrls.createdAt));
   }
 }
 

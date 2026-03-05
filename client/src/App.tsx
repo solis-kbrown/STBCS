@@ -72,6 +72,7 @@ const BrandCertificates = lazy(() => import("@/pages/brand-kit/certificates"));
 const Compliance = lazy(() => import("@/pages/compliance"));
 const RansomwareCalculator = lazy(() => import("@/pages/ransomware-calculator"));
 const STBSync = lazy(() => import("@/pages/stb-sync"));
+const AwarenessPage = lazy(() => import("@/pages/awareness"));
 const NotFound = lazy(() => import("@/pages/not-found"));
 
 // Page loading component
@@ -156,6 +157,7 @@ function Router() {
         <Route path="/compliance" component={Compliance}/>
         <Route path="/ransomware-calculator" component={RansomwareCalculator}/>
         <Route path="/stb-sync" component={STBSync}/>
+        <Route path="/awareness" component={AwarenessPage}/>
         <Route component={NotFound} />
       </Switch>
     </Suspense>

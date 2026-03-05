@@ -3468,31 +3468,36 @@ Hiring: https://stbcybersecurity.com/support
       if (!req.user) {
         return res.status(401).json({ error: "Not authenticated" });
       }
+
+      const fullUser = await storage.getUser(req.user.id);
+      if (!fullUser) {
+        return res.status(401).json({ error: "User not found" });
+      }
       
       let subscription = null;
-      if (req.user.stripeSubscriptionId) {
-        subscription = await stripeService.getSubscription(req.user.stripeSubscriptionId);
+      if (fullUser.stripeSubscriptionId) {
+        subscription = await stripeService.getSubscription(fullUser.stripeSubscriptionId);
       }
       
       res.json({
         user: {
-          id: req.user.id,
-          username: req.user.username,
-          email: req.user.email,
-          tier: req.user.tier || "free",
-          createdAt: req.user.createdAt,
-          hasStripeCustomer: !!req.user.stripeCustomerId,
-          displayName: req.user.displayName || null,
-          bio: req.user.bio || null,
-          avatarUrl: req.user.avatarUrl || null,
-          location: req.user.location || null,
-          website: req.user.website || null,
-          company: req.user.company || null,
-          profilePublic: req.user.profilePublic !== false,
-          showEmail: req.user.showEmail === true,
-          kbReputation: req.user.kbReputation || 0,
-          isTrusted: req.user.isTrusted || false,
-          isAdmin: req.user.isAdmin || false,
+          id: fullUser.id,
+          username: fullUser.username,
+          email: fullUser.email,
+          tier: fullUser.tier || "free",
+          createdAt: fullUser.createdAt,
+          hasStripeCustomer: !!fullUser.stripeCustomerId,
+          displayName: fullUser.displayName || null,
+          bio: fullUser.bio || null,
+          avatarUrl: fullUser.avatarUrl || null,
+          location: fullUser.location || null,
+          website: fullUser.website || null,
+          company: fullUser.company || null,
+          profilePublic: fullUser.profilePublic !== false,
+          showEmail: fullUser.showEmail === true,
+          kbReputation: fullUser.kbReputation || 0,
+          isTrusted: fullUser.isTrusted || false,
+          isAdmin: fullUser.isAdmin || false,
         },
         subscription: subscription ? {
           status: subscription.status,
@@ -6545,6 +6550,160 @@ Hiring: https://stbcybersecurity.com/support
     syncListCache.set(cacheKey, { data: text, timestamp: Date.now(), count: entryCount });
     return { text, count: entryCount };
   }
+
+  // ===== Phishing Awareness Bulletins =====
+  const bulletinCache: { data: any; expires: number } = { data: null, expires: 0 };
+
+  app.get("/api/awareness/latest", generalLimiter, async (_req: Request, res: Response) => {
+    try {
+      if (bulletinCache.data && Date.now() < bulletinCache.expires) {
+        return res.json(bulletinCache.data);
+      }
+      const bulletin = await storage.getLatestBulletin("daily");
+      if (!bulletin) {
+        return res.json({ bulletin: null });
+      }
+      const response = {
+        bulletin: {
+          id: bulletin.id,
+          period: bulletin.period,
+          date: bulletin.date,
+          totalThreats: bulletin.totalThreats,
+          topBrands: bulletin.topBrands ? JSON.parse(bulletin.topBrands) : [],
+          content: bulletin.content,
+          contentHtml: bulletin.contentHtml,
+          contentMarkdown: bulletin.contentMarkdown,
+          metadata: bulletin.metadata ? JSON.parse(bulletin.metadata) : {},
+          createdAt: bulletin.createdAt,
+        },
+      };
+      bulletinCache.data = response;
+      bulletinCache.expires = Date.now() + 3_600_000;
+      res.json(response);
+    } catch (error) {
+      console.error("Awareness latest error:", error);
+      res.status(500).json({ error: "Failed to fetch latest bulletin" });
+    }
+  });
+
+  app.get("/api/awareness/bulletins", async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const page = Math.max(1, parseInt(asString(req.query.page as string)) || 1);
+      const limit = Math.min(50, Math.max(1, parseInt(asString(req.query.limit as string)) || 10));
+      const period = asString(req.query.period as string) || undefined;
+      const offset = (page - 1) * limit;
+
+      const isPro = req.user && ["supporter", "pro", "business", "enterprise", "unlimited"].includes(req.user.tier);
+      if (!isPro) {
+        return res.status(403).json({ error: "PRO subscription required to access bulletin archive" });
+      }
+
+      const [bulletins, total] = await Promise.all([
+        storage.getBulletins(limit, offset, period),
+        storage.getBulletinCount(period),
+      ]);
+
+      res.json({
+        bulletins: bulletins.map(b => ({
+          id: b.id,
+          period: b.period,
+          date: b.date,
+          totalThreats: b.totalThreats,
+          topBrands: b.topBrands ? JSON.parse(b.topBrands) : [],
+          metadata: b.metadata ? JSON.parse(b.metadata) : {},
+          createdAt: b.createdAt,
+        })),
+        total,
+        page,
+        totalPages: Math.ceil(total / limit),
+      });
+    } catch (error) {
+      console.error("Awareness bulletins error:", error);
+      res.status(500).json({ error: "Failed to fetch bulletins" });
+    }
+  });
+
+  app.get("/api/awareness/bulletins/:id", requireAuth as any, requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const bulletin = await storage.getBulletinById(req.params.id);
+      if (!bulletin) {
+        return res.status(404).json({ error: "Bulletin not found" });
+      }
+      res.json({
+        bulletin: {
+          id: bulletin.id,
+          period: bulletin.period,
+          date: bulletin.date,
+          totalThreats: bulletin.totalThreats,
+          topBrands: bulletin.topBrands ? JSON.parse(bulletin.topBrands) : [],
+          content: bulletin.content,
+          contentHtml: bulletin.contentHtml,
+          contentMarkdown: bulletin.contentMarkdown,
+          metadata: bulletin.metadata ? JSON.parse(bulletin.metadata) : {},
+          createdAt: bulletin.createdAt,
+        },
+      });
+    } catch (error) {
+      console.error("Awareness bulletin error:", error);
+      res.status(500).json({ error: "Failed to fetch bulletin" });
+    }
+  });
+
+  app.get("/api/awareness/bulletins/:id/format/:format", requireAuth as any, requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const bulletin = await storage.getBulletinById(req.params.id);
+      if (!bulletin) {
+        return res.status(404).json({ error: "Bulletin not found" });
+      }
+      const fmt = req.params.format;
+      if (fmt === "html") {
+        res.setHeader("Content-Type", "text/html; charset=utf-8");
+        return res.send(bulletin.contentHtml || "");
+      } else if (fmt === "markdown" || fmt === "md") {
+        res.setHeader("Content-Type", "text/markdown; charset=utf-8");
+        return res.send(bulletin.contentMarkdown || "");
+      } else {
+        res.setHeader("Content-Type", "text/plain; charset=utf-8");
+        return res.send(bulletin.content);
+      }
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch bulletin" });
+    }
+  });
+
+  app.post("/api/awareness/generate", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user?.isAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const period = (req.body?.period === "weekly" ? "weekly" : "daily") as "daily" | "weekly";
+      const { generateAndStoreBulletin } = await import("./phishing-bulletin");
+      await generateAndStoreBulletin(period);
+      bulletinCache.data = null;
+      bulletinCache.expires = 0;
+      res.json({ success: true, message: `${period} bulletin generated` });
+    } catch (error) {
+      console.error("Awareness generate error:", error);
+      res.status(500).json({ error: "Failed to generate bulletin" });
+    }
+  });
+
+  app.get("/api/awareness/stats", generalLimiter, async (_req: Request, res: Response) => {
+    try {
+      const [bulletinCount, urlCount] = await Promise.all([
+        storage.getBulletinCount(),
+        storage.getMaliciousUrlCount(),
+      ]);
+      res.json({
+        totalBulletins: bulletinCount,
+        phishingUrlsTracked: urlCount,
+        brandsMonitored: 40,
+        formatsAvailable: 3,
+      });
+    } catch (error) {
+      res.status(500).json({ error: "Failed to fetch stats" });
+    }
+  });
 
   const createSyncTokenBodySchema = z.object({
     name: z.string().min(1).max(64).transform(s => s.trim()),

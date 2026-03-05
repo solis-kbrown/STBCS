@@ -175,6 +175,48 @@ async function staggeredStartup(port: number) {
       log("Cache warm-up complete");
     } catch {}
   }, 26000);
+
+  setTimeout(async () => {
+    try {
+      const { generateAndStoreBulletin } = await import("./phishing-bulletin");
+      const { storage } = await import("./storage");
+
+      const existing = await storage.getLatestBulletin("daily");
+      if (!existing) {
+        log("No awareness bulletins found — generating initial bulletin");
+        await generateAndStoreBulletin("daily");
+      }
+
+      let lastDailyDate = "";
+      let lastWeeklyDate = "";
+
+      const checkAndGenerate = async () => {
+        try {
+          const now = new Date();
+          const utcHour = now.getUTCHours();
+          const utcDay = now.getUTCDay();
+          const dateKey = now.toISOString().slice(0, 10);
+
+          if (utcHour === 7 && lastDailyDate !== dateKey) {
+            await generateAndStoreBulletin("daily");
+            lastDailyDate = dateKey;
+
+            if (utcDay === 1 && lastWeeklyDate !== dateKey) {
+              await generateAndStoreBulletin("weekly");
+              lastWeeklyDate = dateKey;
+            }
+          }
+        } catch (err) {
+          console.error("[Awareness] Scheduler tick error:", err);
+        }
+      };
+
+      setInterval(checkAndGenerate, 3_600_000);
+      log("Awareness bulletin scheduler started (daily 07:00 UTC)");
+    } catch (err) {
+      console.error("Awareness scheduler failed:", err);
+    }
+  }, 29000);
 }
 
 declare module "http" {

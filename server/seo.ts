@@ -247,6 +247,11 @@ const PAGE_META: Record<string, PageMeta> = {
     description: 'Generate authenticated EDL URLs from 130+ threat intelligence feeds. Paste directly into Palo Alto, pfSense, Fortinet, and SonicWall firewalls for automatic IP and domain blocking.',
     keywords: 'external dynamic list, EDL, firewall block list, threat intelligence feed, IP blocklist, domain blocklist, Palo Alto EDL, pfSense URL table, Fortinet threat feed, SonicWall dynamic list, automated threat blocking',
   },
+  '/awareness': {
+    title: 'Do Not Click — Phishing Awareness Feeds | STB Cybersecurity',
+    description: 'Automated phishing awareness bulletins for IT admins. Copy-paste ready email alerts with top targeted brands, spoofed domains, and employee action items — generated daily from real threat intelligence.',
+    keywords: 'phishing awareness, phishing bulletin, security awareness training, phishing alert, do not click, spoofed domains, brand impersonation, employee security awareness, phishing email template, IT admin security bulletin',
+  },
 };
 
 const MAX_TITLE_LENGTH = 60;

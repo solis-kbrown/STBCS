@@ -300,6 +300,7 @@ export default function Footer() {
                 <li><a href="/monitors" className="link-underline inline-flex items-center gap-1 hover:text-primary transition-all duration-200" data-testid="link-footer-monitors">Monitoring & Alerts</a></li>
                 <li><a href="/api-docs" className="link-underline inline-flex items-center gap-1 hover:text-primary transition-all duration-200" data-testid="link-footer-api">API Documentation</a></li>
                 <li><a href="/stb-sync" className="link-underline inline-flex items-center gap-1 hover:text-primary transition-all duration-200" data-testid="link-footer-stb-sync">STB-Sync Block Lists</a></li>
+                <li><a href="/awareness" className="link-underline inline-flex items-center gap-1 hover:text-primary transition-all duration-200" data-testid="link-footer-awareness">Awareness Feeds</a></li>
                 <li><a href="/pricing" className="link-underline inline-flex items-center gap-1 hover:text-primary transition-all duration-200" data-testid="link-footer-pricing">Plans & Pricing</a></li>
               </ul>
             </div>

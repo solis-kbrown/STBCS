@@ -1352,3 +1352,29 @@ export const insertSyncTokenSchema = createInsertSchema(syncTokens).omit({
 
 export type SyncToken = typeof syncTokens.$inferSelect;
 export type InsertSyncToken = z.infer<typeof insertSyncTokenSchema>;
+
+// ===== Phishing Awareness Bulletins =====
+export const phishingBulletins = pgTable("phishing_bulletins", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  period: text("period").notNull().default("daily"),
+  date: timestamp("date").notNull(),
+  totalThreats: integer("total_threats").notNull().default(0),
+  topBrands: text("top_brands"),
+  content: text("content").notNull(),
+  contentHtml: text("content_html"),
+  contentMarkdown: text("content_markdown"),
+  metadata: text("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("bulletin_period_idx").on(table.period),
+  index("bulletin_date_idx").on(table.date),
+  index("bulletin_created_idx").on(table.createdAt),
+]);
+
+export const insertPhishingBulletinSchema = createInsertSchema(phishingBulletins).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type PhishingBulletin = typeof phishingBulletins.$inferSelect;
+export type InsertPhishingBulletin = z.infer<typeof insertPhishingBulletinSchema>;
