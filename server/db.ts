@@ -10,14 +10,18 @@ if (!process.env.DATABASE_URL) {
 const dbUrl = process.env.DATABASE_URL!;
 const connStr = dbUrl.includes('sslmode=') ? dbUrl : (dbUrl.includes('?') ? `${dbUrl}&sslmode=require&uselibpqcompat=true` : `${dbUrl}?sslmode=require&uselibpqcompat=true`);
 
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+
 const pool = new Pool({
   connectionString: connStr,
-  max: 20,
-  idleTimeoutMillis: 20000,
-  connectionTimeoutMillis: 20000,
-  statement_timeout: 60000,
+  max: IS_PRODUCTION ? 30 : 20,
+  min: IS_PRODUCTION ? 5 : 2,
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 30000,
+  statement_timeout: 90000,
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000,
+  allowExitOnIdle: false,
 });
 
 pool.on('error', (err) => {
