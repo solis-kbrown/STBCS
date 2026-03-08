@@ -15,6 +15,9 @@ let saleEndNotificationSent = false;
 let sessionCleanupFailures = 0;
 let lastSessionCleanup = 0;
 let lastSessionCleanupErrorEmail = 0;
+let maintenanceRunning = false;
+
+const inMemoryLastRun: Record<string, number> = {};
 
 async function withRetry<T>(fn: () => Promise<T>, label: string, retries = 2): Promise<T> {
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -65,11 +68,16 @@ async function setConfig(configKey: string, value: string): Promise<boolean> {
   }
 }
 
+let cachedSaleEndDate: Date | null = null;
+
 async function getOrInitializeSaleDate(): Promise<Date> {
+  if (cachedSaleEndDate) return cachedSaleEndDate;
+
   const existingEnd = await getConfig("grand_opening_end");
   
   if (existingEnd) {
-    return new Date(existingEnd);
+    cachedSaleEndDate = new Date(existingEnd);
+    return cachedSaleEndDate;
   }
 
   const endDate = new Date(Date.now() + SALE_DURATION_DAYS * 24 * 60 * 60 * 1000);
@@ -79,16 +87,24 @@ async function getOrInitializeSaleDate(): Promise<Date> {
     log.error("Failed to persist sale end date - using in-memory fallback");
   }
   
+  cachedSaleEndDate = endDate;
   return endDate;
 }
 
 async function getLastRun(taskName: string): Promise<number> {
   const value = await getConfig(`last_run_${taskName}`);
-  return value ? parseInt(value, 10) : 0;
+  if (value) {
+    const ts = parseInt(value, 10);
+    inMemoryLastRun[taskName] = ts;
+    return ts;
+  }
+  return inMemoryLastRun[taskName] || 0;
 }
 
 async function setLastRun(taskName: string): Promise<void> {
-  await setConfig(`last_run_${taskName}`, Date.now().toString());
+  const now = Date.now();
+  inMemoryLastRun[taskName] = now;
+  await setConfig(`last_run_${taskName}`, now.toString());
 }
 
 export async function sendAdminNotification(params: {
@@ -192,9 +208,9 @@ const errorCooldowns: Record<string, number> = {};
 
 export function reportCriticalError(error: Error, context?: string): void {
   const now = Date.now();
-  const WINDOW_MS = 5 * 60 * 1000;
-  const MAX_ERRORS_PER_WINDOW = 10;
-  const PER_CONTEXT_COOLDOWN = 10 * 60 * 1000;
+  const WINDOW_MS = 15 * 60 * 1000;
+  const MAX_ERRORS_PER_WINDOW = 3;
+  const PER_CONTEXT_COOLDOWN = 60 * 60 * 1000;
 
   if (now - errorRateWindow.windowStart > WINDOW_MS) {
     errorRateWindow = { count: 0, windowStart: now };
@@ -451,6 +467,11 @@ export async function startMaintenanceScheduler(): Promise<void> {
   }
 
   maintenanceInterval = setInterval(async () => {
+    if (maintenanceRunning) {
+      log.debug("Maintenance already running, skipping cycle");
+      return;
+    }
+    maintenanceRunning = true;
     try {
       await runCleanupTasks();
       await checkGrandOpeningSale();
@@ -459,8 +480,10 @@ export async function startMaintenanceScheduler(): Promise<void> {
       await sendWeeklyAdminReport();
     } catch (error) {
       log.error("Scheduler error:", error);
+    } finally {
+      maintenanceRunning = false;
     }
-  }, 5 * 60 * 1000);
+  }, 15 * 60 * 1000);
 
   setTimeout(async () => {
     try {
