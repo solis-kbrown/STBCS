@@ -260,27 +260,6 @@ async function runCleanupTasks(): Promise<void> {
     }
   }
 
-  const dayOfWeek = new Date().getUTCDay();
-  const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-  const lastWeeklyRun = await getLastRun("weekly_cleanup");
-
-  if (dayOfWeek === 0 && now - lastWeeklyRun > WEEK_MS - 24 * 60 * 60 * 1000) {
-    try {
-      const result = await withRetry(() => storage.cleanupOldData(730), "Weekly cleanup");
-      log.info(`Weekly cleanup: ${result.ipsDeleted} IPs, ${result.urlsDeleted} URLs, ${result.newsDeleted} news removed`);
-      await setLastRun("weekly_cleanup");
-
-      await sendAdminNotification({
-        type: "maintenance",
-        title: "Weekly Maintenance Complete",
-        message: "The weekly data cleanup has been completed successfully.",
-        details: `Cleaned up:\n- IPs: ${result.ipsDeleted || 0}\n- URLs: ${result.urlsDeleted || 0}\n- News: ${result.newsDeleted || 0}`
-      });
-    } catch (error) {
-      log.error("Weekly cleanup failed:", error);
-      reportCriticalError(error as Error, "Weekly Data Cleanup");
-    }
-  }
 }
 
 async function checkGrandOpeningSale(): Promise<void> {
