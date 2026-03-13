@@ -152,7 +152,7 @@ async function staggeredStartup(port: number) {
   setTimeout(async () => {
     try {
       const { startUptimeScheduler } = await import("./uptimeEngine");
-      startUptimeScheduler(60);
+      startUptimeScheduler(300);
     } catch (err) {
       console.error("Uptime scheduler failed:", err);
     }

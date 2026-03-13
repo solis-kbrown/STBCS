@@ -251,10 +251,8 @@ async function runCleanupTasks(): Promise<void> {
       lastSessionCleanup = now;
     } catch (error) {
       sessionCleanupFailures++;
-      log.error(`Session cleanup failed (attempt ${sessionCleanupFailures}):`, error);
-      if (sessionCleanupFailures >= 5 && now - lastSessionCleanupErrorEmail > ERROR_EMAIL_COOLDOWN) {
-        reportCriticalError(error as Error, `Session Cleanup (failed ${sessionCleanupFailures} times consecutively)`);
-        lastSessionCleanupErrorEmail = now;
+      log.debug(`Session cleanup failed (attempt ${sessionCleanupFailures}): ${(error as Error).message}`);
+      if (sessionCleanupFailures >= 10) {
         sessionCleanupFailures = 0;
       }
     }

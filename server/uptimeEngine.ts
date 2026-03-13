@@ -388,7 +388,7 @@ export async function runUptimeEngine(): Promise<{ checked: number; alerts: numb
   return { checked, alerts: 0, errors };
 }
 
-export function startUptimeScheduler(intervalSeconds = 60): void {
+export function startUptimeScheduler(intervalSeconds = 300): void {
   log.info(`Starting uptime monitor scheduler (every ${intervalSeconds}s)`);
 
   setTimeout(() => {
