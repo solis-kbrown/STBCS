@@ -10,6 +10,8 @@ import type { UptimeMonitor } from "@shared/schema";
 const log = createLogger("UptimeEngine");
 let isRunning = false;
 let checkInterval: NodeJS.Timeout | null = null;
+let _lastRunEnd = 0;
+export function getUptimeEngineHealth() { return { lastRunEnd: _lastRunEnd, isRunning }; }
 
 interface CheckResult {
   status: "up" | "down" | "degraded";
@@ -383,6 +385,7 @@ export async function runUptimeEngine(): Promise<{ checked: number; alerts: numb
     log.error(`Uptime engine error: ${err.message}`);
   } finally {
     isRunning = false;
+    _lastRunEnd = Date.now();
   }
 
   return { checked, alerts: 0, errors };

@@ -40,9 +40,13 @@ export class ScraperLogger {
   private results: { name: string; count: number; error?: string }[] = [];
   private startTime = 0;
   private _lastCycleEnd = 0;
+  private _lastSuccessfulFeeds = 0;
+  private _lastFailedFeeds = 0;
   private logger = createLogger("Scraper");
 
   get lastCycleEnd() { return this._lastCycleEnd; }
+  get lastSuccessfulFeeds() { return this._lastSuccessfulFeeds; }
+  get lastFailedFeeds() { return this._lastFailedFeeds; }
 
   startCycle() {
     this.results = [];
@@ -64,6 +68,8 @@ export class ScraperLogger {
     const elapsed = ((Date.now() - this.startTime) / 1000).toFixed(1);
     const successful = this.results.filter(r => !r.error);
     const failed = this.results.filter(r => r.error);
+    this._lastSuccessfulFeeds = successful.length;
+    this._lastFailedFeeds = failed.length;
     const totalRecords = successful.reduce((sum, r) => sum + r.count, 0);
 
     this.logger.info(

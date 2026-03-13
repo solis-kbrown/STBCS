@@ -11,6 +11,7 @@ import rateLimit from "express-rate-limit";
 import { cache, cachedJson, cacheAndSend, TTL } from "./cache";
 import { activeFeedCount } from "./scrapers";
 import { scraperLog } from "./logger";
+import { getUptimeEngineHealth } from "./uptimeEngine";
 
 // Helper to safely extract string from Express params/query
 function asString(val: string | string[] | undefined): string {
@@ -2444,20 +2445,43 @@ Hiring: https://stbcybersecurity.com/support
         dbStatus = "outage";
       }
 
+      let apiStatus: "operational" | "degraded" | "outage" = "operational";
+      try {
+        const apiCheck = await fetch(`http://localhost:${process.env.PORT || 5000}/api/stats`);
+        if (!apiCheck.ok) apiStatus = "degraded";
+      } catch {
+        apiStatus = "outage";
+      }
+
       const lastScrape = scraperLog.lastCycleEnd;
       const scrapeAge = lastScrape ? Date.now() - lastScrape : Infinity;
+      const successfulFeeds = scraperLog.lastSuccessfulFeeds;
+      const failedFeeds = scraperLog.lastFailedFeeds;
       const scraperStatus: "operational" | "degraded" | "outage" =
-        scrapeAge < 30 * 60 * 1000 ? "operational" :
+        scrapeAge < 30 * 60 * 1000 ? (failedFeeds > successfulFeeds ? "degraded" : "operational") :
         scrapeAge < 60 * 60 * 1000 ? "degraded" : "outage";
 
-      const platformStatus: "operational" | "degraded" | "outage" = dbStatus === "outage" ? "degraded" : "operational";
+      const feedDesc = lastScrape
+        ? `${successfulFeeds} feeds OK, ${failedFeeds} failed (of ${activeFeedCount} configured)`
+        : `${activeFeedCount} configured feeds — awaiting first cycle`;
+
+      const uptimeHealth = getUptimeEngineHealth();
+      const uptimeAge = uptimeHealth.lastRunEnd ? Date.now() - uptimeHealth.lastRunEnd : Infinity;
+      const monitorStatus: "operational" | "degraded" | "outage" =
+        uptimeAge < 10 * 60 * 1000 ? "operational" :
+        uptimeAge < 30 * 60 * 1000 ? "degraded" :
+        uptimeHealth.lastRunEnd === 0 ? "degraded" : "outage";
+
+      const platformStatus: "operational" | "degraded" | "outage" =
+        dbStatus === "outage" || apiStatus === "outage" ? "outage" :
+        dbStatus === "degraded" || apiStatus === "degraded" ? "degraded" : "operational";
 
       const stbcsServices = [
         { name: "STBCS Platform", category: "stbcs", status: platformStatus, description: "Main application and threat intelligence dashboard", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com" },
-        { name: "STBCS API", category: "stbcs", status: platformStatus, description: "REST API endpoints for threat data and tools", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/api/stats" },
+        { name: "STBCS API", category: "stbcs", status: apiStatus, description: "REST API endpoints for threat data and tools", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/api/stats" },
         { name: "STBCS Database", category: "stbcs", status: dbStatus, description: "PostgreSQL database for threat data persistence", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com" },
-        { name: "STBCS Threat Feeds", category: "stbcs", status: scraperStatus, description: `${activeFeedCount || 130} active threat intelligence feed scrapers`, lastUpdated: lastScrape ? new Date(lastScrape).toISOString() : null, url: "https://stbcybersecurity.com/intel" },
-        { name: "STBCS Monitoring", category: "stbcs", status: platformStatus, description: "Uptime, dark web, and alert monitoring engines", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/monitors" },
+        { name: "STBCS Threat Feeds", category: "stbcs", status: scraperStatus, description: feedDesc, lastUpdated: lastScrape ? new Date(lastScrape).toISOString() : null, url: "https://stbcybersecurity.com/intel" },
+        { name: "STBCS Monitoring", category: "stbcs", status: monitorStatus, description: `Uptime and alert monitoring engine${uptimeHealth.isRunning ? " (checking now)" : ""}`, lastUpdated: uptimeHealth.lastRunEnd ? new Date(uptimeHealth.lastRunEnd).toISOString() : null, url: "https://stbcybersecurity.com/monitors" },
       ];
 
       const staticServices = [
