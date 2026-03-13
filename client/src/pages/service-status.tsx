@@ -247,7 +247,10 @@ export default function ServiceStatusPage() {
                             </h4>
                             <StatusDot status={service.status} />
                           </div>
-                          <p className="text-[11px] text-zinc-500 line-clamp-2 mb-2 leading-relaxed">{service.description}</p>
+                          <p className="text-[11px] text-zinc-500 line-clamp-2 mb-2 leading-relaxed">
+                            {service.description}
+                            {cat !== "stbcs" && service.status !== "external" && <span className="text-zinc-600 italic"> — sourced from provider</span>}
+                          </p>
                           <div className="flex items-center justify-between">
                             <Badge
                               variant="outline"
