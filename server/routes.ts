@@ -9,6 +9,7 @@ import { eq, and, sql as dsql } from "drizzle-orm";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { cache, cachedJson, cacheAndSend, TTL } from "./cache";
+import { activeFeedCount } from "./scrapers";
 
 // Helper to safely extract string from Express params/query
 function asString(val: string | string[] | undefined): string {
@@ -2438,7 +2439,7 @@ Hiring: https://stbcybersecurity.com/support
       const stbcsServices = [
         { name: "STBCS Platform", category: "stbcs", status: "operational" as const, description: "Main application and threat intelligence dashboard", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com" },
         { name: "STBCS API", category: "stbcs", status: "operational" as const, description: "REST API endpoints for threat data and tools", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/api/stats" },
-        { name: "STBCS Threat Feeds", category: "stbcs", status: "operational" as const, description: "73 active threat intelligence feed scrapers", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/intel" },
+        { name: "STBCS Threat Feeds", category: "stbcs", status: "operational" as const, description: `${activeFeedCount || 130}+ active threat intelligence feed scrapers`, lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/intel" },
         { name: "STBCS Monitoring", category: "stbcs", status: "operational" as const, description: "Uptime, dark web, and alert monitoring engines", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/monitors" },
         { name: "STBCS Knowledge Base", category: "stbcs", status: "operational" as const, description: "Community hub, articles, and threat advisories", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/knowledge-base" },
       ];

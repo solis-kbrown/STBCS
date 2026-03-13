@@ -7,6 +7,8 @@ import { createLogger, scraperLog } from "./logger";
 import Parser from "rss-parser";
 const log = createLogger("Scraper");
 
+export let activeFeedCount = 0;
+
 function logScraperError(feedName: string, error: unknown): number {
   const msg = error instanceof Error ? error.message : String(error);
   const isTransient = /429|rate.?limit|too many requests/i.test(msg) ||
@@ -5398,7 +5400,28 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "RansomWatch Extended", url: "https://github.com/joshhighet/ransomwatch", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "Extended RansomWatch data with full historical posts and enhanced group profiles" },
   ];
   
+  const apiKeyGatedFeeds: Record<string, string[]> = {
+    "GREYNOISE_API_KEY": ["GreyNoise"],
+    "CROWDSEC_API_KEY": ["CrowdSec"],
+    "SHODAN_API_KEY": ["Shodan"],
+    "PULSEDIVE_API_KEY": ["Pulsedive"],
+    "OTX_API_KEY": ["AlienVault OTX"],
+    "VIRUSTOTAL_API_KEY": ["VirusTotal"],
+    "HYBRID_ANALYSIS_API_KEY": ["Hybrid Analysis"],
+    "HONEYDB_API_ID": ["HoneyDB"],
+    "ABUSEIPDB_API_KEY": ["AbuseIPDB"],
+  };
+
+  const gatedFeedNames = new Set<string>();
+  for (const [envVar, feedNames] of Object.entries(apiKeyGatedFeeds)) {
+    if (!process.env[envVar]) {
+      for (const name of feedNames) gatedFeedNames.add(name);
+    }
+  }
+
+  let activeCount = 0;
   for (const feed of feeds) {
+    const isActive = !gatedFeedNames.has(feed.name);
     await storage.upsertThreatFeed({
       name: feed.name,
       url: feed.url,
@@ -5406,11 +5429,13 @@ export async function initializeThreatFeeds(): Promise<void> {
       updateFrequency: feed.updateFrequency,
       requiresProTier: feed.requiresProTier,
       description: feed.description,
-      isActive: true,
+      isActive,
     });
+    if (isActive) activeCount++;
   }
-  
-  log.info(`Initialized ${feeds.length} threat feed sources`);
+
+  activeFeedCount = activeCount;
+  log.info(`Initialized ${activeCount} active threat feed sources (${feeds.length} total, ${gatedFeedNames.size} skipped - no API key)`);
 }
 
 // ============================================
@@ -5634,11 +5659,6 @@ export async function fetchAllData(): Promise<void> {
   // ===========================================
   // MALICIOUS URL FEEDS
   // ===========================================
-  // URLhaus, ThreatFox, MalwareBazaar require auth now - skipping
-  // await fetchURLhaus();
-  // await fetchThreatFox();
-  // await fetchMalwareBazaar();
-  
   try { scraperLog.recordFeed("OpenPhish", await fetchOpenPhish()); } catch(e) { scraperLog.recordError("OpenPhish", e); }
   await delay(1000);
   
@@ -5730,12 +5750,6 @@ export async function fetchAllData(): Promise<void> {
   await delay(1000);
   
   try { scraperLog.recordFeed("MalwareBazaar", await fetchMalwareBazaarRecent()); } catch(e) { scraperLog.recordError("MalwareBazaar", e); }
-  await delay(1000);
-  
-  try { scraperLog.recordFeed("ThreatFox API", await scrapeThreatFox()); } catch(e) { scraperLog.recordError("ThreatFox API", e); }
-  await delay(1000);
-  
-  try { scraperLog.recordFeed("MalwareBazaar API", await scrapeMalwareBazaar()); } catch(e) { scraperLog.recordError("MalwareBazaar API", e); }
   await delay(1000);
   
   // ===========================================
