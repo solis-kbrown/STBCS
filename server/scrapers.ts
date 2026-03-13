@@ -5398,6 +5398,8 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "Ransomware IOC Repos", url: "https://github.com/sophoslabs/IoCs/tree/master/Ransomware", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "Sophos ransomware IOC collections from GitHub" },
     { name: "Feodo Ransomware", url: "https://feodotracker.abuse.ch/downloads/ipblocklist.json", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Feodo Tracker ransomware-linked C2 infrastructure" },
     { name: "RansomWatch Extended", url: "https://github.com/joshhighet/ransomwatch", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "Extended RansomWatch data with full historical posts and enhanced group profiles" },
+
+    { name: "AbuseIPDB", url: "https://api.abuseipdb.com/api/v2/blacklist", feedType: "ip", updateFrequency: "daily", requiresProTier: true, description: "1,000 queries/day FREE - crowdsourced IP reputation blacklist" },
   ];
   
   const apiKeyGatedFeeds: Record<string, string[]> = {
