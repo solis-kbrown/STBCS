@@ -2447,8 +2447,8 @@ Hiring: https://stbcybersecurity.com/support
 
       let apiStatus: "operational" | "degraded" | "outage" = "operational";
       try {
-        const apiCheck = await fetch(`http://localhost:${process.env.PORT || 5000}/api/stats`);
-        if (!apiCheck.ok) apiStatus = "degraded";
+        const statsRow = await db.execute(dsql`SELECT COUNT(*) as cnt FROM threat_actors LIMIT 1`);
+        if (!statsRow) apiStatus = "degraded";
       } catch {
         apiStatus = "outage";
       }
@@ -2474,8 +2474,8 @@ Hiring: https://stbcybersecurity.com/support
 
       let kbStatus: "operational" | "degraded" | "outage" = "operational";
       try {
-        const kbCheck = await fetch(`http://localhost:${process.env.PORT || 5000}/api/kb/posts?limit=1`);
-        if (!kbCheck.ok) kbStatus = "degraded";
+        const kbRow = await db.execute(dsql`SELECT 1 FROM kb_posts LIMIT 1`);
+        if (!kbRow) kbStatus = "degraded";
       } catch {
         kbStatus = "outage";
       }

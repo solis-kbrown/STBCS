@@ -93,8 +93,17 @@ function TypingText({ text, className }: { text: string; className?: string }) {
   );
 }
 
+interface ServiceStatusEntry {
+  name: string;
+  category: string;
+  status: "operational" | "degraded" | "outage" | "unknown" | "external";
+  description: string;
+  lastUpdated: string | null;
+  url: string;
+}
+
 function InfraStatusWidget() {
-  const { data, isLoading } = useQuery<any[]>({
+  const { data, isLoading } = useQuery<ServiceStatusEntry[]>({
     queryKey: ["/api/tools/service-status"],
     queryFn: async () => {
       const res = await fetch("/api/tools/service-status");
@@ -116,13 +125,13 @@ function InfraStatusWidget() {
   }
 
   const services = data || [];
-  const stbcs = services.filter((s: any) => s.category === "stbcs");
-  const external = services.filter((s: any) => s.category !== "stbcs");
-  const monitored = services.filter((s: any) => s.status !== "external");
-  const opCount = monitored.filter((s: any) => s.status === "operational").length;
-  const degradedCount = monitored.filter((s: any) => s.status === "degraded").length;
-  const outageCount = monitored.filter((s: any) => s.status === "outage").length;
-  const externalCount = services.filter((s: any) => s.status === "external").length;
+  const stbcs = services.filter(s => s.category === "stbcs");
+  const external = services.filter(s => s.category !== "stbcs");
+  const monitored = services.filter(s => s.status !== "external");
+  const opCount = monitored.filter(s => s.status === "operational").length;
+  const degradedCount = monitored.filter(s => s.status === "degraded").length;
+  const outageCount = monitored.filter(s => s.status === "outage").length;
+  const externalCount = services.filter(s => s.status === "external").length;
 
   const categoryLabels: Record<string, string> = {
     cloud: "Cloud", cdn_dns: "CDN/DNS", security: "Security", communication: "Comms",
@@ -130,11 +139,11 @@ function InfraStatusWidget() {
   };
 
   const categoryStats = Object.entries(categoryLabels).map(([key, label]) => {
-    const items = external.filter((s: any) => s.category === key);
-    const monitoredItems = items.filter((s: any) => s.status !== "external");
-    const allExternal = items.length > 0 && items.every((s: any) => s.status === "external");
-    const allOp = monitoredItems.length > 0 && monitoredItems.every((s: any) => s.status === "operational");
-    const hasOutage = monitoredItems.some((s: any) => s.status === "outage");
+    const items = external.filter(s => s.category === key);
+    const monitoredItems = items.filter(s => s.status !== "external");
+    const allExternal = items.length > 0 && items.every(s => s.status === "external");
+    const allOp = monitoredItems.length > 0 && monitoredItems.every(s => s.status === "operational");
+    const hasOutage = monitoredItems.some(s => s.status === "outage");
     return { key, label, count: items.length, allOp, hasOutage, allExternal };
   }).filter(c => c.count > 0);
 
@@ -153,7 +162,7 @@ function InfraStatusWidget() {
       <div className="space-y-1.5">
         <div className="text-[10px] text-zinc-500 font-display tracking-wider uppercase">STBCS Services</div>
         <div className="grid grid-cols-2 md:grid-cols-5 gap-1.5">
-          {stbcs.map((s: any) => (
+          {stbcs.map((s) => (
             <div key={s.name} className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-[11px] border ${
               s.status === "operational" ? "border-green-500/20 bg-green-500/5 text-green-400" :
               s.status === "degraded" ? "border-yellow-500/20 bg-yellow-500/5 text-yellow-400" :
