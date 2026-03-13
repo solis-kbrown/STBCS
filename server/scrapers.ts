@@ -5409,6 +5409,7 @@ export async function initializeThreatFeeds(): Promise<void> {
     "VIRUSTOTAL_API_KEY": ["VirusTotal"],
     "HYBRID_ANALYSIS_API_KEY": ["Hybrid Analysis"],
     "HONEYDB_API_ID": ["HoneyDB"],
+    "HONEYDB_API_KEY": ["HoneyDB"],
     "ABUSEIPDB_API_KEY": ["AbuseIPDB"],
   };
 

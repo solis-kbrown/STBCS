@@ -607,7 +607,7 @@ export type NewsletterSubscription = typeof newsletterSubscriptions.$inferSelect
 
 export type SystemConfig = typeof systemConfig.$inferSelect;
 
-// SMS Messages for Pro/Business users
+// SMS Messages — currently unused/reserved for future use
 export const smsMessages = pgTable("sms_messages", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   externalId: text("external_id").unique(),
@@ -710,6 +710,7 @@ export const dailyVisitorCounts = pgTable("daily_visitor_counts", {
 export type SiteVisitor = typeof siteVisitors.$inferSelect;
 export type DailyVisitorCount = typeof dailyVisitorCounts.$inferSelect;
 
+// Live Chat Sessions — currently unused/reserved for future use
 export const liveChatSessions = pgTable("live_chat_sessions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   sessionToken: text("session_token").notNull().unique(),
@@ -814,7 +815,7 @@ export type InsertApiKey = z.infer<typeof insertApiKeySchema>;
 export type ApiKey = typeof apiKeys.$inferSelect;
 export type ApiKeyUsage = typeof apiKeyUsage.$inferSelect;
 
-// ===== Add-On System =====
+// Add-On System — currently unused/reserved for future use
 export const addOns = pgTable("add_ons", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: text("name").notNull(),
@@ -834,6 +835,7 @@ export const addOns = pgTable("add_ons", {
   index("addons_active_idx").on(table.isActive),
 ]);
 
+// User Add-Ons — currently unused/reserved for future use
 export const userAddOns = pgTable("user_add_ons", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull(),
