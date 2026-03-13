@@ -1,6 +1,7 @@
 import { Link } from "wouter";
 import Layout from "@/components/layout";
 import { Shield, Mail, FileText, CreditCard, Receipt, Share2, Monitor, Video, FileSearch, Palette, Image, Paintbrush, ExternalLink, Projector, Award } from "lucide-react";
+import { useAuth } from "@/lib/auth";
 
 const categories = [
   {
@@ -100,6 +101,7 @@ const linkedPages = [
 ];
 
 export default function BrandKit() {
+  const { isAdmin } = useAuth();
   return (
     <Layout>
       <div className="min-h-screen bg-[#09090b] py-12 px-4 sm:px-6 lg:px-8">
@@ -149,6 +151,7 @@ export default function BrandKit() {
             ))}
           </div>
 
+          {isAdmin && (
           <div className="mt-12">
             <div className="flex items-center gap-3 mb-6">
               <div className="h-px flex-1 bg-zinc-800" />
@@ -186,6 +189,7 @@ export default function BrandKit() {
               ))}
             </div>
           </div>
+          )}
         </div>
       </div>
     </Layout>

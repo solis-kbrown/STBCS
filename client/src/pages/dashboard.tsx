@@ -422,13 +422,13 @@ export default function Dashboard() {
             ))
           ) : (
             [
-              { title: "Ransomware Groups", value: stats?.activeGroups || 0, change: "Monitoring", icon: Skull, color: "text-primary" },
-              { title: "Critical CVEs", value: stats?.criticalCves || 0, change: "Severity", icon: Shield, color: "text-destructive" },
-              { title: "Active Exploits", value: stats?.activeExploits || 0, change: "In the wild", icon: Activity, color: "text-secondary" },
-              { title: "Incidents", value: stats?.totalIncidents || 0, change: "Recorded", icon: Lock, color: "text-green-500" },
-              { title: "Malicious IPs", value: stats?.maliciousIps || 0, change: "Flagged", icon: Globe, color: "text-orange-500" },
-              { title: "Malicious URLs", value: stats?.maliciousUrls || 0, change: "Flagged", icon: Link2, color: "text-yellow-500" },
-              { title: "CISA KEV", value: stats?.cisaKevCount || 0, change: "Known exploited", icon: AlertTriangle, color: "text-red-400" },
+              { title: "Ransomware Groups", value: stats?.activeGroups || 0, change: (stats?.activeGroups || 0) > 50 ? "High activity" : "Monitoring", icon: Skull, color: "text-primary" },
+              { title: "Critical CVEs", value: stats?.criticalCves || 0, change: (stats?.criticalCves || 0) > 100 ? "Critical" : (stats?.criticalCves || 0) > 20 ? "Elevated" : "Normal", icon: Shield, color: "text-destructive" },
+              { title: "Active Exploits", value: stats?.activeExploits || 0, change: (stats?.activeExploits || 0) > 50 ? "Surge" : "In the wild", icon: Activity, color: "text-secondary" },
+              { title: "Incidents", value: stats?.totalIncidents || 0, change: (stats?.totalIncidents || 0) > 1000 ? "High volume" : "Recorded", icon: Lock, color: "text-green-500" },
+              { title: "Malicious IPs", value: stats?.maliciousIps || 0, change: (stats?.maliciousIps || 0) > 500 ? "High threat" : "Flagged", icon: Globe, color: "text-orange-500" },
+              { title: "Malicious URLs", value: stats?.maliciousUrls || 0, change: (stats?.maliciousUrls || 0) > 500 ? "High threat" : "Flagged", icon: Link2, color: "text-yellow-500" },
+              { title: "CISA KEV", value: stats?.cisaKevCount || 0, change: (stats?.cisaKevCount || 0) > 500 ? "Widespread" : "Known exploited", icon: AlertTriangle, color: "text-red-400" },
             ].map((stat, i) => (
               <CountUpStat key={i} value={stat.value} label={stat.title} icon={stat.icon} color={stat.color} change={stat.change} index={i} />
             ))
