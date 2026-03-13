@@ -798,7 +798,7 @@ export default function Dashboard() {
                     <TrendingUp className="h-4 w-4 text-orange-400" />
                     14-Day Threat Activity
                   </CardTitle>
-                  <Badge variant="outline" className="text-[10px] border-orange-500/30 text-orange-400">Live Data</Badge>
+                  <Badge variant="outline" className="text-[10px] border-orange-500/30 text-orange-400">{chartData && chartData.length > 0 ? "Updated" : "Loading"}</Badge>
                 </div>
               </CardHeader>
               <CardContent>
@@ -840,10 +840,10 @@ export default function Dashboard() {
                   <div className="h-32">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={[
-                        { name: 'Critical', value: stats?.criticalCves || 42, fill: '#ef4444' },
-                        { name: 'High', value: stats?.highCves || 128, fill: '#f97316' },
-                        { name: 'Medium', value: stats?.mediumCves || 315, fill: '#eab308' },
-                        { name: 'Low', value: stats?.lowCves || 89, fill: '#22c55e' },
+                        { name: 'Critical', value: stats?.criticalCves || 0, fill: '#ef4444' },
+                        { name: 'High', value: stats?.highCves || 0, fill: '#f97316' },
+                        { name: 'Medium', value: stats?.mediumCves || 0, fill: '#eab308' },
+                        { name: 'Low', value: stats?.lowCves || 0, fill: '#22c55e' },
                       ]} margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                         <Bar dataKey="value" radius={[4, 4, 0, 0]}>
                           {[
