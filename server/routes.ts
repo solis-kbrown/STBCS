@@ -2472,6 +2472,14 @@ Hiring: https://stbcybersecurity.com/support
         uptimeAge < 30 * 60 * 1000 ? "degraded" :
         uptimeHealth.lastRunEnd === 0 ? "degraded" : "outage";
 
+      let kbStatus: "operational" | "degraded" | "outage" = "operational";
+      try {
+        const kbCheck = await fetch(`http://localhost:${process.env.PORT || 5000}/api/kb/posts?limit=1`);
+        if (!kbCheck.ok) kbStatus = "degraded";
+      } catch {
+        kbStatus = "outage";
+      }
+
       const platformStatus: "operational" | "degraded" | "outage" =
         dbStatus === "outage" || apiStatus === "outage" ? "outage" :
         dbStatus === "degraded" || apiStatus === "degraded" ? "degraded" : "operational";
@@ -2482,6 +2490,7 @@ Hiring: https://stbcybersecurity.com/support
         { name: "STBCS Database", category: "stbcs", status: dbStatus, description: "PostgreSQL database for threat data persistence", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com" },
         { name: "STBCS Threat Feeds", category: "stbcs", status: scraperStatus, description: feedDesc, lastUpdated: lastScrape ? new Date(lastScrape).toISOString() : null, url: "https://stbcybersecurity.com/intel" },
         { name: "STBCS Monitoring", category: "stbcs", status: monitorStatus, description: `Uptime and alert monitoring engine${uptimeHealth.isRunning ? " (checking now)" : ""}`, lastUpdated: uptimeHealth.lastRunEnd ? new Date(uptimeHealth.lastRunEnd).toISOString() : null, url: "https://stbcybersecurity.com/monitors" },
+        { name: "STBCS Knowledge Base", category: "stbcs", status: kbStatus, description: "Community hub, articles, and threat advisories", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/knowledge-base" },
       ];
 
       const staticServices = [
