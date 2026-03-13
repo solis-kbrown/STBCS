@@ -4,8 +4,9 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { I18nProvider } from "@/lib/i18n/context";
-import { AuthProvider } from "@/lib/auth";
+import { AuthProvider, useAuth } from "@/lib/auth";
 import { lazy, Suspense } from "react";
+import { Redirect } from "wouter";
 import { Loader2 } from "lucide-react";
 import LiveChatWidget from "@/components/live-chat-widget";
 
@@ -88,6 +89,13 @@ function PageLoader() {
   );
 }
 
+function AdminOnly({ component: Component }: { component: React.ComponentType }) {
+  const { isAdmin, isLoading } = useAuth();
+  if (isLoading) return <PageLoader />;
+  if (!isAdmin) return <Redirect to="/" />;
+  return <Component />;
+}
+
 function Router() {
   return (
     <Suspense fallback={<PageLoader />}>
@@ -99,10 +107,10 @@ function Router() {
         <Route path="/intel" component={IntelPage}/>
         <Route path="/search" component={SearchPage}/>
         <Route path="/tools" component={ToolsPage}/>
-        <Route path="/logos" component={LogoGallery}/>
+        <Route path="/logos">{() => <AdminOnly component={LogoGallery} />}</Route>
         <Route path="/messages" component={Messages}/>
         <Route path="/support" component={Support}/>
-        <Route path="/style-preview" component={StylePreview}/>
+        <Route path="/style-preview">{() => <AdminOnly component={StylePreview} />}</Route>
         <Route path="/privacy" component={Privacy}/>
         <Route path="/terms" component={Terms}/>
         <Route path="/sms-terms" component={SmsTerms}/>
@@ -117,7 +125,7 @@ function Router() {
         <Route path="/risk-score" component={RiskScore}/>
         <Route path="/monitors" component={MonitorsPage}/>
         <Route path="/groups" component={GroupsDirectory}/>
-        <Route path="/hero-backgrounds" component={HeroGallery}/>
+        <Route path="/hero-backgrounds">{() => <AdminOnly component={HeroGallery} />}</Route>
         <Route path="/attack-surface" component={AttackSurface}/>
         <Route path="/reports" component={Reports}/>
         <Route path="/service-status" component={ServiceStatus}/>

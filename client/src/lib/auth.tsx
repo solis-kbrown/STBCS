@@ -16,6 +16,7 @@ interface AuthContextType {
   isPro: boolean;
   isBusiness: boolean;
   isUnlimited: boolean;
+  isAdmin: boolean;
   login: (username: string, password: string) => Promise<void>;
   signup: (username: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
@@ -98,6 +99,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isPro = user ? proTiers.includes(user.tier) : false;
   const isBusiness = user ? businessTiers.includes(user.tier) : false;
   const isUnlimited = user ? unlimitedTiers.includes(user.tier) : false;
+  const ADMIN_EMAIL = "kbpc.inc@gmail.com";
+  const isAdmin = user?.email === ADMIN_EMAIL;
 
   return (
     <AuthContext.Provider
@@ -108,6 +111,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isPro,
         isBusiness,
         isUnlimited,
+        isAdmin,
         login,
         signup,
         logout,

@@ -10,6 +10,7 @@ import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { cache, cachedJson, cacheAndSend, TTL } from "./cache";
 import { activeFeedCount } from "./scrapers";
+import { scraperLog } from "./logger";
 
 // Helper to safely extract string from Express params/query
 function asString(val: string | string[] | undefined): string {
@@ -2436,35 +2437,50 @@ Hiring: https://stbcybersecurity.com/support
 
       const slackService = { name: "Slack", category: "communication", url: "https://status.slack.com/api/v2.0.0/current", statusPage: "https://status.slack.com" };
 
+      let dbStatus: "operational" | "degraded" | "outage" = "operational";
+      try {
+        await db.execute(dsql`SELECT 1`);
+      } catch {
+        dbStatus = "outage";
+      }
+
+      const lastScrape = scraperLog.lastCycleEnd;
+      const scrapeAge = lastScrape ? Date.now() - lastScrape : Infinity;
+      const scraperStatus: "operational" | "degraded" | "outage" =
+        scrapeAge < 30 * 60 * 1000 ? "operational" :
+        scrapeAge < 60 * 60 * 1000 ? "degraded" : "outage";
+
+      const platformStatus: "operational" | "degraded" | "outage" = dbStatus === "outage" ? "degraded" : "operational";
+
       const stbcsServices = [
-        { name: "STBCS Platform", category: "stbcs", status: "operational" as const, description: "Main application and threat intelligence dashboard", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com" },
-        { name: "STBCS API", category: "stbcs", status: "operational" as const, description: "REST API endpoints for threat data and tools", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/api/stats" },
-        { name: "STBCS Threat Feeds", category: "stbcs", status: "operational" as const, description: `${activeFeedCount || 130} active threat intelligence feed scrapers`, lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/intel" },
-        { name: "STBCS Monitoring", category: "stbcs", status: "operational" as const, description: "Uptime, dark web, and alert monitoring engines", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/monitors" },
-        { name: "STBCS Knowledge Base", category: "stbcs", status: "operational" as const, description: "Community hub, articles, and threat advisories", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/knowledge-base" },
+        { name: "STBCS Platform", category: "stbcs", status: platformStatus, description: "Main application and threat intelligence dashboard", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com" },
+        { name: "STBCS API", category: "stbcs", status: platformStatus, description: "REST API endpoints for threat data and tools", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/api/stats" },
+        { name: "STBCS Database", category: "stbcs", status: dbStatus, description: "PostgreSQL database for threat data persistence", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com" },
+        { name: "STBCS Threat Feeds", category: "stbcs", status: scraperStatus, description: `${activeFeedCount || 130} active threat intelligence feed scrapers`, lastUpdated: lastScrape ? new Date(lastScrape).toISOString() : null, url: "https://stbcybersecurity.com/intel" },
+        { name: "STBCS Monitoring", category: "stbcs", status: platformStatus, description: "Uptime, dark web, and alert monitoring engines", lastUpdated: new Date().toISOString(), url: "https://stbcybersecurity.com/monitors" },
       ];
 
       const staticServices = [
-        { name: "AWS", category: "cloud", status: "operational" as const, description: "Amazon Web Services — compute, storage, networking", lastUpdated: new Date().toISOString(), url: "https://health.aws.amazon.com/health/status" },
-        { name: "Microsoft Azure", category: "cloud", status: "operational" as const, description: "Microsoft cloud infrastructure and services", lastUpdated: new Date().toISOString(), url: "https://status.azure.com" },
-        { name: "Google Cloud", category: "cloud", status: "operational" as const, description: "GCP compute, storage, AI/ML, and networking", lastUpdated: new Date().toISOString(), url: "https://status.cloud.google.com" },
-        { name: "Oracle Cloud", category: "cloud", status: "operational" as const, description: "Oracle Cloud Infrastructure (OCI)", lastUpdated: new Date().toISOString(), url: "https://ocistatus.oraclecloud.com" },
-        { name: "IBM Cloud", category: "cloud", status: "operational" as const, description: "IBM Cloud platform and Watson services", lastUpdated: new Date().toISOString(), url: "https://cloud.ibm.com/status" },
-        { name: "Akamai", category: "cdn_dns", status: "operational" as const, description: "Global CDN, DDoS protection, and edge compute", lastUpdated: new Date().toISOString(), url: "https://www.akamai.com/company/network-status" },
-        { name: "Cloudflare DNS", category: "cdn_dns", status: "operational" as const, description: "1.1.1.1 public DNS resolver", lastUpdated: new Date().toISOString(), url: "https://www.cloudflarestatus.com" },
-        { name: "Google DNS", category: "cdn_dns", status: "operational" as const, description: "8.8.8.8 / 8.8.4.4 public DNS", lastUpdated: new Date().toISOString(), url: "https://status.cloud.google.com" },
-        { name: "Microsoft 365", category: "communication", status: "operational" as const, description: "Exchange, Teams, SharePoint, OneDrive", lastUpdated: new Date().toISOString(), url: "https://status.office.com" },
-        { name: "Google Workspace", category: "communication", status: "operational" as const, description: "Gmail, Drive, Meet, and Calendar", lastUpdated: new Date().toISOString(), url: "https://www.google.com/appsstatus/dashboard/" },
-        { name: "Zoom", category: "communication", status: "operational" as const, description: "Video conferencing and collaboration", lastUpdated: new Date().toISOString(), url: "https://status.zoom.us" },
-        { name: "CrowdStrike", category: "security", status: "operational" as const, description: "Endpoint detection and response (EDR)", lastUpdated: new Date().toISOString(), url: "https://status.crowdstrike.com" },
-        { name: "Okta", category: "security", status: "operational" as const, description: "Identity and access management (IAM)", lastUpdated: new Date().toISOString(), url: "https://status.okta.com" },
-        { name: "SentinelOne", category: "security", status: "operational" as const, description: "AI-powered endpoint security platform", lastUpdated: new Date().toISOString(), url: "https://status.sentinelone.com" },
-        { name: "Splunk", category: "security", status: "operational" as const, description: "SIEM, log management, and observability", lastUpdated: new Date().toISOString(), url: "https://www.splunkstatus.com" },
-        { name: "Stripe", category: "infrastructure", status: "operational" as const, description: "Payment processing and financial APIs", lastUpdated: new Date().toISOString(), url: "https://status.stripe.com" },
-        { name: "Docker Hub", category: "development", status: "operational" as const, description: "Container image registry and build service", lastUpdated: new Date().toISOString(), url: "https://www.dockerstatus.com" },
-        { name: "npm Registry", category: "development", status: "operational" as const, description: "Node.js package registry", lastUpdated: new Date().toISOString(), url: "https://status.npmjs.org" },
-        { name: "Let's Encrypt", category: "security", status: "operational" as const, description: "Free TLS/SSL certificate authority", lastUpdated: new Date().toISOString(), url: "https://letsencrypt.status.io" },
-        { name: "Equinix", category: "infrastructure", status: "operational" as const, description: "Data center colocation and interconnection", lastUpdated: new Date().toISOString(), url: "https://status.equinix.com" },
+        { name: "AWS", category: "cloud", status: "external" as const, description: "Amazon Web Services — compute, storage, networking", lastUpdated: null, url: "https://health.aws.amazon.com/health/status" },
+        { name: "Microsoft Azure", category: "cloud", status: "external" as const, description: "Microsoft cloud infrastructure and services", lastUpdated: null, url: "https://status.azure.com" },
+        { name: "Google Cloud", category: "cloud", status: "external" as const, description: "GCP compute, storage, AI/ML, and networking", lastUpdated: null, url: "https://status.cloud.google.com" },
+        { name: "Oracle Cloud", category: "cloud", status: "external" as const, description: "Oracle Cloud Infrastructure (OCI)", lastUpdated: null, url: "https://ocistatus.oraclecloud.com" },
+        { name: "IBM Cloud", category: "cloud", status: "external" as const, description: "IBM Cloud platform and Watson services", lastUpdated: null, url: "https://cloud.ibm.com/status" },
+        { name: "Akamai", category: "cdn_dns", status: "external" as const, description: "Global CDN, DDoS protection, and edge compute", lastUpdated: null, url: "https://www.akamai.com/company/network-status" },
+        { name: "Cloudflare DNS", category: "cdn_dns", status: "external" as const, description: "1.1.1.1 public DNS resolver", lastUpdated: null, url: "https://www.cloudflarestatus.com" },
+        { name: "Google DNS", category: "cdn_dns", status: "external" as const, description: "8.8.8.8 / 8.8.4.4 public DNS", lastUpdated: null, url: "https://status.cloud.google.com" },
+        { name: "Microsoft 365", category: "communication", status: "external" as const, description: "Exchange, Teams, SharePoint, OneDrive", lastUpdated: null, url: "https://status.office.com" },
+        { name: "Google Workspace", category: "communication", status: "external" as const, description: "Gmail, Drive, Meet, and Calendar", lastUpdated: null, url: "https://www.google.com/appsstatus/dashboard/" },
+        { name: "Zoom", category: "communication", status: "external" as const, description: "Video conferencing and collaboration", lastUpdated: null, url: "https://status.zoom.us" },
+        { name: "CrowdStrike", category: "security", status: "external" as const, description: "Endpoint detection and response (EDR)", lastUpdated: null, url: "https://status.crowdstrike.com" },
+        { name: "Okta", category: "security", status: "external" as const, description: "Identity and access management (IAM)", lastUpdated: null, url: "https://status.okta.com" },
+        { name: "SentinelOne", category: "security", status: "external" as const, description: "AI-powered endpoint security platform", lastUpdated: null, url: "https://status.sentinelone.com" },
+        { name: "Splunk", category: "security", status: "external" as const, description: "SIEM, log management, and observability", lastUpdated: null, url: "https://www.splunkstatus.com" },
+        { name: "Stripe", category: "infrastructure", status: "external" as const, description: "Payment processing and financial APIs", lastUpdated: null, url: "https://status.stripe.com" },
+        { name: "Docker Hub", category: "development", status: "external" as const, description: "Container image registry and build service", lastUpdated: null, url: "https://www.dockerstatus.com" },
+        { name: "npm Registry", category: "development", status: "external" as const, description: "Node.js package registry", lastUpdated: null, url: "https://status.npmjs.org" },
+        { name: "Let's Encrypt", category: "security", status: "external" as const, description: "Free TLS/SSL certificate authority", lastUpdated: null, url: "https://letsencrypt.status.io" },
+        { name: "Equinix", category: "infrastructure", status: "external" as const, description: "Data center colocation and interconnection", lastUpdated: null, url: "https://status.equinix.com" },
       ];
 
       async function fetchStatusPage(service: typeof statusPages[0]) {

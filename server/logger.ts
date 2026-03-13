@@ -39,7 +39,10 @@ export function createLogger(tag: string) {
 export class ScraperLogger {
   private results: { name: string; count: number; error?: string }[] = [];
   private startTime = 0;
+  private _lastCycleEnd = 0;
   private logger = createLogger("Scraper");
+
+  get lastCycleEnd() { return this._lastCycleEnd; }
 
   startCycle() {
     this.results = [];
@@ -57,6 +60,7 @@ export class ScraperLogger {
   }
 
   endCycle() {
+    this._lastCycleEnd = Date.now();
     const elapsed = ((Date.now() - this.startTime) / 1000).toFixed(1);
     const successful = this.results.filter(r => !r.error);
     const failed = this.results.filter(r => r.error);

@@ -6,14 +6,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RefreshCw, CheckCircle2, AlertTriangle, XCircle, Cloud, Globe, Server, Shield, Lock, Wifi, Mail, Code, Database, MonitorCheck, Zap, Radio } from "lucide-react";
+import { RefreshCw, CheckCircle2, AlertTriangle, XCircle, Cloud, Globe, Server, Shield, Lock, Wifi, Mail, Code, Database, MonitorCheck, Zap, Radio, ExternalLink } from "lucide-react";
 import AnimatedSection from "@/components/animated-section";
 import { useState } from "react";
 
 interface ServiceStatus {
   name: string;
   category: string;
-  status: "operational" | "degraded" | "outage" | "unknown";
+  status: "operational" | "degraded" | "outage" | "unknown" | "external";
   description: string;
   lastUpdated: string | null;
   url: string;
@@ -35,6 +35,7 @@ function getStatusColor(status: string) {
     case "operational": return "text-green-400";
     case "degraded": return "text-yellow-400";
     case "outage": return "text-red-400";
+    case "external": return "text-blue-400";
     default: return "text-zinc-400";
   }
 }
@@ -44,11 +45,15 @@ function getStatusBg(status: string) {
     case "operational": return "border-green-500/20";
     case "degraded": return "border-yellow-500/20";
     case "outage": return "border-red-500/20";
+    case "external": return "border-blue-500/20";
     default: return "border-zinc-700/30";
   }
 }
 
 function StatusDot({ status }: { status: string }) {
+  if (status === "external") {
+    return <ExternalLink className="h-3.5 w-3.5 text-blue-400" />;
+  }
   const color = status === "operational" ? "bg-green-500" : status === "degraded" ? "bg-yellow-500" : status === "outage" ? "bg-red-500" : "bg-zinc-500";
   return (
     <span className="relative flex h-2.5 w-2.5">
@@ -73,10 +78,12 @@ export default function ServiceStatusPage() {
   });
 
   const services = data || [];
-  const operationalCount = services.filter(s => s.status === "operational").length;
-  const degradedCount = services.filter(s => s.status === "degraded").length;
-  const outageCount = services.filter(s => s.status === "outage").length;
-  const unknownCount = services.filter(s => s.status === "unknown").length;
+  const monitoredServices = services.filter(s => s.status !== "external");
+  const externalCount = services.filter(s => s.status === "external").length;
+  const operationalCount = monitoredServices.filter(s => s.status === "operational").length;
+  const degradedCount = monitoredServices.filter(s => s.status === "degraded").length;
+  const outageCount = monitoredServices.filter(s => s.status === "outage").length;
+  const unknownCount = monitoredServices.filter(s => s.status === "unknown").length;
   const overallStatus = outageCount > 0 ? "outage" : degradedCount > 0 ? "degraded" : operationalCount > 0 ? "operational" : "unknown";
 
   const categories = Object.keys(CATEGORIES);
@@ -138,6 +145,7 @@ export default function ServiceStatusPage() {
                   {degradedCount > 0 && <span className="flex items-center gap-1.5 text-yellow-400"><span className="w-2 h-2 rounded-full bg-yellow-500" />{degradedCount} degraded</span>}
                   {outageCount > 0 && <span className="flex items-center gap-1.5 text-red-400"><span className="w-2 h-2 rounded-full bg-red-500" />{outageCount} outage</span>}
                   {unknownCount > 0 && <span className="flex items-center gap-1.5 text-zinc-400"><span className="w-2 h-2 rounded-full bg-zinc-500" />{unknownCount} unknown</span>}
+                  {externalCount > 0 && <span className="flex items-center gap-1.5 text-blue-400"><ExternalLink className="w-3 h-3" />{externalCount} external</span>}
                 </div>
               </div>
             </CardContent>
@@ -247,10 +255,11 @@ export default function ServiceStatusPage() {
                                 service.status === "operational" ? "border-green-500/30 text-green-400" :
                                 service.status === "degraded" ? "border-yellow-500/30 text-yellow-400" :
                                 service.status === "outage" ? "border-red-500/30 text-red-400" :
+                                service.status === "external" ? "border-blue-500/30 text-blue-400" :
                                 "border-zinc-600 text-zinc-400"
                               }`}
                             >
-                              {service.status === "operational" ? "Operational" : service.status === "degraded" ? "Degraded" : service.status === "outage" ? "Outage" : "Unknown"}
+                              {service.status === "operational" ? "Operational" : service.status === "degraded" ? "Degraded" : service.status === "outage" ? "Outage" : service.status === "external" ? "See Status Page" : "Unknown"}
                             </Badge>
                             {service.url && (
                               <a

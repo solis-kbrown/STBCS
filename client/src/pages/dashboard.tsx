@@ -118,9 +118,11 @@ function InfraStatusWidget() {
   const services = data || [];
   const stbcs = services.filter((s: any) => s.category === "stbcs");
   const external = services.filter((s: any) => s.category !== "stbcs");
-  const opCount = services.filter((s: any) => s.status === "operational").length;
-  const degradedCount = services.filter((s: any) => s.status === "degraded").length;
-  const outageCount = services.filter((s: any) => s.status === "outage").length;
+  const monitored = services.filter((s: any) => s.status !== "external");
+  const opCount = monitored.filter((s: any) => s.status === "operational").length;
+  const degradedCount = monitored.filter((s: any) => s.status === "degraded").length;
+  const outageCount = monitored.filter((s: any) => s.status === "outage").length;
+  const externalCount = services.filter((s: any) => s.status === "external").length;
 
   const categoryLabels: Record<string, string> = {
     cloud: "Cloud", cdn_dns: "CDN/DNS", security: "Security", communication: "Comms",
@@ -129,9 +131,11 @@ function InfraStatusWidget() {
 
   const categoryStats = Object.entries(categoryLabels).map(([key, label]) => {
     const items = external.filter((s: any) => s.category === key);
-    const allOp = items.length > 0 && items.every((s: any) => s.status === "operational");
-    const hasOutage = items.some((s: any) => s.status === "outage");
-    return { key, label, count: items.length, allOp, hasOutage };
+    const monitoredItems = items.filter((s: any) => s.status !== "external");
+    const allExternal = items.length > 0 && items.every((s: any) => s.status === "external");
+    const allOp = monitoredItems.length > 0 && monitoredItems.every((s: any) => s.status === "operational");
+    const hasOutage = monitoredItems.some((s: any) => s.status === "outage");
+    return { key, label, count: items.length, allOp, hasOutage, allExternal };
   }).filter(c => c.count > 0);
 
   return (
@@ -140,10 +144,10 @@ function InfraStatusWidget() {
         <div className="flex items-center gap-2">
           <span className={`w-2 h-2 rounded-full ${outageCount > 0 ? "bg-red-500" : degradedCount > 0 ? "bg-yellow-500" : "bg-green-500"}`} />
           <span className="text-xs text-zinc-300 font-medium">
-            {outageCount > 0 ? `${outageCount} outage${outageCount > 1 ? "s" : ""}` : degradedCount > 0 ? `${degradedCount} degraded` : "All systems operational"}
+            {outageCount > 0 ? `${outageCount} outage${outageCount > 1 ? "s" : ""}` : degradedCount > 0 ? `${degradedCount} degraded` : "All monitored systems operational"}
           </span>
         </div>
-        <span className="text-[10px] text-zinc-600">{opCount}/{services.length} services up</span>
+        <span className="text-[10px] text-zinc-600">{opCount}/{monitored.length} monitored{externalCount > 0 ? ` · ${externalCount} external` : ""}</span>
       </div>
 
       <div className="space-y-1.5">
@@ -171,9 +175,10 @@ function InfraStatusWidget() {
             <div key={cat.key} className={`flex items-center gap-1.5 px-2 py-1.5 rounded text-[11px] border ${
               cat.hasOutage ? "border-red-500/20 bg-red-500/5 text-red-400" :
               cat.allOp ? "border-green-500/20 bg-green-500/5 text-green-400" :
+              cat.allExternal ? "border-blue-500/20 bg-blue-500/5 text-blue-400" :
               "border-yellow-500/20 bg-yellow-500/5 text-yellow-400"
             }`}>
-              {cat.allOp ? <CheckCircle2 className="h-3 w-3 flex-shrink-0" /> : cat.hasOutage ? <XCircle className="h-3 w-3 flex-shrink-0" /> : <AlertTriangle className="h-3 w-3 flex-shrink-0" />}
+              {cat.allOp ? <CheckCircle2 className="h-3 w-3 flex-shrink-0" /> : cat.hasOutage ? <XCircle className="h-3 w-3 flex-shrink-0" /> : cat.allExternal ? <ExternalLink className="h-3 w-3 flex-shrink-0" /> : <AlertTriangle className="h-3 w-3 flex-shrink-0" />}
               <span className="truncate">{cat.label}</span>
             </div>
           ))}
@@ -237,7 +242,7 @@ function SecurityPostureWidget() {
   const items = [
     { label: "Set up watchlist alerts", done: posture.hasWatchlist, href: "/watchlist", key: "watchlist" },
     { label: "Enable email notifications", done: posture.hasEmail, href: "/account", key: "email" },
-    { label: "Complete risk assessment", done: posture.emailVerified, href: "/risk-assessment", key: "risk" },
+    { label: "Verify email address", done: posture.emailVerified, href: "/account", key: "email-verify" },
     { label: "Subscribe to weekly digest", done: posture.hasDigestOptIn, href: "/account", key: "digest" },
     { label: "Enable dark web monitoring", done: posture.hasDarkWebMonitors, href: "/dark-web", key: "darkweb" },
     { label: "Set up uptime monitoring", done: posture.hasUptimeMonitors, href: "/monitors", key: "uptime" },
@@ -408,13 +413,13 @@ export default function Dashboard() {
             ))
           ) : (
             [
-              { title: "Ransomware Groups", value: stats?.activeGroups || 0, change: "Live", icon: Skull, color: "text-primary" },
-              { title: "Critical CVEs", value: stats?.criticalCves || 0, change: "High", icon: Shield, color: "text-destructive" },
-              { title: "Active Exploits", value: stats?.activeExploits || 0, change: "Active", icon: Activity, color: "text-secondary" },
-              { title: "Incidents", value: stats?.totalIncidents || 0, change: "Total", icon: Lock, color: "text-green-500" },
-              { title: "Malicious IPs", value: stats?.maliciousIps || 0, change: "Tracked", icon: Globe, color: "text-orange-500" },
-              { title: "Malicious URLs", value: stats?.maliciousUrls || 0, change: "Active", icon: Link2, color: "text-yellow-500" },
-              { title: "CISA KEV", value: stats?.cisaKevCount || 0, change: "Exploited", icon: AlertTriangle, color: "text-red-400" },
+              { title: "Ransomware Groups", value: stats?.activeGroups || 0, change: "Monitoring", icon: Skull, color: "text-primary" },
+              { title: "Critical CVEs", value: stats?.criticalCves || 0, change: "Severity", icon: Shield, color: "text-destructive" },
+              { title: "Active Exploits", value: stats?.activeExploits || 0, change: "In the wild", icon: Activity, color: "text-secondary" },
+              { title: "Incidents", value: stats?.totalIncidents || 0, change: "Recorded", icon: Lock, color: "text-green-500" },
+              { title: "Malicious IPs", value: stats?.maliciousIps || 0, change: "Flagged", icon: Globe, color: "text-orange-500" },
+              { title: "Malicious URLs", value: stats?.maliciousUrls || 0, change: "Flagged", icon: Link2, color: "text-yellow-500" },
+              { title: "CISA KEV", value: stats?.cisaKevCount || 0, change: "Known exploited", icon: AlertTriangle, color: "text-red-400" },
             ].map((stat, i) => (
               <CountUpStat key={i} value={stat.value} label={stat.title} icon={stat.icon} color={stat.color} change={stat.change} index={i} />
             ))
