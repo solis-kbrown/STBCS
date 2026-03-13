@@ -871,9 +871,9 @@ export default function Dashboard() {
                   <div className="text-xs text-zinc-500 mb-2 font-display tracking-wider uppercase">Platform Coverage</div>
                   <div className="space-y-2">
                     {[
-                      { label: "Threat Feeds Active", value: 73, max: 80, color: "bg-orange-500" },
-                      { label: "CVE Database", value: 95, max: 100, color: "bg-red-500" },
-                      { label: "IOC Coverage", value: 88, max: 100, color: "bg-yellow-500" },
+                      { label: "Threat Feeds Active", value: stats?.activeFeedCount || 0, max: 150, color: "bg-orange-500" },
+                      { label: "CVE Database", value: stats?.criticalCves ? Math.min(Math.round((stats.criticalCves / 700) * 100), 100) : 0, max: 100, color: "bg-red-500" },
+                      { label: "IOC Coverage", value: stats?.maliciousIps ? Math.min(Math.round((stats.maliciousIps / 100000) * 100), 100) : 0, max: 100, color: "bg-yellow-500" },
                     ].map((bar) => (
                       <div key={bar.label}>
                         <div className="flex justify-between text-[11px] mb-1">

@@ -916,7 +916,7 @@ Hiring: https://stbcybersecurity.com/support
       const key = "stats";
       if (cachedJson(res, key, TTL.STATS)) return;
       const stats = await storage.getDashboardStats();
-      cacheAndSend(res, key, stats, TTL.STATS);
+      cacheAndSend(res, key, { ...stats, activeFeedCount: activeFeedCount || 0 }, TTL.STATS);
     } catch (error) {
       console.error("Error fetching stats:", error);
       res.status(500).json({ error: "Failed to fetch dashboard stats" });
