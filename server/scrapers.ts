@@ -55,7 +55,7 @@ async function triggerWatchlistNotifications(
   data: { victim?: string; groupName?: string; cveId?: string; description?: string; sector?: string; country?: string }
 ): Promise<void> {
   try {
-    const allWatchlistItems = await db.select().from(watchlistItems);
+    const allWatchlistItems = await withDbRetry(() => db.select().from(watchlistItems), "dbSelect");
     if (allWatchlistItems.length === 0) return;
     
     const searchableText = [
@@ -107,7 +107,7 @@ async function triggerWatchlistNotifications(
           severity: 'high',
           relatedType: threatType,
         };
-        await storage.createNotification(notification);
+        await withDbRetry(() => storage.createNotification(notification), "createNotification");
         log.debug(`Created notification for user ${item.userId}: ${notification.title}`);
       }
     }
@@ -488,7 +488,7 @@ export async function fetchURLhaus(): Promise<number> {
           reportedAt: new Date(entry.date_added),
         };
         
-        await storage.upsertMaliciousUrl(urlData);
+        await withDbRetry(() => storage.upsertMaliciousUrl(urlData), "upsertUrl");
         count++;
       }
     }
@@ -544,7 +544,7 @@ export async function fetchFeodoTracker(): Promise<number> {
         lastSeen: entry.last_online ? new Date(entry.last_online) : new Date(),
       };
       
-      await storage.upsertMaliciousIp(ipData);
+      await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
       count++;
     }
     
@@ -586,7 +586,7 @@ export async function fetchDShield(): Promise<number> {
             lastSeen: new Date(),
           };
           
-          await storage.upsertMaliciousIp(ipData);
+          await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
           count++;
         }
       }
@@ -629,7 +629,7 @@ export async function fetchTorExitNodes(): Promise<number> {
         lastSeen: new Date(),
       };
       
-      await storage.upsertMaliciousIp(ipData);
+      await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
       count++;
     }
     
@@ -670,7 +670,7 @@ export async function fetchOpenPhish(): Promise<number> {
         reportedAt: new Date(),
       };
       
-      await storage.upsertMaliciousUrl(urlData);
+      await withDbRetry(() => storage.upsertMaliciousUrl(urlData), "upsertUrl");
       count++;
     }
     
@@ -707,12 +707,12 @@ export async function fetchSSLBlacklist(): Promise<number> {
       const ip = line.trim().split(/[\s,;]+/)[0];
       if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip) && !seen.has(ip)) {
         seen.add(ip);
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: ip,
           source: "SSL Blacklist",
           threatType: "malware_ssl",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       }
     }
@@ -759,7 +759,7 @@ export async function fetchIPsum(): Promise<number> {
             lastSeen: new Date(),
           };
           
-          await storage.upsertMaliciousIp(ipData);
+          await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
           count++;
         }
       }
@@ -801,7 +801,7 @@ export async function fetchBlocklistDe(): Promise<number> {
         lastSeen: new Date(),
       };
       
-      await storage.upsertMaliciousIp(ipData);
+      await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
       count++;
     }
     
@@ -841,7 +841,7 @@ export async function fetchCINS(): Promise<number> {
         lastSeen: new Date(),
       };
       
-      await storage.upsertMaliciousIp(ipData);
+      await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
       count++;
     }
     
@@ -881,7 +881,7 @@ export async function fetchGreenSnow(): Promise<number> {
         lastSeen: new Date(),
       };
       
-      await storage.upsertMaliciousIp(ipData);
+      await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
       count++;
     }
     
@@ -921,7 +921,7 @@ export async function fetchEmergingThreats(): Promise<number> {
         lastSeen: new Date(),
       };
       
-      await storage.upsertMaliciousIp(ipData);
+      await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
       count++;
     }
     
@@ -968,7 +968,7 @@ export async function fetchThreatFox(): Promise<number> {
               threatType: ioc.malware || "malware_c2",
               lastSeen: ioc.first_seen ? new Date(ioc.first_seen) : new Date(),
             };
-            await storage.upsertMaliciousIp(ipData);
+            await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
             ipCount++;
           }
         } else if (ioc.ioc_type === "url" && ioc.ioc) {
@@ -979,7 +979,7 @@ export async function fetchThreatFox(): Promise<number> {
             status: "active",
             reportedAt: ioc.first_seen ? new Date(ioc.first_seen) : new Date(),
           };
-          await storage.upsertMaliciousUrl(urlData);
+          await withDbRetry(() => storage.upsertMaliciousUrl(urlData), "upsertUrl");
           urlCount++;
         }
       }
@@ -1018,13 +1018,13 @@ export async function fetchC2IntelFeedsDomains(): Promise<number> {
       const domain = line.split(",")[0]?.trim().toLowerCase();
       if (domain && domain.includes(".") && !domain.includes(" ") && !seen.has(domain)) {
         seen.add(domain);
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: domain,
           source: "C2IntelFeeds Domains",
           threatType: "c2_domain",
           status: "active",
           reportedAt: new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       }
     }
@@ -1072,7 +1072,7 @@ export async function fetchPhishTank(): Promise<number> {
           reportedAt: new Date(),
         };
         
-        await storage.upsertMaliciousUrl(urlData);
+        await withDbRetry(() => storage.upsertMaliciousUrl(urlData), "upsertUrl");
         count++;
       }
     }
@@ -1113,7 +1113,7 @@ export async function fetchBotnetC2(): Promise<number> {
         lastSeen: new Date(),
       };
       
-      await storage.upsertMaliciousIp(ipData);
+      await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
       count++;
     }
     
@@ -1151,12 +1151,12 @@ export async function fetchDanTorNodes(): Promise<number> {
       const trimmed = ip.trim();
       if (!seen.has(trimmed)) {
         seen.add(trimmed);
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: trimmed,
           source: "Dan.me.uk Tor",
           threatType: "tor_exit_node",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       }
     }
@@ -1203,7 +1203,7 @@ export async function fetchMalwareBazaar(): Promise<number> {
             reportedAt: sample.first_seen ? new Date(sample.first_seen) : new Date(),
           };
           
-          await storage.upsertMaliciousUrl(urlData);
+          await withDbRetry(() => storage.upsertMaliciousUrl(urlData), "upsertUrl");
           count++;
         }
       }
@@ -1247,7 +1247,7 @@ export async function fetchSpamhausDrop(): Promise<number> {
           lastSeen: new Date(),
         };
         
-        await storage.upsertMaliciousIp(ipData);
+        await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
         count++;
       }
     }
@@ -1290,7 +1290,7 @@ export async function fetchFireHOL(): Promise<number> {
           lastSeen: new Date(),
         };
         
-        await storage.upsertMaliciousIp(ipData);
+        await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
         count++;
       }
     }
@@ -1331,7 +1331,7 @@ export async function fetchSSLBLAggressive(): Promise<number> {
         lastSeen: new Date(),
       };
       
-      await storage.upsertMaliciousIp(ipData);
+      await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
       count++;
     }
     
@@ -1371,7 +1371,7 @@ export async function fetchC2Tracker(): Promise<number> {
         lastSeen: new Date(),
       };
       
-      await storage.upsertMaliciousIp(ipData);
+      await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
       count++;
     }
     
@@ -1413,7 +1413,7 @@ export async function fetchCleanTalk(): Promise<number> {
         lastSeen: new Date(),
       };
       
-      await storage.upsertMaliciousIp(ipData);
+      await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
       count++;
     }
     
@@ -1455,7 +1455,7 @@ export async function fetchC2IntelFeeds(): Promise<number> {
           lastSeen: new Date(),
         };
         
-        await storage.upsertMaliciousIp(ipData);
+        await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
         count++;
       }
     }
@@ -1501,7 +1501,7 @@ export async function fetchDataplaneSsh(): Promise<number> {
           lastSeen: new Date(),
         };
         
-        await storage.upsertMaliciousIp(ipData);
+        await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
         count++;
       }
     }
@@ -1533,13 +1533,13 @@ export async function fetchDataplaneVnc(): Promise<number> {
       const ip = parts[2]?.trim();
       if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
         const asnInfo = parts[0]?.trim() && parts[1]?.trim() ? `AS${parts[0].trim()} - ${parts[1].trim()}` : null;
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: ip,
           source: "Dataplane VNC",
           threatType: "vnc_scanner",
           asn: asnInfo,
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       }
     }
@@ -1570,13 +1570,13 @@ export async function fetchDataplaneDns(): Promise<number> {
       const ip = parts[2]?.trim();
       if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
         const asnInfo = parts[0]?.trim() && parts[1]?.trim() ? `AS${parts[0].trim()} - ${parts[1].trim()}` : null;
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: ip,
           source: "Dataplane DNS",
           threatType: "dns_abuse",
           asn: asnInfo,
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       }
     }
@@ -1607,13 +1607,13 @@ export async function fetchDataplaneSip(): Promise<number> {
       const ip = parts[2]?.trim();
       if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
         const asnInfo = parts[0]?.trim() && parts[1]?.trim() ? `AS${parts[0].trim()} - ${parts[1].trim()}` : null;
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: ip,
           source: "Dataplane SIP",
           threatType: "sip_abuse",
           asn: asnInfo,
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       }
     }
@@ -1642,12 +1642,12 @@ export async function fetchSpamhausEdrop(): Promise<number> {
     for (const line of lines.slice(0, 200)) {
       const parts = line.split(";")[0].trim().split("/");
       if (parts.length >= 1 && /^\d+\.\d+\.\d+\.\d+$/.test(parts[0])) {
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: parts[0],
           source: "Spamhaus EDROP",
           threatType: "hijacked_netblock",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       }
     }
@@ -1676,12 +1676,12 @@ export async function fetchPhishingDatabaseIPs(): Promise<number> {
       const ip = line.trim();
       if (/^\d+\.\d+\.\d+\.\d+$/.test(ip) && !seen.has(ip)) {
         seen.add(ip);
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: ip,
           source: "Phishing Database",
           threatType: "phishing_infrastructure",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       }
     }
@@ -1709,12 +1709,12 @@ export async function fetchPhishingDatabaseDomains(): Promise<number> {
       const domain = line.trim().toLowerCase();
       if (domain && domain.includes(".") && !domain.includes(" ") && !seen.has(domain)) {
         seen.add(domain);
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: domain,
           source: "Phishing Database",
           threatType: "phishing_domain",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       }
     }
@@ -1742,12 +1742,12 @@ export async function fetchPhishingDatabaseURLs(): Promise<number> {
       const url = line.trim();
       if (url && (url.startsWith("http://") || url.startsWith("https://") || url.includes(".")) && !seen.has(url)) {
         seen.add(url);
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: url.slice(0, 2048),
           source: "Phishing Database",
           threatType: "phishing_url",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       }
     }
@@ -1777,20 +1777,20 @@ export async function fetchMaltrail(): Promise<number> {
       const ioc = line.trim().split(/\s+/)[0];
       if (!ioc) continue;
       if (/^\d+\.\d+\.\d+\.\d+$/.test(ioc)) {
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: ioc,
           source: "Maltrail",
           threatType: "malware",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       } else if (ioc.includes(".") && !ioc.includes(" ") && ioc.length < 256) {
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: ioc,
           source: "Maltrail",
           threatType: "malware_domain",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       }
     }
@@ -1825,21 +1825,21 @@ export async function fetchThreatFoxCSV(): Promise<number> {
       if (iocType === "ip:port" || /^\d+\.\d+\.\d+\.\d+/.test(iocValue)) {
         const ip = iocValue.split(":")[0];
         if (/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
-          await storage.upsertMaliciousIp({
+          await withDbRetry(() => storage.upsertMaliciousIp({
             ipAddress: ip,
             source: "ThreatFox CSV",
             threatType: "threatfox_ioc",
             lastSeen: new Date(),
-          });
+          }), "upsertMaliciousIp");
           count++;
         }
       } else if (iocType === "domain" || iocType === "url") {
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: iocValue.slice(0, 2048),
           source: "ThreatFox CSV",
           threatType: "threatfox_ioc",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       }
     }
@@ -1877,7 +1877,7 @@ export async function fetchBinaryDefense(): Promise<number> {
         lastSeen: new Date(),
       };
       
-      await storage.upsertMaliciousIp(ipData);
+      await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
       count++;
     }
     
@@ -1919,7 +1919,7 @@ export async function fetchTurrisSentinel(): Promise<number> {
           lastSeen: new Date(),
         };
         
-        await storage.upsertMaliciousIp(ipData);
+        await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
         count++;
       }
     }
@@ -2029,7 +2029,7 @@ export async function fetchCrowdSec(): Promise<number> {
               lastSeen: new Date(),
             };
             
-            await storage.upsertMaliciousIp(ipData);
+            await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
             enrichedCount++;
           }
         } else if (response.status === 404) {
@@ -2107,7 +2107,7 @@ export async function fetchPulsedive(): Promise<number> {
               lastSeen: new Date(),
             };
             
-            await storage.upsertMaliciousIp(ipData);
+            await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
             count++;
           } else if (item.indicator && (item.type === "url" || item.type === "domain")) {
             const urlData: InsertMaliciousUrl = {
@@ -2118,7 +2118,7 @@ export async function fetchPulsedive(): Promise<number> {
               reportedAt: new Date(),
             };
             
-            await storage.upsertMaliciousUrl(urlData);
+            await withDbRetry(() => storage.upsertMaliciousUrl(urlData), "upsertUrl");
             count++;
           }
         }
@@ -2190,7 +2190,7 @@ export async function fetchShodanIntel(): Promise<number> {
               lastSeen: new Date(),
             };
             
-            await storage.upsertMaliciousIp(ipData);
+            await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
             enrichedCount++;
           }
         } else if (hostResponse.status === 404) {
@@ -2282,7 +2282,7 @@ export async function fetchAlienVaultOTX(): Promise<number> {
               country: pulse.targeted_countries?.[0] || null,
               lastSeen: new Date(),
             };
-            await storage.upsertMaliciousIp(ipData);
+            await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
             ipCount++;
           } else if (indicator.type === "URL" || indicator.type === "domain") {
             const urlData: InsertMaliciousUrl = {
@@ -2292,7 +2292,7 @@ export async function fetchAlienVaultOTX(): Promise<number> {
               status: "active",
               reportedAt: new Date(),
             };
-            await storage.upsertMaliciousUrl(urlData);
+            await withDbRetry(() => storage.upsertMaliciousUrl(urlData), "upsertUrl");
             urlCount++;
           }
         } catch (err) {
@@ -2413,7 +2413,7 @@ export async function fetchHybridAnalysis(): Promise<number> {
               status: "active",
               reportedAt: new Date(),
             };
-            await storage.upsertMaliciousUrl(urlData);
+            await withDbRetry(() => storage.upsertMaliciousUrl(urlData), "upsertUrl");
             count++;
           }
         }
@@ -2428,7 +2428,7 @@ export async function fetchHybridAnalysis(): Promise<number> {
                 threatType: sample.verdict || "malware",
                 lastSeen: new Date(),
               };
-              await storage.upsertMaliciousIp(ipData);
+              await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
               count++;
             }
           }
@@ -2481,7 +2481,7 @@ export async function fetchCIRCLCves(): Promise<number> {
           ) || false,
         };
         
-        await storage.upsertCve(cveData);
+        await withDbRetry(() => storage.upsertCve(cveData), "upsertCve");
         count++;
       } catch (err) {
         continue;
@@ -2595,7 +2595,7 @@ export async function fetchRansomwareLiveVictims(): Promise<number> {
           victimRevenue: victim.revenue || null,
         };
         
-        const result = await storage.upsertRansomwareIncidentWithFlag(incident);
+        const result = await withDbRetry(() => storage.upsertRansomwareIncidentWithFlag(incident), "upsertRansomwareInci");
         
         // Only trigger watchlist notifications for NEW ransomware incidents (not updates)
         if (result.isNew) {
@@ -2667,7 +2667,7 @@ export async function fetchRansomwareLiveGroups(): Promise<number> {
         const statusMsg = isSeized ? "Law enforcement seizure" : 
           group.meta || (isActive ? "Active" : "Inactive/Offline");
 
-        await storage.upsertThreatActor({
+        await withDbRetry(() => storage.upsertThreatActor({
           name: group.name,
           description: description.replace(/<BR>/gi, '\n').slice(0, 8000),
           type: "Ransomware Operator",
@@ -2690,7 +2690,7 @@ export async function fetchRansomwareLiveGroups(): Promise<number> {
           ransomwareAsService: description.toLowerCase().includes('raas') || description.toLowerCase().includes('as a service') || description.toLowerCase().includes('affiliate'),
           malwareFamilies: null,
           affiliations: profileDesc.length > 0 ? profileDesc.slice(0, 2000) : null,
-        });
+        }), "upsertThreatActor");
         count++;
         if (ttpsFormatted.length > 0 || profileLinks.length > 0) enrichedCount++;
       } catch (err) {
@@ -2776,7 +2776,7 @@ export async function fetchRansomLookVictims(): Promise<number> {
           sourceApi: "ransomlook.io",
         };
         
-        const result = await storage.upsertRansomwareIncidentWithFlag(incident);
+        const result = await withDbRetry(() => storage.upsertRansomwareIncidentWithFlag(incident), "upsertRansomwareInci");
         
         // Only trigger notifications for NEW incidents
         if (result.isNew) {
@@ -2824,14 +2824,14 @@ export async function fetchRansomLookGroups(): Promise<number> {
         const profileText = group.profile?.join(" ") || "";
         const locations = group.locations?.join(", ") || "Unknown";
         
-        await storage.upsertThreatActor({
+        await withDbRetry(() => storage.upsertThreatActor({
           name: group.name,
           description: profileText || group.meta || `Active ransomware group tracked by RansomLook`,
           type: "Ransomware Operator",
           origin: locations,
           lastActive: new Date(),
           active: true,
-        });
+        }), "upsertThreatActor");
         count++;
       } catch (err) {
         continue;
@@ -2867,7 +2867,7 @@ export async function fetchRansomLookBreaches(): Promise<number> {
     if (Array.isArray(leaks)) {
       for (const leak of leaks.slice(0, 300)) { // Limit to 300 for efficiency
         try {
-          await storage.upsertBreachIncident({
+          await withDbRetry(() => storage.upsertBreachIncident({
             name: leak.name || leak.title || "Unknown",
             description: leak.description || `Data breach tracked by RansomLook`,
             breachDate: leak.date ? new Date(leak.date) : null,
@@ -2876,7 +2876,7 @@ export async function fetchRansomLookBreaches(): Promise<number> {
             dataClasses: leak.data_types || null,
             sourceUrl: "https://ransomlook.io",
             sourceApi: "ransomlook.io",
-          });
+          }), "upsertBreachIncident");
           count++;
         } catch (err) {
           continue;
@@ -2948,14 +2948,14 @@ export async function fetchRansomwhere(): Promise<number> {
     const families = Array.from(familyData.entries());
     for (const [family, info] of families) {
       try {
-        await storage.upsertThreatActor({
+        await withDbRetry(() => storage.upsertThreatActor({
           name: family,
           description: `Ransomware family with $${info.totalUSD.toLocaleString('en-US', { maximumFractionDigits: 0 })} USD in tracked payments across ${info.wallets.size} wallets`,
           type: "Ransomware Operator",
           origin: "Unknown",
           lastActive: new Date(),
           active: true,
-        });
+        }), "upsertThreatActor");
         actorCount++;
         
         if (info.totalUSD > 0) {
@@ -3017,7 +3017,7 @@ export async function fetchTalosBlocklist(): Promise<number> {
             country: null,
             lastSeen: new Date(),
           };
-          await storage.upsertMaliciousIp(ipData);
+          await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
           count++;
         } catch (err) {
           continue;
@@ -3063,12 +3063,12 @@ export async function fetchCyberCureIPs(): Promise<number> {
       const cleanIp = typeof ip === 'string' ? ip.trim() : String(ip).trim();
       if (cleanIp && /^[\d.]+$/.test(cleanIp)) {
         try {
-          await storage.upsertMaliciousIp({
+          await withDbRetry(() => storage.upsertMaliciousIp({
             ipAddress: cleanIp,
             source: "CyberCure",
             threatType: "infected_host",
             lastSeen: new Date(),
-          });
+          }), "upsertMaliciousIp");
           count++;
         } catch (err) {
           continue;
@@ -3107,13 +3107,13 @@ export async function fetchCyberCureURLs(): Promise<number> {
       const cleanUrl = typeof url === 'string' ? url.trim() : String(url).trim();
       if (cleanUrl && cleanUrl.length > 5) {
         try {
-          await storage.upsertMaliciousUrl({
+          await withDbRetry(() => storage.upsertMaliciousUrl({
             url: cleanUrl.slice(0, 500),
             source: "CyberCure",
             threatType: "malware",
             status: "active",
             reportedAt: new Date(),
-          });
+          }), "upsertMaliciousUrl");
           count++;
         } catch (err) {
           continue;
@@ -3163,24 +3163,24 @@ export async function fetchThreatFoxRecent(): Promise<number> {
         if (ioc.ioc_type === "ip:port" || ioc.ioc_type === "ip") {
           const ip = iocValue.split(':')[0];
           if (ip && /^[\d.]+$/.test(ip)) {
-            await storage.upsertMaliciousIp({
+            await withDbRetry(() => storage.upsertMaliciousIp({
               ipAddress: ip,
               source: "ThreatFox",
               threatType: threatType,
               tags: malwareFamily,
               lastSeen: ioc.first_seen_utc ? new Date(ioc.first_seen_utc) : new Date(),
-            });
+            }), "upsertMaliciousIp");
             ipCount++;
           }
         } else if (ioc.ioc_type === "url" || ioc.ioc_type === "domain") {
-          await storage.upsertMaliciousUrl({
+          await withDbRetry(() => storage.upsertMaliciousUrl({
             url: iocValue.slice(0, 500),
             source: "ThreatFox",
             threatType: threatType,
             malwareFamily: malwareFamily,
             status: "active",
             reportedAt: ioc.first_seen_utc ? new Date(ioc.first_seen_utc) : new Date(),
-          });
+          }), "upsertMaliciousUrl");
           urlCount++;
         }
         
@@ -3234,14 +3234,14 @@ export async function fetchMalwareBazaarRecent(): Promise<number> {
             signature.toLowerCase().includes('akira');
           
           if (isRansomware && sha256) {
-            await storage.upsertMaliciousUrl({
+            await withDbRetry(() => storage.upsertMaliciousUrl({
               url: `malware://${sha256.slice(0, 16)}`,
               source: "MalwareBazaar",
               threatType: "ransomware_sample",
               malwareFamily: signature,
               status: "active",
               reportedAt: new Date(),
-            });
+            }), "upsertMaliciousUrl");
           }
           count++;
         }
@@ -3294,25 +3294,25 @@ export async function scrapeThreatFox(): Promise<number> {
         if (ioc.ioc_type === "ip:port" || ioc.ioc_type === "ip") {
           const ip = iocValue.split(":")[0];
           if (ip && /^[\d.]+$/.test(ip)) {
-            await storage.upsertMaliciousIp({
+            await withDbRetry(() => storage.upsertMaliciousIp({
               ipAddress: ip,
               source: "threatfox",
               threatType,
               tags: [malware, tags].filter(Boolean).join(", "),
               abuseConfidenceScore: confidence,
               lastSeen: ioc.first_seen_utc ? new Date(ioc.first_seen_utc) : new Date(),
-            });
+            }), "upsertMaliciousIp");
             ipCount++;
           }
         } else if (ioc.ioc_type === "url" || ioc.ioc_type === "domain") {
-          await storage.upsertMaliciousUrl({
+          await withDbRetry(() => storage.upsertMaliciousUrl({
             url: iocValue.slice(0, 500),
             source: "threatfox",
             threatType,
             malwareFamily: malware,
             status: "active",
             reportedAt: ioc.first_seen_utc ? new Date(ioc.first_seen_utc) : new Date(),
-          });
+          }), "upsertMaliciousUrl");
           urlCount++;
         }
       } catch {
@@ -3362,14 +3362,14 @@ export async function scrapeMalwareBazaar(): Promise<number> {
         const fileType = sample.file_type || "unknown";
         const tags = Array.isArray(sample.tags) ? sample.tags.join(", ") : (sample.tags || null);
 
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: hash,
           source: "malwarebazaar",
           threatType: signature,
           malwareFamily: [fileType, tags].filter(Boolean).join(" | "),
           status: "active",
           reportedAt: sample.first_seen ? new Date(sample.first_seen) : new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       } catch {
         continue;
@@ -3414,14 +3414,14 @@ export async function fetchThreatFeedsIO(): Promise<number> {
           for (const ip of lines.slice(0, 50)) {
             const cleanIp = ip.trim();
             if (cleanIp && /^[\d.]+$/.test(cleanIp)) {
-              await storage.upsertMaliciousIp({
+              await withDbRetry(() => storage.upsertMaliciousIp({
                 ipAddress: cleanIp,
                 source: "ThreatFeeds.io",
                 threatType: feed.name,
                 asn: null,
                 country: null,
                 lastSeen: new Date(),
-              });
+              }), "upsertMaliciousIp");
               totalCount++;
             }
           }
@@ -3506,7 +3506,7 @@ export async function fetchRansomWatchVictims(): Promise<number> {
       };
 
       try {
-        await storage.upsertRansomwareIncidentWithFlag(incident);
+        await withDbRetry(() => storage.upsertRansomwareIncidentWithFlag(incident), "upsertRansomwareInci");
         count++;
       } catch {}
     }
@@ -3546,13 +3546,13 @@ export async function fetchRansomWatchGroups(): Promise<number> {
       const infrastructure = onionUrls ? `Dark web sites: ${onionUrls} (${activeSites}/${totalSites} active)` : "";
 
       try {
-        await storage.upsertThreatActor({
+        await withDbRetry(() => storage.upsertThreatActor({
           name: group.name.toLowerCase().trim(),
           description,
           type: "Ransomware Operator",
           active: activeSites > 0,
           infrastructure: infrastructure || undefined,
-        });
+        }), "upsertThreatActor");
         count++;
       } catch {}
     }
@@ -3620,12 +3620,12 @@ export async function fetchBotvrijIPs(): Promise<number> {
     let count = 0;
 
     for (const ip of ips.slice(0, 500)) {
-      await storage.upsertMaliciousIp({
+      await withDbRetry(() => storage.upsertMaliciousIp({
         ipAddress: ip.trim(),
         source: "Botvrij.eu",
         threatType: "eu_cert_ioc",
         lastSeen: new Date(),
-      });
+      }), "upsertMaliciousIp");
       count++;
     }
 
@@ -3651,13 +3651,13 @@ export async function fetchBotvrijDomains(): Promise<number> {
     for (const domain of domains.slice(0, 300)) {
       const cleanDomain = domain.trim();
       if (cleanDomain.length > 3) {
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: cleanDomain,
           source: "Botvrij.eu",
           threatType: "eu_cert_malicious_domain",
           status: "active",
           reportedAt: new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       }
     }
@@ -3690,12 +3690,12 @@ export async function fetchRutgersSsh(): Promise<number> {
     for (const line of ips.slice(0, 500)) {
       const ip = line.trim().split(/\s+/)[0];
       if (/^\d+\.\d+\.\d+\.\d+$/.test(ip)) {
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: ip,
           source: "Rutgers SSH",
           threatType: "ssh_bruteforce",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       }
     }
@@ -3731,12 +3731,12 @@ export async function fetchCriticalPathCobaltStrike(): Promise<number> {
       const ip = parts[0]?.trim();
       if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip) && !seen.has(ip)) {
         seen.add(ip);
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: ip,
           source: "CriticalPath Security",
           threatType: "cobalt_strike_c2",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       }
     }
@@ -3773,14 +3773,14 @@ export async function fetchSSLBLCerts(): Promise<number> {
         const sha1 = parts[1]?.trim();
         const reason = parts[2]?.trim();
         if (sha1 && sha1.length === 40 && reason) {
-          await storage.upsertMaliciousUrl({
+          await withDbRetry(() => storage.upsertMaliciousUrl({
             url: `ssl:${sha1}`,
             source: "SSLBL",
             threatType: "malware_ssl_cert",
             status: "active",
             malwareFamily: reason || null,
             reportedAt: listing_date ? new Date(listing_date) : new Date(),
-          });
+          }), "upsertMaliciousUrl");
           count++;
         }
       }
@@ -3814,13 +3814,13 @@ export async function fetchDisconnectMalvertising(): Promise<number> {
     for (const domain of domains.slice(0, 500)) {
       const cleanDomain = domain.trim();
       if (cleanDomain.length > 3) {
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: cleanDomain,
           source: "Disconnect.me",
           threatType: "malvertising",
           status: "active",
           reportedAt: new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       }
     }
@@ -3890,7 +3890,7 @@ export async function fetchGitHubAdvisories(): Promise<number> {
             ).join("; ") || null,
           };
 
-          await storage.upsertCve(cveData);
+          await withDbRetry(() => storage.upsertCve(cveData), "upsertCve");
           count++;
 
           await triggerWatchlistNotifications('cve', {
@@ -3988,7 +3988,7 @@ export async function fetchMITREAttackGroups(): Promise<number> {
           profileUrl: group.external_references?.find((r: any) => r.source_name === "mitre-attack")?.url || null,
         };
 
-        await storage.upsertThreatActor(actorData);
+        await withDbRetry(() => storage.upsertThreatActor(actorData), "upsertActor");
         count++;
       } catch (err) {
         continue;
@@ -4023,12 +4023,12 @@ async function fetchSimpleIPList(url: string, source: string, threatType: string
         seen.add(ip);
         const cleanIp = ip.includes("/") ? ip.split("/")[0] : ip;
         if (/^\d+\.\d+\.\d+\.\d+$/.test(cleanIp)) {
-          await storage.upsertMaliciousIp({
+          await withDbRetry(() => storage.upsertMaliciousIp({
             ipAddress: cleanIp,
             source,
             threatType,
             lastSeen: new Date(),
-          });
+          }), "upsertMaliciousIp");
           count++;
         }
       }
@@ -4055,12 +4055,12 @@ export async function fetchAlienVaultReputation(): Promise<number> {
       const ip = line.trim().split(/[\s#]+/)[0];
       if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip) && !seen.has(ip)) {
         seen.add(ip);
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: ip,
           source: "AlienVault Reputation",
           threatType: "otx_reputation",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       }
     }
@@ -4099,12 +4099,12 @@ export async function fetchCriticalPathAbuseCh(): Promise<number> {
       const ip = parts[0]?.trim();
       if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip) && !seen.has(ip)) {
         seen.add(ip);
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: ip,
           source: "CriticalPath abuse.ch",
           threatType: "abuse_ch_malware",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       }
     }
@@ -4162,12 +4162,12 @@ async function fetchSimpleDomainList(url: string, source: string, threatType: st
       const domain = line.trim().toLowerCase().split(/[\s,;]+/)[0];
       if (domain && domain.includes(".") && !domain.includes(" ") && domain.length > 3 && !seen.has(domain)) {
         seen.add(domain);
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: domain,
           source,
           threatType,
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       }
     }
@@ -4194,12 +4194,12 @@ async function fetchHostsFileDomains(url: string, source: string, threatType: st
       const domain = (parts.length >= 2 && (parts[0] === "0.0.0.0" || parts[0] === "127.0.0.1")) ? parts[1]?.toLowerCase() : null;
       if (domain && domain.includes(".") && domain !== "localhost" && !seen.has(domain)) {
         seen.add(domain);
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: domain,
           source,
           threatType,
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       }
     }
@@ -4262,20 +4262,20 @@ export async function fetchMaltrailMalware(): Promise<number> {
       if (!ioc || seen.has(ioc)) continue;
       seen.add(ioc);
       if (/^\d+\.\d+\.\d+\.\d+$/.test(ioc)) {
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: ioc,
           source: "Maltrail Malware",
           threatType: "maltrail_malware",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       } else if (ioc.includes(".") && !ioc.includes(" ")) {
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: ioc.toLowerCase(),
           source: "Maltrail Malware",
           threatType: "maltrail_malware",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       }
     }
@@ -4309,20 +4309,20 @@ export async function fetchTweetFeedIOC(): Promise<number> {
       if (!iocValue || seen.has(iocValue)) continue;
       seen.add(iocValue);
       if (iocType === "ip" && /^\d+\.\d+\.\d+\.\d+$/.test(iocValue)) {
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: iocValue,
           source: "TweetFeed",
           threatType: "twitter_ioc",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       } else if ((iocType === "domain" || iocType === "url") && iocValue.includes(".")) {
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: iocValue.slice(0, 2048),
           source: "TweetFeed",
           threatType: "twitter_ioc",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       }
     }
@@ -4353,7 +4353,7 @@ export async function fetchAPTNotes(): Promise<number> {
       if (!title || !link || seen.has(link)) continue;
       seen.add(link);
       try {
-        await storage.upsertNews({
+        await withDbRetry(() => storage.upsertNews({
           title: `APT Research: ${title}`.slice(0, 500),
           summary: `Published by ${source}. APT/threat actor campaign research paper.`,
           source: "APT Notes",
@@ -4361,7 +4361,7 @@ export async function fetchAPTNotes(): Promise<number> {
           category: "APT",
           tags: "apt,research,threat-actor",
           publishedAt: new Date(),
-        });
+        }), "upsertNews");
         count++;
       } catch { /* skip individual errors */ }
     }
@@ -4387,12 +4387,12 @@ export async function fetchTargetedThreats(): Promise<number> {
       const domain = line.split(",")[0]?.trim().toLowerCase();
       if (domain && domain.includes(".") && !seen.has(domain)) {
         seen.add(domain);
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: domain,
           source: "Targeted Threats",
           threatType: "targeted_threat",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       }
     }
@@ -4442,20 +4442,20 @@ export async function fetchStamparmBlackbook(): Promise<number> {
       const value = typeof entry === "string" ? entry.trim() : (entry?.value || entry?.indicator || "").trim();
       if (!value) continue;
       if (/^\d+\.\d+\.\d+\.\d+$/.test(value)) {
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: value,
           source: "Stamparm Blackbook",
           threatType: "blackbook_malware",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         count++;
       } else if (value.includes(".") && !value.includes(" ") && value.length > 3) {
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: value,
           source: "Stamparm Blackbook",
           threatType: "blackbook_malware",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousUrl");
         count++;
       }
     }
@@ -4505,7 +4505,7 @@ export async function fetchOpenBugBountyRSS(): Promise<number> {
       const publishedAt = item.pubDate ? new Date(item.pubDate) : new Date();
       if (isNaN(publishedAt.getTime())) continue;
       try {
-        const result = await storage.upsertNews({
+        const result = await withDbRetry(() => storage.upsertNews({
           title,
           summary: summary || null,
           source: "OpenBugBounty",
@@ -4513,7 +4513,7 @@ export async function fetchOpenBugBountyRSS(): Promise<number> {
           category: "Vulnerability",
           tags: "vulnerability,disclosure,bugbounty",
           publishedAt,
-        });
+        }), "upsertNews");
         if (result.isNew) count++;
       } catch { /* skip */ }
     }
@@ -4627,7 +4627,7 @@ async function fetchRSSFeed(feed: RSSFeedConfig): Promise<number> {
       if (isNaN(publishedAt.getTime())) continue;
 
       try {
-        const result = await storage.upsertNews({
+        const result = await withDbRetry(() => storage.upsertNews({
           title,
           summary: summary || null,
           source: feed.name,
@@ -4635,7 +4635,7 @@ async function fetchRSSFeed(feed: RSSFeedConfig): Promise<number> {
           category,
           tags: category.toLowerCase(),
           publishedAt,
-        });
+        }), "upsertNews");
         if (result.isNew) newCount++;
       } catch {
         // skip individual article errors
@@ -4720,7 +4720,7 @@ export async function fetchMISPThreatActorGalaxy(): Promise<number> {
               if (!actorByAlias.description && description) updates.description = description;
 
               if (Object.keys(updates).length > 0) {
-                await db.update(threatActors).set(updates).where(eq(threatActors.name, actorByAlias.name));
+                await withDbRetry(() => db.update(threatActors).set(updates).where(eq(threatActors.name, actorByAlias.name)), "updateActor");
                 enrichedCount++;
               }
               matchedByAlias = true;
@@ -4730,7 +4730,7 @@ export async function fetchMISPThreatActorGalaxy(): Promise<number> {
         }
 
         if (!matchedByAlias && description) {
-          await storage.upsertThreatActor({
+          await withDbRetry(() => storage.upsertThreatActor({
             name,
             aliases: synonyms || null,
             description,
@@ -4738,7 +4738,7 @@ export async function fetchMISPThreatActorGalaxy(): Promise<number> {
             targetSectors: targetSectors || null,
             type: meta["cfr-type-of-incident"] ? String(meta["cfr-type-of-incident"]) : "threat-actor",
             active: true,
-          });
+          }), "upsertThreatActor");
           enrichedCount++;
         }
       } else {
@@ -4749,7 +4749,7 @@ export async function fetchMISPThreatActorGalaxy(): Promise<number> {
         if (!existingActor.description && description) updates.description = description;
 
         if (Object.keys(updates).length > 0) {
-          await db.update(threatActors).set(updates).where(eq(threatActors.name, name));
+          await withDbRetry(() => db.update(threatActors).set(updates).where(eq(threatActors.name, name)), "updateActor");
           enrichedCount++;
         }
       }
@@ -4797,7 +4797,7 @@ export async function fetchYARAifyRecent(): Promise<number> {
           malwareFamily: malwareFamily.slice(0, 200),
           reportedAt: entry.first_seen ? new Date(entry.first_seen) : new Date(),
         };
-        await storage.upsertMaliciousUrl(urlData);
+        await withDbRetry(() => storage.upsertMaliciousUrl(urlData), "upsertUrl");
         count++;
       }
     }
@@ -4834,7 +4834,7 @@ export async function fetchURLhausCSV(): Promise<number> {
         malwareFamily: tags || null,
         reportedAt: parts[1] ? new Date(parts[1]) : new Date(),
       };
-      await storage.upsertMaliciousUrl(urlData);
+      await withDbRetry(() => storage.upsertMaliciousUrl(urlData), "upsertUrl");
       count++;
     }
     log.debug(`Processed ${count} URLhaus CSV malicious URLs`);
@@ -4872,7 +4872,7 @@ export async function fetchMalwareBazaarTags(): Promise<number> {
               malwareFamily: sample.signature || sample.malware || tag,
               reportedAt: sample.first_seen ? new Date(sample.first_seen) : new Date(),
             };
-            await storage.upsertMaliciousUrl(urlData);
+            await withDbRetry(() => storage.upsertMaliciousUrl(urlData), "upsertUrl");
             totalCount++;
           }
         }
@@ -4906,9 +4906,9 @@ export async function fetchMalpediaFamilies(): Promise<number> {
         if (actors.length > 0) {
           for (const actorName of actors) {
             try {
-              const existingActors = await db.select().from(threatActors)
+              const existingActors = await withDbRetry(() => db.select().from(threatActors)
                 .where(eq(threatActors.name, actorName))
-                .limit(1);
+                .limit(1), "dbSelect");
               if (existingActors.length > 0) {
                 const actor = existingActors[0];
                 const currentFamilies = actor.malwareFamilies || "";
@@ -4916,9 +4916,9 @@ export async function fetchMalpediaFamilies(): Promise<number> {
                   const updatedFamilies = currentFamilies
                     ? `${currentFamilies}, ${familyName}`
                     : familyName;
-                  await db.update(threatActors).set({
+                  await withDbRetry(() => db.update(threatActors).set({
                     malwareFamilies: updatedFamilies.slice(0, 2000),
-                  }).where(eq(threatActors.name, actorName));
+                  }).where(eq(threatActors.name, actorName)), "updateActor");
                   count++;
                 }
               }
@@ -4956,23 +4956,23 @@ export async function fetchBambenekC2(): Promise<number> {
       const malwareFamily = parts[3]?.trim() || "dga_malware";
       if (domain && domain.includes(".") && !seenDomains.has(domain)) {
         seenDomains.add(domain);
-        await storage.upsertMaliciousUrl({
+        await withDbRetry(() => storage.upsertMaliciousUrl({
           url: domain,
           source: "Bambenek C2",
           threatType: "c2_domain",
           status: "active",
           malwareFamily,
-        });
+        }), "upsertMaliciousUrl");
         domainCount++;
       }
       if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip) && !seenIps.has(ip)) {
         seenIps.add(ip);
-        await storage.upsertMaliciousIp({
+        await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: ip,
           source: "Bambenek C2",
           threatType: "c2_server",
           lastSeen: new Date(),
-        });
+        }), "upsertMaliciousIp");
         ipCount++;
       }
     }
@@ -5010,7 +5010,7 @@ export async function fetchCISAStopRansomware(): Promise<number> {
       if (isNaN(publishedAt.getTime())) continue;
 
       try {
-        await storage.upsertNews({
+        await withDbRetry(() => storage.upsertNews({
           title,
           summary: summary || null,
           source: "CISA StopRansomware",
@@ -5018,7 +5018,7 @@ export async function fetchCISAStopRansomware(): Promise<number> {
           category: "ransomware_advisory",
           tags: "ransomware,advisory,cisa,stopransomware",
           publishedAt,
-        });
+        }), "upsertNews");
         count++;
       } catch {}
     }
@@ -5065,7 +5065,7 @@ export async function fetchDarkFeedVictims(): Promise<number> {
           discoveredAt: victim.date ? new Date(victim.date) : new Date(),
           sourceApi: "darkfeed.io",
         };
-        await storage.upsertRansomwareIncidentWithFlag(incident);
+        await withDbRetry(() => storage.upsertRansomwareIncidentWithFlag(incident), "upsertRansomwareInci");
         count++;
       } catch {}
     }
@@ -5106,20 +5106,20 @@ export async function fetchRansomwareIOCRepos(): Promise<number> {
           seen.add(iocValue);
 
           if ((iocType.includes("ip") || /^\d+\.\d+\.\d+\.\d+$/.test(iocValue)) && /^\d+\.\d+\.\d+\.\d+$/.test(iocValue)) {
-            await storage.upsertMaliciousIp({
+            await withDbRetry(() => storage.upsertMaliciousIp({
               ipAddress: iocValue,
               source: "Sophos Ransomware IOCs",
               threatType: "ransomware_c2",
               lastSeen: new Date(),
-            });
+            }), "upsertMaliciousIp");
             totalCount++;
           } else if (iocType.includes("domain") || iocType.includes("url") || (iocValue.includes(".") && !iocValue.includes(" ") && iocValue.length > 3)) {
-            await storage.upsertMaliciousUrl({
+            await withDbRetry(() => storage.upsertMaliciousUrl({
               url: iocValue.toLowerCase().slice(0, 2048),
               source: "Sophos Ransomware IOCs",
               threatType: "ransomware_c2",
               reportedAt: new Date(),
-            });
+            }), "upsertMaliciousUrl");
             totalCount++;
           }
         }
@@ -5151,7 +5151,7 @@ export async function fetchFeodoRansomware(): Promise<number> {
     );
 
     for (const entry of ransomwareEntries.slice(0, 500)) {
-      await storage.upsertMaliciousIp({
+      await withDbRetry(() => storage.upsertMaliciousIp({
         ipAddress: entry.ip_address,
         source: "Feodo Ransomware",
         threatType: "ransomware_loader_c2",
@@ -5160,7 +5160,7 @@ export async function fetchFeodoRansomware(): Promise<number> {
         firstSeen: entry.first_seen ? new Date(entry.first_seen) : null,
         lastSeen: entry.last_online ? new Date(entry.last_online) : new Date(),
         tags: entry.malware || null,
-      });
+      }), "upsertMaliciousIp");
       count++;
     }
 
@@ -5197,14 +5197,14 @@ export async function fetchRansomWatchExtended(): Promise<number> {
       for (const post of extendedPosts) {
         if (!post.post_title || !post.group_name) continue;
         try {
-          await storage.upsertRansomwareIncidentWithFlag({
+          await withDbRetry(() => storage.upsertRansomwareIncidentWithFlag({
             victim: post.post_title.trim(),
             groupName: post.group_name.toLowerCase().trim(),
             discoveredAt: new Date(post.discovered),
             description: `Victim posted by ${post.group_name} ransomware group`,
             status: "claimed",
             sourceApi: "ransomwatch",
-          });
+          }), "upsertRansomwareInci");
           totalCount++;
         } catch {}
       }
@@ -5232,7 +5232,7 @@ export async function fetchRansomWatchExtended(): Promise<number> {
           .pop();
 
         try {
-          await storage.upsertThreatActor({
+          await withDbRetry(() => storage.upsertThreatActor({
             name: group.name.toLowerCase().trim(),
             description: group.meta || `Ransomware group tracked by RansomWatch`,
             type: "Ransomware Operator",
@@ -5241,7 +5241,7 @@ export async function fetchRansomWatchExtended(): Promise<number> {
             websiteUrl: onionUrls[0] || undefined,
             mirrorUrls: mirrorUrls || undefined,
             lastActive: lastUpdated ? new Date(lastUpdated) : undefined,
-          });
+          }), "upsertThreatActor");
         } catch {}
       }
     }
@@ -5451,7 +5451,7 @@ export async function initializeThreatFeeds(): Promise<void> {
   let activeCount = 0;
   for (const feed of feeds) {
     const isActive = !gatedFeedNames.has(feed.name);
-    await storage.upsertThreatFeed({
+    await withDbRetry(() => storage.upsertThreatFeed({
       name: feed.name,
       url: feed.url,
       feedType: feed.feedType,
@@ -5459,7 +5459,7 @@ export async function initializeThreatFeeds(): Promise<void> {
       requiresProTier: feed.requiresProTier,
       description: feed.description,
       isActive,
-    });
+    }), "upsertThreatFeed");
     if (isActive) activeCount++;
   }
 
@@ -5485,11 +5485,11 @@ export async function fetchExploitDB(): Promise<number> {
       for (const cveId of cveMatch) {
         const normalized = cveId.toUpperCase();
         try {
-          await db.update(cves).set({
+          await withDbRetry(() => db.update(cves).set({
             exploitAvailable: true,
             pocAvailable: true,
             status: "PoC Available",
-          }).where(eq(cves.cveId, normalized));
+          }).where(eq(cves.cveId, normalized)), "updateCve");
           count++;
         } catch { /* CVE may not exist yet */ }
       }
@@ -5515,10 +5515,10 @@ export async function fetchInTheWild(): Promise<number> {
       const cveId = (entry.cve || entry.id || "").toUpperCase();
       if (!cveId.startsWith("CVE-")) continue;
       try {
-        await db.update(cves).set({
+        await withDbRetry(() => db.update(cves).set({
           exploitAvailable: true,
           status: "Active",
-        }).where(eq(cves.cveId, cveId));
+        }).where(eq(cves.cveId, cveId)), "updateCve");
         count++;
       } catch { /* CVE may not exist yet */ }
     }
@@ -5543,9 +5543,9 @@ export async function fetchTrickestPoC(): Promise<number> {
     let count = 0;
     for (const cveId of uniqueCves.slice(0, 2000)) {
       try {
-        await db.update(cves).set({
+        await withDbRetry(() => db.update(cves).set({
           pocAvailable: true,
-        }).where(eq(cves.cveId, cveId));
+        }).where(eq(cves.cveId, cveId)), "updateCve");
         count++;
       } catch { /* CVE may not exist yet */ }
     }
@@ -5576,10 +5576,10 @@ export async function fetchNucleiTemplatesCVE(): Promise<number> {
     let count = 0;
     for (const cveId of uniqueCves.slice(0, 2000)) {
       try {
-        await db.update(cves).set({
+        await withDbRetry(() => db.update(cves).set({
           pocAvailable: true,
           exploitAvailable: true,
-        }).where(eq(cves.cveId, cveId));
+        }).where(eq(cves.cveId, cveId)), "updateCve");
         count++;
       } catch { /* CVE may not exist yet */ }
     }
@@ -5610,11 +5610,11 @@ export async function fetchVulnCheckKEV(): Promise<number> {
       const cveId = (entry.cve || entry.cveId || entry.id || "").toUpperCase();
       if (!cveId.startsWith("CVE-")) continue;
       try {
-        await db.update(cves).set({
+        await withDbRetry(() => db.update(cves).set({
           exploitAvailable: true,
           inCisaKev: true,
           status: "Active",
-        }).where(eq(cves.cveId, cveId));
+        }).where(eq(cves.cveId, cveId)), "updateCve");
         count++;
       } catch { /* CVE may not exist yet */ }
     }
@@ -5645,11 +5645,11 @@ export async function fetchMetasploitModules(): Promise<number> {
         if (!cveMatch || seen.has(cveMatch[0])) continue;
         seen.add(cveMatch[0]);
         try {
-          await db.update(cves).set({
+          await withDbRetry(() => db.update(cves).set({
             exploitAvailable: true,
             pocAvailable: true,
             status: "Active",
-          }).where(eq(cves.cveId, cveMatch[0]));
+          }).where(eq(cves.cveId, cveMatch[0])), "updateCve");
           count++;
         } catch { /* CVE may not exist yet */ }
       }
@@ -6129,7 +6129,7 @@ export async function fetchHoneyDB(): Promise<number> {
               lastSeen: new Date(),
               riskScore: Math.min(100, (host.count || 1) * 10),
             };
-            await storage.upsertMaliciousIp(ipData);
+            await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
             count++;
           }
         } catch (err) {
@@ -6200,7 +6200,7 @@ export async function fetchAbuseIPDB(): Promise<number> {
             riskScore: entry.abuseConfidenceScore || 100,
             country: entry.countryCode || null,
           };
-          await storage.upsertMaliciousIp(ipData);
+          await withDbRetry(() => storage.upsertMaliciousIp(ipData), "upsertIp");
           count++;
         } catch (err) {
           continue;
@@ -6347,9 +6347,9 @@ export async function fetchEPSSScores(): Promise<number> {
             
             if (!isNaN(epssScore) && !isNaN(epssPercentile)) {
               try {
-                await db.update(cves)
+                await withDbRetry(() => db.update(cves)
                   .set({ epssScore, epssPercentile })
-                  .where(eq(cves.cveId, entry.cve));
+                  .where(eq(cves.cveId, entry.cve)), "updateCve");
                 enriched++;
               } catch {}
             }
@@ -6406,9 +6406,9 @@ export async function scrapeEpssScores(): Promise<number> {
       if (isNaN(epssScore) || isNaN(epssPercentile)) continue;
 
       try {
-        const result = await db.update(cves)
+        const result = await withDbRetry(() => db.update(cves)
           .set({ epssScore, epssPercentile })
-          .where(eq(cves.cveId, item.cve));
+          .where(eq(cves.cveId, item.cve)), "updateCve");
         if (result.rowCount && result.rowCount > 0) {
           updated++;
         }
@@ -6433,11 +6433,11 @@ export async function checkPocAvailability(): Promise<number> {
     log.debug("Checking PoC availability for top CVEs...");
 
     const { desc } = await import("drizzle-orm");
-    const topCves = await db
+    const topCves = await withDbRetry(() => db
       .select({ cveId: cves.cveId })
       .from(cves)
       .orderBy(desc(cves.score))
-      .limit(50);
+      .limit(50), "dbSelect");
 
     if (topCves.length === 0) return 0;
 
@@ -6451,9 +6451,9 @@ export async function checkPocAvailability(): Promise<number> {
         const response = await secureFetch(url);
 
         if (response.ok) {
-          await db.update(cves)
+          await withDbRetry(() => db.update(cves)
             .set({ pocAvailable: true })
-            .where(eq(cves.cveId, row.cveId));
+            .where(eq(cves.cveId, row.cveId)), "updateCve");
           updated++;
         }
 

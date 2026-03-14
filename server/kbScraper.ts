@@ -1,6 +1,30 @@
 import { storage } from "./storage";
 import { toSlug } from "@shared/schema";
 
+function isTransientDbError(error: any): boolean {
+  const msg = error?.message || "";
+  return msg.includes("Connection terminated") ||
+    msg.includes("connection timeout") ||
+    msg.includes("too many clients") ||
+    msg.includes("Connection refused") ||
+    msg.includes("ECONNRESET");
+}
+
+async function withDbRetry<T>(fn: () => Promise<T>, label: string, retries = 2): Promise<T> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      if (isTransientDbError(error) && attempt < retries) {
+        await new Promise(r => setTimeout(r, (attempt + 1) * 2000));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error(`${label}: exhausted retries`);
+}
+
 const CYBERSEC_FEEDS = [
   { url: "https://feeds.feedburner.com/TheHackersNews", source: "The Hacker News", type: "threat_intel" },
   { url: "https://www.bleepingcomputer.com/feed/", source: "BleepingComputer", type: "threat_intel" },
@@ -136,20 +160,20 @@ function formatAsMarkdown(item: FeedItem): string {
 }
 
 async function ensureSystemUser(): Promise<string> {
-  const existing = await storage.getUserByUsername("STB-KnowledgeBot");
+  const existing = await withDbRetry(() => storage.getUserByUsername("STB-KnowledgeBot"), "getKbBot");
   if (existing) return existing.id;
 
   try {
-    const user = await storage.createUser({
+    const user = await withDbRetry(() => storage.createUser({
       username: "STB-KnowledgeBot",
       password: "$2b$12$placeholder_hash_not_a_real_login_00000000000000",
       email: "kb-bot@stbcybersecurity.internal",
-    });
+    }), "createKbBot");
 
-    await storage.setUserTrusted(user.id, true);
+    await withDbRetry(() => storage.setUserTrusted(user.id, true), "setKbBotTrusted");
     return user.id;
   } catch {
-    const existing2 = await storage.getUserByUsername("STB-KnowledgeBot");
+    const existing2 = await withDbRetry(() => storage.getUserByUsername("STB-KnowledgeBot"), "getKbBot2");
     if (existing2) return existing2.id;
     throw new Error("Failed to create KB system user");
   }
@@ -168,20 +192,20 @@ const SEED_MEMBERS = [
 
 export async function ensureSeedMembers(): Promise<void> {
   for (const member of SEED_MEMBERS) {
-    const existing = await storage.getUserByUsername(member.username);
+    const existing = await withDbRetry(() => storage.getUserByUsername(member.username), "getSeedMember");
     if (existing) continue;
     try {
-      const user = await storage.createUser({
+      const user = await withDbRetry(() => storage.createUser({
         username: member.username,
         password: "$2b$12$placeholder_hash_not_a_real_login_00000000000000",
         email: member.email,
-      });
-      await storage.awardReputation(user.id, member.reputation);
-      if (member.isTrusted) await storage.setUserTrusted(user.id, true);
+      }), "createSeedMember");
+      await withDbRetry(() => storage.awardReputation(user.id, member.reputation), "awardRep");
+      if (member.isTrusted) await withDbRetry(() => storage.setUserTrusted(user.id, true), "setTrusted");
       const { db } = await import("./db");
       const { users } = await import("@shared/schema");
       const { eq } = await import("drizzle-orm");
-      await db.update(users).set({ tier: member.tier }).where(eq(users.id, user.id));
+      await withDbRetry(() => db.update(users).set({ tier: member.tier }).where(eq(users.id, user.id)), "setTier");
       console.log(`[KB Seed] Created demo member: ${member.username} (${member.tier}, ${member.reputation} pts)`);
     } catch {
       // already exists or race condition
@@ -234,7 +258,7 @@ export async function scrapeKbFeeds(): Promise<number> {
         if (!baseSlug || baseSlug.length < 5) continue;
 
         let slug = baseSlug.slice(0, 100);
-        const existing = await storage.getKbPostBySlug(slug);
+        const existing = await withDbRetry(() => storage.getKbPostBySlug(slug), "getKbPost");
         if (existing) continue;
 
         const tags = autoTag(item.title, item.description);
@@ -242,7 +266,7 @@ export async function scrapeKbFeeds(): Promise<number> {
 
         const content = formatAsMarkdown(item);
 
-        await storage.createKbPost({
+        await withDbRetry(() => storage.createKbPost({
           authorId: botUserId,
           title: item.title,
           slug,
@@ -251,7 +275,7 @@ export async function scrapeKbFeeds(): Promise<number> {
           status: "published",
           isPinned: false,
           tags: [...new Set(tags)].slice(0, 6),
-        });
+        }), "createKbPost");
         created++;
       } catch (err) {
         continue;
@@ -273,11 +297,11 @@ export async function scrapeKbFeeds(): Promise<number> {
 export async function cleanupOldKbPosts(): Promise<number> {
   try {
     const cutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
-    const oldPosts = await storage.getKbPosts({
+    const oldPosts = await withDbRetry(() => storage.getKbPosts({
       status: "published",
       limit: 100,
       offset: 0,
-    });
+    }), "getKbPosts");
 
     let deleted = 0;
     for (const post of oldPosts) {
@@ -286,9 +310,9 @@ export async function cleanupOldKbPosts(): Promise<number> {
         (post.voteCount || 0) === 0 &&
         (post.commentCount || 0) === 0
       ) {
-        const bot = await storage.getUserByUsername("STB-KnowledgeBot");
+        const bot = await withDbRetry(() => storage.getUserByUsername("STB-KnowledgeBot"), "getKbBot");
         if (bot && post.authorId === bot.id) {
-          await storage.deleteKbPost(post.id);
+          await withDbRetry(() => storage.deleteKbPost(post.id), "deleteKbPost");
           deleted++;
         }
       }
