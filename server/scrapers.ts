@@ -2961,12 +2961,12 @@ export async function fetchRansomwhere(): Promise<number> {
         if (info.totalUSD > 0) {
           const walletsArr = Array.from(info.wallets);
           const primaryWallet = walletsArr[0] || undefined;
-          const updated = await storage.enrichRansomwarePaymentsByGroup(family, {
+          const updated = await withDbRetry(() => storage.enrichRansomwarePaymentsByGroup(family, {
             totalUSD: info.totalUSD,
             ransomCurrency: "USD (BTC equivalent)",
             bitcoinWallet: primaryWallet,
             paymentStatus: info.txCount > 0 ? "confirmed" : "tracked",
-          });
+          }), "enrichPayments");
           enrichedCount += updated;
         }
       } catch (err) {
@@ -3971,7 +3971,7 @@ export async function fetchMITREAttackGroups(): Promise<number> {
         const rawCountry = group.x_mitre_country;
         const origin = Array.isArray(rawCountry) ? rawCountry.join(", ") : (rawCountry || null);
 
-        const existingActor = await storage.getThreatActorByName(name);
+        const existingActor = await withDbRetry(() => storage.getThreatActorByName(name), "getActor");
 
         const actorData = {
           name,
@@ -4704,14 +4704,14 @@ export async function fetchMISPThreatActorGalaxy(): Promise<number> {
       const refs = (meta.refs || []).slice(0, 5).join(", ");
       const description = entry.description || null;
 
-      const existingActor = await storage.getThreatActorByName(name);
+      const existingActor = await withDbRetry(() => storage.getThreatActorByName(name), "getActor");
 
       if (!existingActor) {
         let matchedByAlias = false;
         if (synonyms) {
           const aliasList = synonyms.split(", ");
           for (const alias of aliasList) {
-            const actorByAlias = await storage.getThreatActorByName(alias.trim());
+            const actorByAlias = await withDbRetry(() => storage.getThreatActorByName(alias.trim()), "getActorAlias");
             if (actorByAlias) {
               const updates: Record<string, string | null> = {};
               if (!actorByAlias.aliases && synonyms) updates.aliases = synonyms;
@@ -6312,7 +6312,7 @@ export function startDataRefreshScheduler(intervalMinutes = 15): void {
 // ============================================
 export async function fetchEPSSScores(): Promise<number> {
   try {
-    const allCves = await storage.getCves(500);
+    const allCves = await withDbRetry(() => storage.getCves(500), "getCves");
     const cvesNeedingEpss = allCves.filter(c => !c.epssScore || c.epssScore === 0);
     
     if (cvesNeedingEpss.length === 0) {

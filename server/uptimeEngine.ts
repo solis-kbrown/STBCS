@@ -319,7 +319,11 @@ async function sendDownAlert(monitor: UptimeMonitor, result: CheckResult): Promi
     });
     log.info(`Down alert sent to ${user.email} for ${monitor.name}`);
   } catch (err: any) {
-    log.error(`Failed to send down alert for ${monitor.name}: ${err.message}`);
+    if (isTransientDbError(err)) {
+      log.debug(`Transient DB error sending down alert for ${monitor.name}: ${err.message}`);
+    } else {
+      log.error(`Failed to send down alert for ${monitor.name}: ${err.message}`);
+    }
   }
 }
 
@@ -349,7 +353,11 @@ async function sendRecoveryAlert(monitor: UptimeMonitor, result: CheckResult): P
     });
     log.info(`Recovery alert sent to ${user.email} for ${monitor.name}`);
   } catch (err: any) {
-    log.error(`Failed to send recovery alert for ${monitor.name}: ${err.message}`);
+    if (isTransientDbError(err)) {
+      log.debug(`Transient DB error sending recovery alert for ${monitor.name}: ${err.message}`);
+    } else {
+      log.error(`Failed to send recovery alert for ${monitor.name}: ${err.message}`);
+    }
   }
 }
 
@@ -380,7 +388,11 @@ async function sendSslAlert(monitor: UptimeMonitor, result: CheckResult): Promis
     });
     log.info(`SSL alert sent to ${user.email} for ${monitor.name}`);
   } catch (err: any) {
-    log.error(`Failed to send SSL alert for ${monitor.name}: ${err.message}`);
+    if (isTransientDbError(err)) {
+      log.debug(`Transient DB error sending SSL alert for ${monitor.name}: ${err.message}`);
+    } else {
+      log.error(`Failed to send SSL alert for ${monitor.name}: ${err.message}`);
+    }
   }
 }
 
