@@ -24,9 +24,7 @@ async function withRetry<T>(fn: () => Promise<T>, label: string, retries = 2): P
     try {
       return await fn();
     } catch (error: any) {
-      const isTransient = error?.message?.includes("Connection terminated") ||
-        error?.message?.includes("connection timeout") ||
-        error?.message?.includes("too many clients");
+      const isTransient = isTransientDbError(error);
       if (isTransient && attempt < retries) {
         const delay = (attempt + 1) * 3000;
         log.debug(`${label} transient DB error, retry ${attempt + 1}/${retries} in ${delay}ms`);
@@ -39,31 +37,56 @@ async function withRetry<T>(fn: () => Promise<T>, label: string, retries = 2): P
   throw new Error("unreachable");
 }
 
+function isTransientDbError(error: any): boolean {
+  const msg = error?.message || "";
+  return msg.includes("Connection terminated") ||
+    msg.includes("connection timeout") ||
+    msg.includes("too many clients") ||
+    msg.includes("Connection refused") ||
+    msg.includes("ECONNRESET");
+}
+
+const STAGGER_DELAY_MS = 3000;
+function stagger(): Promise<void> {
+  return new Promise(r => setTimeout(r, STAGGER_DELAY_MS));
+}
+
 async function getConfig(configKey: string): Promise<string | null> {
   try {
-    const result = await db.select().from(systemConfig).where(eq(systemConfig.key, configKey)).limit(1);
-    return result.length > 0 ? result[0].value : null;
-  } catch (error) {
-    log.error(`Error getting config ${configKey}:`, error);
+    return await withRetry(async () => {
+      const result = await db.select().from(systemConfig).where(eq(systemConfig.key, configKey)).limit(1);
+      return result.length > 0 ? result[0].value : null;
+    }, `getConfig(${configKey})`);
+  } catch (error: any) {
+    if (isTransientDbError(error)) {
+      log.debug(`Config read transient failure ${configKey}: ${error.message}`);
+    } else {
+      log.error(`Error getting config ${configKey}:`, error);
+    }
     return null;
   }
 }
 
 async function setConfig(configKey: string, value: string): Promise<boolean> {
   try {
-    const existing = await db.select().from(systemConfig).where(eq(systemConfig.key, configKey)).limit(1);
-    
-    if (existing.length > 0) {
-      await db.update(systemConfig)
-        .set({ value, updatedAt: new Date() })
-        .where(eq(systemConfig.key, configKey));
+    return await withRetry(async () => {
+      const existing = await db.select().from(systemConfig).where(eq(systemConfig.key, configKey)).limit(1);
+      if (existing.length > 0) {
+        await db.update(systemConfig)
+          .set({ value, updatedAt: new Date() })
+          .where(eq(systemConfig.key, configKey));
+      } else {
+        await db.insert(systemConfig)
+          .values({ key: configKey, value, updatedAt: new Date() });
+      }
+      return true;
+    }, `setConfig(${configKey})`);
+  } catch (error: any) {
+    if (isTransientDbError(error)) {
+      log.debug(`Config write transient failure ${configKey}: ${error.message}`);
     } else {
-      await db.insert(systemConfig)
-        .values({ key: configKey, value, updatedAt: new Date() });
+      log.error(`Error setting config ${configKey}:`, error);
     }
-    return true;
-  } catch (error) {
-    log.error(`Error setting config ${configKey}:`, error);
     return false;
   }
 }
@@ -295,11 +318,15 @@ async function captureDailyStats(): Promise<void> {
 
   if (now - lastCapture > DAY_MS - 60 * 60 * 1000) {
     try {
-      await storage.captureDailyThreatStats();
+      await withRetry(() => storage.captureDailyThreatStats(), "Daily stats capture");
       await setLastRun("daily_stats_capture");
       log.info("Daily threat stats snapshot captured");
-    } catch (error) {
-      log.error("Daily stats capture failed:", error);
+    } catch (error: any) {
+      if (isTransientDbError(error)) {
+        log.debug(`Daily stats capture skipped (transient): ${error.message}`);
+      } else {
+        log.error("Daily stats capture failed:", error);
+      }
     }
   }
 }
@@ -312,12 +339,12 @@ async function sendDailyHealthCheck(): Promise<void> {
 
   if (currentHour >= 8 && currentHour < 9 && now - lastHealthCheck > DAY_MS - 60 * 60 * 1000) {
     try {
-      const stats = await storage.getDashboardStats();
+      const stats = await withRetry(() => storage.getDashboardStats(), "Health check stats");
       const endDate = await getOrInitializeSaleDate();
 
       let kbSection = "";
       try {
-        const kbStats = await storage.getKbActivityStats();
+        const kbStats = await withRetry(() => storage.getKbActivityStats(), "Health check KB stats");
         kbSection = [
           "",
           "KNOWLEDGE BASE (24h)",
@@ -339,8 +366,12 @@ async function sendDailyHealthCheck(): Promise<void> {
 
       await setLastRun("daily_health_check");
       errorRateWindow = { count: 0, windowStart: now };
-    } catch (error) {
-      log.error("Health check failed:", error);
+    } catch (error: any) {
+      if (isTransientDbError(error)) {
+        log.debug(`Health check skipped (transient): ${error.message}`);
+      } else {
+        log.error("Health check failed:", error);
+      }
     }
   }
 }
@@ -354,12 +385,12 @@ async function sendWeeklyAdminReport(): Promise<void> {
 
   if (currentDay === 1 && currentHour >= 9 && currentHour < 10 && now - lastReport > WEEK_MS - 60 * 60 * 1000) {
     try {
-      const stats = await storage.getDashboardStats();
-      const visitorStats = await storage.getVisitorStats();
-      const dailyCounts = await storage.getDailyVisitorCounts(7);
+      const stats = await withRetry(() => storage.getDashboardStats(), "Weekly report stats");
+      const visitorStats = await withRetry(() => storage.getVisitorStats(), "Weekly report visitors");
+      const dailyCounts = await withRetry(() => storage.getDailyVisitorCounts(7), "Weekly report daily counts");
       const weekAgo = new Date(now - WEEK_MS);
-      const newSignups = await storage.getNewSignupsCount(weekAgo);
-      const totalUsers = await storage.getTotalUserCount();
+      const newSignups = await withRetry(() => storage.getNewSignupsCount(weekAgo), "Weekly report signups");
+      const totalUsers = await withRetry(() => storage.getTotalUserCount(), "Weekly report users");
 
       const dailyBreakdown = dailyCounts
         .map(d => `  ${d.date}: ${d.uniqueCount || 0} unique / ${d.totalHits || 0} hits`)
@@ -367,7 +398,7 @@ async function sendWeeklyAdminReport(): Promise<void> {
 
       let kbLines: string[] = [];
       try {
-        const kbStats = await storage.getKbActivityStats();
+        const kbStats = await withRetry(() => storage.getKbActivityStats(), "Weekly report KB stats");
         kbLines = [
           "",
           "KNOWLEDGE BASE",
@@ -424,8 +455,12 @@ async function sendWeeklyAdminReport(): Promise<void> {
 
       await setLastRun("weekly_admin_report");
       log.info(`Weekly admin report sent: ${visitorStats.thisWeek} visitors, ${newSignups} signups`);
-    } catch (error) {
-      log.error("Weekly admin report failed:", error);
+    } catch (error: any) {
+      if (isTransientDbError(error)) {
+        log.debug(`Weekly admin report skipped (transient): ${error.message}`);
+      } else {
+        log.error("Weekly admin report failed:", error);
+      }
     }
   }
 }
@@ -451,12 +486,20 @@ export async function startMaintenanceScheduler(): Promise<void> {
     maintenanceRunning = true;
     try {
       await runCleanupTasks();
+      await stagger();
       await checkGrandOpeningSale();
+      await stagger();
       await captureDailyStats();
+      await stagger();
       await sendDailyHealthCheck();
+      await stagger();
       await sendWeeklyAdminReport();
-    } catch (error) {
-      log.error("Scheduler error:", error);
+    } catch (error: any) {
+      if (isTransientDbError(error)) {
+        log.debug(`Scheduler cycle skipped (transient): ${error.message}`);
+      } else {
+        log.error("Scheduler error:", error);
+      }
     } finally {
       maintenanceRunning = false;
     }

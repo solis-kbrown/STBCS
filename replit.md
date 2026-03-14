@@ -27,10 +27,11 @@ Preferred communication style: Simple, everyday language.
 - **Performance**: Parallelized DB queries, in-memory `index.html` caching.
 
 ### Data Storage
-- **Database**: PostgreSQL via Drizzle ORM with an optimized connection pool.
+- **Database**: PostgreSQL via Drizzle ORM with a resource-tuned connection pool (max 15 prod / 10 dev, 15s idle/connection timeouts).
 - **Schema**: Defined for CVEs, ransomware, threat actors, and user data.
 - **Integrity**: Unique constraints and atomic upserts.
 - **Transactions**: Multi-step operations use `db.transaction()` for atomicity.
+- **DB Resilience**: All background services (maintenance, scrapers, uptime engine) use `withRetry`/`withDbRetry` wrappers for transient connection errors. Transient failures (connection timeout, pool exhaustion) are logged at debug level and silently retried next cycle. The maintenance scheduler staggers tasks with 3-second delays to reduce concurrent DB pressure.
 
 ### Key Design Patterns
 - Shared Types, Storage Abstraction, API Hooks (for React Query), Path Aliases.

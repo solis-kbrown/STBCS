@@ -13,6 +13,32 @@ let checkInterval: NodeJS.Timeout | null = null;
 let _lastRunEnd = 0;
 export function getUptimeEngineHealth() { return { lastRunEnd: _lastRunEnd, isRunning }; }
 
+function isTransientDbError(error: any): boolean {
+  const msg = error?.message || "";
+  return msg.includes("Connection terminated") ||
+    msg.includes("connection timeout") ||
+    msg.includes("too many clients") ||
+    msg.includes("Connection refused") ||
+    msg.includes("ECONNRESET");
+}
+
+async function withDbRetry<T>(fn: () => Promise<T>, label: string, retries = 2): Promise<T> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      if (isTransientDbError(error) && attempt < retries) {
+        const delay = (attempt + 1) * 2000;
+        log.debug(`${label} transient DB error, retry ${attempt + 1}/${retries} in ${delay}ms`);
+        await new Promise(r => setTimeout(r, delay));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error("unreachable");
+}
+
 interface CheckResult {
   status: "up" | "down" | "degraded";
   statusCode?: number;
@@ -159,7 +185,7 @@ async function processMonitor(monitor: UptimeMonitor): Promise<void> {
   try {
     const result = await checkEndpoint(monitor);
 
-    await storage.recordUptimeCheck({
+    await withDbRetry(() => storage.recordUptimeCheck({
       monitorId: monitor.id,
       status: result.status,
       statusCode: result.statusCode,
@@ -167,7 +193,7 @@ async function processMonitor(monitor: UptimeMonitor): Promise<void> {
       errorMessage: result.errorMessage,
       sslValid: result.sslValid,
       sslDaysRemaining: result.sslDaysRemaining,
-    });
+    }), `recordCheck(${monitor.id})`);
 
     const previousState = monitor.currentState;
     const totalChecks = (monitor.totalChecks || 0) + 1;
@@ -203,12 +229,12 @@ async function processMonitor(monitor: UptimeMonitor): Promise<void> {
     if (result.sslIssuer) stateUpdate.sslIssuer = result.sslIssuer;
     if (result.httpVersion) stateUpdate.httpVersion = result.httpVersion;
 
-    await storage.updateMonitorState(monitor.id, stateUpdate);
+    await withDbRetry(() => storage.updateMonitorState(monitor.id, stateUpdate), `updateState(${monitor.id})`);
 
     if (result.status === "down" && previousState !== "down" && monitor.alertOnDown) {
-      const existing = await storage.getActiveIncident(monitor.id);
+      const existing = await withDbRetry(() => storage.getActiveIncident(monitor.id), `getIncident(${monitor.id})`);
       if (!existing) {
-        await storage.createUptimeIncident({
+        await withDbRetry(() => storage.createUptimeIncident({
           monitorId: monitor.id,
           userId: monitor.userId,
           type: "downtime",
@@ -216,55 +242,59 @@ async function processMonitor(monitor: UptimeMonitor): Promise<void> {
           description: result.errorMessage
             ? `${monitor.url} - ${result.errorMessage}`
             : `${monitor.url} returned HTTP ${result.statusCode}`,
-        });
+        }), `createIncident(${monitor.id})`);
       }
       await sendDownAlert(monitor, result);
     }
 
     if (result.status === "up" && previousState === "down") {
-      await storage.resolveUptimeIncident(monitor.id);
+      await withDbRetry(() => storage.resolveUptimeIncident(monitor.id), `resolveIncident(${monitor.id})`);
       await sendRecoveryAlert(monitor, result);
     }
 
     if (result.sslDaysRemaining !== undefined && result.sslDaysRemaining <= (monitor.sslExpiryThresholdDays || 14) && monitor.alertOnSslExpiry) {
-      const sslIncident = await storage.getActiveIncident(monitor.id);
+      const sslIncident = await withDbRetry(() => storage.getActiveIncident(monitor.id), `getSslIncident(${monitor.id})`);
       if (!sslIncident || sslIncident.type !== "ssl_expiry") {
         if (result.sslDaysRemaining <= 0) {
-          await storage.createUptimeIncident({
+          await withDbRetry(() => storage.createUptimeIncident({
             monitorId: monitor.id,
             userId: monitor.userId,
             type: "ssl_expiry",
             title: `SSL Certificate EXPIRED for ${monitor.name}`,
             description: `The SSL certificate for ${monitor.url} has expired. Issued by ${result.sslIssuer || "Unknown"}.`,
-          });
+          }), `createSslIncident(${monitor.id})`);
         } else {
-          await storage.createUptimeIncident({
+          await withDbRetry(() => storage.createUptimeIncident({
             monitorId: monitor.id,
             userId: monitor.userId,
             type: "ssl_expiry",
             title: `SSL Certificate expiring soon for ${monitor.name}`,
             description: `The SSL certificate for ${monitor.url} expires in ${result.sslDaysRemaining} days. Issued by ${result.sslIssuer || "Unknown"}.`,
-          });
+          }), `createSslWarnIncident(${monitor.id})`);
         }
         await sendSslAlert(monitor, result);
       }
     }
 
     if (result.sslDaysRemaining !== undefined && result.sslDaysRemaining > (monitor.sslExpiryThresholdDays || 14)) {
-      const sslIncident = await storage.getActiveIncident(monitor.id);
+      const sslIncident = await withDbRetry(() => storage.getActiveIncident(monitor.id), `getSslResolve(${monitor.id})`);
       if (sslIncident && sslIncident.type === "ssl_expiry") {
-        await storage.resolveUptimeIncident(monitor.id);
+        await withDbRetry(() => storage.resolveUptimeIncident(monitor.id), `resolveSsl(${monitor.id})`);
       }
     }
 
   } catch (err: any) {
-    log.error(`Error processing monitor ${monitor.id}: ${err.message}`);
+    if (isTransientDbError(err)) {
+      log.debug(`Monitor ${monitor.id} skipped (transient DB): ${err.message}`);
+    } else {
+      log.error(`Error processing monitor ${monitor.id}: ${err.message}`);
+    }
   }
 }
 
 async function sendDownAlert(monitor: UptimeMonitor, result: CheckResult): Promise<void> {
   try {
-    const user = await storage.getUser(monitor.userId);
+    const user = await withDbRetry(() => storage.getUser(monitor.userId), `getUser(${monitor.userId})`);
     if (!user?.email || !monitor.emailAlert) return;
 
     await sendEmail({
@@ -295,7 +325,7 @@ async function sendDownAlert(monitor: UptimeMonitor, result: CheckResult): Promi
 
 async function sendRecoveryAlert(monitor: UptimeMonitor, result: CheckResult): Promise<void> {
   try {
-    const user = await storage.getUser(monitor.userId);
+    const user = await withDbRetry(() => storage.getUser(monitor.userId), `getUser(${monitor.userId})`);
     if (!user?.email || !monitor.emailAlert) return;
 
     await sendEmail({
@@ -325,7 +355,7 @@ async function sendRecoveryAlert(monitor: UptimeMonitor, result: CheckResult): P
 
 async function sendSslAlert(monitor: UptimeMonitor, result: CheckResult): Promise<void> {
   try {
-    const user = await storage.getUser(monitor.userId);
+    const user = await withDbRetry(() => storage.getUser(monitor.userId), `getUser(${monitor.userId})`);
     if (!user?.email || !monitor.emailAlert) return;
 
     const expired = (result.sslDaysRemaining || 0) <= 0;
@@ -365,12 +395,12 @@ export async function runUptimeEngine(): Promise<{ checked: number; alerts: numb
   let errors = 0;
 
   try {
-    const dueMonitors = await storage.getUptimeMonitorsDue();
+    const dueMonitors = await withDbRetry(() => storage.getUptimeMonitorsDue(), "getMonitorsDue");
     if (dueMonitors.length === 0) return { checked: 0, alerts: 0, errors: 0 };
 
     log.info(`Processing ${dueMonitors.length} due uptime monitors`);
 
-    const batchSize = 10;
+    const batchSize = 5;
     for (let i = 0; i < dueMonitors.length; i += batchSize) {
       const batch = dueMonitors.slice(i, i + batchSize);
       const results = await Promise.allSettled(batch.map(m => processMonitor(m)));
@@ -378,11 +408,18 @@ export async function runUptimeEngine(): Promise<{ checked: number; alerts: numb
         if (r.status === "fulfilled") checked++;
         else errors++;
       }
+      if (i + batchSize < dueMonitors.length) {
+        await new Promise(r => setTimeout(r, 1000));
+      }
     }
 
     log.info(`Uptime check complete: ${checked} checked, ${errors} errors`);
   } catch (err: any) {
-    log.error(`Uptime engine error: ${err.message}`);
+    if (isTransientDbError(err)) {
+      log.debug(`Uptime engine skipped (transient): ${err.message}`);
+    } else {
+      log.error(`Uptime engine error: ${err.message}`);
+    }
   } finally {
     isRunning = false;
     _lastRunEnd = Date.now();

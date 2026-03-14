@@ -9,6 +9,32 @@ const log = createLogger("Scraper");
 
 export let activeFeedCount = 0;
 
+function isTransientDbError(error: any): boolean {
+  const msg = error?.message || "";
+  return msg.includes("Connection terminated") ||
+    msg.includes("connection timeout") ||
+    msg.includes("too many clients") ||
+    msg.includes("Connection refused") ||
+    msg.includes("ECONNRESET");
+}
+
+async function withDbRetry<T>(fn: () => Promise<T>, label: string, retries = 2): Promise<T> {
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fn();
+    } catch (error: any) {
+      if (isTransientDbError(error) && attempt < retries) {
+        const waitMs = (attempt + 1) * 2000;
+        log.debug(`${label} transient DB error, retry ${attempt + 1}/${retries} in ${waitMs}ms`);
+        await new Promise(r => setTimeout(r, waitMs));
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error("unreachable");
+}
+
 function logScraperError(feedName: string, error: unknown): number {
   const msg = error instanceof Error ? error.message : String(error);
   const isTransient = /429|rate.?limit|too many requests/i.test(msg) ||
@@ -188,7 +214,7 @@ async function processNVDVulnerabilities(vulnerabilities: NVDResponse["vulnerabi
       status: score >= 9.0 ? "Active" : score >= 7.0 ? "PoC Available" : "Patched",
     };
 
-    await storage.upsertCve(cveData);
+    await withDbRetry(() => storage.upsertCve(cveData), "upsertCve");
     count++;
   }
   return count;
@@ -237,7 +263,7 @@ export async function fetchNVDCves(): Promise<number> {
     } else {
       log.debug("NVD: no new CVEs in this cycle");
     }
-    await storage.updateFeedLastFetched("NVD");
+    await withDbRetry(() => storage.updateFeedLastFetched("NVD"), "updateFeed");
     return totalCount;
   } catch (error) {
     logScraperError("Feed", error);
@@ -290,10 +316,10 @@ export async function fetchCISAKev(): Promise<number> {
       notes: vuln.notes || null,
     }));
 
-    await storage.batchUpsertCisaKev(allKevData);
+    await withDbRetry(() => storage.batchUpsertCisaKev(allKevData), "batchUpsertKev");
     
     log.debug(`Processed ${allKevData.length} known exploited vulnerabilities`);
-    await storage.updateFeedLastFetched("CISA KEV");
+    await withDbRetry(() => storage.updateFeedLastFetched("CISA KEV"), "updateFeed");
     return allKevData.length;
   } catch (error) {
     logScraperError("Feed", error);
@@ -344,9 +370,9 @@ export async function fetchCISAICS(): Promise<number> {
       });
     }
     if (advisories.length > 0) {
-      await storage.batchUpsertIcsAdvisories(advisories);
+      await withDbRetry(() => storage.batchUpsertIcsAdvisories(advisories), "batchUpsertIcs");
     }
-    await storage.updateFeedLastFetched("CISA ICS");
+    await withDbRetry(() => storage.updateFeedLastFetched("CISA ICS"), "updateFeed");
     return advisories.length;
   } catch (error) {
     log.error("CISA ICS error:", error);
@@ -392,8 +418,8 @@ async function fetchCISAICSFromAtom(): Promise<number> {
       });
     }
     if (advisories.length > 0) {
-      await storage.batchUpsertIcsAdvisories(advisories);
-      await storage.updateFeedLastFetched("CISA ICS");
+      await withDbRetry(() => storage.batchUpsertIcsAdvisories(advisories), "batchUpsertIcs");
+      await withDbRetry(() => storage.updateFeedLastFetched("CISA ICS"), "updateFeed");
       return advisories.length;
     }
     return generateSyntheticICSAdvisories();
@@ -418,8 +444,8 @@ async function generateSyntheticICSAdvisories(): Promise<number> {
     { advisoryId: "ICSA-25-035-01", title: "Beckhoff TwinCAT OPC UA Server Use-After-Free", summary: "A use-after-free vulnerability in Beckhoff TwinCAT OPC UA Server could be exploited for remote code execution or denial of service.", vendor: "Beckhoff", product: "TwinCAT", cvssScore: 8.1, cveIds: "CVE-2025-1245", severity: "High", publishedDate: new Date("2025-02-04"), sourceUrl: "https://www.cisa.gov/news-events/ics-advisories/icsa-25-035-01" },
     { advisoryId: "ICSA-25-034-01", title: "WAGO PFC200 Controller Improper Authentication", summary: "Improper authentication in WAGO PFC200 series controllers could allow unauthorized modification of PLC programs and configurations.", vendor: "WAGO", product: "PFC200", cvssScore: 9.1, cveIds: "CVE-2025-1246", severity: "Critical", publishedDate: new Date("2025-02-03"), sourceUrl: "https://www.cisa.gov/news-events/ics-advisories/icsa-25-034-01" },
   ];
-  await storage.batchUpsertIcsAdvisories(recentAdvisories);
-  await storage.updateFeedLastFetched("CISA ICS");
+  await withDbRetry(() => storage.batchUpsertIcsAdvisories(recentAdvisories), "batchUpsertIcs");
+  await withDbRetry(() => storage.updateFeedLastFetched("CISA ICS"), "updateFeed");
   return recentAdvisories.length;
 }
 
@@ -468,7 +494,7 @@ export async function fetchURLhaus(): Promise<number> {
     }
     
     log.debug(`Processed ${count} malicious URLs`);
-    await storage.updateFeedLastFetched("URLhaus");
+    await withDbRetry(() => storage.updateFeedLastFetched("URLhaus"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -523,7 +549,7 @@ export async function fetchFeodoTracker(): Promise<number> {
     }
     
     log.debug(`Processed ${count} C2 IPs`);
-    await storage.updateFeedLastFetched("Feodo Tracker");
+    await withDbRetry(() => storage.updateFeedLastFetched("Feodo Tracker"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -567,7 +593,7 @@ export async function fetchDShield(): Promise<number> {
     }
     
     log.debug(`Processed ${count} attacking IPs`);
-    await storage.updateFeedLastFetched("SANS DShield");
+    await withDbRetry(() => storage.updateFeedLastFetched("SANS DShield"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -608,7 +634,7 @@ export async function fetchTorExitNodes(): Promise<number> {
     }
     
     log.debug(`Processed ${count} exit nodes`);
-    await storage.updateFeedLastFetched("Tor Exit Nodes");
+    await withDbRetry(() => storage.updateFeedLastFetched("Tor Exit Nodes"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -649,7 +675,7 @@ export async function fetchOpenPhish(): Promise<number> {
     }
     
     log.debug(`Processed ${count} phishing URLs`);
-    await storage.updateFeedLastFetched("OpenPhish");
+    await withDbRetry(() => storage.updateFeedLastFetched("OpenPhish"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -692,7 +718,7 @@ export async function fetchSSLBlacklist(): Promise<number> {
     }
     
     log.debug(`Processed ${count} SSL blacklist IPs`);
-    await storage.updateFeedLastFetched("SSL Blacklist");
+    await withDbRetry(() => storage.updateFeedLastFetched("SSL Blacklist"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -740,7 +766,7 @@ export async function fetchIPsum(): Promise<number> {
     }
     
     log.debug(`Processed ${count} high-confidence malicious IPs`);
-    await storage.updateFeedLastFetched("IPsum");
+    await withDbRetry(() => storage.updateFeedLastFetched("IPsum"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -780,7 +806,7 @@ export async function fetchBlocklistDe(): Promise<number> {
     }
     
     log.debug(`Processed ${count} attack IPs`);
-    await storage.updateFeedLastFetched("Blocklist.de");
+    await withDbRetry(() => storage.updateFeedLastFetched("Blocklist.de"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -820,7 +846,7 @@ export async function fetchCINS(): Promise<number> {
     }
     
     log.debug(`Processed ${count} bad actor IPs`);
-    await storage.updateFeedLastFetched("CINS Army");
+    await withDbRetry(() => storage.updateFeedLastFetched("CINS Army"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -860,7 +886,7 @@ export async function fetchGreenSnow(): Promise<number> {
     }
     
     log.debug(`Processed ${count} attacker IPs`);
-    await storage.updateFeedLastFetched("GreenSnow");
+    await withDbRetry(() => storage.updateFeedLastFetched("GreenSnow"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -900,7 +926,7 @@ export async function fetchEmergingThreats(): Promise<number> {
     }
     
     log.debug(`Processed ${count} compromised IPs`);
-    await storage.updateFeedLastFetched("EmergingThreats");
+    await withDbRetry(() => storage.updateFeedLastFetched("EmergingThreats"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -960,7 +986,7 @@ export async function fetchThreatFox(): Promise<number> {
     }
     
     log.debug(`Processed ${ipCount} IPs, ${urlCount} URLs`);
-    await storage.updateFeedLastFetched("ThreatFox");
+    await withDbRetry(() => storage.updateFeedLastFetched("ThreatFox"), "updateFeed");
     return ipCount + urlCount;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1004,7 +1030,7 @@ export async function fetchC2IntelFeedsDomains(): Promise<number> {
     }
     
     log.debug(`Processed ${count} C2 domains`);
-    await storage.updateFeedLastFetched("C2IntelFeeds Domains");
+    await withDbRetry(() => storage.updateFeedLastFetched("C2IntelFeeds Domains"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1052,7 +1078,7 @@ export async function fetchPhishTank(): Promise<number> {
     }
     
     log.debug(`Processed ${count} verified phishing URLs`);
-    await storage.updateFeedLastFetched("PhishTank");
+    await withDbRetry(() => storage.updateFeedLastFetched("PhishTank"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1092,7 +1118,7 @@ export async function fetchBotnetC2(): Promise<number> {
     }
     
     log.debug(`Processed ${count} recommended C2 IPs`);
-    await storage.updateFeedLastFetched("Feodo Recommended");
+    await withDbRetry(() => storage.updateFeedLastFetched("Feodo Recommended"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1136,7 +1162,7 @@ export async function fetchDanTorNodes(): Promise<number> {
     }
     
     log.debug(`Processed ${count} Tor exit nodes`);
-    await storage.updateFeedLastFetched("Dan.me.uk Tor");
+    await withDbRetry(() => storage.updateFeedLastFetched("Dan.me.uk Tor"), "updateFeed");
     return count;
   } catch (error) {
     log.debug(`Dan.me.uk Tor: ${error instanceof Error ? error.message.split("\n")[0] : "unavailable"} (secondary source)`);
@@ -1184,7 +1210,7 @@ export async function fetchMalwareBazaar(): Promise<number> {
     }
     
     log.debug(`Processed ${count} malware samples`);
-    await storage.updateFeedLastFetched("Malware Bazaar");
+    await withDbRetry(() => storage.updateFeedLastFetched("Malware Bazaar"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1227,7 +1253,7 @@ export async function fetchSpamhausDrop(): Promise<number> {
     }
     
     log.debug(`Processed ${count} DROP netblocks`);
-    await storage.updateFeedLastFetched("Spamhaus DROP");
+    await withDbRetry(() => storage.updateFeedLastFetched("Spamhaus DROP"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1270,7 +1296,7 @@ export async function fetchFireHOL(): Promise<number> {
     }
     
     log.debug(`Processed ${count} high-confidence IPs`);
-    await storage.updateFeedLastFetched("FireHOL Level1");
+    await withDbRetry(() => storage.updateFeedLastFetched("FireHOL Level1"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1310,7 +1336,7 @@ export async function fetchSSLBLAggressive(): Promise<number> {
     }
     
     log.debug(`Processed ${count} aggressive SSL blacklist IPs`);
-    await storage.updateFeedLastFetched("SSLBL Aggressive");
+    await withDbRetry(() => storage.updateFeedLastFetched("SSLBL Aggressive"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1350,7 +1376,7 @@ export async function fetchC2Tracker(): Promise<number> {
     }
     
     log.debug(`Processed ${count} C2 server IPs`);
-    await storage.updateFeedLastFetched("C2 Tracker");
+    await withDbRetry(() => storage.updateFeedLastFetched("C2 Tracker"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1392,7 +1418,7 @@ export async function fetchCleanTalk(): Promise<number> {
     }
     
     log.debug(`Processed ${count} HTTP spammer IPs`);
-    await storage.updateFeedLastFetched("CleanTalk");
+    await withDbRetry(() => storage.updateFeedLastFetched("CleanTalk"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1435,7 +1461,7 @@ export async function fetchC2IntelFeeds(): Promise<number> {
     }
     
     log.debug(`Processed ${count} C2 infrastructure IPs`);
-    await storage.updateFeedLastFetched("C2IntelFeeds");
+    await withDbRetry(() => storage.updateFeedLastFetched("C2IntelFeeds"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1481,7 +1507,7 @@ export async function fetchDataplaneSsh(): Promise<number> {
     }
     
     log.debug(`Processed ${count} SSH bruteforce IPs`);
-    await storage.updateFeedLastFetched("Dataplane SSH");
+    await withDbRetry(() => storage.updateFeedLastFetched("Dataplane SSH"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1518,7 +1544,7 @@ export async function fetchDataplaneVnc(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} VNC scanning IPs`);
-    await storage.updateFeedLastFetched("Dataplane VNC");
+    await withDbRetry(() => storage.updateFeedLastFetched("Dataplane VNC"), "updateFeed");
     return count;
   } catch (error) {
     log.error("Dataplane VNC error:", error);
@@ -1555,7 +1581,7 @@ export async function fetchDataplaneDns(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} DNS abuse IPs`);
-    await storage.updateFeedLastFetched("Dataplane DNS");
+    await withDbRetry(() => storage.updateFeedLastFetched("Dataplane DNS"), "updateFeed");
     return count;
   } catch (error) {
     log.error("Dataplane DNS error:", error);
@@ -1592,7 +1618,7 @@ export async function fetchDataplaneSip(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} SIP/VoIP abuse IPs`);
-    await storage.updateFeedLastFetched("Dataplane SIP");
+    await withDbRetry(() => storage.updateFeedLastFetched("Dataplane SIP"), "updateFeed");
     return count;
   } catch (error) {
     log.error("Dataplane SIP error:", error);
@@ -1626,7 +1652,7 @@ export async function fetchSpamhausEdrop(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} EDROP netblocks`);
-    await storage.updateFeedLastFetched("Spamhaus EDROP");
+    await withDbRetry(() => storage.updateFeedLastFetched("Spamhaus EDROP"), "updateFeed");
     return count;
   } catch (error) {
     log.error("Spamhaus EDROP error:", error);
@@ -1660,7 +1686,7 @@ export async function fetchPhishingDatabaseIPs(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} phishing infrastructure IPs`);
-    await storage.updateFeedLastFetched("Phishing Database IPs");
+    await withDbRetry(() => storage.updateFeedLastFetched("Phishing Database IPs"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1693,7 +1719,7 @@ export async function fetchPhishingDatabaseDomains(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} phishing domains`);
-    await storage.updateFeedLastFetched("Phishing Database Domains");
+    await withDbRetry(() => storage.updateFeedLastFetched("Phishing Database Domains"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1726,7 +1752,7 @@ export async function fetchPhishingDatabaseURLs(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} phishing URLs`);
-    await storage.updateFeedLastFetched("Phishing Database URLs");
+    await withDbRetry(() => storage.updateFeedLastFetched("Phishing Database URLs"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1769,7 +1795,7 @@ export async function fetchMaltrail(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} Maltrail IOCs`);
-    await storage.updateFeedLastFetched("Maltrail");
+    await withDbRetry(() => storage.updateFeedLastFetched("Maltrail"), "updateFeed");
     return count;
   } catch (error) {
     log.error("Maltrail error:", error);
@@ -1818,7 +1844,7 @@ export async function fetchThreatFoxCSV(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} ThreatFox IOCs`);
-    await storage.updateFeedLastFetched("ThreatFox CSV");
+    await withDbRetry(() => storage.updateFeedLastFetched("ThreatFox CSV"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1856,7 +1882,7 @@ export async function fetchBinaryDefense(): Promise<number> {
     }
     
     log.debug(`Processed ${count} threat intel IPs`);
-    await storage.updateFeedLastFetched("BinaryDefense");
+    await withDbRetry(() => storage.updateFeedLastFetched("BinaryDefense"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1899,7 +1925,7 @@ export async function fetchTurrisSentinel(): Promise<number> {
     }
     
     log.debug(`Processed ${count} greylist attack IPs`);
-    await storage.updateFeedLastFetched("Turris Sentinel");
+    await withDbRetry(() => storage.updateFeedLastFetched("Turris Sentinel"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -1939,7 +1965,7 @@ export async function fetchGreyNoiseCommunity(): Promise<number> {
     
     if (response.ok) {
       log.debug("API connection verified - enrichment available for IP lookups");
-      await storage.updateFeedLastFetched("GreyNoise");
+      await withDbRetry(() => storage.updateFeedLastFetched("GreyNoise"), "updateFeed");
       return 1;
     } else {
       log.debug(`API error: ${response.status}`);
@@ -2023,7 +2049,7 @@ export async function fetchCrowdSec(): Promise<number> {
     
     log.debug(`API connected - enriched ${enrichedCount} IPs with reputation data`);
     log.debug(`Use security tools to lookup any IP for real-time threat scoring`);
-    await storage.updateFeedLastFetched("CrowdSec");
+    await withDbRetry(() => storage.updateFeedLastFetched("CrowdSec"), "updateFeed");
     return enrichedCount;
   } catch (error) {
     logScraperError("Feed", error);
@@ -2101,7 +2127,7 @@ export async function fetchPulsedive(): Promise<number> {
     
     log.debug(`Processed ${count} high-risk indicators`);
     log.debug(`Use security tools for real-time threat lookups`);
-    await storage.updateFeedLastFetched("Pulsedive");
+    await withDbRetry(() => storage.updateFeedLastFetched("Pulsedive"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -2181,7 +2207,7 @@ export async function fetchShodanIntel(): Promise<number> {
     
     log.debug(`Enriched ${enrichedCount} IPs with host intelligence`);
     log.debug(`Use security tools for real-time IP/host lookups`);
-    await storage.updateFeedLastFetched("Shodan");
+    await withDbRetry(() => storage.updateFeedLastFetched("Shodan"), "updateFeed");
     return enrichedCount;
   } catch (error) {
     logScraperError("Feed", error);
@@ -2276,7 +2302,7 @@ export async function fetchAlienVaultOTX(): Promise<number> {
     }
     
     log.debug(`Processed ${ipCount} IPs and ${urlCount} URLs from ${pulses.length} pulses`);
-    await storage.updateFeedLastFetched("AlienVault OTX");
+    await withDbRetry(() => storage.updateFeedLastFetched("AlienVault OTX"), "updateFeed");
     return ipCount + urlCount;
   } catch (error) {
     logScraperError("Feed", error);
@@ -2321,7 +2347,7 @@ export async function fetchVirusTotalFeed(): Promise<number> {
       const allowed = quota?.allowed || 500;
       log.debug(`API connected - ${used}/${allowed} daily requests used`);
       log.debug("Enrichment available for IP/URL/hash lookups via security tools");
-      await storage.updateFeedLastFetched("VirusTotal");
+      await withDbRetry(() => storage.updateFeedLastFetched("VirusTotal"), "updateFeed");
       return 1;
     } else if (response.status === 429) {
       log.debug("Rate limit reached - will retry next cycle");
@@ -2411,7 +2437,7 @@ export async function fetchHybridAnalysis(): Promise<number> {
     }
     
     log.debug(`Processed ${count} malware IOCs`);
-    await storage.updateFeedLastFetched("Hybrid Analysis");
+    await withDbRetry(() => storage.updateFeedLastFetched("Hybrid Analysis"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -2463,7 +2489,7 @@ export async function fetchCIRCLCves(): Promise<number> {
     }
     
     log.debug(`Processed ${count} enhanced CVEs`);
-    await storage.updateFeedLastFetched("CIRCL CVE");
+    await withDbRetry(() => storage.updateFeedLastFetched("CIRCL CVE"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -2949,7 +2975,7 @@ export async function fetchRansomwhere(): Promise<number> {
     }
     
     log.debug(`Tracked ${actorCount} ransomware families, enriched ${enrichedCount} incidents with payment data`);
-    await storage.updateFeedLastFetched("Ransomwhere");
+    await withDbRetry(() => storage.updateFeedLastFetched("Ransomwhere"), "updateFeed");
     return actorCount;
   } catch (error) {
     logScraperError("Feed", error);
@@ -3000,7 +3026,7 @@ export async function fetchTalosBlocklist(): Promise<number> {
     }
     
     log.debug(`Processed ${count} Cisco Talos blocklist IPs`);
-    await storage.updateFeedLastFetched("Cisco Talos");
+    await withDbRetry(() => storage.updateFeedLastFetched("Cisco Talos"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -3051,7 +3077,7 @@ export async function fetchCyberCureIPs(): Promise<number> {
     }
     
     log.debug(`Processed ${count} infected host IPs`);
-    await storage.updateFeedLastFetched("CyberCure");
+    await withDbRetry(() => storage.updateFeedLastFetched("CyberCure"), "updateFeed");
     return count;
   } catch (error) {
     log.error("IP feed error:", error);
@@ -3165,7 +3191,7 @@ export async function fetchThreatFoxRecent(): Promise<number> {
     }
     
     log.debug(`Processed ${count} IOCs (${ipCount} IPs, ${urlCount} URLs)`);
-    await storage.updateFeedLastFetched("ThreatFox");
+    await withDbRetry(() => storage.updateFeedLastFetched("ThreatFox"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -3225,7 +3251,7 @@ export async function fetchMalwareBazaarRecent(): Promise<number> {
     }
     
     log.debug(`Processed ${count} recent malware samples`);
-    await storage.updateFeedLastFetched("MalwareBazaar");
+    await withDbRetry(() => storage.updateFeedLastFetched("MalwareBazaar"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -3298,7 +3324,7 @@ export async function scrapeThreatFox(): Promise<number> {
     if (total > 0) {
       log.info(`ThreatFox API: ${total} IOCs (${ipCount} IPs, ${urlCount} URLs/domains)`);
     }
-    await storage.updateFeedLastFetched("ThreatFox API");
+    await withDbRetry(() => storage.updateFeedLastFetched("ThreatFox API"), "updateFeed");
     return total;
   } catch (error) {
     logScraperError("ThreatFox API", error);
@@ -3353,7 +3379,7 @@ export async function scrapeMalwareBazaar(): Promise<number> {
     if (count > 0) {
       log.info(`MalwareBazaar API: ${count} malware samples stored`);
     }
-    await storage.updateFeedLastFetched("MalwareBazaar API");
+    await withDbRetry(() => storage.updateFeedLastFetched("MalwareBazaar API"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("MalwareBazaar API", error);
@@ -3406,7 +3432,7 @@ export async function fetchThreatFeedsIO(): Promise<number> {
     }
     
     log.debug(`Processed ${totalCount} aggregated threat IPs`);
-    await storage.updateFeedLastFetched("ThreatFeeds.io");
+    await withDbRetry(() => storage.updateFeedLastFetched("ThreatFeeds.io"), "updateFeed");
     return totalCount;
   } catch (error) {
     logScraperError("Feed", error);
@@ -3604,7 +3630,7 @@ export async function fetchBotvrijIPs(): Promise<number> {
     }
 
     log.debug(`Processed ${count} EU CERT IOC IPs`);
-    await storage.updateFeedLastFetched("Botvrij.eu IPs");
+    await withDbRetry(() => storage.updateFeedLastFetched("Botvrij.eu IPs"), "updateFeed");
     return count;
   } catch (error) {
     log.error("Botvrij IP error:", error);
@@ -3637,7 +3663,7 @@ export async function fetchBotvrijDomains(): Promise<number> {
     }
 
     log.debug(`Processed ${count} EU CERT malicious domains`);
-    await storage.updateFeedLastFetched("Botvrij.eu Domains");
+    await withDbRetry(() => storage.updateFeedLastFetched("Botvrij.eu Domains"), "updateFeed");
     return count;
   } catch (error) {
     log.error("Botvrij domain error:", error);
@@ -3675,7 +3701,7 @@ export async function fetchRutgersSsh(): Promise<number> {
     }
 
     log.debug(`Processed ${count} SSH brute-force IPs`);
-    await storage.updateFeedLastFetched("Rutgers SSH");
+    await withDbRetry(() => storage.updateFeedLastFetched("Rutgers SSH"), "updateFeed");
     return count;
   } catch (error) {
     log.error("Rutgers SSH error:", error);
@@ -3716,7 +3742,7 @@ export async function fetchCriticalPathCobaltStrike(): Promise<number> {
     }
 
     log.debug(`Processed ${count} Cobalt Strike C2 IPs`);
-    await storage.updateFeedLastFetched("CriticalPath Cobalt Strike");
+    await withDbRetry(() => storage.updateFeedLastFetched("CriticalPath Cobalt Strike"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -3761,7 +3787,7 @@ export async function fetchSSLBLCerts(): Promise<number> {
     }
 
     log.debug(`Processed ${count} malicious SSL certificates`);
-    await storage.updateFeedLastFetched("SSLBL Certs");
+    await withDbRetry(() => storage.updateFeedLastFetched("SSLBL Certs"), "updateFeed");
     return count;
   } catch (error) {
     log.error("SSLBL CSV error:", error);
@@ -3800,7 +3826,7 @@ export async function fetchDisconnectMalvertising(): Promise<number> {
     }
 
     log.debug(`Processed ${count} malvertising domains`);
-    await storage.updateFeedLastFetched("Disconnect Malvertising");
+    await withDbRetry(() => storage.updateFeedLastFetched("Disconnect Malvertising"), "updateFeed");
     return count;
   } catch (error) {
     log.error("Disconnect error:", error);
@@ -3878,7 +3904,7 @@ export async function fetchGitHubAdvisories(): Promise<number> {
     }
 
     log.debug(`Processed ${count} GitHub Security Advisories`);
-    await storage.updateFeedLastFetched("GitHub GHSA");
+    await withDbRetry(() => storage.updateFeedLastFetched("GitHub GHSA"), "updateFeed");
     return count;
   } catch (error) {
     log.error("GHSA error:", error);
@@ -3970,7 +3996,7 @@ export async function fetchMITREAttackGroups(): Promise<number> {
     }
 
     log.debug(`Processed ${count} MITRE ATT&CK threat actor groups`);
-    await storage.updateFeedLastFetched("MITRE ATT&CK");
+    await withDbRetry(() => storage.updateFeedLastFetched("MITRE ATT&CK"), "updateFeed");
     return count;
   } catch (error) {
     log.error("MITRE ATT&CK error:", error);
@@ -4008,7 +4034,7 @@ async function fetchSimpleIPList(url: string, source: string, threatType: string
       }
     }
     log.debug(`Processed ${count} ${source} IPs`);
-    await storage.updateFeedLastFetched(source);
+    await withDbRetry(() => storage.updateFeedLastFetched(source), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -4039,7 +4065,7 @@ export async function fetchAlienVaultReputation(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} AlienVault reputation IPs`);
-    await storage.updateFeedLastFetched("AlienVault Reputation");
+    await withDbRetry(() => storage.updateFeedLastFetched("AlienVault Reputation"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -4083,7 +4109,7 @@ export async function fetchCriticalPathAbuseCh(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} CriticalPath abuse.ch IPs`);
-    await storage.updateFeedLastFetched("CriticalPath abuse.ch");
+    await withDbRetry(() => storage.updateFeedLastFetched("CriticalPath abuse.ch"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -4146,7 +4172,7 @@ async function fetchSimpleDomainList(url: string, source: string, threatType: st
       }
     }
     log.debug(`Processed ${count} ${source} domains`);
-    await storage.updateFeedLastFetched(source);
+    await withDbRetry(() => storage.updateFeedLastFetched(source), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -4178,7 +4204,7 @@ async function fetchHostsFileDomains(url: string, source: string, threatType: st
       }
     }
     log.debug(`Processed ${count} ${source} domains`);
-    await storage.updateFeedLastFetched(source);
+    await withDbRetry(() => storage.updateFeedLastFetched(source), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -4254,7 +4280,7 @@ export async function fetchMaltrailMalware(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} Maltrail Malware IOCs`);
-    await storage.updateFeedLastFetched("Maltrail Malware");
+    await withDbRetry(() => storage.updateFeedLastFetched("Maltrail Malware"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -4301,7 +4327,7 @@ export async function fetchTweetFeedIOC(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} TweetFeed IOCs`);
-    await storage.updateFeedLastFetched("TweetFeed");
+    await withDbRetry(() => storage.updateFeedLastFetched("TweetFeed"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -4340,7 +4366,7 @@ export async function fetchAPTNotes(): Promise<number> {
       } catch { /* skip individual errors */ }
     }
     log.debug(`Processed ${count} APT Notes entries`);
-    await storage.updateFeedLastFetched("APT Notes");
+    await withDbRetry(() => storage.updateFeedLastFetched("APT Notes"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -4371,7 +4397,7 @@ export async function fetchTargetedThreats(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} Targeted Threat domains`);
-    await storage.updateFeedLastFetched("Targeted Threats");
+    await withDbRetry(() => storage.updateFeedLastFetched("Targeted Threats"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -4390,7 +4416,7 @@ export async function fetchResearchIOCRepos(): Promise<number> {
     try {
       const response = await secureFetch(repo.url);
       if (response.ok) {
-        await storage.updateFeedLastFetched(repo.name);
+        await withDbRetry(() => storage.updateFeedLastFetched(repo.name), "updateFeed");
         total++;
       }
     } catch { /* non-critical */ }
@@ -4434,7 +4460,7 @@ export async function fetchStamparmBlackbook(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} Stamparm Blackbook IOCs`);
-    await storage.updateFeedLastFetched("Stamparm Blackbook");
+    await withDbRetry(() => storage.updateFeedLastFetched("Stamparm Blackbook"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -4492,7 +4518,7 @@ export async function fetchOpenBugBountyRSS(): Promise<number> {
       } catch { /* skip */ }
     }
     log.debug(`Processed ${count} OpenBugBounty articles`);
-    await storage.updateFeedLastFetched("OpenBugBounty");
+    await withDbRetry(() => storage.updateFeedLastFetched("OpenBugBounty"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -4734,7 +4760,7 @@ export async function fetchMISPThreatActorGalaxy(): Promise<number> {
     } else {
       log.debug("MISP Galaxy: no new enrichment data");
     }
-    await storage.updateFeedLastFetched("MISP Threat Actor Galaxy");
+    await withDbRetry(() => storage.updateFeedLastFetched("MISP Threat Actor Galaxy"), "updateFeed");
     return enrichedCount;
   } catch (error) {
     logScraperError("MISP Galaxy", error);
@@ -4776,7 +4802,7 @@ export async function fetchYARAifyRecent(): Promise<number> {
       }
     }
     log.debug(`Processed ${count} YARAify YARA rule matches`);
-    await storage.updateFeedLastFetched("YARAify");
+    await withDbRetry(() => storage.updateFeedLastFetched("YARAify"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("YARAify", error);
@@ -4812,7 +4838,7 @@ export async function fetchURLhausCSV(): Promise<number> {
       count++;
     }
     log.debug(`Processed ${count} URLhaus CSV malicious URLs`);
-    await storage.updateFeedLastFetched("URLhaus CSV");
+    await withDbRetry(() => storage.updateFeedLastFetched("URLhaus CSV"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("URLhaus CSV", error);
@@ -4856,7 +4882,7 @@ export async function fetchMalwareBazaarTags(): Promise<number> {
       }
     }
     log.debug(`Processed ${totalCount} MalwareBazaar tagged samples`);
-    await storage.updateFeedLastFetched("MalwareBazaar Tags");
+    await withDbRetry(() => storage.updateFeedLastFetched("MalwareBazaar Tags"), "updateFeed");
     return totalCount;
   } catch (error) {
     logScraperError("MalwareBazaar Tags", error);
@@ -4904,7 +4930,7 @@ export async function fetchMalpediaFamilies(): Promise<number> {
       }
     }
     log.debug(`Enriched ${count} threat actors with Malpedia malware family data`);
-    await storage.updateFeedLastFetched("Malpedia");
+    await withDbRetry(() => storage.updateFeedLastFetched("Malpedia"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Malpedia", error);
@@ -4952,7 +4978,7 @@ export async function fetchBambenekC2(): Promise<number> {
     }
     const total = ipCount + domainCount;
     log.debug(`Processed ${total} Bambenek C2 indicators (${ipCount} IPs, ${domainCount} domains)`);
-    await storage.updateFeedLastFetched("Bambenek C2");
+    await withDbRetry(() => storage.updateFeedLastFetched("Bambenek C2"), "updateFeed");
     return total;
   } catch (error) {
     logScraperError("Bambenek C2", error);
@@ -4998,7 +5024,7 @@ export async function fetchCISAStopRansomware(): Promise<number> {
     }
 
     log.debug(`Processed ${count} CISA #StopRansomware advisories`);
-    await storage.updateFeedLastFetched("CISA StopRansomware");
+    await withDbRetry(() => storage.updateFeedLastFetched("CISA StopRansomware"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -5015,7 +5041,7 @@ export async function fetchDarkFeedVictims(): Promise<number> {
 
     if (!response.ok) {
       log.debug(`DarkFeed.io API not publicly accessible (${response.status}), skipping gracefully`);
-      await storage.updateFeedLastFetched("DarkFeed.io");
+      await withDbRetry(() => storage.updateFeedLastFetched("DarkFeed.io"), "updateFeed");
       return 0;
     }
 
@@ -5045,7 +5071,7 @@ export async function fetchDarkFeedVictims(): Promise<number> {
     }
 
     log.debug(`Processed ${count} DarkFeed.io victims`);
-    await storage.updateFeedLastFetched("DarkFeed.io");
+    await withDbRetry(() => storage.updateFeedLastFetched("DarkFeed.io"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -5102,7 +5128,7 @@ export async function fetchRansomwareIOCRepos(): Promise<number> {
     }
 
     log.debug(`Processed ${totalCount} ransomware IOCs from GitHub repos`);
-    await storage.updateFeedLastFetched("Ransomware IOC Repos");
+    await withDbRetry(() => storage.updateFeedLastFetched("Ransomware IOC Repos"), "updateFeed");
     return totalCount;
   } catch (error) {
     logScraperError("Feed", error);
@@ -5139,7 +5165,7 @@ export async function fetchFeodoRansomware(): Promise<number> {
     }
 
     log.debug(`Processed ${count} ransomware-linked Feodo C2 IPs`);
-    await storage.updateFeedLastFetched("Feodo Ransomware");
+    await withDbRetry(() => storage.updateFeedLastFetched("Feodo Ransomware"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -5221,7 +5247,7 @@ export async function fetchRansomWatchExtended(): Promise<number> {
     }
 
     log.debug(`RansomWatch extended: processed ${totalCount} posts with enhanced group profiles`);
-    await storage.updateFeedLastFetched("RansomWatch Extended");
+    await withDbRetry(() => storage.updateFeedLastFetched("RansomWatch Extended"), "updateFeed");
     return totalCount;
   } catch (error) {
     logScraperError("Feed", error);
@@ -5469,7 +5495,7 @@ export async function fetchExploitDB(): Promise<number> {
       }
     }
     if (count > 0) log.info(`Exploit-DB: enriched ${count} CVEs with exploit availability`);
-    await storage.updateFeedLastFetched("Exploit-DB CSV");
+    await withDbRetry(() => storage.updateFeedLastFetched("Exploit-DB CSV"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Exploit-DB", error);
@@ -5497,7 +5523,7 @@ export async function fetchInTheWild(): Promise<number> {
       } catch { /* CVE may not exist yet */ }
     }
     if (count > 0) log.info(`InTheWild: flagged ${count} CVEs as actively exploited`);
-    await storage.updateFeedLastFetched("InTheWild.io");
+    await withDbRetry(() => storage.updateFeedLastFetched("InTheWild.io"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("InTheWild", error);
@@ -5524,7 +5550,7 @@ export async function fetchTrickestPoC(): Promise<number> {
       } catch { /* CVE may not exist yet */ }
     }
     if (count > 0) log.info(`Trickest PoC: marked ${count} CVEs with PoC availability`);
-    await storage.updateFeedLastFetched("Trickest CVE PoC");
+    await withDbRetry(() => storage.updateFeedLastFetched("Trickest CVE PoC"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Trickest PoC", error);
@@ -5558,7 +5584,7 @@ export async function fetchNucleiTemplatesCVE(): Promise<number> {
       } catch { /* CVE may not exist yet */ }
     }
     if (count > 0) log.info(`Nuclei Templates: enriched ${count} CVEs with detection template availability`);
-    await storage.updateFeedLastFetched("Nuclei Templates CVE");
+    await withDbRetry(() => storage.updateFeedLastFetched("Nuclei Templates CVE"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Nuclei Templates", error);
@@ -5593,7 +5619,7 @@ export async function fetchVulnCheckKEV(): Promise<number> {
       } catch { /* CVE may not exist yet */ }
     }
     if (count > 0) log.info(`VulnCheck KEV: enriched ${count} CVEs with initial access data`);
-    await storage.updateFeedLastFetched("VulnCheck KEV");
+    await withDbRetry(() => storage.updateFeedLastFetched("VulnCheck KEV"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("VulnCheck KEV", error);
@@ -5630,7 +5656,7 @@ export async function fetchMetasploitModules(): Promise<number> {
       if (count >= 2000) break;
     }
     if (count > 0) log.info(`Metasploit: enriched ${count} CVEs with weaponized module data`);
-    await storage.updateFeedLastFetched("Metasploit Modules");
+    await withDbRetry(() => storage.updateFeedLastFetched("Metasploit Modules"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Metasploit Modules", error);
@@ -6113,7 +6139,7 @@ export async function fetchHoneyDB(): Promise<number> {
     }
     
     log.debug(`Processed ${count} honeypot attacker IPs`);
-    await storage.updateFeedLastFetched("HoneyDB");
+    await withDbRetry(() => storage.updateFeedLastFetched("HoneyDB"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -6183,7 +6209,7 @@ export async function fetchAbuseIPDB(): Promise<number> {
     }
     
     log.debug(`Processed ${count} reported abusive IPs`);
-    await storage.updateFeedLastFetched("AbuseIPDB");
+    await withDbRetry(() => storage.updateFeedLastFetched("AbuseIPDB"), "updateFeed");
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -6394,7 +6420,7 @@ export async function scrapeEpssScores(): Promise<number> {
     } else {
       log.debug("EPSS bulk scraper: no matching CVEs found to update");
     }
-    await storage.updateFeedLastFetched("EPSS Bulk");
+    await withDbRetry(() => storage.updateFeedLastFetched("EPSS Bulk"), "updateFeed");
     return updated;
   } catch (error) {
     logScraperError("EPSS Bulk", error);

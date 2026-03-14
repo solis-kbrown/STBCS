@@ -14,11 +14,11 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 const pool = new Pool({
   connectionString: connStr,
-  max: IS_PRODUCTION ? 30 : 20,
-  min: IS_PRODUCTION ? 5 : 2,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 30000,
-  statement_timeout: 90000,
+  max: IS_PRODUCTION ? 15 : 10,
+  min: IS_PRODUCTION ? 2 : 1,
+  idleTimeoutMillis: 15000,
+  connectionTimeoutMillis: 15000,
+  statement_timeout: 60000,
   keepAlive: true,
   keepAliveInitialDelayMillis: 10000,
   allowExitOnIdle: false,
