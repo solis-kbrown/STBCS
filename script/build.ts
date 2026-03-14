@@ -107,6 +107,9 @@ async function buildAll() {
 
   console.log("writing launcher...");
   await writeFile("dist/start.js", LAUNCHER_CODE, "utf-8");
+
+  const CJS_WRAPPER = `import('./start.js').catch(e => { console.error('Failed to start:', e); process.exit(1); });\n`;
+  await writeFile("dist/index.cjs", CJS_WRAPPER, "utf-8");
 }
 
 buildAll().catch((err) => {
