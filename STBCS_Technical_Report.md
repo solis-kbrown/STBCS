@@ -605,30 +605,30 @@ The STBCS database comprises 35+ PostgreSQL tables organized into functional dom
 ## Why STBCS for Your Business
 
 ### The Problem
-- **82% of ransomware attacks target businesses with fewer than 1,000 employees**
-- SMBs lack the budget for enterprise SIEM platforms ($50K–$500K/year)
+- SMBs are disproportionately targeted by ransomware and cyber attacks
+- SMBs typically lack the budget for enterprise SIEM platforms
 - Most SMBs have zero dedicated security staff
 - Threat intelligence is fragmented across dozens of disconnected free tools
-- Compliance requirements are growing, but expertise isn't
+- Compliance requirements are growing, but in-house expertise isn't
 
 ### The STBCS Solution
 - **One platform** replacing 10+ point solutions
-- **133 threat feeds** aggregated and correlated automatically
+- **134 built-in threat feeds** aggregated and correlated automatically (plus 9 optional API-key integrations)
 - **Professional services** available when you need expert hands, not just dashboards
 - **Compliance-ready** with built-in NIST, CIS, and ISO mapping
 - **Enterprise features** at SMB prices: $0/month for core intelligence, $24.99/month for full Pro access
 - **No infrastructure to manage** — fully hosted, always-on, continuously updated
 
-### ROI Snapshot
+### Value Comparison
 
-| Without STBCS | With STBCS |
-|---------------|------------|
+| Traditional Approach | With STBCS |
+|---------------------|------------|
 | 10+ browser tabs of free threat feeds | 1 unified dashboard |
 | Manual CVE tracking in spreadsheets | Automated CVE monitoring with EPSS prioritization |
 | No ransomware visibility | Real-time group tracking with victim correlation |
-| $5,000+/year for basic uptime monitoring | Included in Supporter tier ($89.94/year) |
-| $15,000+/year for a SIEM/TI platform | Full Pro access for $249.95/year |
-| $50,000+/year for compliance consulting | Built-in NIST/CIS/ISO mapping + professional services |
+| Separate uptime monitoring service | Included in Supporter tier ($74.95/year) |
+| Separate threat intelligence platform | Full Pro access for $249.95/year |
+| External compliance consulting | Built-in NIST/CIS/ISO mapping + professional services |
 | No incident response capability | Expert IR team on standby |
 
 ---
