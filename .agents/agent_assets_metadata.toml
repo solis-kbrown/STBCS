@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "ZwksRbLIoac-Mcvt3H066"
+uri = "file://STBCS_Technical_Report.md"
+type = "text"
+title = "STBCS Technical & Executive Report"
