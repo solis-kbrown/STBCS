@@ -5425,6 +5425,45 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "Feodo Ransomware", url: "https://feodotracker.abuse.ch/downloads/ipblocklist.json", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Feodo Tracker ransomware-linked C2 infrastructure" },
     { name: "RansomWatch Extended", url: "https://github.com/joshhighet/ransomwatch", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "Extended RansomWatch data with full historical posts and enhanced group profiles" },
 
+    // 2026 Expansion — Government & National CERTs
+    { name: "JPCERT/CC", url: "https://www.jpcert.or.jp/english/rss/jpcert-en.rdf", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Japan CERT Coordination Center security advisories" },
+    { name: "ACSC Australia", url: "https://www.cyber.gov.au/about-us/view-all-content/alerts-and-advisories/rss.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Australian Cyber Security Centre advisories" },
+    { name: "CCCS Canada", url: "https://www.cyber.gc.ca/api/cccs/rss?lang=en", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Canadian Centre for Cyber Security alerts" },
+    { name: "ENISA", url: "https://www.enisa.europa.eu/publications/rss", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "EU Agency for Cybersecurity publications and threat landscape reports" },
+    { name: "BSI Germany", url: "https://www.bsi.bund.de/SiteGlobals/Functions/RSSFeed/RSSNewsfeed/RSSNewsfeed_en.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "German Federal Office for Information Security advisories" },
+    { name: "CERT-FR", url: "https://www.cert.ssi.gouv.fr/feed/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "French national CERT security advisories" },
+    { name: "CERT-In India", url: "https://www.cert-in.org.in/Rss.jsp", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Indian Computer Emergency Response Team advisories" },
+    { name: "SingCERT", url: "https://www.csa.gov.sg/singcert/rss/alerts", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Singapore Cyber Security Agency alerts" },
+
+    // 2026 Expansion — Supply Chain & Open Source Security
+    { name: "OSV.dev", url: "https://osv.dev", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "Google OSV open source vulnerability database covering npm, PyPI, Go, crates.io, and more" },
+    { name: "Snyk Vuln DB", url: "https://security.snyk.io/vuln", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "Snyk open source vulnerability database with fix guidance" },
+    { name: "RustSec Advisory", url: "https://raw.githubusercontent.com/rustsec/advisory-db/main/SUMMARY.md", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "Rust ecosystem security advisories" },
+
+    // 2026 Expansion — Ransomware & Dark Web Enrichment
+    { name: "No More Ransom", url: "https://www.nomoreransom.org/en/index.html", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "Europol ransomware decryption tools and prevention" },
+    { name: "ID Ransomware", url: "https://id-ransomware.malwarehunterteam.com/", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "Ransomware variant identification service" },
+
+    // 2026 Expansion — Network & BGP Intelligence
+    { name: "BGP Ranking", url: "https://bgpranking.circl.lu/", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "ASN reputation ranking based on malicious activity" },
+    { name: "InQuest Labs IOC", url: "https://labs.inquest.net/iocdb", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "InQuest Labs aggregated IOC database from threat research" },
+    { name: "InQuest Labs DFI", url: "https://labs.inquest.net/dfi", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "Deep file inspection results with malware classification" },
+
+    // 2026 Expansion — DNS & Domain Intelligence
+    { name: "DNStwist Phishing", url: "https://raw.githubusercontent.com/elceef/dnstwist/master/dictionaries/common_tlds.dict", feedType: "url", updateFrequency: "daily", requiresProTier: false, description: "Domain typosquatting and phishing detection patterns" },
+    { name: "CertStream", url: "https://certstream.calidog.io/", feedType: "url", updateFrequency: "realtime", requiresProTier: false, description: "Real-time certificate transparency log monitoring for phishing detection" },
+
+    // 2026 Expansion — Threat Research & Intelligence Blogs
+    { name: "Securelist (Kaspersky)", url: "https://securelist.com/feed/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Kaspersky Global Research & Analysis Team threat reports" },
+    { name: "Elastic Security Labs", url: "https://www.elastic.co/security-labs/rss/feed.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Elastic threat research, malware analysis, and detection rules" },
+    { name: "Qualys ThreatPROTECT", url: "https://blog.qualys.com/feed", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Qualys vulnerability research and zero-day analysis" },
+    { name: "Rapid7 Blog", url: "https://blog.rapid7.com/rss/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Rapid7 threat intelligence and vulnerability research" },
+    { name: "Fortinet FortiGuard", url: "https://www.fortinet.com/blog/threat-research.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Fortinet FortiGuard Labs threat research" },
+    { name: "ZDI Advisories", url: "https://www.zerodayinitiative.com/rss/published/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Zero Day Initiative published vulnerability advisories" },
+    { name: "SANS ISC Diary", url: "https://isc.sans.edu/rssfeed.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "SANS Internet Storm Center daily security diary" },
+    { name: "Wordfence Blog", url: "https://www.wordfence.com/blog/feed/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "WordPress security research and vulnerability disclosures" },
+    { name: "CISA ICS-CERT", url: "https://www.cisa.gov/news-events/ics-advisories/all.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "CISA Industrial Control Systems advisories for OT/ICS environments" },
+
     { name: "AbuseIPDB", url: "https://api.abuseipdb.com/api/v2/blacklist", feedType: "ip", updateFrequency: "daily", requiresProTier: true, description: "1,000 queries/day FREE - crowdsourced IP reputation blacklist" },
   ];
   

@@ -185,7 +185,7 @@ export default function ApiDocsPage() {
             </div>
           </div>
           <p className="text-zinc-400 text-sm leading-relaxed max-w-2xl">
-            Access real-time threat intelligence data from 130+ sources programmatically. 
+            Access real-time threat intelligence data from 160+ sources programmatically. 
             Our REST API provides CVEs, ransomware incidents, malicious IPs/URLs, CISA KEV data, and IOC lookups.
           </p>
         </div>

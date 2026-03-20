@@ -322,7 +322,7 @@ function SecurityPostureWidget() {
 }
 
 export default function Dashboard() {
-  useDocumentTitle("STB Cybersecurity | Real-Time Threat Intelligence for SMBs", "Track ransomware, CVEs, and malicious IPs across 130+ live feeds. Get 24/7 incident response, ransomware recovery, and threat hunting for your business.");
+  useDocumentTitle("STB Cybersecurity | Real-Time Threat Intelligence for SMBs", "Track ransomware, CVEs, and malicious IPs across 160+ live feeds. Get 24/7 incident response, ransomware recovery, and threat hunting for your business.");
   const { data: stats, isLoading: statsLoading } = useStats();
   const { data: cvesData, isLoading: cvesLoading } = useCves(5);
   const { data: ransomwareData, isLoading: ransomwareLoading } = useRansomware(5);
@@ -385,7 +385,7 @@ export default function Dashboard() {
               KNOW THE THREAT <span className="text-primary text-shimmer">BEFORE IT HITS</span>
             </h1>
             <p className="text-muted-foreground text-sm sm:text-lg mb-3 sm:mb-6 hidden sm:block">
-              130+ live threat feeds. Ransomware tracking. CVE monitoring. When your business faces an attack, our incident response team is one call away.
+              160+ live threat feeds. Ransomware tracking. CVE monitoring. When your business faces an attack, our incident response team is one call away.
             </p>
             <div className="flex gap-2 sm:gap-4">
               <Button className="bg-primary hover:bg-primary/90 text-white font-bold btn-press" data-testid="button-view-incidents" asChild>
@@ -767,7 +767,7 @@ export default function Dashboard() {
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             {[
               { href: "/tools", label: "Security Tools", icon: Wrench, desc: "IP lookup, port scan & more" },
-              { href: "/search?tab=ioc", label: "IOC Lookup", icon: Scan, desc: "Search 130+ threat feeds" },
+              { href: "/search?tab=ioc", label: "IOC Lookup", icon: Scan, desc: "Search 160+ threat feeds" },
               { href: "/risk-score", label: "Risk Score", icon: ShieldCheck, desc: "Free cyber risk assessment" },
               { href: "/groups", label: "Threat Actors", icon: Users, desc: "Ransomware & APT profiles" },
               { href: "/breaches", label: "Breach Database", icon: Database, desc: "Known data breaches" },
@@ -939,8 +939,8 @@ export default function Dashboard() {
                   </h3>
                   <div className="space-y-3">
                     {[
-                      { icon: Clock, text: "15-minute refresh cycles across all 130+ threat feeds", highlight: "15 min" },
-                      { icon: Shield, text: "Automated IOC correlation across multiple intelligence sources", highlight: "130+" },
+                      { icon: Clock, text: "15-minute refresh cycles across all 160+ threat feeds", highlight: "15 min" },
+                      { icon: Shield, text: "Automated IOC correlation across multiple intelligence sources", highlight: "160+" },
                       { icon: AlertTriangle, text: "Real-time alerts for critical vulnerabilities affecting your stack", highlight: "Real-time" },
                       { icon: Globe, text: "Dark web monitoring for leaked credentials and data exposure", highlight: "24/7" },
                     ].map((item, i) => (

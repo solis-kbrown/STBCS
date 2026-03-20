@@ -132,12 +132,12 @@ export default function ThreatFeedsTab() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <p className="text-muted-foreground">
-            Malicious IPs, phishing URLs, and CISA Known Exploited Vulnerabilities pulled from 130+ sources every 15 minutes.
+            Malicious IPs, phishing URLs, and CISA Known Exploited Vulnerabilities pulled from 160+ sources every 15 minutes.
           </p>
         </div>
         <Badge className="bg-green-600/20 text-green-400 border-green-500/50 px-4 py-2" data-testid="badge-live-status">
           <span className="w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
-          130+ FEEDS ACTIVE
+          160+ FEEDS ACTIVE
         </Badge>
       </div>
 

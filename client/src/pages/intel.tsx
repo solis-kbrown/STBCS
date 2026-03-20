@@ -19,7 +19,7 @@ export default function IntelPage() {
       : "Threat Intelligence Feeds | STB Cybersecurity",
     activeTab === "news"
       ? "Curated cybersecurity news, threat intelligence reports, policy updates, and industry analysis from trusted security sources worldwide."
-      : "Real-time malicious IPs, phishing URLs, CISA KEV, and threat indicators from 130+ feeds including SANS DShield, Feodo Tracker, and more."
+      : "Real-time malicious IPs, phishing URLs, CISA KEV, and threat indicators from 160+ feeds including SANS DShield, Feodo Tracker, and more."
   );
 
   useEffect(() => {
@@ -40,7 +40,7 @@ export default function IntelPage() {
       <div className="space-y-8 animate-in fade-in duration-500">
         <div className="max-w-2xl">
           <h1 className="text-3xl font-display font-bold text-white mb-2">Intel & Feeds</h1>
-          <p className="text-muted-foreground">Curated cybersecurity news and live threat intelligence data from 130+ sources, updated continuously.</p>
+          <p className="text-muted-foreground">Curated cybersecurity news and live threat intelligence data from 160+ sources, updated continuously.</p>
         </div>
 
         <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-6">

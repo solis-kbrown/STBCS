@@ -169,7 +169,7 @@ function STBSyncPage() {
               STB-Sync
             </h1>
             <p className="text-lg text-zinc-400 max-w-2xl mb-6" data-testid="text-page-description">
-              Dynamic Firewall Block Lists — automatically defend your perimeter with real-time threat intelligence from 130+ feeds.
+              Dynamic Firewall Block Lists — automatically defend your perimeter with real-time threat intelligence from 160+ feeds.
             </p>
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-2xl">
@@ -177,7 +177,7 @@ function STBSyncPage() {
                 { label: "Threat IPs", value: syncStats?.totalIps?.toLocaleString() || "—", icon: Server },
                 { label: "Malicious Domains", value: syncStats?.totalDomains?.toLocaleString() || "—", icon: Globe },
                 { label: "Update Frequency", value: "5 min", icon: RefreshCw },
-                { label: "Feed Sources", value: "130+", icon: Activity },
+                { label: "Feed Sources", value: "160+", icon: Activity },
               ].map((stat) => (
                 <div key={stat.label} className="bg-zinc-900/60 border border-zinc-800/50 rounded-lg p-3 text-center" data-testid={`stat-${stat.label.toLowerCase().replace(/\s/g, "-")}`}>
                   <stat.icon className="h-4 w-4 text-orange-400 mx-auto mb-1.5" />
@@ -217,7 +217,7 @@ function STBSyncPage() {
                     </p>
                     <div className="grid sm:grid-cols-3 gap-3 mb-6">
                       {[
-                        { icon: Zap, text: "Auto-updating block lists from 130+ threat feeds" },
+                        { icon: Zap, text: "Auto-updating block lists from 160+ threat feeds" },
                         { icon: Shield, text: "Compatible with Palo Alto, pfSense, Fortinet, SonicWall" },
                         { icon: Clock, text: "5-minute refresh intervals for real-time protection" },
                       ].map((feature) => (

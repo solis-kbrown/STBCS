@@ -41,11 +41,11 @@ const PAID_TIERS = [
     icon: Coffee,
     name: "Supporter",
     tagline: "Back our mission and unlock monitoring",
-    monthlyPrice: "$7.49",
-    monthlyOriginal: "$14.99",
-    yearlyPrice: "$74.95",
-    yearlyOriginal: "$149.90",
-    discount: "50% OFF",
+    monthlyPrice: "$14.99",
+    monthlyOriginal: null,
+    yearlyPrice: "$149.90",
+    yearlyOriginal: null,
+    discount: null,
     color: "from-zinc-800/50 to-zinc-900/50",
     borderColor: "border-zinc-500",
     accentColor: "text-blue-400",
@@ -58,11 +58,11 @@ const PAID_TIERS = [
     icon: Rocket,
     name: "Pro",
     tagline: "Full threat intelligence for security professionals",
-    monthlyPrice: "$24.99",
-    monthlyOriginal: "$49.99",
-    yearlyPrice: "$249.95",
-    yearlyOriginal: "$499.90",
-    discount: "50% OFF",
+    monthlyPrice: "$49.99",
+    monthlyOriginal: null,
+    yearlyPrice: "$499.90",
+    yearlyOriginal: null,
+    discount: null,
     popular: true,
     color: "from-orange-500/20 to-orange-600/10",
     borderColor: "border-orange-500/50",
@@ -76,11 +76,11 @@ const PAID_TIERS = [
     icon: Building2,
     name: "Business",
     tagline: "Enterprise-grade security for teams and MSPs",
-    monthlyPrice: "$99.99",
-    monthlyOriginal: "$199.99",
-    yearlyPrice: "$999.95",
-    yearlyOriginal: "$1,999.90",
-    discount: "50% OFF",
+    monthlyPrice: "$199.99",
+    monthlyOriginal: null,
+    yearlyPrice: "$1,999.90",
+    yearlyOriginal: null,
+    discount: null,
     color: "from-purple-500/10 to-zinc-900/50",
     borderColor: "border-purple-500/30",
     accentColor: "text-purple-400",
@@ -93,11 +93,11 @@ const PAID_TIERS = [
     icon: Crown,
     name: "Unlimited",
     tagline: "No limits, no restrictions, full platform access",
-    monthlyPrice: "$249.99",
-    monthlyOriginal: "$499.99",
-    yearlyPrice: "$2,499.95",
-    yearlyOriginal: "$4,999.90",
-    discount: "50% OFF",
+    monthlyPrice: "$499.99",
+    monthlyOriginal: null,
+    yearlyPrice: "$4,999.90",
+    yearlyOriginal: null,
+    discount: null,
     color: "from-yellow-500/10 to-amber-600/5",
     borderColor: "border-yellow-500/40",
     accentColor: "text-yellow-400",
@@ -132,7 +132,7 @@ const FEATURE_CATEGORIES: FeatureCategory[] = [
     icon: Eye,
     rows: [
       { label: "Real-time threat dashboard", free: true, supporter: true, pro: true, business: true, unlimited: true },
-      { label: "130+ threat intelligence feeds", free: true, supporter: true, pro: true, business: true, unlimited: true },
+      { label: "160+ threat intelligence feeds", free: true, supporter: true, pro: true, business: true, unlimited: true },
       { label: "Ransomware group tracker", free: true, supporter: true, pro: true, business: true, unlimited: true },
       { label: "CVE & exploit database", free: true, supporter: true, pro: true, business: true, unlimited: true },
       { label: "Data breach database", free: true, supporter: true, pro: true, business: true, unlimited: true },
@@ -266,7 +266,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Is there a free trial?",
-    a: "We don't offer traditional free trials because our Free tier already gives you access to 20+ security tools, the full threat intelligence dashboard, and 130+ data feeds — permanently, no credit card required. Upgrade when you're ready for monitoring, exports, and advanced tools.",
+    a: "We don't offer traditional free trials because our Free tier already gives you access to 20+ security tools, the full threat intelligence dashboard, and 160+ data feeds — permanently, no credit card required. Upgrade when you're ready for monitoring, exports, and advanced tools.",
   },
   {
     q: "How does annual billing work?",
@@ -285,8 +285,8 @@ const FAQ_ITEMS = [
     a: "Yes. Contact our team at info@stbcybersecurity.com with details about your organization. We offer special pricing for verified nonprofits, educational institutions, and government agencies.",
   },
   {
-    q: "What's included in the 50% off Grand Opening Sale?",
-    a: "Every paid plan is currently 50% off during our grand opening. The discounted prices you see are the prices you'll lock in for as long as you maintain your subscription. This applies to both monthly and annual billing.",
+    q: "Do you offer volume or team discounts?",
+    a: "Yes. Contact our sales team for custom pricing on multi-seat deployments, MSP partnerships, and enterprise agreements. We also offer special pricing for verified nonprofits, educational institutions, and government agencies.",
   },
 ];
 
@@ -308,7 +308,7 @@ function FeatureCell({ value }: { value: FeatureValue }) {
 export default function PricingPage() {
   useDocumentTitle(
     "Plans & Pricing | STB Cybersecurity — Threat Intelligence for Every Budget",
-    "Compare Free, Supporter, Pro, Business, and Unlimited plans. Uptime monitoring, dark web scans, API access, advanced security tools, and more. 50% off Grand Opening Sale."
+    "Compare Free, Supporter, Pro, Business, and Unlimited plans. Uptime monitoring, dark web scans, API access, advanced security tools, and more."
   );
   const { toast } = useToast();
   const [, navigate] = useLocation();
@@ -421,24 +421,12 @@ export default function PricingPage() {
       <div className="space-y-12 page-transition pb-12">
 
         <AnimatedSection animation="fade-down">
-          <div className="bg-gradient-to-r from-green-500/20 via-green-600/30 to-green-500/20 border border-green-500/50 rounded-xl p-4 text-center">
-            <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Badge className="bg-green-500 text-white text-sm px-3 py-1 animate-pulse" data-testid="badge-sale">
-                GRAND OPENING SALE
-              </Badge>
-              <span className="text-white font-bold text-lg">50% OFF All Memberships</span>
-              <span className="text-green-300 text-sm">Lock in these prices for life</span>
-            </div>
-          </div>
-        </AnimatedSection>
-
-        <AnimatedSection animation="fade-down">
           <div className="text-center space-y-4 max-w-4xl mx-auto">
             <h1 className="text-4xl md:text-5xl font-display font-bold tracking-tight text-white" data-testid="text-pricing-title">
               Security Intelligence Built for Your Budget
             </h1>
             <p className="text-xl text-zinc-400 leading-relaxed max-w-3xl mx-auto">
-              From free threat feeds to unlimited enterprise coverage. Every plan includes access to our real-time threat intelligence dashboard and 130+ data feeds. Upgrade when you need monitoring, exports, and advanced tools.
+              From free threat feeds to unlimited enterprise coverage. Every plan includes access to our real-time threat intelligence dashboard and 160+ data feeds. Upgrade when you need monitoring, exports, and advanced tools.
             </p>
           </div>
         </AnimatedSection>
@@ -487,20 +475,11 @@ export default function PricingPage() {
                       Your Plan
                     </Badge>
                   )}
-                  {tier.discount && !isCurrentPlan && (
-                    <Badge className="absolute -top-3 right-3 bg-green-500 text-white animate-pulse z-10">
-                      {tier.discount}
-                    </Badge>
-                  )}
-
                   <CardHeader className="text-center pb-2 pt-6">
                     <tier.icon className={`h-10 w-10 mx-auto mb-2 ${tier.accentColor}`} aria-hidden="true" />
                     <CardTitle className="text-lg text-white">{tier.name}</CardTitle>
                     <div className="mt-2">
-                      {displayOriginal && (
-                        <span className="text-base text-zinc-500 line-through mr-2">{displayOriginal}</span>
-                      )}
-                      <span className={`text-2xl font-bold ${isUnlimitedTier ? 'text-yellow-400' : tier.name === "Free" ? 'text-green-400' : 'text-green-400'}`}>
+                      <span className={`text-2xl font-bold ${isUnlimitedTier ? 'text-yellow-400' : tier.name === "Free" ? 'text-green-400' : 'text-white'}`}>
                         {displayPrice}
                       </span>
                       {tier.name !== "Free" && <span className="text-zinc-500 text-sm">/{intervalLabel}</span>}
@@ -640,7 +619,7 @@ export default function PricingPage() {
                 <Shield className="h-10 w-10 mx-auto text-orange-400" aria-hidden="true" />
                 <h3 className="font-bold text-white">No Credit Card for Free Tier</h3>
                 <p className="text-sm text-zinc-400">
-                  Sign up and start using 20+ security tools, the threat dashboard, and all 130+ data feeds immediately. No payment info required.
+                  Sign up and start using 20+ security tools, the threat dashboard, and all 160+ data feeds immediately. No payment info required.
                 </p>
               </CardContent>
             </Card>
@@ -714,7 +693,7 @@ export default function PricingPage() {
                 <h3 className="text-lg font-bold text-white">100% Community Funded — Zero Ads, Zero Data Selling</h3>
                 <p className="text-zinc-400 text-sm leading-relaxed">
                   Every scan, every API call, every threat feed costs real money. There are no investors, no ad revenue, and no data harvesting.
-                  Memberships, donations, and partnerships fund everything — hosting, 130+ data feeds, development, and research.
+                  Memberships, donations, and partnerships fund everything — hosting, 160+ data feeds, development, and research.
                 </p>
                 <div className="flex flex-wrap justify-center gap-4 text-xs text-zinc-500 pt-2">
                   <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" /> Hosting & Infrastructure</span>

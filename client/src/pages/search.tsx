@@ -28,8 +28,8 @@ export default function SearchPage() {
       ? "IOC Lookup | STB Cybersecurity"
       : "Global Threat Search | STB Cybersecurity",
     activeTab === 'ioc'
-      ? "Search Indicators of Compromise across 130+ threat intelligence feeds. Check IPs, domains, hashes, URLs, and CVEs against multiple threat databases."
-      : "Search CVEs, ransomware incidents, malicious IPs, phishing URLs, threat actors, and security news. Unified threat intelligence search across 130+ feeds."
+      ? "Search Indicators of Compromise across 160+ threat intelligence feeds. Check IPs, domains, hashes, URLs, and CVEs against multiple threat databases."
+      : "Search CVEs, ransomware incidents, malicious IPs, phishing URLs, threat actors, and security news. Unified threat intelligence search across 160+ feeds."
   );
 
   const handleTabChange = useCallback((value: string) => {

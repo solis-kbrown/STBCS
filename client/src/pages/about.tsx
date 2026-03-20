@@ -1,4 +1,4 @@
-import { Shield, Target, Search, MessageSquare, Phone, Mail, Users, Award, Clock, Globe, TrendingUp, Zap, CheckCircle, Star, Quote, Briefcase } from "lucide-react";
+import { Shield, Target, Search, MessageSquare, Phone, Mail, Users, Award, Clock, Globe, TrendingUp, Zap, CheckCircle, Star, Quote, Briefcase, Rocket, Brain, GraduationCap, Building2 } from "lucide-react";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -40,7 +40,7 @@ const platformFeatures = [
 ];
 
 const stats = [
-  { value: "130+", label: "Threat Intelligence Feeds", icon: Globe },
+  { value: "160+", label: "Threat Intelligence Feeds", icon: Globe },
   { value: "24/7", label: "Emergency Response", icon: Clock },
   { value: "15min", label: "Threat Data Refresh Cycle", icon: Zap },
   { value: "SMB", label: "Focused on Small Business", icon: Users },
@@ -48,7 +48,7 @@ const stats = [
 
 const whyUs = [
   "Real practitioners who handle real incidents every day",
-  "Threat intelligence from 130+ live public and commercial feeds",
+  "Threat intelligence from 160+ live public and commercial feeds",
   "No long-term contracts required for consulting engagements",
   "Free security tools and threat intelligence for everyone",
   "Subscription plans that scale — Supporter, Pro, Business, and Unlimited Everything tiers",
@@ -92,7 +92,7 @@ const consultingHighlights = [
 export default function AboutPage() {
   useDocumentTitle(
     "About Us — Incident Response & Threat Intelligence | STB Cybersecurity",
-    "Meet STB Cybersecurity: incident responders, recovery engineers, and threat hunters protecting SMBs. 130+ live threat feeds, 24/7 IR, ransomware recovery, and security consulting."
+    "Meet STB Cybersecurity: incident responders, recovery engineers, and threat hunters protecting SMBs. 160+ live threat feeds, 24/7 IR, ransomware recovery, and security consulting."
   );
 
   return (
@@ -130,7 +130,7 @@ export default function AboutPage() {
             <h2 className="text-2xl font-bold text-white" data-testid="text-about-mission-title">Our Mission</h2>
             <p className="text-zinc-400 max-w-3xl mx-auto leading-relaxed" data-testid="text-about-mission">
               Fortune 500 companies have dedicated threat intelligence teams. Most small businesses don't.
-              We built STBCS to close that gap. Our platform pulls data from 130+ live threat feeds and pairs it with
+              We built STBCS to close that gap. Our platform pulls data from 160+ live threat feeds and pairs it with
               hands-on consulting from people who handle real incidents every day.
               The goal is simple: give every business the tools and expertise to see threats coming and respond fast.
             </p>
@@ -189,7 +189,7 @@ export default function AboutPage() {
                     </h3>
                     <p className="text-sm text-zinc-400 leading-relaxed">
                       Our free tools let anyone check IP/domain reputation, scan ports, analyze email headers,
-                      check SSL certificates, assess password strength, calculate subnets, search IOCs across 130+ feeds,
+                      check SSL certificates, assess password strength, calculate subnets, search IOCs across 160+ feeds,
                       and generate a cyber risk score. No account required.
                     </p>
                   </div>
@@ -273,6 +273,38 @@ export default function AboutPage() {
               </CardContent>
             </Card>
           </div>
+        </AnimatedSection>
+
+        <AnimatedSection animation="fade-up">
+          <Card className="bg-zinc-900/50 border-zinc-800">
+            <CardContent className="py-8">
+              <h2 className="text-2xl font-bold text-white text-center mb-2" data-testid="text-about-roadmap-title">Public Roadmap</h2>
+              <p className="text-zinc-400 text-center text-sm mb-6 max-w-2xl mx-auto">
+                We're building the most comprehensive threat intelligence platform for SMBs. Here's what's coming next.
+              </p>
+              <div className="grid sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
+                {[
+                  { icon: Brain, title: "AI Threat Scoring", desc: "Machine learning models that prioritize threats by relevance to your specific industry, infrastructure, and tech stack.", status: "In Development" },
+                  { icon: Shield, title: "Managed Detection & Response", desc: "24/7 MDR service with human analysts monitoring your environment, triaging alerts, and responding to incidents in real time.", status: "Q3 2026" },
+                  { icon: GraduationCap, title: "Security Awareness Training", desc: "Interactive training modules, phishing simulations, and compliance-ready reporting for your entire team.", status: "Q4 2026" },
+                  { icon: Building2, title: "Industry-Specific Intel Packs", desc: "Curated threat feeds and dashboards tailored for healthcare, finance, legal, manufacturing, and retail verticals.", status: "2027" },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-start gap-3 p-4 bg-zinc-800/50 rounded-lg border border-zinc-700/50" data-testid={`card-roadmap-${i}`}>
+                    <div className="p-2 bg-orange-500/10 rounded-lg flex-shrink-0">
+                      <item.icon className="h-5 w-5 text-orange-400" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-sm font-bold text-white">{item.title}</h3>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-300 font-medium">{item.status}</span>
+                      </div>
+                      <p className="text-xs text-zinc-400 leading-relaxed">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </AnimatedSection>
 
         <AnimatedSection animation="fade-up">

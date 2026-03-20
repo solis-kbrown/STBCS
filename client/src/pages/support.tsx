@@ -25,11 +25,11 @@ const donationAmounts = [
 const membershipTiers = [
   {
     name: "Supporter",
-    monthlyOriginal: "$14.99",
-    monthlyPrice: "$7.49",
-    yearlyOriginal: "$149.90",
-    yearlyPrice: "$74.95",
-    discount: "50% OFF",
+    monthlyOriginal: null,
+    monthlyPrice: "$14.99",
+    yearlyOriginal: null,
+    yearlyPrice: "$149.90",
+    discount: null,
     description: "Back our mission and keep free security tools available for everyone",
     icon: Coffee,
     stripeName: "Supporter",
@@ -45,11 +45,11 @@ const membershipTiers = [
   },
   {
     name: "Pro",
-    monthlyOriginal: "$49.99",
-    monthlyPrice: "$24.99",
-    yearlyOriginal: "$499.90",
-    yearlyPrice: "$249.95",
-    discount: "50% OFF",
+    monthlyOriginal: null,
+    monthlyPrice: "$49.99",
+    yearlyOriginal: null,
+    yearlyPrice: "$499.90",
+    discount: null,
     description: "Everything you need to monitor threats targeting your business",
     icon: Rocket,
     popular: true,
@@ -71,11 +71,11 @@ const membershipTiers = [
   },
   {
     name: "Business",
-    monthlyOriginal: "$199.99",
-    monthlyPrice: "$99.99",
-    yearlyOriginal: "$1,999.90",
-    yearlyPrice: "$999.95",
-    discount: "50% OFF",
+    monthlyOriginal: null,
+    monthlyPrice: "$199.99",
+    yearlyOriginal: null,
+    yearlyPrice: "$1,999.90",
+    discount: null,
     description: "Threat intelligence built for security teams and managed service providers",
     icon: Building2,
     stripeName: "Business",
@@ -96,11 +96,11 @@ const membershipTiers = [
   },
   {
     name: "Unlimited Everything",
-    monthlyOriginal: "$499.99",
-    monthlyPrice: "$249.99",
-    yearlyOriginal: "$4,999.90",
-    yearlyPrice: "$2,499.95",
-    discount: "50% OFF",
+    monthlyOriginal: null,
+    monthlyPrice: "$499.99",
+    yearlyOriginal: null,
+    yearlyPrice: "$4,999.90",
+    discount: null,
     description: "Full unlimited access to the entire STBCS platform — no limits, no restrictions",
     icon: Crown,
     stripeName: "Unlimited Everything",
@@ -123,7 +123,7 @@ const membershipTiers = [
 ];
 
 export default function SupportPage() {
-  useDocumentTitle("Plans & Pricing | STB Cybersecurity", "Get real-time threat alerts, custom watchlists, and priority incident response. Plans start at $7.49/mo. 50% off during our grand opening.");
+  useDocumentTitle("Plans & Pricing | STB Cybersecurity", "Get real-time threat alerts, custom watchlists, and priority incident response. Plans start at $14.99/mo.");
   const { toast } = useToast();
   const [, navigate] = useLocation();
 
@@ -190,18 +190,6 @@ export default function SupportPage() {
   return (
     <Layout>
       <div className="space-y-8 page-transition">
-
-        <AnimatedSection animation="fade-down">
-          <div className="bg-gradient-to-r from-green-500/20 via-green-600/30 to-green-500/20 border border-green-500/50 rounded-xl p-4 mb-6 text-center">
-            <div className="flex items-center justify-center gap-3 flex-wrap">
-              <Badge className="bg-green-500 text-white text-sm px-3 py-1 animate-pulse">
-                GRAND OPENING SALE
-              </Badge>
-              <span className="text-white font-bold text-lg">50% OFF All Memberships!</span>
-              <span className="text-green-300 text-sm">Limited time offer</span>
-            </div>
-          </div>
-        </AnimatedSection>
 
         <AnimatedSection animation="fade-down">
           <div className="text-center space-y-4">
@@ -517,7 +505,7 @@ export default function SupportPage() {
               <h3 className="text-lg font-bold text-white">100% Community Funded. Zero Ads. Zero Data Selling.</h3>
               <p className="text-zinc-400 text-sm leading-relaxed">
                 Every IP lookup, every threat scan, every API call costs real money to run. There are no investors, no ad revenue, and no data harvesting.
-                Memberships, donations, and partnerships fund the hosting, the 130+ data feeds, the development, and the research. That's it.
+                Memberships, donations, and partnerships fund the hosting, the 160+ data feeds, the development, and the research. That's it.
               </p>
               <div className="flex flex-wrap justify-center gap-4 text-xs text-zinc-500 pt-2">
                 <span className="flex items-center gap-1"><Check className="h-3 w-3 text-orange-400" aria-hidden="true" /> Hosting & Infrastructure</span>
