@@ -24,3 +24,9 @@ id = "2zPCdnvULA-3S9rlfOmYw"
 uri = "file://SETUP_GUIDE.md"
 type = "text"
 title = "STB Cybersecurity — Installation & Setup Guide"
+
+[[outputs]]
+id = "VjEJm4neb_OCkxqszo--i"
+uri = "file://STBCS_v2_Definitive_Release_Notes.md"
+type = "text"
+title = "STBCS v2.0 Definitive Release Notes"
