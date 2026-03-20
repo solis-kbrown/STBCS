@@ -1,5 +1,5 @@
 {
-  "name": "rest-express",
+  "name": "stb-cybersecurity",
   "version": "1.0.0",
   "type": "module",
   "license": "MIT",
@@ -128,5 +128,6 @@
   },
   "optionalDependencies": {
     "bufferutil": "^4.0.8"
-  }
+  },
+  "description": "STB Cybersecurity — Enterprise threat intelligence platform for SMBs"
 }
