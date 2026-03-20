@@ -18,3 +18,9 @@ id = "XIzPnoyY69vUW36-BTHJP"
 uri = "file://STBCS_Vision_Roadmap.pdf"
 type = "pdf"
 title = "STB Cybersecurity — Vision & Roadmap (PDF)"
+
+[[outputs]]
+id = "2zPCdnvULA-3S9rlfOmYw"
+uri = "file://SETUP_GUIDE.md"
+type = "text"
+title = "STB Cybersecurity — Installation & Setup Guide"

@@ -25,23 +25,3 @@ export async function getStripeSecretKey() {
   const { secretKey } = getCredentials();
   return secretKey;
 }
-
-let stripeSync: any = null;
-
-export async function getStripeSync() {
-  if (!stripeSync) {
-    const { StripeSync } = await import('stripe-replit-sync');
-    const secretKey = await getStripeSecretKey();
-
-    const dbUrl = process.env.DATABASE_URL!;
-    const connStr = dbUrl.includes('sslmode=') ? dbUrl : (dbUrl.includes('?') ? `${dbUrl}&sslmode=require&uselibpqcompat=true` : `${dbUrl}?sslmode=require&uselibpqcompat=true`);
-    stripeSync = new StripeSync({
-      poolConfig: {
-        connectionString: connStr,
-        max: 2,
-      },
-      stripeSecretKey: secretKey,
-    });
-  }
-  return stripeSync;
-}

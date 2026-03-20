@@ -523,35 +523,26 @@ async function initStripe() {
     return;
   }
   try {
-    console.log('Initializing Stripe schema...');
-    const { runMigrations } = await import('stripe-replit-sync');
-    await runMigrations({ databaseUrl, schema: 'stripe' } as any);
-    console.log('Stripe schema ready');
-    const { getStripeSync } = await import("./stripeClient");
-    const stripeSync = await getStripeSync();
-    console.log('Setting up managed webhook...');
+    console.log('Initializing Stripe...');
+    const { getUncachableStripeClient } = await import("./stripeClient");
+    const stripe = await getUncachableStripeClient();
+    await stripe.products.list({ limit: 1 });
+    console.log('Stripe connection verified');
+
     const customDomain = process.env.CUSTOM_DOMAIN;
-    const replitDomains = process.env.REPLIT_DOMAINS;
+    const baseUrl = process.env.BASE_URL;
     let webhookBaseUrl: string | null = null;
     if (customDomain) {
       webhookBaseUrl = `https://${customDomain}`;
-    } else if (replitDomains) {
-      webhookBaseUrl = `https://${replitDomains.split(',')[0]}`;
+    } else if (baseUrl) {
+      webhookBaseUrl = baseUrl.replace(/\/+$/, '');
     }
     if (webhookBaseUrl) {
-      const { webhook } = await stripeSync.findOrCreateManagedWebhook(
-        `${webhookBaseUrl}/api/stripe/webhook`
-      );
-      console.log(`Webhook configured: ${webhook?.url || 'pending'}`);
+      console.log(`Webhook URL base: ${webhookBaseUrl}/api/stripe/webhook`);
     } else {
-      console.log('No domain available, skipping webhook configuration');
+      console.log('No CUSTOM_DOMAIN or BASE_URL set, configure webhook URL manually in Stripe Dashboard');
     }
-    console.log('Stripe sync queued for background execution...');
-    setTimeout(() => {
-      stripeSync.syncBackfill()
-        .then(() => console.log('Stripe data synced'))
-        .catch((err: Error) => console.error('Error syncing Stripe data:', err));
-    }, 5000);
+    console.log('Stripe initialization complete');
   } catch (error) {
     console.error('Failed to initialize Stripe:', error);
   }

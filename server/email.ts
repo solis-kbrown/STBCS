@@ -12,42 +12,20 @@ export interface EmailOptions {
   text?: string;
 }
 
-let connectionSettings: any = null;
-
-async function getResendCredentials(): Promise<{ apiKey: string; fromEmail: string }> {
-  const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
-  const xReplitToken = process.env.REPL_IDENTITY 
-    ? 'repl ' + process.env.REPL_IDENTITY 
-    : process.env.WEB_REPL_RENEWAL 
-    ? 'depl ' + process.env.WEB_REPL_RENEWAL 
-    : null;
-
-  if (!xReplitToken || !hostname) {
-    throw new Error('Resend credentials not available');
+function getResendCredentials(): { apiKey: string; fromEmail: string } {
+  const apiKey = process.env.RESEND_API_KEY;
+  if (!apiKey) {
+    throw new Error('RESEND_API_KEY environment variable is required');
   }
 
-  connectionSettings = await fetch(
-    'https://' + hostname + '/api/v2/connection?include_secrets=true&connector_names=resend',
-    {
-      headers: {
-        'Accept': 'application/json',
-        'X_REPLIT_TOKEN': xReplitToken
-      }
-    }
-  ).then(res => res.json()).then(data => data.items?.[0]);
-
-  if (!connectionSettings || !connectionSettings.settings?.api_key) {
-    throw new Error('Resend not connected');
-  }
-  
   return {
-    apiKey: connectionSettings.settings.api_key,
-    fromEmail: connectionSettings.settings.from_email || 'noreply@stbcybersecurity.com'
+    apiKey,
+    fromEmail: process.env.RESEND_FROM_EMAIL || 'noreply@stbcybersecurity.com'
   };
 }
 
-async function getResendClient(): Promise<{ client: Resend; fromEmail: string }> {
-  const { apiKey, fromEmail } = await getResendCredentials();
+function getResendClient(): { client: Resend; fromEmail: string } {
+  const { apiKey, fromEmail } = getResendCredentials();
   return {
     client: new Resend(apiKey),
     fromEmail

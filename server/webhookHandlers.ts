@@ -1,4 +1,4 @@
-import { getStripeSync, getUncachableStripeClient } from './stripeClient';
+import { getUncachableStripeClient } from './stripeClient';
 import { storage } from './storage';
 
 const TIER_PRODUCT_MAP: Record<string, string> = {
@@ -19,31 +19,15 @@ export class WebhookHandlers {
       );
     }
 
-    let syncProcessed = false;
-    try {
-      const sync = await getStripeSync();
-      await sync.processWebhook(payload, signature);
-      syncProcessed = true;
-      console.log('[Stripe] Managed webhook processed successfully');
-    } catch (syncError: any) {
-      console.warn('[Stripe] sync.processWebhook error:', syncError.message);
-    }
-
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-    if (webhookSecret) {
-      try {
-        const stripe = await getUncachableStripeClient();
-        const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
-        await WebhookHandlers.handleEvent(event);
-        syncProcessed = true;
-      } catch (eventError: any) {
-        console.warn('[Stripe] Custom event verification failed:', eventError.message);
-      }
+    if (!webhookSecret) {
+      throw new Error('STRIPE_WEBHOOK_SECRET environment variable is required for webhook verification');
     }
 
-    if (!syncProcessed) {
-      throw new Error('Webhook signature verification failed — event not processed');
-    }
+    const stripe = await getUncachableStripeClient();
+    const event = stripe.webhooks.constructEvent(payload, signature, webhookSecret);
+    await WebhookHandlers.handleEvent(event);
+    console.log('[Stripe] Webhook event processed:', event.type);
   }
 
   static async handleEvent(event: any): Promise<void> {

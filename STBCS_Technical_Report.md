@@ -377,11 +377,11 @@ STBCS uses a freemium model with four paid tiers, all currently offered at **50%
 
 | Component | Detail |
 |-----------|--------|
-| Hosting | Replit VM (always-running) |
+| Hosting | Linux VM / Cloud VM (platform-agnostic) |
 | Domain | stbcybersecurity.com |
-| TLS | Automatic via Replit |
+| TLS | Via reverse proxy (e.g., Nginx, Caddy) or cloud provider |
 | Build Chain | `npm run build` → esbuild → `dist/index.cjs` (CJS wrapper) → `start.js` (launcher) → `index.js` (ESM, ~2.1MB) |
-| Deployment | `deploymentTarget = "vm"` with `build` and `run` commands |
+| Deployment | Standard Node.js process with `build` and `run` commands |
 
 ---
 
@@ -505,7 +505,7 @@ STBCS offers a RESTful API for programmatic access to threat intelligence data. 
 
 ### Stripe Integration
 - 4 subscription products: STBCS Supporter, STBCS Pro, STBCS Business, STBCS Unlimited Everything
-- Managed via `stripe-replit-sync` with direct Stripe API fallback
+- Managed via direct Stripe SDK integration
 - Embedded checkout flow with return handling
 - Webhook processing for subscription lifecycle events
 
