@@ -6,3 +6,9 @@ id = "ZwksRbLIoac-Mcvt3H066"
 uri = "file://STBCS_Technical_Report.md"
 type = "text"
 title = "STBCS Technical & Executive Report"
+
+[[outputs]]
+id = "hla5rCkhcdopmRSIl2K4e"
+uri = "file://STBCS_Technical_Report.pdf"
+type = "pdf"
+title = "STB Cybersecurity — Platform & Technical Report (PDF)"
