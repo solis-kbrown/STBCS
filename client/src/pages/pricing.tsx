@@ -120,6 +120,16 @@ interface FeatureRow {
   unlimited: FeatureValue;
 }
 
+interface StripePrice {
+  id: string;
+  recurring?: { interval: string };
+}
+
+interface StripeProduct {
+  name?: string;
+  prices?: StripePrice[];
+}
+
 interface FeatureCategory {
   name: string;
   icon: typeof Shield;
@@ -363,9 +373,9 @@ export default function PricingPage() {
   const handleSelectPlan = (tier: typeof PAID_TIERS[0]) => {
     if (!isAuthenticated) {
       const products = productsData?.products || [];
-      const product = products.find((p: any) => p.name?.includes(tier.stripeName));
+      const product = products.find((p: StripeProduct) => p.name?.includes(tier.stripeName));
       if (product) {
-        const matchedPrice = product?.prices?.find((p: any) => p.recurring?.interval === billingInterval);
+        const matchedPrice = product?.prices?.find((p: StripePrice) => p.recurring?.interval === billingInterval);
         const price = matchedPrice || product?.prices?.[0];
         if (price?.id) {
           openSignupForPlan(`/checkout?type=subscription&priceId=${encodeURIComponent(price.id)}&tier=${encodeURIComponent(tier.stripeName!)}`);
@@ -385,12 +395,12 @@ export default function PricingPage() {
     }
 
     const products = productsData?.products || [];
-    const product = products.find((p: any) => p.name?.includes(tier.stripeName));
+    const product = products.find((p: StripeProduct) => p.name?.includes(tier.stripeName));
     if (!product) {
       toast({ title: "Plan not found", description: "Please try again or visit our support page.", variant: "destructive" });
       return;
     }
-    const matchedPrice = product?.prices?.find((p: any) => p.recurring?.interval === billingInterval);
+    const matchedPrice = product?.prices?.find((p: StripePrice) => p.recurring?.interval === billingInterval);
     const price = matchedPrice || product?.prices?.[0];
     if (!price?.id) {
       toast({ title: "Price not available", description: "Please refresh and try again.", variant: "destructive" });

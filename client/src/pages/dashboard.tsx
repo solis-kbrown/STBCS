@@ -7,6 +7,7 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import type { LucideIcon } from "lucide-react";
 import { ArrowUpRight, Shield, Skull, Activity, Lock, ExternalLink, RefreshCw, Globe, Link2, AlertTriangle, Wrench, Scan, ShieldCheck, Users, Database, Factory, ChevronRight, Search, FileSearch, BarChart3, Radio, TrendingUp, Zap, Eye, Clock, MonitorCheck, CheckCircle2, XCircle, Share2, Twitter, Linkedin, Mail, Copy } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -33,7 +34,7 @@ const iconColorMap: Record<string, string> = {
 };
 
 function CountUpStat({ value, label, icon: Icon, color, change, index }: {
-  value: number; label: string; icon: any; color: string; change: string; index: number;
+  value: number; label: string; icon: LucideIcon; color: string; change: string; index: number;
 }) {
   const { ref, isInView } = useInView();
   const { count, start } = useCountUp(value, 1200, true);
