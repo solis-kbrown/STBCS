@@ -12,13 +12,13 @@
 
 STB Cybersecurity (STBCS) is a comprehensive, production-grade cybersecurity intelligence platform purpose-built for small and medium-sized businesses. The platform delivers enterprise-level threat visibility, security tooling, and professional services at accessible price points — eliminating the need for expensive SIEM deployments or dedicated SOC teams.
 
-STBCS continuously aggregates data from **133 active threat intelligence feeds** across 8 categories, processes it through automated enrichment pipelines, and presents actionable intelligence through an intuitive, real-time dashboard. The platform combines passive threat monitoring with active security tools — including network scanners, file analysis, SSL inspection, DNS security analysis, and more — giving security teams and business owners a single pane of glass for their entire threat landscape.
+STBCS continuously aggregates data from **134 built-in threat intelligence feeds** (plus 9 optional API-key integrations) across 8 categories, processes it through automated enrichment pipelines, and presents actionable intelligence through an intuitive, real-time dashboard. The platform combines passive threat monitoring with active security tools — including network scanners, file analysis, SSL inspection, DNS security analysis, and more — giving security teams and business owners a single pane of glass for their entire threat landscape.
 
 Beyond tooling, STBCS offers hands-on professional services: **Cybersecurity Consulting, Incident Response, Ransomware Recovery & Restoration, and Threat Hunting** — delivered by experienced professionals who understand the unique constraints of SMB environments.
 
 ### Key Differentiators
 
-- **133 live threat feeds** refreshed every 15 minutes — no API keys required for core coverage
+- **134 built-in threat feeds** refreshed every 15 minutes — no API keys required for core coverage, plus 9 optional API-key integrations for enhanced enrichment
 - **18+ integrated security features** spanning threat intelligence, active scanning, compliance mapping, and community knowledge sharing
 - **Professional services** bundled alongside the platform — not just data, but expert guidance when it matters most
 - **SMB-first pricing** starting at $0/month for core intelligence, with paid tiers from $7.49/month
@@ -389,7 +389,7 @@ STBCS uses a freemium model with four paid tiers, all currently offered at **50%
 
 ### Feed Categories & Coverage
 
-STBCS aggregates data from **133 active threat intelligence feeds** (134 total, 1 gated behind API key) organized into 8 categories. All feeds refresh on a 15-minute cycle.
+STBCS aggregates data from **134 built-in threat intelligence feeds** organized into 8 categories, with 9 additional optional API-key integrations for enhanced enrichment. The number of active feeds depends on which optional API keys are configured — all 134 core feeds run without any API keys. All feeds refresh on a 15-minute cycle.
 
 #### Category 1: Core Vulnerability Intelligence (5 feeds)
 NVD API, CISA Known Exploited Vulnerabilities, CIRCL CVE, GitHub Security Advisories (GHSA), FIRST.org EPSS API
@@ -421,7 +421,7 @@ AlienVault OTX, VirusTotal, Hybrid Analysis, GreyNoise, CrowdSec, Shodan, Pulsed
 ### Data Processing Pipeline
 
 ```
-External Feeds (133 sources)
+External Feeds (134 built-in + up to 9 API-key integrations)
     │
     ▼
 Scraper Engine (15-min cycle)
@@ -449,7 +449,7 @@ STBCS runs four autonomous background services that operate continuously without
 
 ### 1. Threat Intelligence Scrapers (`scrapers.ts`)
 - **Cycle:** Every 15 minutes
-- **Coverage:** 133 active feeds across 8 categories
+- **Coverage:** 134 built-in feeds across 8 categories (plus up to 9 additional API-key integrations when configured)
 - **Resilience:** All database operations wrapped with `withDbRetry`; transient errors (connection timeout, pool exhaustion, connection reset) are classified by `isTransientDbError()` and retried up to 2 times with exponential backoff (2s, 4s)
 - **Deduplication:** In-memory tracking + database unique constraints prevent duplicate records
 
@@ -495,13 +495,13 @@ STBCS offers a RESTful API for programmatic access to threat intelligence data. 
 
 **Rate Limits by Tier:**
 
-| Tier | Requests/Minute | Daily Quota | Live Lookups/Day |
-|------|-----------------|-------------|-------------------|
-| Free | 10 | - | - |
-| Supporter | 10 | - | - |
-| Pro | 60 | 1,000 | 50 |
-| Business | 120 | 1,000 | 50 |
-| Unlimited | 120 | 1,000 | 50 |
+| Tier | API Keys | Requests/Minute | Daily Quota | Live Lookups/Day |
+|------|----------|-----------------|-------------|-------------------|
+| Free | - | 10 (web) | - | - |
+| Supporter | - | 10 (web) | - | - |
+| Pro | 1 | 60 | 1,000 | 50 |
+| Business | 5 | 120 | 10,000 | 200 |
+| Unlimited | 10 | 300 | 100,000 | 1,000 |
 
 ### Stripe Integration
 - 4 subscription products: STBCS Supporter, STBCS Pro, STBCS Business, STBCS Unlimited Everything
@@ -542,7 +542,7 @@ STBCS offers a RESTful API for programmatic access to threat intelligence data. 
 - **Security Headers:** Content-Security-Policy, Strict-Transport-Security (HSTS), X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
 - **Rate Limiting:** 6 tiers of rate limiting (general, strict, auth, free tools, pro tools, business tools) with subscription-aware middleware
 - **Input Validation:** Zod schema validation on all API inputs with type-safe error responses
-- **CSRF Protection:** Cookie-based CSRF prevention
+- **Session Security:** Cryptographic token-based sessions with secure cookie attributes (HttpOnly, SameSite)
 - **API Key Security:** Keys are hashed before storage; only the prefix is stored in plaintext for identification
 
 ### Data Privacy & Legal
