@@ -30,7 +30,7 @@ export function serveStatic(app: Express) {
   }));
 
   app.use("/{*path}", (req, res, next) => {
-    if (req.path === '/health' || req.path === '/__repl') {
+    if (req.path === '/health') {
       return next();
     }
     const html = injectMetaTags(baseHtml, req.originalUrl);

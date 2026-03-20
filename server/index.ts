@@ -22,21 +22,14 @@ if (IS_PRODUCTION) {
 }
 
 let seoIndexHtml: string | null = null;
-const launcher = IS_PRODUCTION ? (global as any).__launcher : null;
 
-const httpServer = launcher?.server || createServer((req, res) => {
+const httpServer = createServer((req, res) => {
   const url = req.url || '/';
   const urlPath = url.split('?')[0];
 
   if (urlPath === '/health') {
     res.writeHead(200, { 'Content-Type': 'application/json', 'Connection': 'close' });
     res.end('{"status":"ok"}');
-    return;
-  }
-
-  if (urlPath === '/__repl') {
-    res.writeHead(200, { 'Content-Type': 'text/plain', 'Connection': 'close' });
-    res.end('ok');
     return;
   }
 
@@ -82,20 +75,14 @@ async function initWithRetry(maxRetries = 10) {
   }
 }
 
-if (launcher) {
-  log(`reusing launcher server on port ${port}`);
-  appReady = true;
-  initWithRetry().catch(err => console.error('Init failed:', err));
-} else {
-  httpServer.listen(
-    { port, host: "0.0.0.0", reusePort: true },
-    () => {
-      log(`serving on port ${port}`);
-      appReady = true;
-      initWithRetry().catch(err => console.error('Init failed:', err));
-    },
-  );
-}
+httpServer.listen(
+  { port, host: "0.0.0.0", reusePort: true },
+  () => {
+    log(`serving on port ${port}`);
+    appReady = true;
+    initWithRetry().catch(err => console.error('Init failed:', err));
+  },
+);
 
 async function yieldToEventLoop() {
   return new Promise<void>(resolve => setImmediate(resolve));
@@ -282,11 +269,6 @@ async function initializeApp() {
     res.end('{"status":"ok"}');
   });
 
-  app.get('/__repl', (_req, res) => {
-    res.writeHead(200, { 'Content-Type': 'text/plain', 'Connection': 'close' });
-    res.end('ok');
-  });
-
   app.use((req, res, next) => {
     const host = req.get('host')?.split(':')[0];
     if (host && (SECONDARY_DOMAINS.includes(host) || host === `www.${PRIMARY_DOMAIN}`)) {
@@ -466,7 +448,7 @@ async function initializeApp() {
     const baseHtml = fs.readFileSync(indexPath, "utf-8");
     seoIndexHtml = injectMetaTags(baseHtml, '/');
     app.get('/{*path}', (req, res, next) => {
-      if (req.path === '/health' || req.path === '/__repl') {
+      if (req.path === '/health') {
         return next();
       }
       const html = injectMetaTags(baseHtml, req.originalUrl);
@@ -501,13 +483,6 @@ async function initializeApp() {
   });
 
   expressApp = app;
-
-  if (launcher) {
-    launcher.handler = (req: any, res: any) => {
-      expressApp!(req, res);
-    };
-    launcher.ready = true;
-  }
 
   log("Routes and static serving initialized");
 }

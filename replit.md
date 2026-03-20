@@ -1,7 +1,7 @@
 # STB Cybersecurity (STBCS)
 
 ## Overview
-Comprehensive cybersecurity threat intelligence platform for small and mid-sized businesses (SMBs). Aggregates 134 built-in threat intelligence feeds, provides 18+ security tools, real-time ransomware tracking, and professional security services with Stripe-based subscription tiers.
+Comprehensive cybersecurity threat intelligence platform for small and mid-sized businesses (SMBs). Aggregates 134 built-in threat intelligence feeds, provides 18+ security tools, real-time ransomware tracking, and professional security services with Stripe-based subscription tiers. Fully portable — deployable on any Linux VM, VPS, or cloud provider. See `SETUP.md` for deployment instructions.
 
 ## Architecture
 - **Frontend:** React 19 + TypeScript + Vite + Tailwind CSS + shadcn/ui
@@ -22,6 +22,7 @@ Comprehensive cybersecurity threat intelligence platform for small and mid-sized
 - `server/maintenance.ts` — Maintenance scheduler and admin notifications
 - `client/src/App.tsx` — Frontend routing and page registration
 - `client/src/pages/pricing.tsx` — Subscription tier pricing page
+- `SETUP.md` — Complete deployment and setup guide for any environment
 
 ## Subscription Tiers (50% introductory pricing)
 - **Free:** $0 — Full threat dashboard + all 18 security tools
@@ -49,14 +50,22 @@ Comprehensive cybersecurity threat intelligence platform for small and mid-sized
 - Phone: (855) STB-1987
 
 ## Documents
-- `STBCS_Technical_Report.md` / `.pdf` — Full platform technical report
-- `STBCS_Vision_Roadmap.md` / `.pdf` — Future plans and expansion roadmap
+- `STBCS_Technical_Report.md` / `.pdf` — Full platform technical report (20 pages)
+- `STBCS_Vision_Roadmap.md` / `.pdf` — Future plans and expansion roadmap (10 pages)
 - Both accessible via secure token-protected download at `/report/download?token=<token>`
+- Tokens are defined in `server/routes.ts` (REPORT_TOKENS constant)
 
 ## Environment Variables Required
 - `DATABASE_URL` — PostgreSQL connection string
 - `STRIPE_SECRET_KEY` — Stripe API secret key
+- `STRIPE_PUBLISHABLE_KEY` — Stripe publishable key
 - `STRIPE_WEBHOOK_SECRET` — Stripe webhook signing secret
 - `RESEND_API_KEY` — Resend email API key
-- `RESEND_FROM_EMAIL` — Sender email address
-- Optional: `GREYNOISE_API_KEY`, `CROWDSEC_API_KEY`, `SHODAN_API_KEY`, `PULSEDIVE_API_KEY`, `OTX_API_KEY`, `VIRUSTOTAL_API_KEY`, `HYBRID_ANALYSIS_API_KEY`, `HONEYDB_API_ID`, `HONEYDB_API_KEY`, `ABUSEIPDB_API_KEY`
+- `SESSION_SECRET` — Session cookie signing secret
+- `RESEND_FROM_EMAIL` — Sender email address (optional, defaults to noreply@stbcybersecurity.com)
+- `CUSTOM_DOMAIN` — Production domain (optional)
+- `BASE_URL` — Full base URL (optional)
+- Optional premium feed keys: `GREYNOISE_API_KEY`, `CROWDSEC_API_KEY`, `SHODAN_API_KEY`, `PULSEDIVE_API_KEY`, `OTX_API_KEY`, `VIRUSTOTAL_API_KEY`, `HYBRID_ANALYSIS_API_KEY`, `HONEYDB_API_ID`, `HONEYDB_API_KEY`, `ABUSEIPDB_API_KEY`
+
+## Deployment
+See `SETUP.md` for complete deployment instructions covering local development, production builds, PM2/systemd, Nginx/Caddy reverse proxy, TLS, DNS, Stripe webhooks, and GitHub CI/CD.
