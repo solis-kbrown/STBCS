@@ -67,7 +67,7 @@ async function initWithRetry(maxRetries = 10) {
         await new Promise(r => setTimeout(r, waitSec * 1000));
       } else {
         console.error("App initialization failed after all retries:", err);
-        console.error("Launcher will remain alive for health checks. Scheduling retry in 30s...");
+        console.error("Server will remain alive for health checks. Scheduling retry in 30s...");
         setTimeout(() => { initWithRetry(maxRetries).catch(e => console.error("Re-init failed:", e)); }, 30000);
         return;
       }
