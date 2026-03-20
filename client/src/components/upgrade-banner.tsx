@@ -85,7 +85,7 @@ export default function UpgradeBanner({ context = "general" }: UpgradeBannerProp
                   <Crown className="h-4 w-4 mr-2" /> View Pro Plans
                 </a>
               </Button>
-              <p className="text-[10px] text-zinc-500 text-center">Starting at $7.49/month</p>
+              <p className="text-[10px] text-zinc-500 text-center">Starting at $14.99/month</p>
             </div>
           </div>
         </CardContent>

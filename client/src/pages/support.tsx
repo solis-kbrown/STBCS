@@ -531,7 +531,7 @@ export default function SupportPage() {
                 Be one of the first names on the wall. Early supporters get permanent recognition.
               </p>
               <p className="text-xs text-zinc-500">
-                Start a Supporter plan at $7.49/month and your name appears here.
+                Start a Supporter plan at $14.99/month and your name appears here.
               </p>
             </div>
           </CardContent>
