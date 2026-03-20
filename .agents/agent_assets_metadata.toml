@@ -12,3 +12,9 @@ id = "hla5rCkhcdopmRSIl2K4e"
 uri = "file://STBCS_Technical_Report.pdf"
 type = "pdf"
 title = "STB Cybersecurity — Platform & Technical Report (PDF)"
+
+[[outputs]]
+id = "XIzPnoyY69vUW36-BTHJP"
+uri = "file://STBCS_Vision_Roadmap.pdf"
+type = "pdf"
+title = "STB Cybersecurity — Vision & Roadmap (PDF)"

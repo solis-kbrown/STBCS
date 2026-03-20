@@ -6942,21 +6942,31 @@ Hiring: https://stbcybersecurity.com/support
 
   // ===================== END NEW ROUTES =====================
 
-  const REPORT_DOWNLOAD_TOKEN = "06ec7d70dfa25e409b3a4d074829899418f0aee620ff482e8b5adf74eb917fc0";
+  const REPORT_TOKENS: Record<string, { file: string; filename: string }> = {
+    "06ec7d70dfa25e409b3a4d074829899418f0aee620ff482e8b5adf74eb917fc0": {
+      file: "STBCS_Technical_Report.pdf",
+      filename: "STBCS_Technical_Report.pdf",
+    },
+    "9184e1cb0b14509a0bf24bd5513174534e6979b350ee5a4f812d1cc228402713": {
+      file: "STBCS_Vision_Roadmap.pdf",
+      filename: "STBCS_Vision_Roadmap.pdf",
+    },
+  };
 
   app.get("/report/download", (req: Request, res: Response) => {
     const token = asString(req.query.token as string);
-    if (!token || token !== REPORT_DOWNLOAD_TOKEN) {
+    const entry = token ? REPORT_TOKENS[token] : undefined;
+    if (!entry) {
       return res.status(403).json({ error: "Invalid or missing access token" });
     }
 
-    const filePath = resolvePath("STBCS_Technical_Report.pdf");
+    const filePath = resolvePath(entry.file);
     if (!existsSync(filePath)) {
       return res.status(404).json({ error: "Report not available" });
     }
 
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", 'inline; filename="STBCS_Technical_Report.pdf"');
+    res.setHeader("Content-Disposition", `inline; filename="${entry.filename}"`);
     res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
     res.setHeader("X-Content-Type-Options", "nosniff");
     const stream = createReadStream(filePath);
