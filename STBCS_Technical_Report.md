@@ -369,7 +369,7 @@ STBCS uses a freemium model with four paid tiers, all currently offered at **50%
 | Engine | PostgreSQL 16 |
 | ORM | Drizzle ORM with drizzle-zod for validation |
 | Connection Pool | Max 15 (prod) / 10 (dev), Min 2/1, 15s idle timeout, 15s connection timeout, 60s statement timeout |
-| Tables | 35+ tables covering threat data, users, sessions, monitoring, community, billing, and analytics |
+| Tables | 52 tables covering threat data, users, sessions, monitoring, community, billing, and analytics |
 | Integrity | Unique constraints, composite indexes, atomic upserts, database transactions |
 | Resilience | `withDbRetry` wrappers on all background services with transient error classification |
 
@@ -431,7 +431,7 @@ Scraper Engine (15-min cycle)
     ├── Classification (threat type, severity, source attribution)
     │
     ▼
-PostgreSQL (35+ tables, indexed for fast query)
+PostgreSQL (52 tables, indexed for fast query)
     │
     ├── REST API (/api/*) with Zod validation
     ├── In-memory response cache (TTL-based)
@@ -574,10 +574,10 @@ STBCS offers a RESTful API for programmatic access to threat intelligence data. 
 
 ## Database Schema Overview
 
-The STBCS database comprises 35+ PostgreSQL tables organized into functional domains:
+The STBCS database comprises 52 PostgreSQL tables (defined in `shared/schema.ts`) organized into functional domains:
 
-### Threat Intelligence (8 tables)
-`cves`, `ransomware_incidents`, `threat_actors`, `malicious_ips`, `malicious_urls`, `cisa_kev`, `cisa_ics_advisories`, `news_articles`
+### Threat Intelligence (9 tables)
+`cves`, `ransomware_incidents`, `threat_actors`, `malicious_ips`, `malicious_urls`, `cisa_kev`, `cisa_ics_advisories`, `news_articles`, `breach_incidents`
 
 ### User & Account Management (7 tables)
 `users`, `sessions`, `subscriptions`, `user_settings`, `saved_searches`, `newsletter_subscriptions`, `contact_messages`
@@ -594,10 +594,10 @@ The STBCS database comprises 35+ PostgreSQL tables organized into functional dom
 ### Platform & Billing (5 tables)
 `threat_feeds`, `site_settings`, `system_config`, `add_ons`, `user_add_ons`
 
-### Integrations (4 tables)
+### Integrations & Reports (6 tables)
 `sync_tokens`, `phishing_bulletins`, `attack_surface_scans`, `attack_surface_assets`, `threat_reports`, `report_schedules`
 
-### Other (3 tables)
+### Visitor, Messaging & Submissions (6 tables)
 `site_visitors`, `daily_visitor_counts`, `logo_votes`, `sms_messages`, `live_chat_sessions`, `exploit_submissions`
 
 ---
