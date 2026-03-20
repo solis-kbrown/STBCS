@@ -53,7 +53,9 @@ Comprehensive cybersecurity threat intelligence platform for small and mid-sized
 - `STBCS_Technical_Report.md` / `.pdf` — Full platform technical report (20 pages)
 - `STBCS_Vision_Roadmap.md` / `.pdf` — Future plans and expansion roadmap (10 pages)
 - Both accessible via secure token-protected download at `/report/download?token=<token>`
-- Tokens are defined in `server/routes.ts` (REPORT_TOKENS constant)
+- Tech Report: `/report/download?token=06ec7d70dfa25e409b3a4d074829899418f0aee620ff482e8b5adf74eb917fc0`
+- Vision Roadmap: `/report/download?token=9184e1cb0b14509a0bf24bd5513174534e6979b350ee5a4f812d1cc228402713`
+- Token definitions are in `server/routes.ts` (REPORT_TOKENS constant)
 
 ## Environment Variables Required
 - `DATABASE_URL` — PostgreSQL connection string
