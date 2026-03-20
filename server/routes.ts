@@ -1573,22 +1573,16 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
-  // Get grand opening sale status
   app.get("/api/sale-status", async (req: Request, res: Response) => {
     try {
       const key = "sale-status";
       if (cachedJson(res, key, TTL.SALE_STATUS)) return;
-      const { isGrandOpeningActive, getGrandOpeningEndDate } = await import("./maintenance");
-      const endDate = await getGrandOpeningEndDate();
-      const isActive = await isGrandOpeningActive();
-      const daysRemaining = Math.max(0, Math.ceil((endDate.getTime() - Date.now()) / (24 * 60 * 60 * 1000)));
-      
       const result = {
-        active: isActive,
-        endDate: endDate.toISOString(),
-        daysRemaining,
-        discount: isActive ? "50%" : null,
-        coupon: isActive ? "GRANDOPENING50" : null
+        active: false,
+        endDate: null,
+        daysRemaining: 0,
+        discount: null,
+        coupon: null
       };
       cacheAndSend(res, key, result, TTL.SALE_STATUS);
     } catch (error) {

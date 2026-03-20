@@ -1,7 +1,7 @@
 # STB Cybersecurity (STBCS)
 
 ## Overview
-Comprehensive cybersecurity threat intelligence platform for small and mid-sized businesses (SMBs). Aggregates 134 built-in threat intelligence feeds, provides 18+ security tools, real-time ransomware tracking, and professional security services with Stripe-based subscription tiers. Fully portable — deployable on any Linux VM, VPS, or cloud provider. See `SETUP.md` for deployment instructions.
+Comprehensive cybersecurity threat intelligence platform for small and mid-sized businesses (SMBs). Aggregates 161 built-in threat intelligence feeds, provides 18+ security tools, real-time ransomware tracking, and professional security services with Stripe-based subscription tiers. Fully portable — deployable on any Linux VM, VPS, or cloud provider. See `SETUP.md` for deployment instructions.
 
 ## Architecture
 - **Frontend:** React 19 + TypeScript + Vite + Tailwind CSS + shadcn/ui
@@ -14,7 +14,7 @@ Comprehensive cybersecurity threat intelligence platform for small and mid-sized
 ## Key Files
 - `shared/schema.ts` — All 52 database table definitions with Drizzle ORM
 - `server/routes.ts` — Main API routes (~7000 lines)
-- `server/scrapers.ts` — 134 threat feed definitions and scraping logic
+- `server/scrapers.ts` — 161 threat feed definitions and scraping logic
 - `server/apiKeyAuth.ts` — API key authentication with tier-based rate limits
 - `server/email.ts` — Resend email service (alerts, digests, lockout notifications)
 - `server/stripeService.ts` — Stripe subscription management
@@ -24,12 +24,12 @@ Comprehensive cybersecurity threat intelligence platform for small and mid-sized
 - `client/src/pages/pricing.tsx` — Subscription tier pricing page
 - `SETUP.md` — Complete deployment and setup guide for any environment
 
-## Subscription Tiers (50% introductory pricing)
-- **Free:** $0 — Full threat dashboard + all 18 security tools
-- **Supporter:** $7.49/mo ($74.95/yr) — Uptime monitoring (3 monitors)
-- **Pro:** $24.99/mo ($249.95/yr) — Dark web monitoring, API access, 9 premium feeds
-- **Business:** $99.99/mo ($999.95/yr) — Attack surface scans, threat reports, SMS alerts
-- **Unlimited:** $249.99/mo ($2,499.95/yr) — Unlimited everything + priority support
+## Subscription Tiers (Permanent Professional Pricing)
+- **Free:** $0 — Full threat dashboard + all 18 security tools + 160+ feeds
+- **Supporter:** $14.99/mo ($149.90/yr) — Uptime monitoring (5 monitors), supporter wall
+- **Pro:** $49.99/mo ($499.90/yr) — Dark web monitoring, API access, premium feeds, watchlists
+- **Business:** $199.99/mo ($1,999.90/yr) — Attack surface scans, threat reports, SMS alerts, 25 monitors
+- **Unlimited:** $499.99/mo ($4,999.90/yr) — Unlimited everything + priority support + white-label
 
 ## API Tier Limits (from apiKeyAuth.ts)
 - **Pro:** 1 key, 60 rpm, 1K daily, 50 live lookups
@@ -56,7 +56,16 @@ Comprehensive cybersecurity threat intelligence platform for small and mid-sized
 - Tech Report: `/report/download?token=06ec7d70dfa25e409b3a4d074829899418f0aee620ff482e8b5adf74eb917fc0`
 - Vision Roadmap: `/report/download?token=9184e1cb0b14509a0bf24bd5513174534e6979b350ee5a4f812d1cc228402713`
 - Token definitions are in `server/routes.ts` (REPORT_TOKENS constant)
-- Both PDFs emailed to kbpc.inc@gmail.com on March 20, 2026 via Resend (message ID: 595d6e8a-ce2d-424a-b29a-753db2a2e382) with branded HTML template and secure download links. Delivery proof available in Resend dashboard at resend.com/emails.
+- Both PDFs emailed to kbpc.inc@gmail.com on March 20, 2026 via Resend (message ID: 595d6e8a-ce2d-424a-b29a-753db2a2e382)
+
+## Git Tags (Design Snapshots)
+- `v1.0-grand-opening` — Original Grand Opening design with 50% sale pricing
+- `v1.1-pre-definitive` — Pre-definitive release snapshot (134 feeds, sale pricing)
+- To restore any snapshot: `git checkout v1.0-grand-opening` or deploy from tag
+
+## Release History
+- **v1.0 Grand Opening** — Initial launch with 134 feeds, 50% promotional pricing, Grand Opening Sale banners
+- **v2.0 Definitive Release** — 161 feeds, permanent professional pricing, public roadmap, expanded global CERTs, supply chain security feeds, removed all promotional language, SEO updated to 160+
 
 ## Environment Variables Required
 - `DATABASE_URL` — PostgreSQL connection string

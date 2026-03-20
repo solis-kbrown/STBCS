@@ -32,14 +32,6 @@ export class StripeService {
     };
     
     if (params.mode === 'subscription') {
-      try {
-        const { isGrandOpeningActive } = await import("./maintenance");
-        if (await isGrandOpeningActive()) {
-          sessionParams.discounts = [{ coupon: 'GRANDOPENING50' }];
-        }
-      } catch (error) {
-        sessionParams.discounts = [{ coupon: 'GRANDOPENING50' }];
-      }
     }
     
     return await stripe.checkout.sessions.create(sessionParams);
