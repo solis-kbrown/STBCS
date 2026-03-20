@@ -119,7 +119,7 @@ async function triggerWatchlistNotifications(
 // ============================================
 // THREAT INTELLIGENCE FEED SOURCES
 // ============================================
-// This system integrates 130+ free and premium threat intel feeds
+// This system integrates 160+ free and premium threat intel feeds
 // to provide comprehensive, real-time threat data
 
 const USER_AGENT = "STBCS/1.0 (STB Cybersecurity Threat Intelligence Platform)";
@@ -6314,7 +6314,7 @@ let lastRefreshTimestamp = 0;
 export function getLastRefreshTimestamp(): number { return lastRefreshTimestamp; }
 
 export function startDataRefreshScheduler(intervalMinutes = 15): void {
-  log.info(`Starting threat intel refresh every ${intervalMinutes} minutes (130+ sources)`);
+  log.info(`Starting threat intel refresh every ${intervalMinutes} minutes (160+ sources)`);
   
   const fetchAndInvalidate = async () => {
     try {

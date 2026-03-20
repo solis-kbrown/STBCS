@@ -14,7 +14,7 @@ interface PageMeta {
 const PAGE_META: Record<string, PageMeta> = {
   '/': {
     title: 'STBCS | Threat Intelligence & Incident Response',
-    description: 'STBCS delivers 24/7 incident response, ransomware recovery, and real-time threat intelligence from 130+ feeds. Trusted cybersecurity partner for SMBs.',
+    description: 'STBCS delivers 24/7 incident response, ransomware recovery, and real-time threat intelligence from 160+ feeds. Trusted cybersecurity partner for SMBs.',
     keywords: 'cybersecurity, threat intelligence, incident response, ransomware recovery, threat hunting, SMB cybersecurity, real-time monitoring, STBCS, STB Cybersecurity, security operations center, managed security',
   },
   '/ransomware': {
@@ -29,7 +29,7 @@ const PAGE_META: Record<string, PageMeta> = {
   },
   '/exploits': {
     title: 'Exploits & CVE Database | STB Cybersecurity',
-    description: 'Search and track CVEs, zero-days, and exploits from NVD, CISA KEV, and 130+ feeds. CVSS scoring, EPSS predictions, and real-time exploit alerts.',
+    description: 'Search and track CVEs, zero-days, and exploits from NVD, CISA KEV, and 160+ feeds. CVSS scoring, EPSS predictions, and real-time exploit alerts.',
     keywords: 'CVE database, vulnerabilities, exploits, zero-day, CISA KEV, vulnerability scanner, security advisories, CVE tracker, CVSS scoring, EPSS, NVD, exploit alerts',
   },
   '/tools': {
@@ -39,12 +39,12 @@ const PAGE_META: Record<string, PageMeta> = {
   },
   '/search': {
     title: 'Threat Search & IOC Lookup | STB Cybersecurity',
-    description: 'Search CVEs, ransomware incidents, malicious IPs, phishing URLs, and threat actors. IOC lookup across 130+ threat intelligence feeds.',
+    description: 'Search CVEs, ransomware incidents, malicious IPs, phishing URLs, and threat actors. IOC lookup across 160+ threat intelligence feeds.',
     keywords: 'IOC search, indicator of compromise, threat search, IP reputation, domain reputation, malware check, CVE search, threat intelligence lookup, malicious IP check',
   },
   '/intel': {
     title: 'Intel & Threat Feeds | STB Cybersecurity',
-    description: 'Curated cybersecurity news, real-time malicious IPs, phishing URLs, CISA KEV, and threat indicators from 130+ feeds including SANS DShield and Feodo Tracker.',
+    description: 'Curated cybersecurity news, real-time malicious IPs, phishing URLs, CISA KEV, and threat indicators from 160+ feeds including SANS DShield and Feodo Tracker.',
     keywords: 'threat feeds, threat intelligence feeds, malicious IPs, phishing URLs, malware URLs, security news, cyber threat feeds, SANS DShield, Feodo Tracker, CISA KEV',
   },
   '/support': {
@@ -59,7 +59,7 @@ const PAGE_META: Record<string, PageMeta> = {
   },
   '/about': {
     title: 'About Us — Incident Response & Threat Intelligence | STB Cybersecurity',
-    description: 'Meet STB Cybersecurity: incident responders, recovery engineers, and threat hunters protecting SMBs. 130+ live threat feeds, 24/7 IR, ransomware recovery, and security consulting.',
+    description: 'Meet STB Cybersecurity: incident responders, recovery engineers, and threat hunters protecting SMBs. 160+ live threat feeds, 24/7 IR, ransomware recovery, and security consulting.',
     keywords: 'about STB Cybersecurity, cybersecurity company, incident response team, security consulting, ransomware recovery team, threat hunting experts, SMB security',
   },
   '/contact': {
@@ -224,7 +224,7 @@ const PAGE_META: Record<string, PageMeta> = {
   },
   '/pricing': {
     title: 'Plans & Pricing | STB Cybersecurity',
-    description: 'Compare STBCS subscription tiers — Supporter, Pro, Business, and Unlimited Everything. 130+ features, real-time threat intel, monitoring, and 24/7 incident response for SMBs.',
+    description: 'Compare STBCS subscription tiers — Supporter, Pro, Business, and Unlimited Everything. 160+ features, real-time threat intel, monitoring, and 24/7 incident response for SMBs.',
     keywords: 'cybersecurity plans, threat intelligence pricing, security monitoring plans, cybersecurity subscription, STBCS pricing, pro plan, business plan, security service pricing',
   },
   '/brand-kit': {
@@ -244,7 +244,7 @@ const PAGE_META: Record<string, PageMeta> = {
   },
   '/stb-sync': {
     title: 'STB-Sync Dynamic Firewall Block Lists | STB Cybersecurity',
-    description: 'Generate authenticated EDL URLs from 130+ threat intelligence feeds. Paste directly into Palo Alto, pfSense, Fortinet, and SonicWall firewalls for automatic IP and domain blocking.',
+    description: 'Generate authenticated EDL URLs from 160+ threat intelligence feeds. Paste directly into Palo Alto, pfSense, Fortinet, and SonicWall firewalls for automatic IP and domain blocking.',
     keywords: 'external dynamic list, EDL, firewall block list, threat intelligence feed, IP blocklist, domain blocklist, Palo Alto EDL, pfSense URL table, Fortinet threat feed, SonicWall dynamic list, automated threat blocking',
   },
   '/awareness': {

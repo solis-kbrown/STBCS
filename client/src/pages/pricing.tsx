@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import {
   Check, X, Minus, Crown, Coffee, Rocket, Building2, Shield, Zap,
-  CreditCard, Lock, ArrowRight, Users, Eye,
+  CreditCard, Lock, ArrowRight, Users, Eye, Wrench,
   FileText, Network, Terminal, MonitorCheck, ChevronDown,
   ChevronUp, HelpCircle, MessageSquare, ScanSearch
 } from "lucide-react";
@@ -290,13 +290,6 @@ const FAQ_ITEMS = [
   },
 ];
 
-function Wrench(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
-      <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-    </svg>
-  );
-}
 
 function FeatureCell({ value }: { value: FeatureValue }) {
   if (value === true) return <Check className="h-5 w-5 text-green-400 mx-auto" aria-label="Included" />;

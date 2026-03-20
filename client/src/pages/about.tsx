@@ -112,7 +112,7 @@ export default function AboutPage() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4" data-testid="stats-grid">
           {stats.map((stat, i) => (
-            <AnimatedSection key={stat.label} animation="fade-up" stagger={i + 1 as any}>
+            <AnimatedSection key={stat.label} animation="fade-up" stagger={i + 1}>
               <Card className="bg-zinc-900/50 border-zinc-800 text-center card-interactive">
                 <CardContent className="pt-6 pb-5 space-y-2">
                   <stat.icon className="h-6 w-6 text-orange-400 mx-auto icon-hover" />
@@ -144,7 +144,7 @@ export default function AboutPage() {
           </AnimatedSection>
           <div className="grid md:grid-cols-2 gap-6">
             {services.map((service, i) => (
-              <AnimatedSection key={service.title} animation={i % 2 === 0 ? "fade-left" : "fade-right"} stagger={i + 1 as any}>
+              <AnimatedSection key={service.title} animation={i % 2 === 0 ? "fade-left" : "fade-right"} stagger={i + 1}>
                 <Card className="bg-zinc-900/50 border-zinc-800 card-interactive" data-testid={`card-service-${service.title.toLowerCase().replace(/\s+/g, '-')}`}>
                   <CardContent className="pt-6 space-y-3">
                     <div className="flex items-center gap-3">
@@ -175,7 +175,7 @@ export default function AboutPage() {
                       Real-Time Threat Intelligence
                     </h3>
                     <p className="text-sm text-zinc-400 leading-relaxed">
-                      STBCS aggregates data from over 130 public and commercial threat feeds — NVD, CISA KEV, URLhaus,
+                      STBCS aggregates data from over 160 public and commercial threat feeds — NVD, CISA KEV, URLhaus,
                       OpenPhish, Shodan, AlienVault OTX, VirusTotal, and many more — refreshed every 15 minutes.
                       Track ransomware groups, CVEs, malicious IPs, phishing URLs, and threat actors all in one place.
                     </p>
@@ -243,7 +243,7 @@ export default function AboutPage() {
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {consultingHighlights.map((item, i) => (
-                <AnimatedSection key={item.label} animation="fade-up" stagger={i + 1 as any}>
+                <AnimatedSection key={item.label} animation="fade-up" stagger={i + 1}>
                   <Card className="bg-zinc-900/50 border-orange-500/20 text-center" data-testid={`card-consulting-stat-${i}`}>
                     <CardContent className="pt-6 pb-5 space-y-1">
                       <p className="text-2xl font-bold text-orange-400 font-display">{item.value}</p>
@@ -313,7 +313,7 @@ export default function AboutPage() {
           </h2>
           <div className="grid md:grid-cols-2 gap-6">
             {testimonials.map((t, i) => (
-              <AnimatedSection key={i} animation={i % 2 === 0 ? "fade-left" : "fade-right"} stagger={i + 1 as any}>
+              <AnimatedSection key={i} animation={i % 2 === 0 ? "fade-left" : "fade-right"} stagger={i + 1}>
                 <Card className="bg-zinc-900/50 border-zinc-800 h-full" data-testid={`card-testimonial-${i}`}>
                   <CardContent className="pt-6 space-y-4">
                     <div className="flex gap-1">

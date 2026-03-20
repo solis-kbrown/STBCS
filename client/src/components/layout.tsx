@@ -1,4 +1,5 @@
 import { Link, useLocation, useRoute } from "wouter";
+import type { LucideIcon } from "lucide-react";
 import { 
   GalleryVerticalEnd,
   Scan,
@@ -76,7 +77,7 @@ import { useIconTheme } from "@/lib/use-icon-theme";
 type NavItem = {
   href: string;
   labelKey: string;
-  icon: any;
+  icon: LucideIcon;
   isPro?: boolean;
   isBusiness?: boolean;
 };
@@ -453,7 +454,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col min-w-0">
           {/* Header */}
-          <header className="h-16 border-b border-border/50 bg-background/85 backdrop-blur-xl flex items-center justify-between px-4 sm:px-6 sticky top-0 z-50 relative">
+          <header className="h-16 border-b border-border/50 header-glass flex items-center justify-between px-4 sm:px-6 sticky top-0 z-50 relative">
             <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-orange-500/40 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 h-[6px] bg-gradient-to-t from-orange-500/[0.03] to-transparent pointer-events-none" />
             <div className="flex items-center gap-3 sm:gap-4">
@@ -486,8 +487,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               {isAuthenticated && (
                 <Link href="/monitors?tab=alerts">
                   <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-orange-400 relative" aria-label="View alerts">
-                    <Bell className="h-5 w-5" />
-                    <span className="absolute top-3 right-3 h-2 w-2 bg-orange-500 rounded-full animate-pulse motion-reduce:animate-none"></span>
+                    <Bell className={`h-5 w-5 ${bellAnimating ? 'bell-bounce' : 'bell-hover'}`} />
+                    <span className="absolute top-3 right-3 h-2 w-2 bg-orange-500 rounded-full status-pulse"></span>
                   </Button>
                 </Link>
               )}
@@ -568,7 +569,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
 
           {/* Main Content Scroll Area */}
           <main id="main-content" className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-primary/20 scrollbar-track-transparent">
-            {children}
+            <div key={location} className="page-transition">
+              {children}
+            </div>
           </main>
         </div>
       </div>

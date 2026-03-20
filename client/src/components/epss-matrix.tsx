@@ -107,7 +107,7 @@ export default function EpssMatrix({ cves }: EpssMatrixProps) {
     <div className="space-y-4" data-testid="epss-matrix-container">
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {QUADRANT_LABELS.map((q, i) => (
-          <Card key={q.label} className={`border-white/5 ${q.bg}`} data-testid={`card-quadrant-${q.label.toLowerCase().replace(/\s/g, '-')}`}>
+          <Card key={q.label} className={`border-white/5 ${q.bg} card-interactive`} data-testid={`card-quadrant-${q.label.toLowerCase().replace(/\s/g, '-')}`}>
             <CardContent className="p-3 text-center">
               <div className={`text-lg font-bold ${q.color}`}>{quadrantCounts[i]}</div>
               <div className="text-xs font-semibold text-white">{q.label}</div>
@@ -117,7 +117,7 @@ export default function EpssMatrix({ cves }: EpssMatrixProps) {
         ))}
       </div>
 
-      <Card className="border-white/5 bg-card/50 overflow-hidden">
+      <Card className="border-white/5 bg-card/50 overflow-hidden chart-card relative">
         <CardContent className="p-4">
           <div className="flex items-center gap-4 mb-3 flex-wrap">
             <span className="text-xs text-muted-foreground">{dataPoints.length} CVEs plotted</span>

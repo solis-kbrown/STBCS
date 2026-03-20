@@ -42,7 +42,7 @@ export const NIST_CSF: ComplianceFramework = {
         { id: "ID.AM-01", name: "Asset Management", description: "Inventories of hardware, software, and data assets are maintained", stbcsMapping: "Run Attack Surface Discovery to identify external-facing assets", checkType: "attack_surface" },
         { id: "ID.AM-02", name: "Software Inventory", description: "Software platforms and applications are inventoried", stbcsMapping: "Use Web Fingerprinting to identify technology stacks", checkType: "tool_usage" },
         { id: "ID.RA-01", name: "Risk Assessment", description: "Vulnerabilities in assets are identified and documented", stbcsMapping: "Monitor CVE database and configure vulnerability watchlists", checkType: "watchlist" },
-        { id: "ID.RA-02", name: "Threat Intelligence", description: "Cyber threat intelligence is received from information sharing forums", stbcsMapping: "STBCS aggregates 130+ threat intelligence feeds automatically", checkType: "manual" },
+        { id: "ID.RA-02", name: "Threat Intelligence", description: "Cyber threat intelligence is received from information sharing forums", stbcsMapping: "STBCS aggregates 160+ threat intelligence feeds automatically", checkType: "manual" },
         { id: "ID.RA-05", name: "Risk Prioritization", description: "Threats, vulnerabilities, likelihoods, and impacts are used to understand risk", stbcsMapping: "Use EPSS scores and CVSS to prioritize CVE remediation", checkType: "manual" },
       ],
     },
@@ -136,7 +136,7 @@ export const ISO_27001: ComplianceFramework = {
       id: "A5",
       name: "A.5 — Organizational Controls",
       controls: [
-        { id: "A.5.7", name: "Threat Intelligence", description: "Information about technical threats shall be collected and analyzed", stbcsMapping: "STBCS provides 130+ live threat feeds with automated analysis", checkType: "manual" },
+        { id: "A.5.7", name: "Threat Intelligence", description: "Information about technical threats shall be collected and analyzed", stbcsMapping: "STBCS provides 160+ live threat feeds with automated analysis", checkType: "manual" },
         { id: "A.5.23", name: "Cloud Service Security", description: "Security of cloud services shall be managed", stbcsMapping: "Monitor cloud endpoints with Uptime Monitors and SSL Checker", checkType: "uptime" },
         { id: "A.5.24", name: "Incident Management Planning", description: "Incident management procedures shall be planned", stbcsMapping: "Review and follow Incident Response Playbooks", checkType: "playbook" },
         { id: "A.5.30", name: "ICT Business Continuity", description: "ICT readiness shall be planned, implemented, and maintained", stbcsMapping: "Set up Uptime Monitors and alert escalation via SMS/email", checkType: "uptime" },

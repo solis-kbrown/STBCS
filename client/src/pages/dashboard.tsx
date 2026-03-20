@@ -927,7 +927,7 @@ export default function Dashboard() {
                     usually comes down to one thing: visibility.
                   </p>
                   <p className="text-sm text-zinc-400 leading-relaxed">
-                    STBCS gives you that visibility. Our platform monitors over 130 threat intelligence feeds in real-time,
+                    STBCS gives you that visibility. Our platform monitors over 160 threat intelligence feeds in real-time,
                     tracking everything from zero-day CVEs to active ransomware campaigns, malicious infrastructure,
                     and dark web activity — so you can see threats before they reach your network.
                   </p>
