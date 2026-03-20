@@ -1,5 +1,7 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import { createReadStream, existsSync } from "fs";
+import { resolve as resolvePath } from "path";
 import cookieParser from "cookie-parser";
 import { storage } from "./storage";
 import { visitorTrackingMiddleware } from "./visitors";
@@ -6939,6 +6941,27 @@ Hiring: https://stbcybersecurity.com/support
   });
 
   // ===================== END NEW ROUTES =====================
+
+  const REPORT_DOWNLOAD_TOKEN = "06ec7d70dfa25e409b3a4d074829899418f0aee620ff482e8b5adf74eb917fc0";
+
+  app.get("/report/download", (req: Request, res: Response) => {
+    const token = asString(req.query.token as string);
+    if (!token || token !== REPORT_DOWNLOAD_TOKEN) {
+      return res.status(403).json({ error: "Invalid or missing access token" });
+    }
+
+    const filePath = resolvePath("STBCS_Technical_Report.pdf");
+    if (!existsSync(filePath)) {
+      return res.status(404).json({ error: "Report not available" });
+    }
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'inline; filename="STBCS_Technical_Report.pdf"');
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+    const stream = createReadStream(filePath);
+    stream.pipe(res);
+  });
 
   function generateRecommendations(stats: any, scanSummaries: any[]): string[] {
     const recs: string[] = [];
