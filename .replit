@@ -61,3 +61,7 @@ integrations = ["resend:1.0.0", "stripe:2.0.0"]
 [userenv.shared]
 CUSTOM_DOMAIN = "stbcybersecurity.com"
 ADMIN_EMAIL = "kbpc.inc@gmail.com"
+
+[postMerge]
+path = "scripts/post-merge.sh"
+timeoutMs = 120000
