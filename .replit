@@ -61,6 +61,8 @@ integrations = ["resend:1.0.0", "stripe:2.0.0", "github:1.0.0"]
 [userenv.shared]
 CUSTOM_DOMAIN = "stbcybersecurity.com"
 ADMIN_EMAIL = "kbpc.inc@gmail.com"
+RESEND_API_KEY = "re_XFJhgnQa_8uPHNvxnnTLwPvq3PLQR6qoY"
+RESEND_FROM_EMAIL = "updates@stoptbcs.com"
 
 [postMerge]
 path = "scripts/post-merge.sh"
