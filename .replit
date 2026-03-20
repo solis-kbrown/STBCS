@@ -54,7 +54,7 @@ waitForPort = 5000
 
 [agent]
 mockupState = "FULLSTACK"
-integrations = ["resend:1.0.0", "stripe:2.0.0"]
+integrations = ["resend:1.0.0", "stripe:2.0.0", "github:1.0.0"]
 
 [userenv]
 
