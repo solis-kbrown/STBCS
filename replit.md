@@ -56,7 +56,7 @@ Comprehensive cybersecurity threat intelligence platform for small and mid-sized
 - Tech Report: `/report/download?token=06ec7d70dfa25e409b3a4d074829899418f0aee620ff482e8b5adf74eb917fc0`
 - Vision Roadmap: `/report/download?token=9184e1cb0b14509a0bf24bd5513174534e6979b350ee5a4f812d1cc228402713`
 - Token definitions are in `server/routes.ts` (REPORT_TOKENS constant)
-- Both PDFs emailed to kbpc.inc@gmail.com on March 20, 2026 via Resend (message ID: 595d6e8a-ce2d-424a-b29a-753db2a2e382) with branded HTML template and secure download links
+- Both PDFs emailed to kbpc.inc@gmail.com on March 20, 2026 via Resend (message ID: 595d6e8a-ce2d-424a-b29a-753db2a2e382) with branded HTML template and secure download links. Delivery proof available in Resend dashboard at resend.com/emails.
 
 ## Environment Variables Required
 - `DATABASE_URL` — PostgreSQL connection string
