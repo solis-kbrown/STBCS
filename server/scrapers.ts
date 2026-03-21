@@ -132,17 +132,18 @@ async function delay(ms: number): Promise<void> {
 }
 
 // Secure fetch wrapper with timeout and error handling
-async function secureFetch(url: string, options: RequestInit = {}): Promise<Response> {
+async function secureFetch(url: string, options: RequestInit & { timeoutMs?: number } = {}): Promise<Response> {
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 30000);
+  const { timeoutMs = 30000, ...fetchOptions } = options;
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
   
   try {
     const response = await fetch(url, {
-      ...options,
+      ...fetchOptions,
       signal: controller.signal,
       headers: {
         "User-Agent": USER_AGENT,
-        ...options.headers,
+        ...fetchOptions.headers,
       },
     });
     return response;
@@ -997,7 +998,7 @@ export async function fetchThreatFox(): Promise<number> {
 }
 
 // ============================================
-// 15. Bambenek C2 - DGA-based C2 Domains
+// 15. C2IntelFeeds - DGA-based C2 Domains
 // ============================================
 const C2INTELFEEDS_DOMAINS_URL = "https://raw.githubusercontent.com/drb-ra/C2IntelFeeds/master/feeds/domainC2s-30day.csv";
 
@@ -2567,7 +2568,7 @@ export async function fetchRansomwareLiveVictims(): Promise<number> {
   try {
     log.debug("Fetching real-time ransomware victim data...");
     
-    const response = await secureFetch(`${RANSOMWARE_LIVE_API}/recentvictims`);
+    const response = await secureFetch(`${RANSOMWARE_LIVE_API}/recentvictims`, { timeoutMs: 60000 });
     
     if (!response.ok) {
       throw new Error(`Ransomware.live API error: ${response.status}`);
@@ -2630,7 +2631,7 @@ export async function fetchRansomwareLiveGroups(): Promise<number> {
   try {
     log.debug("Fetching ransomware group intelligence...");
     
-    const response = await secureFetch(`${RANSOMWARE_LIVE_API}/groups`);
+    const response = await secureFetch(`${RANSOMWARE_LIVE_API}/groups`, { timeoutMs: 60000 });
     
     if (!response.ok) {
       throw new Error(`Ransomware.live groups API error: ${response.status}`);
@@ -4435,13 +4436,15 @@ export async function fetchResearchIOCRepos(): Promise<number> {
 export async function fetchStamparmBlackbook(): Promise<number> {
   try {
     log.debug("Fetching Stamparm Blackbook IOCs...");
-    const response = await secureFetch("https://raw.githubusercontent.com/stamparm/blackbook/master/blackbook.json");
+    const response = await secureFetch("https://raw.githubusercontent.com/stamparm/blackbook/master/blackbook.csv");
     if (!response.ok) throw new Error(`Stamparm Blackbook error: ${response.status}`);
-    const data = await response.json();
+    const text = await response.text();
     let count = 0;
-    const entries = Array.isArray(data) ? data : [];
-    for (const entry of entries.slice(0, 1000)) {
-      const value = typeof entry === "string" ? entry.trim() : (entry?.value || entry?.indicator || "").trim();
+    const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("Domain,"));
+    for (const line of lines.slice(0, 1000)) {
+      const parts = line.split(",");
+      const value = parts[0]?.trim();
+      const malwareFamily = parts[1]?.trim() || "blackbook_malware";
       if (!value) continue;
       if (/^\d+\.\d+\.\d+\.\d+$/.test(value)) {
         await withDbRetry(() => storage.upsertMaliciousIp({
@@ -4457,6 +4460,7 @@ export async function fetchStamparmBlackbook(): Promise<number> {
           source: "Stamparm Blackbook",
           threatType: "blackbook_malware",
           lastSeen: new Date(),
+          malwareFamily,
         }), "upsertMaliciousUrl");
         count++;
       }
@@ -4465,7 +4469,7 @@ export async function fetchStamparmBlackbook(): Promise<number> {
     await withDbRetry(() => storage.updateFeedLastFetched("Stamparm Blackbook"), "updateFeed");
     return count;
   } catch (error) {
-    logScraperError("Feed", error);
+    logScraperError("Stamparm Blackbook", error);
     return 0;
   }
 }
@@ -4491,7 +4495,7 @@ export async function fetchBlocklistDeMail(): Promise<number> {
 }
 
 export async function fetchSecReconC2IPs(): Promise<number> {
-  return fetchSimpleIPList("https://raw.githubusercontent.com/jstrosch/malware-samples/master/indicators/c2_ips.txt", "SecRecon C2", "c2_sandbox", 500);
+  return fetchSimpleIPList("https://raw.githubusercontent.com/montysecurity/C2-Tracker/main/data/all.txt", "C2 Tracker", "c2_tracked", 500);
 }
 
 export async function fetchOpenBugBountyRSS(): Promise<number> {
@@ -4940,50 +4944,33 @@ export async function fetchMalpediaFamilies(): Promise<number> {
   }
 }
 
-export async function fetchBambenekC2(): Promise<number> {
+export async function fetchFeodoTrackerC2(): Promise<number> {
   try {
-    log.debug("Fetching Bambenek C2 master list...");
-    const response = await secureFetch("https://osint.bambenekconsulting.com/feeds/c2-masterlist.txt");
-    if (!response.ok) throw new Error(`Bambenek error: ${response.status}`);
+    log.debug("Fetching Feodo Tracker C2 IPs...");
+    const response = await secureFetch("https://feodotracker.abuse.ch/downloads/ipblocklist.txt");
+    if (!response.ok) throw new Error(`Feodo Tracker error: ${response.status}`);
     const text = await response.text();
     const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#"));
-    let ipCount = 0;
-    let domainCount = 0;
-    const seenIps = new Set<string>();
-    const seenDomains = new Set<string>();
+    let count = 0;
+    const seen = new Set<string>();
     for (const line of lines.slice(0, 1000)) {
-      const parts = line.split(",");
-      const domain = parts[0]?.trim();
-      const ip = parts[1]?.trim();
-      const malwareFamily = parts[3]?.trim() || "dga_malware";
-      if (domain && domain.includes(".") && !seenDomains.has(domain)) {
-        seenDomains.add(domain);
-        await withDbRetry(() => storage.upsertMaliciousUrl({
-          url: domain,
-          source: "Bambenek C2",
-          threatType: "c2_domain",
-          status: "active",
-          malwareFamily,
-        }), "upsertMaliciousUrl");
-        domainCount++;
-      }
-      if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip) && !seenIps.has(ip)) {
-        seenIps.add(ip);
+      const ip = line.trim();
+      if (ip && /^\d+\.\d+\.\d+\.\d+$/.test(ip) && !seen.has(ip)) {
+        seen.add(ip);
         await withDbRetry(() => storage.upsertMaliciousIp({
           ipAddress: ip,
-          source: "Bambenek C2",
-          threatType: "c2_server",
+          source: "Feodo Tracker",
+          threatType: "c2_botnet",
           lastSeen: new Date(),
         }), "upsertMaliciousIp");
-        ipCount++;
+        count++;
       }
     }
-    const total = ipCount + domainCount;
-    log.debug(`Processed ${total} Bambenek C2 indicators (${ipCount} IPs, ${domainCount} domains)`);
-    await withDbRetry(() => storage.updateFeedLastFetched("Bambenek C2"), "updateFeed");
-    return total;
+    log.debug(`Processed ${count} Feodo Tracker C2 IPs`);
+    await withDbRetry(() => storage.updateFeedLastFetched("Feodo Tracker"), "updateFeed");
+    return count;
   } catch (error) {
-    logScraperError("Bambenek C2", error);
+    logScraperError("Feodo Tracker", error);
     return 0;
   }
 }
@@ -5404,13 +5391,13 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "CrowdStrike Blog", url: "https://www.crowdstrike.com/blog/feed/", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "CrowdStrike threat research with named threat actors" },
 
     // Additional Network & Infrastructure Intelligence
-    { name: "Stamparm Blackbook", url: "https://raw.githubusercontent.com/stamparm/blackbook/master/blackbook.json", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "Curated malware research IOC collection from IPsum/Maltrail creator" },
+    { name: "Stamparm Blackbook", url: "https://raw.githubusercontent.com/stamparm/blackbook/master/blackbook.csv", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "Curated malware research IOC collection from IPsum/Maltrail creator" },
     { name: "DigitalSide IPs", url: "https://raw.githubusercontent.com/davidonzo/Threat-Intel/master/lists/latestips.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "OSINT-sourced threat IPs with daily updates" },
     { name: "DigitalSide Domains", url: "https://raw.githubusercontent.com/davidonzo/Threat-Intel/master/lists/latestdomains.txt", feedType: "url", updateFrequency: "daily", requiresProTier: false, description: "OSINT-sourced threat domains with daily updates" },
     { name: "Blocklist.de Apache", url: "https://lists.blocklist.de/lists/apache.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Web server attack source IPs" },
     { name: "Blocklist.de SSH", url: "https://lists.blocklist.de/lists/ssh.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "SSH brute force attack source IPs" },
     { name: "Blocklist.de Mail", url: "https://lists.blocklist.de/lists/mail.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Email abuse source IPs" },
-    { name: "SecRecon C2", url: "https://raw.githubusercontent.com/jstrosch/malware-samples/master/indicators/c2_ips.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "C2 IPs from malware sandbox analysis" },
+    { name: "C2 Tracker", url: "https://raw.githubusercontent.com/montysecurity/C2-Tracker/main/data/all.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Tracked C2 framework IPs (Cobalt Strike, Mythic, Sliver, etc.)" },
     { name: "OpenBugBounty", url: "https://www.openbugbounty.org/rss/latest.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Disclosed web vulnerabilities and XSS/SQLi reports" },
 
     // Malware & C2 Infrastructure Feeds
@@ -5418,7 +5405,7 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "URLhaus CSV", url: "https://urlhaus.abuse.ch/downloads/csv_recent/", feedType: "url", updateFrequency: "15min", requiresProTier: false, description: "Recent malware distribution URLs (public CSV)" },
     { name: "MalwareBazaar Tags", url: "https://mb-api.abuse.ch/api/v1/", feedType: "ioc", updateFrequency: "15min", requiresProTier: false, description: "Malware samples tagged by category (ransomware, stealer, loader, rat)" },
     { name: "Malpedia", url: "https://malpedia.caad.fkie.fraunhofer.de/api/list/families", feedType: "ioc", updateFrequency: "daily", requiresProTier: false, description: "Comprehensive malware family encyclopedia with actor attribution" },
-    { name: "Bambenek C2", url: "https://osint.bambenekconsulting.com/feeds/c2-masterlist.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Curated C2 domain and IP list across DGA-based malware families" },
+    { name: "Feodo Tracker", url: "https://feodotracker.abuse.ch/downloads/ipblocklist.txt", feedType: "ip", updateFrequency: "15min", requiresProTier: false, description: "Abuse.ch botnet C2 IP blocklist (Dridex, Emotet, TrickBot, QakBot)" },
 
     // Ransomware & Dark Web Intelligence (T002)
     { name: "CISA StopRansomware", url: "https://www.cisa.gov/news-events/cybersecurity-advisories/all.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "CISA #StopRansomware dedicated advisories" },
@@ -6061,7 +6048,7 @@ export async function fetchAllData(): Promise<void> {
   try { scraperLog.recordFeed("Blocklist.de Mail", await fetchBlocklistDeMail()); } catch(e) { scraperLog.recordError("Blocklist.de Mail", e); }
   await delay(1000);
 
-  try { scraperLog.recordFeed("SecRecon C2", await fetchSecReconC2IPs()); } catch(e) { scraperLog.recordError("SecRecon C2", e); }
+  try { scraperLog.recordFeed("C2 Tracker", await fetchSecReconC2IPs()); } catch(e) { scraperLog.recordError("C2 Tracker", e); }
   await delay(1000);
 
   try { scraperLog.recordFeed("OpenBugBounty", await fetchOpenBugBountyRSS()); } catch(e) { scraperLog.recordError("OpenBugBounty", e); }
@@ -6088,7 +6075,7 @@ export async function fetchAllData(): Promise<void> {
   try { scraperLog.recordFeed("Malpedia", await fetchMalpediaFamilies()); } catch(e) { scraperLog.recordError("Malpedia", e); }
   await delay(1000);
 
-  try { scraperLog.recordFeed("Bambenek C2", await fetchBambenekC2()); } catch(e) { scraperLog.recordError("Bambenek C2", e); }
+  try { scraperLog.recordFeed("Feodo Tracker", await fetchFeodoTrackerC2()); } catch(e) { scraperLog.recordError("Feodo Tracker", e); }
   await delay(1000);
 
   // ===========================================
