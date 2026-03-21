@@ -8,7 +8,7 @@ import Parser from "rss-parser";
 const log = createLogger("Scraper");
 
 export let activeFeedCount = 0;
-export let totalConfiguredFeeds = 161;
+export let totalConfiguredFeeds = 160;
 export let feedsInitialized = false;
 
 function isTransientDbError(error: any): boolean {
@@ -5397,7 +5397,6 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "Blocklist.de Apache", url: "https://lists.blocklist.de/lists/apache.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Web server attack source IPs" },
     { name: "Blocklist.de SSH", url: "https://lists.blocklist.de/lists/ssh.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "SSH brute force attack source IPs" },
     { name: "Blocklist.de Mail", url: "https://lists.blocklist.de/lists/mail.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Email abuse source IPs" },
-    { name: "C2 Tracker", url: "https://raw.githubusercontent.com/montysecurity/C2-Tracker/main/data/all.txt", feedType: "ip", updateFrequency: "daily", requiresProTier: false, description: "Tracked C2 framework IPs (Cobalt Strike, Mythic, Sliver, etc.)" },
     { name: "OpenBugBounty", url: "https://www.openbugbounty.org/rss/latest.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "Disclosed web vulnerabilities and XSS/SQLi reports" },
 
     // Malware & C2 Infrastructure Feeds
