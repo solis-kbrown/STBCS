@@ -648,7 +648,7 @@ export default function PricingPage() {
         </AnimatedSection>
 
         <AnimatedSection animation="fade-up">
-          <Card className="bg-gradient-to-r from-orange-500/5 to-zinc-900/50 border-orange-500/20">
+          <Card className="bg-gradient-to-r from-orange-500/5 to-zinc-900/50 border-orange-500/20 cta-shimmer">
             <CardContent className="py-8 text-center space-y-4">
               <h3 className="text-2xl font-bold text-white">Why We Built This Platform</h3>
               <blockquote className="text-zinc-400 max-w-3xl mx-auto italic leading-relaxed">

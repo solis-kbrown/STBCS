@@ -125,7 +125,7 @@ export default function AboutPage() {
         </div>
 
         <AnimatedSection animation="scale">
-          <Card className="bg-gradient-to-r from-orange-500/5 to-zinc-900/50 border-orange-500/20">
+          <Card className="bg-gradient-to-r from-orange-500/5 to-zinc-900/50 border-orange-500/20 cta-shimmer">
           <CardContent className="py-8 text-center space-y-4">
             <h2 className="text-2xl font-bold text-white" data-testid="text-about-mission-title">Our Mission</h2>
             <p className="text-zinc-400 max-w-3xl mx-auto leading-relaxed" data-testid="text-about-mission">
@@ -170,7 +170,7 @@ export default function AboutPage() {
               <div className="grid md:grid-cols-2 gap-6">
                 <AnimatedSection animation="fade-left">
                   <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2 section-header-accent">
                       <TrendingUp className="h-5 w-5 text-orange-400 icon-hover" />
                       Real-Time Threat Intelligence
                     </h3>
@@ -183,7 +183,7 @@ export default function AboutPage() {
                 </AnimatedSection>
                 <AnimatedSection animation="fade-right">
                   <div className="space-y-4">
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2 section-header-accent">
                       <Search className="h-5 w-5 text-orange-400 icon-hover" />
                       Free Security Tools
                     </h3>

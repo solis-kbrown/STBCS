@@ -33,6 +33,16 @@ const iconColorMap: Record<string, string> = {
   "text-red-400": "icon-red",
 };
 
+const accentColorMap: Record<string, string> = {
+  "text-primary": "accent-primary",
+  "text-destructive": "accent-destructive",
+  "text-secondary": "accent-secondary",
+  "text-green-500": "accent-green",
+  "text-orange-500": "accent-orange",
+  "text-yellow-500": "accent-yellow",
+  "text-red-400": "accent-red",
+};
+
 function CountUpStat({ value, label, icon: Icon, color, change, index }: {
   value: number; label: string; icon: LucideIcon; color: string; change: string; index: number;
 }) {
@@ -44,10 +54,11 @@ function CountUpStat({ value, label, icon: Icon, color, change, index }: {
   }, [isInView, start]);
 
   const iconBgClass = iconColorMap[color] || "icon-primary";
+  const accentClass = accentColorMap[color] || "accent-primary";
 
   return (
     <div ref={ref}>
-      <Card className={`border-white/5 bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm card-interactive card-3d anim-fade-up stagger-${Math.min(index + 1, 7)} ${isInView ? "in-view" : ""}`} data-testid={`card-stat-${index}`}>
+      <Card className={`border-white/5 bg-gradient-to-b from-card/80 to-card/40 backdrop-blur-sm card-interactive card-3d stat-accent-bar ${accentClass} stat-value-glow anim-fade-up stagger-${Math.min(index + 1, 7)} ${isInView ? "in-view" : ""}`} data-testid={`card-stat-${index}`}>
         <CardContent className="p-4">
           <div className="flex justify-between items-start mb-3">
             <div className={`p-2.5 rounded-lg bg-background/80 border border-white/5 ${color} stat-icon-bg ${iconBgClass} icon-bounce`}>
@@ -389,7 +400,7 @@ export default function Dashboard() {
               160+ live threat feeds. Ransomware tracking. CVE monitoring. When your business faces an attack, our incident response team is one call away.
             </p>
             <div className="flex gap-2 sm:gap-4">
-              <Button className="bg-primary hover:bg-primary/90 text-white font-bold btn-press" data-testid="button-view-incidents" asChild>
+              <Button className="btn-hero-primary text-white font-bold btn-press" data-testid="button-view-incidents" asChild>
                 <a href="/ransomware">SEE ACTIVE THREATS</a>
               </Button>
               <Button 
@@ -666,7 +677,7 @@ export default function Dashboard() {
                       {ransomware.map((incident, idx) => (
                         <tr 
                           key={incident.id} 
-                          className={`border-b border-white/5 hover:bg-white/5 transition-all duration-200 border-l-2 ${
+                          className={`border-b border-white/5 hover:bg-white/5 transition-all duration-200 table-row-highlight border-l-2 ${
                             incident.status === "Published" ? "border-l-red-500/60" :
                             incident.status === "Negotiating" ? "border-l-yellow-500/60" :
                             "border-l-zinc-700/40"
@@ -746,7 +757,7 @@ export default function Dashboard() {
 
         {!isAuthenticated && (
           <AnimatedSection animation="fade-up">
-            <div className="rounded-xl border border-orange-500/20 bg-gradient-to-r from-orange-500/5 via-orange-600/10 to-orange-500/5 p-5">
+            <div className="rounded-xl border border-orange-500/20 bg-gradient-to-r from-orange-500/5 via-orange-600/10 to-orange-500/5 p-5 cta-shimmer">
               <div className="flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
                 <div className="p-3 rounded-xl bg-orange-500/10 border border-orange-500/20 shrink-0">
                   <Users className="h-8 w-8 text-orange-400" />
@@ -764,7 +775,7 @@ export default function Dashboard() {
         )}
 
         <AnimatedSection animation="fade-up">
-          <h2 className="text-xl font-display font-bold text-white mb-4">Explore the Platform</h2>
+          <h2 className="text-xl font-display font-bold text-white mb-4 section-header-accent">Explore the Platform</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             {[
               { href: "/tools", label: "Security Tools", icon: Wrench, desc: "IP lookup, port scan & more" },
@@ -835,7 +846,7 @@ export default function Dashboard() {
             </Card>
 
             <div className="space-y-4">
-              <Card className="bg-zinc-900/50 border-zinc-800">
+              <Card className="bg-zinc-900/50 border-zinc-800 viz-card-inner">
                 <CardContent className="pt-5 pb-4">
                   <div className="text-xs text-zinc-500 mb-3 font-display tracking-wider uppercase">Threat Severity Breakdown</div>
                   <div className="h-32">
@@ -867,7 +878,7 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
 
-              <Card className="bg-zinc-900/50 border-zinc-800">
+              <Card className="bg-zinc-900/50 border-zinc-800 viz-card-inner">
                 <CardContent className="pt-5 pb-4">
                   <div className="text-xs text-zinc-500 mb-2 font-display tracking-wider uppercase">Platform Coverage</div>
                   <div className="space-y-2">
@@ -882,7 +893,7 @@ export default function Dashboard() {
                           <span className="text-zinc-500">{bar.displayValue}</span>
                         </div>
                         <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                          <div className={`h-full ${bar.color} rounded-full transition-all duration-1000`} style={{ width: `${bar.pct}%` }} />
+                          <div className={`h-full ${bar.color} rounded-full transition-all duration-1000 progress-glow`} style={{ width: `${bar.pct}%` }} />
                         </div>
                       </div>
                     ))}
@@ -917,7 +928,7 @@ export default function Dashboard() {
             <CardContent className="py-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-4">
-                  <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
+                  <h3 className="text-lg font-display font-bold text-white flex items-center gap-2 section-header-accent">
                     <Eye className="h-5 w-5 text-orange-400" />
                     Why Threat Intelligence Matters
                   </h3>
@@ -934,7 +945,7 @@ export default function Dashboard() {
                   </p>
                 </div>
                 <div className="space-y-4">
-                  <h3 className="text-lg font-display font-bold text-white flex items-center gap-2">
+                  <h3 className="text-lg font-display font-bold text-white flex items-center gap-2 section-header-accent">
                     <Zap className="h-5 w-5 text-orange-400" />
                     Built for Speed, Designed for Action
                   </h3>
@@ -962,7 +973,7 @@ export default function Dashboard() {
           </Card>
         </AnimatedSection>
 
-        <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/5 via-zinc-900/80 to-zinc-900/50" data-testid="card-expert-consulting">
+        <Card className="border-orange-500/20 bg-gradient-to-br from-orange-500/5 via-zinc-900/80 to-zinc-900/50 cta-shimmer" data-testid="card-expert-consulting">
           <CardContent className="py-5">
             <div className="max-w-4xl mx-auto">
               <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-8">

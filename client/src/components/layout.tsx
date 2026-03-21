@@ -465,8 +465,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 <img src={activeTheme.icon} alt="STBCS Logo" className="h-8 w-8 drop-shadow-[0_0_6px_rgba(249,115,22,0.3)]" />
                 <span className="font-display font-bold text-sm tracking-wider text-orange-400">STBCS</span>
               </Link>
-              <div className="relative hidden sm:block w-96">
-                <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <div className="relative hidden sm:block w-96 search-glow rounded-md transition-all duration-300">
+                <Search aria-hidden="true" className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground search-icon transition-colors duration-300" />
                 <Input 
                   placeholder="Search CVEs, Groups, Incidents… (Press Enter)" 
                   className="pl-10 bg-sidebar-accent border-input focus:border-primary/50 transition-colors"
