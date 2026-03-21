@@ -159,6 +159,10 @@ export interface IStorage {
   getDashboardStats(): Promise<{
     activeGroups: number;
     criticalCves: number;
+    highCves: number;
+    mediumCves: number;
+    lowCves: number;
+    totalCves: number;
     activeExploits: number;
     totalIncidents: number;
     maliciousIps: number;
@@ -1084,15 +1088,23 @@ export class DatabaseStorage implements IStorage {
   async getDashboardStats(): Promise<{
     activeGroups: number;
     criticalCves: number;
+    highCves: number;
+    mediumCves: number;
+    lowCves: number;
+    totalCves: number;
     activeExploits: number;
     totalIncidents: number;
     maliciousIps: number;
     maliciousUrls: number;
     cisaKevCount: number;
   }> {
-    const [activeGroupsResult, criticalCvesResult, activeExploitsResult, totalIncidents, maliciousIpCount, maliciousUrlCount, kevCount] = await Promise.all([
+    const [activeGroupsResult, criticalCvesResult, highCvesResult, mediumCvesResult, lowCvesResult, totalCvesResult, activeExploitsResult, totalIncidents, maliciousIpCount, maliciousUrlCount, kevCount] = await Promise.all([
       db.select({ count: sql<number>`count(distinct ${ransomwareIncidents.groupName})` }).from(ransomwareIncidents),
       db.select({ count: sql<number>`count(*)` }).from(cves).where(eq(cves.severity, "CRITICAL")),
+      db.select({ count: sql<number>`count(*)` }).from(cves).where(eq(cves.severity, "HIGH")),
+      db.select({ count: sql<number>`count(*)` }).from(cves).where(eq(cves.severity, "MEDIUM")),
+      db.select({ count: sql<number>`count(*)` }).from(cves).where(eq(cves.severity, "LOW")),
+      db.select({ count: sql<number>`count(*)` }).from(cves),
       db.select({ count: sql<number>`count(*)` }).from(cves).where(eq(cves.exploitAvailable, true)),
       this.getRansomwareCount(),
       this.getMaliciousIpCount(),
@@ -1103,6 +1115,10 @@ export class DatabaseStorage implements IStorage {
     return {
       activeGroups: Number(activeGroupsResult[0]?.count || 0),
       criticalCves: Number(criticalCvesResult[0]?.count || 0),
+      highCves: Number(highCvesResult[0]?.count || 0),
+      mediumCves: Number(mediumCvesResult[0]?.count || 0),
+      lowCves: Number(lowCvesResult[0]?.count || 0),
+      totalCves: Number(totalCvesResult[0]?.count || 0),
       activeExploits: Number(activeExploitsResult[0]?.count || 0),
       totalIncidents,
       maliciousIps: maliciousIpCount,

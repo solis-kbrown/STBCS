@@ -872,17 +872,17 @@ export default function Dashboard() {
                   <div className="text-xs text-zinc-500 mb-2 font-display tracking-wider uppercase">Platform Coverage</div>
                   <div className="space-y-2">
                     {[
-                      { label: "Threat Feeds Active", value: stats?.activeFeedCount || 0, max: 150, color: "bg-orange-500" },
-                      { label: "CVE Database", value: stats?.criticalCves ? Math.min(Math.round((stats.criticalCves / 700) * 100), 100) : 0, max: 100, color: "bg-red-500" },
-                      { label: "IOC Coverage", value: stats?.maliciousIps ? Math.min(Math.round((stats.maliciousIps / 100000) * 100), 100) : 0, max: 100, color: "bg-yellow-500" },
+                      { label: "Threat Feeds Active", value: stats?.activeFeedCount || 0, displayValue: `${stats?.activeFeedCount || 0} sources`, pct: Math.min(((stats?.activeFeedCount || 0) / 200) * 100, 100), color: "bg-orange-500" },
+                      { label: "CVE Database", value: stats?.totalCves || 0, displayValue: `${(stats?.totalCves || 0).toLocaleString()} tracked`, pct: Math.min(((stats?.totalCves || 0) / 10000) * 100, 100), color: "bg-red-500" },
+                      { label: "IOC Coverage", value: (stats?.maliciousIps || 0) + (stats?.maliciousUrls || 0), displayValue: `${(((stats?.maliciousIps || 0) + (stats?.maliciousUrls || 0)) / 1000).toFixed(0)}K indicators`, pct: Math.min((((stats?.maliciousIps || 0) + (stats?.maliciousUrls || 0)) / 250000) * 100, 100), color: "bg-yellow-500" },
                     ].map((bar) => (
                       <div key={bar.label}>
                         <div className="flex justify-between text-[11px] mb-1">
                           <span className="text-zinc-400">{bar.label}</span>
-                          <span className="text-zinc-500">{bar.value}%</span>
+                          <span className="text-zinc-500">{bar.displayValue}</span>
                         </div>
                         <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-                          <div className={`h-full ${bar.color} rounded-full transition-all duration-1000`} style={{ width: `${(bar.value / bar.max) * 100}%` }} />
+                          <div className={`h-full ${bar.color} rounded-full transition-all duration-1000`} style={{ width: `${bar.pct}%` }} />
                         </div>
                       </div>
                     ))}

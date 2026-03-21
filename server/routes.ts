@@ -11,7 +11,7 @@ import { eq, and, sql as dsql } from "drizzle-orm";
 import { z } from "zod";
 import rateLimit from "express-rate-limit";
 import { cache, cachedJson, cacheAndSend, TTL } from "./cache";
-import { activeFeedCount } from "./scrapers";
+import { activeFeedCount, totalConfiguredFeeds, feedsInitialized } from "./scrapers";
 import { scraperLog } from "./logger";
 import { getUptimeEngineHealth } from "./uptimeEngine";
 
@@ -918,7 +918,8 @@ Hiring: https://stbcybersecurity.com/support
       const key = "stats";
       if (cachedJson(res, key, TTL.STATS)) return;
       const stats = await storage.getDashboardStats();
-      cacheAndSend(res, key, { ...stats, activeFeedCount: activeFeedCount || 0 }, TTL.STATS);
+      const feedCount = feedsInitialized ? activeFeedCount : totalConfiguredFeeds;
+      cacheAndSend(res, key, { ...stats, activeFeedCount: feedCount }, TTL.STATS);
     } catch (error) {
       console.error("Error fetching stats:", error);
       res.status(500).json({ error: "Failed to fetch dashboard stats" });

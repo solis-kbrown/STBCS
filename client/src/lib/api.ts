@@ -101,11 +101,16 @@ export interface NewsArticle {
 export interface DashboardStats {
   activeGroups: number;
   criticalCves: number;
+  highCves: number;
+  mediumCves: number;
+  lowCves: number;
+  totalCves: number;
   activeExploits: number;
   totalIncidents: number;
   maliciousIps: number;
   maliciousUrls: number;
   cisaKevCount: number;
+  activeFeedCount: number;
 }
 
 export interface ThreatTrends {

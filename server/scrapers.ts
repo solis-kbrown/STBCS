@@ -8,6 +8,8 @@ import Parser from "rss-parser";
 const log = createLogger("Scraper");
 
 export let activeFeedCount = 0;
+export let totalConfiguredFeeds = 161;
+export let feedsInitialized = false;
 
 function isTransientDbError(error: any): boolean {
   const msg = error?.message || "";
@@ -5503,6 +5505,8 @@ export async function initializeThreatFeeds(): Promise<void> {
   }
 
   activeFeedCount = activeCount;
+  totalConfiguredFeeds = feeds.length;
+  feedsInitialized = true;
   log.info(`Initialized ${activeCount} active threat feed sources (${feeds.length} total, ${gatedFeedNames.size} skipped - no API key)`);
 }
 
