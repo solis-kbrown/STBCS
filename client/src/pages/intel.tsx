@@ -1,5 +1,6 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useLocation } from "wouter";
@@ -62,7 +63,8 @@ export default function IntelPage() {
           </TabsContent>
         </Tabs>
 
-        <Footer />
+                <RelatedResources links={getRelatedLinks("/intel")} testIdPrefix="intel" />
+<Footer />
       </div>
     </Layout>
   );

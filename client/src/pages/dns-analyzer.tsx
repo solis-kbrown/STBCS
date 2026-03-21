@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -880,7 +881,8 @@ export default function DnsAnalyzer() {
           </p>
         </div>
       </div>
-      <Footer />
+              <RelatedResources links={getRelatedLinks("/dns-analyzer")} testIdPrefix="dns" />
+<Footer />
     </Layout>
   );
 }

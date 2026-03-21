@@ -1,5 +1,7 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import BreadcrumbNav from "@/components/breadcrumb-nav";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import { useStats, useCves, useRansomware, useRefreshData, useTrends, useLastRefresh } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 import { getHeroBackground } from "@/components/hero-backgrounds";
@@ -1001,6 +1003,7 @@ export default function Dashboard() {
           </CardContent>
         </Card>
 
+        <RelatedResources links={getRelatedLinks("/")} testIdPrefix="dashboard" />
         <Footer />
       </div>
       <AuthModal

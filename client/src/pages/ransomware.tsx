@@ -1,5 +1,6 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import AnimatedSection, { AnimatedList } from "@/components/animated-section";
 import UpgradeBanner from "@/components/upgrade-banner";
 import { useRansomware, useRansomwareGroups, useRansomwareSearch, useExportData, useTrackView, useRansomwareAnalytics } from "@/lib/api";
@@ -920,6 +921,7 @@ export default function Ransomware() {
         </Tabs>
 
         <UpgradeBanner context="data" />
+        <RelatedResources links={getRelatedLinks("/ransomware")} testIdPrefix="ransomware" />
         <Footer />
       </div>
     </Layout>

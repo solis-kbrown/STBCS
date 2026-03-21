@@ -404,6 +404,13 @@ export function injectMetaTags(html: string, path: string): string {
     `    ${hreflangTags}\n    ${xDefaultTag}\n  </head>`
   );
 
+  const breadcrumbLd = generateBreadcrumbJsonLd(path);
+  const pageLd = generatePageStructuredData(path);
+  const extraLd = (breadcrumbLd + pageLd).trim();
+  if (extraLd) {
+    html = html.replace('</head>', `${extraLd}\n  </head>`);
+  }
+
   const ssrContent = generateSSRContent(path, meta);
   html = html.replace(
     '<div id="root"></div>',
@@ -450,6 +457,10 @@ function getH1Text(path: string, meta: PageMeta): string {
     '/pricing': 'Plans & Pricing',
     '/brand-kit': 'Brand Kit & Asset Hub',
     '/feedback': 'Feedback & Bug Reports',
+    '/compliance': 'Compliance Mapper',
+    '/ransomware-calculator': 'Ransomware Cost Estimator',
+    '/stb-sync': 'STB-Sync Dynamic Firewall Block Lists',
+    '/awareness': 'Phishing Awareness Feeds',
   };
   const cleanPath = path.split('?')[0].split('#')[0].replace(/\/$/, '') || '/';
   if (titleMap[cleanPath]) return titleMap[cleanPath];
@@ -461,9 +472,260 @@ function getH1Text(path: string, meta: PageMeta): string {
   return meta.title.split('|')[0].trim();
 }
 
+const SSR_CROSS_LINKS: Record<string, { label: string; href: string }[]> = {
+  '/': [
+    { label: 'Ransomware Tracker', href: '/ransomware' },
+    { label: 'Exploits & CVE Database', href: '/exploits' },
+    { label: 'Free Security Tools', href: '/tools' },
+    { label: 'Intel & Threat Feeds', href: '/intel' },
+  ],
+  '/ransomware': [
+    { label: 'Threat Actors Directory', href: '/groups' },
+    { label: 'Ransomware Cost Estimator', href: '/ransomware-calculator' },
+    { label: 'Incident Response Playbooks', href: '/playbooks' },
+  ],
+  '/exploits': [
+    { label: 'ICS-CERT Advisories', href: '/ics-advisories' },
+    { label: 'Attack Surface Discovery', href: '/attack-surface' },
+    { label: 'Threat Search & IOC Lookup', href: '/search' },
+  ],
+  '/tools': [
+    { label: 'SSL/TLS Certificate Checker', href: '/ssl-checker' },
+    { label: 'DNS Security Analyzer', href: '/dns-analyzer' },
+    { label: 'HTTP Security Headers Scanner', href: '/headers-scanner' },
+    { label: 'Email Header Analyzer', href: '/email-analyzer' },
+  ],
+  '/ssl-checker': [
+    { label: 'DNS Security Analyzer', href: '/dns-analyzer' },
+    { label: 'HTTP Security Headers Scanner', href: '/headers-scanner' },
+    { label: 'Attack Surface Discovery', href: '/attack-surface' },
+  ],
+  '/dns-analyzer': [
+    { label: 'SSL/TLS Certificate Checker', href: '/ssl-checker' },
+    { label: 'Email Header Analyzer', href: '/email-analyzer' },
+    { label: 'Exchange Server Checker', href: '/exchange-checker' },
+  ],
+  '/headers-scanner': [
+    { label: 'SSL/TLS Certificate Checker', href: '/ssl-checker' },
+    { label: 'Web Server Fingerprinter', href: '/web-fingerprint' },
+    { label: 'DNS Security Analyzer', href: '/dns-analyzer' },
+  ],
+  '/web-fingerprint': [
+    { label: 'HTTP Security Headers Scanner', href: '/headers-scanner' },
+    { label: 'SSL/TLS Certificate Checker', href: '/ssl-checker' },
+    { label: 'Exchange Server Checker', href: '/exchange-checker' },
+  ],
+  '/exchange-checker': [
+    { label: 'DNS Security Analyzer', href: '/dns-analyzer' },
+    { label: 'Web Server Fingerprinter', href: '/web-fingerprint' },
+    { label: 'Exploits & CVE Database', href: '/exploits' },
+  ],
+  '/email-analyzer': [
+    { label: 'DNS Security Analyzer', href: '/dns-analyzer' },
+    { label: 'Phishing Awareness Feeds', href: '/awareness' },
+    { label: 'Data Breach Database', href: '/breaches' },
+  ],
+  '/file-scanner': [
+    { label: 'Encoding & Decoding Tools', href: '/encoding-tools' },
+    { label: 'Threat Search & IOC Lookup', href: '/search' },
+    { label: 'Free Security Tools', href: '/tools' },
+  ],
+  '/encoding-tools': [
+    { label: 'File Scanner & Malware Analyzer', href: '/file-scanner' },
+    { label: 'Email Header Analyzer', href: '/email-analyzer' },
+    { label: 'Free Security Tools', href: '/tools' },
+  ],
+  '/risk-score': [
+    { label: 'Compliance Mapper', href: '/compliance' },
+    { label: 'Attack Surface Discovery', href: '/attack-surface' },
+    { label: 'Ransomware Cost Estimator', href: '/ransomware-calculator' },
+  ],
+  '/breaches': [
+    { label: 'Threat Search & IOC Lookup', href: '/search' },
+    { label: 'Ransomware Tracker', href: '/ransomware' },
+    { label: 'Email Header Analyzer', href: '/email-analyzer' },
+  ],
+  '/ics-advisories': [
+    { label: 'Exploits & CVE Database', href: '/exploits' },
+    { label: 'Compliance Mapper', href: '/compliance' },
+    { label: 'Attack Surface Discovery', href: '/attack-surface' },
+  ],
+  '/intel': [
+    { label: 'STB-Sync Firewall Block Lists', href: '/stb-sync' },
+    { label: 'Phishing Awareness Feeds', href: '/awareness' },
+    { label: 'Ransomware Tracker', href: '/ransomware' },
+  ],
+  '/search': [
+    { label: 'Exploits & CVE Database', href: '/exploits' },
+    { label: 'Data Breach Database', href: '/breaches' },
+    { label: 'Threat Actors Directory', href: '/groups' },
+  ],
+  '/attack-surface': [
+    { label: 'SSL/TLS Certificate Checker', href: '/ssl-checker' },
+    { label: 'DNS Security Analyzer', href: '/dns-analyzer' },
+    { label: 'Threat Intelligence Reports', href: '/reports' },
+  ],
+  '/playbooks': [
+    { label: 'Ransomware Tracker', href: '/ransomware' },
+    { label: 'Cyber Risk Score', href: '/risk-score' },
+    { label: 'Compliance Mapper', href: '/compliance' },
+  ],
+  '/compliance': [
+    { label: 'Cyber Risk Score', href: '/risk-score' },
+    { label: 'Attack Surface Discovery', href: '/attack-surface' },
+    { label: 'Incident Response Playbooks', href: '/playbooks' },
+  ],
+  '/ransomware-calculator': [
+    { label: 'Ransomware Tracker', href: '/ransomware' },
+    { label: 'Cyber Risk Score', href: '/risk-score' },
+    { label: 'Incident Response Playbooks', href: '/playbooks' },
+  ],
+  '/awareness': [
+    { label: 'Intel & Threat Feeds', href: '/intel' },
+    { label: 'Email Header Analyzer', href: '/email-analyzer' },
+    { label: 'Data Breach Database', href: '/breaches' },
+  ],
+  '/stb-sync': [
+    { label: 'Intel & Threat Feeds', href: '/intel' },
+    { label: 'Threat Search & IOC Lookup', href: '/search' },
+    { label: 'Attack Surface Discovery', href: '/attack-surface' },
+  ],
+  '/knowledge-base': [
+    { label: 'Intel & Threat Feeds', href: '/intel' },
+    { label: 'Incident Response Playbooks', href: '/playbooks' },
+    { label: 'Free Security Tools', href: '/tools' },
+  ],
+  '/pricing': [
+    { label: 'Free Security Tools', href: '/tools' },
+    { label: 'Threat Intelligence Dashboard', href: '/' },
+    { label: 'Contact Us', href: '/contact' },
+  ],
+  '/about': [
+    { label: 'Plans & Pricing', href: '/pricing' },
+    { label: 'Contact Us', href: '/contact' },
+    { label: 'Knowledge Base', href: '/knowledge-base' },
+  ],
+  '/contact': [
+    { label: 'About STB Cybersecurity', href: '/about' },
+    { label: 'Plans & Pricing', href: '/pricing' },
+    { label: 'Feedback & Bug Reports', href: '/feedback' },
+  ],
+  '/groups': [
+    { label: 'Ransomware Tracker', href: '/ransomware' },
+    { label: 'Exploits & CVE Database', href: '/exploits' },
+    { label: 'Intel & Threat Feeds', href: '/intel' },
+  ],
+  '/reports': [
+    { label: 'Attack Surface Discovery', href: '/attack-surface' },
+    { label: 'Ransomware Tracker', href: '/ransomware' },
+    { label: 'Plans & Pricing', href: '/pricing' },
+  ],
+  '/brand-kit': [
+    { label: 'About STB Cybersecurity', href: '/about' },
+    { label: 'Threat Intelligence Reports', href: '/reports' },
+    { label: 'Contact Us', href: '/contact' },
+  ],
+  '/feedback': [
+    { label: 'Knowledge Base', href: '/knowledge-base' },
+    { label: 'Service Status', href: '/service-status' },
+    { label: 'Contact Us', href: '/contact' },
+  ],
+  '/service-status': [
+    { label: 'Threat Intelligence Dashboard', href: '/' },
+    { label: 'Feedback & Bug Reports', href: '/feedback' },
+    { label: 'Contact Us', href: '/contact' },
+  ],
+  '/support': [
+    { label: 'Plans & Pricing', href: '/pricing' },
+    { label: 'About STB Cybersecurity', href: '/about' },
+    { label: 'Contact Us', href: '/contact' },
+  ],
+};
+
+const SSR_FEATURES: Record<string, string[]> = {
+  '/': ['Real-time threat intelligence from 160+ feeds', 'Ransomware tracking and analytics', 'CVE database with CVSS scoring', '18+ free security tools'],
+  '/ransomware': ['Active ransomware group monitoring', 'Victim posting analytics', 'Attack timeline visualization', 'Industry targeting data'],
+  '/exploits': ['NVD and CISA KEV integration', 'CVSS and EPSS scoring', 'Zero-day tracking', 'Exploit maturity indicators'],
+  '/tools': ['IP/Domain WHOIS Lookup', 'Port Scanner', 'Hash Analyzer', 'Password Strength Checker', 'Subnet Calculator'],
+  '/ssl-checker': ['Certificate chain validation', 'TLS 1.0-1.3 protocol check', 'Cipher suite audit', 'A+ to F security grading'],
+  '/dns-analyzer': ['SPF record validation', 'DKIM and DMARC checks', 'DNSSEC verification', 'Nameserver redundancy analysis'],
+  '/headers-scanner': ['HSTS detection', 'Content Security Policy audit', 'X-Frame-Options check', 'Permissions-Policy analysis'],
+  '/risk-score': ['12-question security assessment', 'Category-based scoring', 'Actionable recommendations', 'Industry benchmarking'],
+  '/ransomware-calculator': ['Industry-specific ransom estimates', 'Downtime cost modeling', 'Threat group targeting analysis', 'Financial impact projections'],
+};
+
+function getBreadcrumbsForPath(path: string): { name: string; url: string }[] {
+  const cleanPath = path.split('?')[0].split('#')[0].replace(/\/$/, '') || '/';
+  const crumbs: { name: string; url: string }[] = [{ name: 'Home', url: `${DOMAIN}/` }];
+
+  const toolPages = ['/ssl-checker', '/dns-analyzer', '/headers-scanner', '/web-fingerprint', '/exchange-checker', '/email-analyzer', '/file-scanner', '/encoding-tools'];
+  if (toolPages.includes(cleanPath)) {
+    crumbs.push({ name: 'Security Tools', url: `${DOMAIN}/tools` });
+  }
+
+  if (cleanPath.startsWith('/group/')) {
+    crumbs.push({ name: 'Threat Actors', url: `${DOMAIN}/groups` });
+  }
+
+  if (cleanPath.startsWith('/knowledge-base/') && cleanPath !== '/knowledge-base/new' && cleanPath !== '/knowledge-base/admin') {
+    crumbs.push({ name: 'Knowledge Base', url: `${DOMAIN}/knowledge-base` });
+  }
+
+  if (cleanPath.startsWith('/brand-kit/')) {
+    crumbs.push({ name: 'Brand Kit', url: `${DOMAIN}/brand-kit` });
+  }
+
+  const h1 = getH1Text(path, getPageMeta(path));
+  crumbs.push({ name: h1, url: `${DOMAIN}${cleanPath}` });
+  return crumbs;
+}
+
+function generateBreadcrumbJsonLd(path: string): string {
+  const crumbs = getBreadcrumbsForPath(path);
+  const items = crumbs.map((c, i) => `{"@type":"ListItem","position":${i + 1},"name":"${escapeAttr(c.name)}","item":"${escapeAttr(c.url)}"}`);
+  return `<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[${items.join(',')}]}</script>`;
+}
+
+function generatePageStructuredData(path: string): string {
+  const cleanPath = path.split('?')[0].split('#')[0].replace(/\/$/, '') || '/';
+
+  const toolPages: Record<string, { name: string; desc: string }> = {
+    '/ssl-checker': { name: 'SSL/TLS Certificate Checker', desc: 'Comprehensive SSL/TLS analysis with certificate chain validation, protocol support, cipher suite audit, and A+ to F security grading.' },
+    '/dns-analyzer': { name: 'DNS Security Analyzer', desc: 'DNS security analysis including SPF, DKIM, DMARC validation, DNSSEC status, MX records, and CAA checks.' },
+    '/headers-scanner': { name: 'HTTP Security Headers Scanner', desc: 'Audit HSTS, CSP, X-Frame-Options, Referrer-Policy, and Permissions-Policy with remediation guidance.' },
+    '/web-fingerprint': { name: 'Web Server Fingerprinter', desc: 'Identify web server software, CMS platforms, and technology stacks from HTTP response analysis.' },
+    '/exchange-checker': { name: 'Exchange Server Security Checker', desc: 'Detect exposed Microsoft Exchange servers, OWA/ECP endpoints, and map known vulnerabilities.' },
+    '/email-analyzer': { name: 'Email Header Analyzer', desc: 'Analyze email headers to trace routing, verify authentication, and detect spoofing.' },
+    '/file-scanner': { name: 'File Scanner & Malware Analyzer', desc: 'File hash computation, MIME detection, entropy analysis, and string extraction for security analysis.' },
+    '/encoding-tools': { name: 'Encoding & Decoding Tools', desc: 'Base64, URL, Hex, and ROT13 encoding and decoding for cybersecurity analysts.' },
+  };
+
+  if (toolPages[cleanPath]) {
+    const t = toolPages[cleanPath];
+    return `<script type="application/ld+json">{"@context":"https://schema.org","@type":"SoftwareApplication","name":"${escapeAttr(t.name)}","description":"${escapeAttr(t.desc)}","applicationCategory":"SecurityApplication","operatingSystem":"Any","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"provider":{"@type":"Organization","name":"STB Cybersecurity","url":"${DOMAIN}"}}</script>`;
+  }
+
+  if (cleanPath === '/risk-score') {
+    return `<script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Cyber Risk Score Calculator","description":"Assess your organization's cybersecurity posture in 12 questions.","step":[{"@type":"HowToStep","position":1,"text":"Answer 12 questions about your security practices"},{"@type":"HowToStep","position":2,"text":"Receive your security grade and category scores"},{"@type":"HowToStep","position":3,"text":"Review actionable recommendations"}]}</script>`;
+  }
+
+  if (cleanPath === '/ransomware-calculator') {
+    return `<script type="application/ld+json">{"@context":"https://schema.org","@type":"HowTo","name":"Ransomware Cost Estimator","description":"Estimate the financial impact of a ransomware attack on your business.","step":[{"@type":"HowToStep","position":1,"text":"Select your industry and company size"},{"@type":"HowToStep","position":2,"text":"View estimated ransom demands and downtime costs"},{"@type":"HowToStep","position":3,"text":"See which threat groups target your sector"}]}</script>`;
+  }
+
+  if (cleanPath.startsWith('/group/')) {
+    const slug = decodeURIComponent(cleanPath.replace('/group/', ''));
+    const displayName = slug.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    return `<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"${escapeAttr(displayName)} Ransomware Group Profile","author":{"@type":"Organization","name":"STB Cybersecurity"},"publisher":{"@type":"Organization","name":"STB Cybersecurity","logo":{"@type":"ImageObject","url":"${DOMAIN}/brand/logo-main.png"}},"description":"${escapeAttr(`Threat profile for ${displayName}: TTPs, targeted sectors, attack timeline, and MITRE ATT&CK mapping.`)}"}</script>`;
+  }
+
+  return '';
+}
+
 function generateSSRContent(path: string, meta: PageMeta): string {
   const h1 = escapeHtml(getH1Text(path, meta));
   const desc = escapeHtml(meta.description);
+  const cleanPath = path.split('?')[0].split('#')[0].replace(/\/$/, '') || '/';
 
   const nav = `<nav aria-label="Main navigation"><ul>` +
     `<li><a href="/">Dashboard</a></li>` +
@@ -485,12 +747,26 @@ function generateSSRContent(path: string, meta: PageMeta): string {
     `<li><a href="/intel">Intel & Feeds</a></li>` +
     `<li><a href="/search">Search & IOC Lookup</a></li>` +
     `<li><a href="/playbooks">IR Playbooks</a></li>` +
+    `<li><a href="/awareness">Phishing Awareness</a></li>` +
+    `<li><a href="/stb-sync">STB-Sync Block Lists</a></li>` +
+    `<li><a href="/compliance">Compliance Mapper</a></li>` +
+    `<li><a href="/ransomware-calculator">Ransomware Calculator</a></li>` +
     `<li><a href="/knowledge-base">Knowledge Base</a></li>` +
     `<li><a href="/pricing">Plans & Pricing</a></li>` +
     `<li><a href="/support">Support</a></li>` +
     `<li><a href="/about">About</a></li>` +
     `<li><a href="/contact">Contact</a></li>` +
     `</ul></nav>`;
+
+  const crossLinks = SSR_CROSS_LINKS[cleanPath] || [];
+  const crossLinkHtml = crossLinks.length > 0
+    ? `<nav aria-label="Related resources"><h2>Related Resources</h2><ul>${crossLinks.map(l => `<li><a href="${l.href}">${escapeHtml(l.label)}</a></li>`).join('')}</ul></nav>`
+    : '';
+
+  const features = SSR_FEATURES[cleanPath] || [];
+  const featureHtml = features.length > 0
+    ? `<ul aria-label="Key features">${features.map(f => `<li>${escapeHtml(f)}</li>`).join('')}</ul>`
+    : '';
 
   const footer = `<footer><nav aria-label="Legal"><ul>` +
     `<li><a href="/about">About</a></li>` +
@@ -511,6 +787,8 @@ function generateSSRContent(path: string, meta: PageMeta): string {
     `<main id="main-content">` +
     `<h1>${h1}</h1>` +
     `<p>${desc}</p>` +
+    featureHtml +
+    crossLinkHtml +
     `</main>` +
     footer;
 }

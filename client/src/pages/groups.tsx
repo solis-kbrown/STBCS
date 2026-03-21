@@ -1,5 +1,6 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import AnimatedSection from "@/components/animated-section";
 import UpgradeBanner from "@/components/upgrade-banner";
 import { useDocumentTitle } from "@/lib/use-document-title";
@@ -555,7 +556,8 @@ export default function GroupsDirectory() {
         )}
 
         <UpgradeBanner context="data" />
-        <Footer />
+                <RelatedResources links={getRelatedLinks("/groups")} testIdPrefix="groups" />
+<Footer />
       </div>
     </Layout>
   );

@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import Layout from "@/components/layout";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import { Shield, Mail, FileText, CreditCard, Receipt, Share2, Monitor, Video, FileSearch, Palette, Image, Paintbrush, ExternalLink, Projector, Award } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 
@@ -191,6 +192,7 @@ export default function BrandKit() {
           </div>
           )}
         </div>
+        <RelatedResources links={getRelatedLinks("/brand-kit")} testIdPrefix="brand" />
       </div>
     </Layout>
   );

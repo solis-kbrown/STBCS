@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import AnimatedSection, { AnimatedList } from "@/components/animated-section";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -2081,7 +2082,8 @@ export default function ToolsPage() {
             Unauthorized scanning of systems you do not own may be illegal.
           </p>
         </div>
-        <Footer />
+                <RelatedResources links={getRelatedLinks("/tools")} testIdPrefix="tools" />
+<Footer />
       </div>
     </Layout>
   );

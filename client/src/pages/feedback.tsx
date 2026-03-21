@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -242,7 +243,8 @@ export default function FeedbackPage() {
           </AnimatedSection>
         </div>
       </div>
-      <Footer />
+              <RelatedResources links={getRelatedLinks("/feedback")} testIdPrefix="feedback" />
+<Footer />
     </Layout>
   );
 }

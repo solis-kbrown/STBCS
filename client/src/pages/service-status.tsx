@@ -1,5 +1,6 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
@@ -306,7 +307,8 @@ export default function ServiceStatusPage() {
           </Card>
         </AnimatedSection>
 
-        <Footer />
+                <RelatedResources links={getRelatedLinks("/service-status")} testIdPrefix="status" />
+<Footer />
       </div>
     </Layout>
   );

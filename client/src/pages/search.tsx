@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useLocation } from "wouter";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import UpgradeBanner from "@/components/upgrade-banner";
 import { useGlobalSearch } from "@/lib/api";
 import { useDocumentTitle } from "@/lib/use-document-title";
@@ -622,7 +623,8 @@ export default function SearchPage() {
         </Tabs>
 
         <UpgradeBanner context="search" />
-        <Footer />
+                <RelatedResources links={getRelatedLinks("/search")} testIdPrefix="search" />
+<Footer />
       </div>
     </Layout>
   );

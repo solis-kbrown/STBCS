@@ -1,5 +1,6 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import ToolPageHeader from "@/components/tool-page-header";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { useAuth } from "@/lib/auth";
@@ -537,7 +538,8 @@ export default function Compliance() {
           </CardContent>
         </Card>
       </div>
-      <Footer />
+              <RelatedResources links={getRelatedLinks("/compliance")} testIdPrefix="compliance" />
+<Footer />
     </Layout>
   );
 }

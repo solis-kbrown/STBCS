@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 
 const donationAmounts = [
   { amount: 500, label: "$5" },
@@ -614,7 +615,8 @@ export default function SupportPage() {
           <p><a href="/contact?category=billing&subject=Billing%20Question" className="text-orange-400 hover:underline">Contact us about billing</a></p>
         </div>
       </div>
-      <Footer />
+              <RelatedResources links={getRelatedLinks("/support")} testIdPrefix="support" />
+<Footer />
     </Layout>
   );
 }

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import Layout from "@/components/layout";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -640,6 +641,7 @@ export default function KnowledgeBase() {
           </div>
         </div>
       )}
+      <RelatedResources links={getRelatedLinks("/knowledge-base")} testIdPrefix="kb" />
       <AuthModal
         open={showAuthModal}
         onOpenChange={setShowAuthModal}

@@ -3,6 +3,7 @@ import { useDocumentTitle } from "@/lib/use-document-title";
 import { useLocation } from "wouter";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -398,7 +399,8 @@ export default function ContactPage() {
           </AnimatedSection>
         </div>
 
-        <Footer />
+                <RelatedResources links={getRelatedLinks("/contact")} testIdPrefix="contact" />
+<Footer />
       </div>
     </Layout>
   );

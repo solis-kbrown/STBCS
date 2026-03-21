@@ -4,6 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import { Link } from "wouter";
 import AnimatedSection, { AnimatedList } from "@/components/animated-section";
 
@@ -376,7 +377,8 @@ export default function AboutPage() {
         </Card>
         </AnimatedSection>
 
-        <Footer />
+                <RelatedResources links={getRelatedLinks("/about")} testIdPrefix="about" />
+<Footer />
       </div>
     </Layout>
   );

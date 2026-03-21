@@ -7,6 +7,7 @@ import AnimatedSection from "@/components/animated-section";
 import { AuthModal } from "@/components/auth-modal";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -734,7 +735,8 @@ export default function PricingPage() {
         </div>
 
       </div>
-      <Footer />
+              <RelatedResources links={getRelatedLinks("/pricing")} testIdPrefix="pricing" />
+<Footer />
       <AuthModal
         open={showAuthModal}
         onOpenChange={setShowAuthModal}

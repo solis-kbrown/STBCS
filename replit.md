@@ -58,6 +58,14 @@ Comprehensive cybersecurity threat intelligence platform for small and mid-sized
 - Token definitions are in `server/routes.ts` (REPORT_TOKENS constant)
 - Both PDFs emailed to kbpc.inc@gmail.com on March 20, 2026 via Resend (message ID: 595d6e8a-ce2d-424a-b29a-753db2a2e382)
 
+## SEO Enhancements (Task #11)
+- **Breadcrumbs:** `client/src/components/breadcrumb-nav.tsx` — reusable breadcrumb nav rendered on every page
+- **Related Resources:** `client/src/components/related-resources.tsx` — cross-linking component with CROSS_LINK_MAP covering 30+ pages
+- **Structured Data:** Dynamic per-page JSON-LD in `server/seo.ts` — BreadcrumbList, SoftwareApplication (tools), HowTo (calculators), Article (group profiles)
+- **Sitemap:** Expanded to 745+ URLs including /awareness, /stb-sync, /compliance, /ransomware-calculator, and dynamic KB articles
+- **SSR Enrichment:** Server-rendered cross-links and feature lists for crawlers on every public page
+- **Key Files:** `server/seo.ts`, `client/src/components/breadcrumb-nav.tsx`, `client/src/components/related-resources.tsx`
+
 ## Git Tags (Design Snapshots)
 - `v1.0-grand-opening` — Original Grand Opening design with 50% sale pricing
 - `v1.1-pre-definitive` — Pre-definitive release snapshot (134 feeds, sale pricing)

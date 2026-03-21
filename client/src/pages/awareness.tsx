@@ -5,6 +5,7 @@ import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -443,7 +444,8 @@ export default function AwarenessPage() {
           </CardContent>
         </Card>
       </div>
-      <Footer />
+              <RelatedResources links={getRelatedLinks("/awareness")} testIdPrefix="awareness" />
+<Footer />
     </Layout>
   );
 }

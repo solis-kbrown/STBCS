@@ -1,5 +1,6 @@
 import Layout from "@/components/layout";
 import Footer from "@/components/footer";
+import RelatedResources, { getRelatedLinks } from "@/components/related-resources";
 import { useDocumentTitle } from "@/lib/use-document-title";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -604,7 +605,8 @@ export default function RansomwareCalculator() {
           </div>
         ) : null}
       </div>
-      <Footer />
+              <RelatedResources links={getRelatedLinks("/ransomware-calculator")} testIdPrefix="calc" />
+<Footer />
     </Layout>
   );
 }

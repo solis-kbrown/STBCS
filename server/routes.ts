@@ -194,13 +194,36 @@ export async function registerRoutes(
           uniqueNames.add(a.name.toLowerCase());
           return true;
         })
-        .map((a: any) => `  <url>
+        .map((a: any) => {
+          const lastmod = a.updatedAt ? new Date(a.updatedAt).toISOString().split("T")[0] : today;
+          return `  <url>
     <loc>https://stbcybersecurity.com/group/${toSlug(a.name)}</loc>
-    <lastmod>${today}</lastmod>
+    <lastmod>${lastmod}</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
-  </url>`)
+  </url>`;
+        })
         .join("\n");
+
+      let kbEntries = '';
+      try {
+        const kbPosts = await storage.getKbPosts({ limit: 500, status: 'published' });
+        if (kbPosts && Array.isArray(kbPosts)) {
+          kbEntries = kbPosts
+            .filter((a: any) => a.slug)
+            .map((a: any) => {
+              const lastmod = a.updatedAt ? new Date(a.updatedAt).toISOString().split("T")[0] : today;
+              return `  <url>
+    <loc>https://stbcybersecurity.com/knowledge-base/${encodeURIComponent(a.slug)}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>`;
+            })
+            .join("\n");
+        }
+      } catch {}
+
 
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
@@ -461,7 +484,30 @@ export async function registerRoutes(
     <priority>0.6</priority>
   </url>
 
+  <url>
+    <loc>https://stbcybersecurity.com/awareness</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/stb-sync</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
+    <loc>https://stbcybersecurity.com/email-signatures</loc>
+    <lastmod>${today}</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+
 ${groupEntries}
+
+${kbEntries}
 </urlset>`;
       res.setHeader("Content-Type", "application/xml; charset=utf-8");
       res.setHeader("Cache-Control", "public, max-age=3600");
