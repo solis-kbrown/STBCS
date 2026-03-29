@@ -613,7 +613,14 @@ export async function runDarkWebEngine(): Promise<{ scanned: number; findings: n
 
     log.info(`Dark web scan complete: ${scanned} scanned, ${totalFindings} new findings, ${errors} errors`);
   } catch (err: any) {
-    log.error(`Dark web engine error: ${err.message}`);
+    const msg = err?.message || "";
+    const isTransient = msg.includes("timeout exceeded") || msg.includes("Connection terminated") ||
+      msg.includes("connection timeout") || msg.includes("too many clients") || msg.includes("ETIMEDOUT");
+    if (isTransient) {
+      log.debug(`Dark web engine skipped (transient): ${msg.split("\n")[0]}`);
+    } else {
+      log.error(`Dark web engine error: ${msg}`);
+    }
   } finally {
     isRunning = false;
   }
@@ -629,7 +636,16 @@ export function startDarkWebScheduler(intervalMinutes = 60): void {
   }, 30000);
 
   scanInterval = setInterval(() => {
-    runDarkWebEngine().catch(err => log.error(`Dark web run failed: ${err.message}`));
+    runDarkWebEngine().catch(err => {
+      const msg = err?.message || "";
+      const isTransient = msg.includes("timeout exceeded") || msg.includes("Connection terminated") ||
+        msg.includes("connection timeout") || msg.includes("too many clients") || msg.includes("ETIMEDOUT");
+      if (isTransient) {
+        log.debug(`Dark web scheduler skipped (transient): ${msg.split("\n")[0]}`);
+      } else {
+        log.error(`Dark web run failed: ${msg}`);
+      }
+    });
   }, intervalMinutes * 60 * 1000);
 }
 

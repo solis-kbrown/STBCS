@@ -37,12 +37,15 @@ Comprehensive cybersecurity threat intelligence platform for small and mid-sized
 - **Unlimited:** 10 keys, 300 rpm, 100K daily, 1K live lookups
 
 ## Background Services
-- Threat feed scrapers (every 15min–daily depending on feed)
-- Uptime monitoring engine (every 5 minutes)
-- Dark web monitor scheduler
+- Threat feed scrapers (every 15min–daily depending on feed, sequential with 1-2s stagger)
+- Uptime monitoring engine (every 5 minutes, batches of 5)
+- Dark web monitor scheduler (every 60 minutes)
 - KB content scraper (every 4 hours)
 - Weekly digest emailer
-- Maintenance scheduler
+- Maintenance scheduler (every 15 minutes)
+- Pulsedive API throttled to every 6 hours (free tier: 100 queries/day)
+- InTheWild feed removed (GitHub repo permanently deleted; CISA KEV covers exploited CVEs)
+- DB pool: 25 max connections (prod) / 15 (dev), 30s connection + idle timeout, health monitoring
 
 ## Admin
 - Admin email: kbpc.inc@gmail.com

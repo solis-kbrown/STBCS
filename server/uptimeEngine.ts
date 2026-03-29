@@ -17,9 +17,11 @@ function isTransientDbError(error: any): boolean {
   const msg = error?.message || "";
   return msg.includes("Connection terminated") ||
     msg.includes("connection timeout") ||
+    msg.includes("timeout exceeded") ||
     msg.includes("too many clients") ||
     msg.includes("Connection refused") ||
-    msg.includes("ECONNRESET");
+    msg.includes("ECONNRESET") ||
+    msg.includes("ETIMEDOUT");
 }
 
 async function withDbRetry<T>(fn: () => Promise<T>, label: string, retries = 2): Promise<T> {
@@ -448,7 +450,13 @@ export function startUptimeScheduler(intervalSeconds = 300): void {
   }, 15000);
 
   checkInterval = setInterval(() => {
-    runUptimeEngine().catch(err => log.error(`Uptime run failed: ${err.message}`));
+    runUptimeEngine().catch(err => {
+      if (isTransientDbError(err)) {
+        log.debug(`[UptimeEngine] Skipped cycle (transient): ${err.message}`);
+      } else {
+        log.error(`[UptimeEngine] Uptime run failed: ${err.message}`);
+      }
+    });
   }, intervalSeconds * 1000);
 }
 

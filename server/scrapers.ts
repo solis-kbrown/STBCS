@@ -15,9 +15,11 @@ function isTransientDbError(error: any): boolean {
   const msg = error?.message || "";
   return msg.includes("Connection terminated") ||
     msg.includes("connection timeout") ||
+    msg.includes("timeout exceeded") ||
     msg.includes("too many clients") ||
     msg.includes("Connection refused") ||
-    msg.includes("ECONNRESET");
+    msg.includes("ECONNRESET") ||
+    msg.includes("ETIMEDOUT");
 }
 
 async function withDbRetry<T>(fn: () => Promise<T>, label: string, retries = 2): Promise<T> {
@@ -1316,7 +1318,7 @@ export async function fetchSSLBLAggressive(): Promise<number> {
   try {
     log.debug("Fetching aggressive SSL blacklist...");
     
-    const response = await secureFetch(SSLBL_AGGRESSIVE_URL);
+    const response = await secureFetch(SSLBL_AGGRESSIVE_URL, { timeoutMs: 45000 });
     
     if (!response.ok) {
       throw new Error(`SSLBL-Agg error: ${response.status}`);
@@ -1524,7 +1526,7 @@ const DATAPLANE_VNC_URL = "https://dataplane.org/vncrfb.txt";
 export async function fetchDataplaneVnc(): Promise<number> {
   try {
     log.debug("Fetching VNC scanning IPs...");
-    const response = await secureFetch(DATAPLANE_VNC_URL);
+    const response = await secureFetch(DATAPLANE_VNC_URL, { timeoutMs: 45000 });
     if (!response.ok) {
       throw new Error(`Dataplane VNC error: ${response.status}`);
     }
@@ -1561,7 +1563,7 @@ const DATAPLANE_DNS_URL = "https://dataplane.org/dnsrd.txt";
 export async function fetchDataplaneDns(): Promise<number> {
   try {
     log.debug("Fetching DNS abuse IPs...");
-    const response = await secureFetch(DATAPLANE_DNS_URL);
+    const response = await secureFetch(DATAPLANE_DNS_URL, { timeoutMs: 45000 });
     if (!response.ok) {
       throw new Error(`Dataplane DNS error: ${response.status}`);
     }
@@ -1598,7 +1600,7 @@ const DATAPLANE_SIP_URL = "https://dataplane.org/sipinvitation.txt";
 export async function fetchDataplaneSip(): Promise<number> {
   try {
     log.debug("Fetching SIP/VoIP abuse IPs...");
-    const response = await secureFetch(DATAPLANE_SIP_URL);
+    const response = await secureFetch(DATAPLANE_SIP_URL, { timeoutMs: 45000 });
     if (!response.ok) {
       throw new Error(`Dataplane SIP error: ${response.status}`);
     }
@@ -1635,7 +1637,7 @@ const SPAMHAUS_EDROP_URL = "https://www.spamhaus.org/drop/edrop.txt";
 export async function fetchSpamhausEdrop(): Promise<number> {
   try {
     log.debug("Fetching EDROP list (extended hijacked netblocks)...");
-    const response = await secureFetch(SPAMHAUS_EDROP_URL);
+    const response = await secureFetch(SPAMHAUS_EDROP_URL, { timeoutMs: 45000 });
     if (!response.ok) {
       throw new Error(`Spamhaus EDROP error: ${response.status}`);
     }
@@ -1769,7 +1771,7 @@ const MALTRAIL_URL = "https://raw.githubusercontent.com/stamparm/maltrail/master
 export async function fetchMaltrail(): Promise<number> {
   try {
     log.debug("Fetching Maltrail malware IOCs...");
-    const response = await secureFetch(MALTRAIL_URL);
+    const response = await secureFetch(MALTRAIL_URL, { timeoutMs: 45000 });
     if (!response.ok) {
       throw new Error(`Maltrail error: ${response.status}`);
     }
@@ -2068,12 +2070,21 @@ export async function fetchCrowdSec(): Promise<number> {
 // Community threat intelligence platform
 const PULSEDIVE_API = "https://pulsedive.com/api";
 
+let _pulsediveLastFetch = 0;
+const PULSEDIVE_MIN_INTERVAL_MS = 6 * 60 * 60 * 1000;
+
 export async function fetchPulsedive(): Promise<number> {
   const apiKey = process.env.PULSEDIVE_API_KEY;
   
   if (!apiKey) {
     log.debug("No API key configured - skipping (add PULSEDIVE_API_KEY for 100 queries/day FREE)");
     return 0;
+  }
+
+  if (Date.now() - _pulsediveLastFetch < PULSEDIVE_MIN_INTERVAL_MS) {
+    log.debug("Pulsedive: throttled (free tier: max 3-4 fetches/day). Next fetch in " +
+      Math.round((PULSEDIVE_MIN_INTERVAL_MS - (Date.now() - _pulsediveLastFetch)) / 60000) + "m");
+    return -1;
   }
   
   try {
@@ -2131,6 +2142,7 @@ export async function fetchPulsedive(): Promise<number> {
     log.debug(`Processed ${count} high-risk indicators`);
     log.debug(`Use security tools for real-time threat lookups`);
     await withDbRetry(() => storage.updateFeedLastFetched("Pulsedive"), "updateFeed");
+    _pulsediveLastFetch = Date.now();
     return count;
   } catch (error) {
     logScraperError("Feed", error);
@@ -3683,7 +3695,7 @@ const RUTGERS_SSH_URL = "https://report.cs.rutgers.edu/DROP/attackers";
 export async function fetchRutgersSsh(): Promise<number> {
   try {
     log.debug("Fetching Rutgers SSH brute-force IPs...");
-    const response = await secureFetch(RUTGERS_SSH_URL);
+    const response = await secureFetch(RUTGERS_SSH_URL, { timeoutMs: 45000 });
     if (!response.ok) throw new Error(`Rutgers SSH error: ${response.status}`);
 
     const text = await response.text();
@@ -3762,7 +3774,7 @@ const SSLBL_CSV_URL = "https://sslbl.abuse.ch/blacklist/sslblacklist.csv";
 export async function fetchSSLBLCerts(): Promise<number> {
   try {
     log.debug("Fetching SSL certificate blacklist...");
-    const response = await secureFetch(SSLBL_CSV_URL);
+    const response = await secureFetch(SSLBL_CSV_URL, { timeoutMs: 45000 });
     if (!response.ok) throw new Error(`SSLBL CSV error: ${response.status}`);
 
     const text = await response.text();
@@ -3807,7 +3819,7 @@ const DISCONNECT_MALVERT_URL = "https://s3.amazonaws.com/lists.disconnect.me/sim
 export async function fetchDisconnectMalvertising(): Promise<number> {
   try {
     log.debug("Fetching malvertising domains...");
-    const response = await secureFetch(DISCONNECT_MALVERT_URL);
+    const response = await secureFetch(DISCONNECT_MALVERT_URL, { timeoutMs: 45000 });
     if (!response.ok) throw new Error(`Disconnect error: ${response.status}`);
 
     const text = await response.text();
@@ -3847,6 +3859,7 @@ export async function fetchGitHubAdvisories(): Promise<number> {
   try {
     log.debug("Fetching GitHub Security Advisories...");
     const response = await secureFetch(`${GHSA_API_URL}?per_page=50&type=reviewed`, {
+      timeoutMs: 45000,
       headers: {
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
@@ -3924,7 +3937,7 @@ const MITRE_GROUPS_URL = "https://raw.githubusercontent.com/mitre/cti/master/ent
 export async function fetchMITREAttackGroups(): Promise<number> {
   try {
     log.debug("Fetching MITRE ATT&CK group intelligence...");
-    const response = await secureFetch(MITRE_GROUPS_URL);
+    const response = await secureFetch(MITRE_GROUPS_URL, { timeoutMs: 60000 });
     if (!response.ok) throw new Error(`MITRE ATT&CK error: ${response.status}`);
 
     const bundle = await response.json();
@@ -4254,7 +4267,7 @@ export async function fetchMaltrailSuspicious(): Promise<number> {
 export async function fetchMaltrailMalware(): Promise<number> {
   try {
     log.debug("Fetching Maltrail Malware Generic...");
-    const response = await secureFetch("https://raw.githubusercontent.com/stamparm/maltrail/master/trails/static/malware/generic.txt");
+    const response = await secureFetch("https://raw.githubusercontent.com/stamparm/maltrail/master/trails/static/malware/generic.txt", { timeoutMs: 45000 });
     if (!response.ok) throw new Error(`Maltrail Malware error: ${response.status}`);
     const text = await response.text();
     const lines = text.split("\n").filter(line => line.trim() && !line.startsWith("#"));
@@ -5364,7 +5377,7 @@ export async function initializeThreatFeeds(): Promise<void> {
 
     // Exploit & Zero-Day Intelligence Feeds
     { name: "Exploit-DB CSV", url: "https://gitlab.com/exploit-database/exploitdb/-/raw/main/files_exploits.csv", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "Full exploit database with CVE mappings, platform, and type" },
-    { name: "InTheWild.io", url: "https://raw.githubusercontent.com/gmatuz/inthewilddb/main/exploited.json", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "CVEs confirmed exploited in the wild with timestamps" },
+    // InTheWild.io — REMOVED: GitHub repo (gmatuz/inthewilddb) permanently deleted, inthewild.io unreachable. CISA KEV covers exploited-in-the-wild CVEs.
     { name: "Trickest CVE PoC", url: "https://raw.githubusercontent.com/trickest/cve/main/README.md", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "Large curated PoC collection mapped to CVE IDs" },
     { name: "Nuclei Templates CVE", url: "https://raw.githubusercontent.com/projectdiscovery/nuclei-templates/main/cves.json", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "CVEs mapped to Nuclei detection templates" },
     { name: "VulnCheck KEV", url: "https://api.vulncheck.com/v3/index/initial-access", feedType: "cve", updateFrequency: "daily", requiresProTier: false, description: "Extended KEV with exploit metadata and initial access vectors" },
@@ -5532,33 +5545,8 @@ export async function fetchExploitDB(): Promise<number> {
   }
 }
 
-export async function fetchInTheWild(): Promise<number> {
-  try {
-    log.debug("Fetching InTheWild.io exploited CVEs...");
-    const response = await secureFetch("https://raw.githubusercontent.com/gmatuz/inthewilddb/main/exploited.json");
-    if (!response.ok) throw new Error(`InTheWild error: ${response.status}`);
-    const data = await response.json();
-    let count = 0;
-    const entries = Array.isArray(data) ? data : [];
-    for (const entry of entries.slice(0, 2000)) {
-      const cveId = (entry.cve || entry.id || "").toUpperCase();
-      if (!cveId.startsWith("CVE-")) continue;
-      try {
-        await withDbRetry(() => db.update(cves).set({
-          exploitAvailable: true,
-          status: "Active",
-        }).where(eq(cves.cveId, cveId)), "updateCve");
-        count++;
-      } catch { /* CVE may not exist yet */ }
-    }
-    if (count > 0) log.info(`InTheWild: flagged ${count} CVEs as actively exploited`);
-    await withDbRetry(() => storage.updateFeedLastFetched("InTheWild.io"), "updateFeed");
-    return count;
-  } catch (error) {
-    logScraperError("InTheWild", error);
-    return 0;
-  }
-}
+// fetchInTheWild — DISABLED: GitHub repo gmatuz/inthewilddb permanently removed (404).
+// CISA KEV (fetchCISAKev) already covers exploited-in-the-wild CVE flagging.
 
 export async function fetchTrickestPoC(): Promise<number> {
   try {
@@ -5787,7 +5775,7 @@ export async function fetchAllData(): Promise<void> {
   await delay(1000);
   
   try { scraperLog.recordFeed("Dataplane", await fetchDataplaneSsh()); } catch(e) { scraperLog.recordError("Dataplane", e); }
-  await delay(1000);
+  await delay(2000);
   
   try { scraperLog.recordFeed("BinaryDefense", await fetchBinaryDefense()); } catch(e) { scraperLog.recordError("BinaryDefense", e); }
   await delay(1000);
@@ -5892,16 +5880,16 @@ export async function fetchAllData(): Promise<void> {
   // EXPANDED 2026 FEEDS - Deep Intelligence
   // ===========================================
   try { scraperLog.recordFeed("Dataplane VNC", await fetchDataplaneVnc()); } catch(e) { scraperLog.recordError("Dataplane VNC", e); }
-  await delay(1000);
+  await delay(2000);
 
   try { scraperLog.recordFeed("Dataplane DNS", await fetchDataplaneDns()); } catch(e) { scraperLog.recordError("Dataplane DNS", e); }
-  await delay(1000);
+  await delay(2000);
 
   try { scraperLog.recordFeed("Dataplane SIP", await fetchDataplaneSip()); } catch(e) { scraperLog.recordError("Dataplane SIP", e); }
-  await delay(1000);
+  await delay(2000);
 
   try { scraperLog.recordFeed("Spamhaus EDROP", await fetchSpamhausEdrop()); } catch(e) { scraperLog.recordError("Spamhaus EDROP", e); }
-  await delay(1000);
+  await delay(2000);
 
   try { scraperLog.recordFeed("Phishing Database IPs", await fetchPhishingDatabaseIPs()); } catch(e) { scraperLog.recordError("Phishing Database IPs", e); }
   await delay(1000);
@@ -5913,7 +5901,7 @@ export async function fetchAllData(): Promise<void> {
   await delay(1000);
 
   try { scraperLog.recordFeed("Maltrail", await fetchMaltrail()); } catch(e) { scraperLog.recordError("Maltrail", e); }
-  await delay(1000);
+  await delay(2000);
 
   try { scraperLog.recordFeed("ThreatFox CSV", await fetchThreatFoxCSV()); } catch(e) { scraperLog.recordError("ThreatFox CSV", e); }
   await delay(1000);
@@ -6011,8 +5999,7 @@ export async function fetchAllData(): Promise<void> {
   try { scraperLog.recordFeed("Exploit-DB", await fetchExploitDB()); } catch(e) { scraperLog.recordError("Exploit-DB", e); }
   await delay(2000);
 
-  try { scraperLog.recordFeed("InTheWild", await fetchInTheWild()); } catch(e) { scraperLog.recordError("InTheWild", e); }
-  await delay(1000);
+  // InTheWild — REMOVED: GitHub repo permanently deleted (404). CISA KEV already covers exploited-in-the-wild CVEs.
 
   try { scraperLog.recordFeed("Trickest PoC", await fetchTrickestPoC()); } catch(e) { scraperLog.recordError("Trickest PoC", e); }
   await delay(1000);

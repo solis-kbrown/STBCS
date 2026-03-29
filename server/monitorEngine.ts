@@ -136,8 +136,15 @@ export async function runMonitorEngine(): Promise<{ processed: number; alerts: n
     }
 
     return { processed, alerts: alertsSent, errors };
-  } catch (error) {
-    console.error("[Monitor] Engine critical error:", error);
+  } catch (error: any) {
+    const msg = error?.message || "";
+    const isTransient = msg.includes("timeout exceeded") || msg.includes("Connection terminated") ||
+      msg.includes("connection timeout") || msg.includes("too many clients") || msg.includes("ETIMEDOUT");
+    if (isTransient) {
+      console.debug("[Monitor] Engine skipped (transient):", msg.split("\n")[0]);
+    } else {
+      console.error("[Monitor] Engine critical error:", error);
+    }
     return { processed, alerts: alertsSent, errors: errors + 1 };
   } finally {
     isRunning = false;

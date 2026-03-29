@@ -41,9 +41,11 @@ function isTransientDbError(error: any): boolean {
   const msg = error?.message || "";
   return msg.includes("Connection terminated") ||
     msg.includes("connection timeout") ||
+    msg.includes("timeout exceeded") ||
     msg.includes("too many clients") ||
     msg.includes("Connection refused") ||
-    msg.includes("ECONNRESET");
+    msg.includes("ECONNRESET") ||
+    msg.includes("ETIMEDOUT");
 }
 
 const STAGGER_DELAY_MS = 3000;

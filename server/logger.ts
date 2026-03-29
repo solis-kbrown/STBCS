@@ -37,16 +37,18 @@ export function createLogger(tag: string) {
 }
 
 export class ScraperLogger {
-  private results: { name: string; count: number; error?: string }[] = [];
+  private results: { name: string; count: number; error?: string; skipped?: boolean }[] = [];
   private startTime = 0;
   private _lastCycleEnd = 0;
   private _lastSuccessfulFeeds = 0;
   private _lastFailedFeeds = 0;
+  private _lastSkippedFeeds = 0;
   private logger = createLogger("Scraper");
 
   get lastCycleEnd() { return this._lastCycleEnd; }
   get lastSuccessfulFeeds() { return this._lastSuccessfulFeeds; }
   get lastFailedFeeds() { return this._lastFailedFeeds; }
+  get lastSkippedFeeds() { return this._lastSkippedFeeds; }
 
   startCycle() {
     this.results = [];
@@ -55,7 +57,11 @@ export class ScraperLogger {
   }
 
   recordFeed(name: string, count: number) {
-    this.results.push({ name, count });
+    if (count === -1) {
+      this.results.push({ name, count: 0, skipped: true });
+    } else {
+      this.results.push({ name, count });
+    }
   }
 
   recordError(name: string, error: unknown) {
@@ -66,15 +72,19 @@ export class ScraperLogger {
   endCycle() {
     this._lastCycleEnd = Date.now();
     const elapsed = ((Date.now() - this.startTime) / 1000).toFixed(1);
-    const successful = this.results.filter(r => !r.error);
+    const successful = this.results.filter(r => !r.error && !r.skipped);
     const failed = this.results.filter(r => r.error);
+    const skipped = this.results.filter(r => r.skipped);
     this._lastSuccessfulFeeds = successful.length;
     this._lastFailedFeeds = failed.length;
+    this._lastSkippedFeeds = skipped.length;
     const totalRecords = successful.reduce((sum, r) => sum + r.count, 0);
 
-    this.logger.info(
-      `Cycle complete: ${successful.length} feeds OK, ${failed.length} failed, ${totalRecords} records in ${elapsed}s`
-    );
+    const parts = [`${successful.length} OK`, `${failed.length} failed`];
+    if (skipped.length > 0) parts.push(`${skipped.length} throttled`);
+    parts.push(`${totalRecords} records in ${elapsed}s`);
+
+    this.logger.info(`Cycle complete: ${parts.join(", ")}`);
 
     if (failed.length > 0) {
       this.logger.warn(
