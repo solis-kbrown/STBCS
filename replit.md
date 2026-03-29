@@ -6,7 +6,7 @@ Comprehensive cybersecurity threat intelligence platform for small and mid-sized
 ## Architecture
 - **Frontend:** React 19 + TypeScript + Vite + Tailwind CSS + shadcn/ui
 - **Backend:** Express.js + TypeScript (Node.js 20)
-- **Database:** PostgreSQL 16 with Drizzle ORM (52 tables)
+- **Database:** PostgreSQL 16 with Drizzle ORM (53 tables)
 - **Payments:** Stripe integration with 5 subscription tiers
 - **Email:** Resend for transactional emails and alerts
 - **Routing:** wouter (frontend), Express router (backend)
@@ -14,7 +14,7 @@ Comprehensive cybersecurity threat intelligence platform for small and mid-sized
 ## Key Files
 - `shared/schema.ts` — All 52 database table definitions with Drizzle ORM
 - `server/routes.ts` — Main API routes (~7000 lines)
-- `server/scrapers.ts` — 161 threat feed definitions and scraping logic
+- `server/scrapers.ts` — 165+ threat feed definitions and scraping logic (incl. ransom note repos)
 - `server/apiKeyAuth.ts` — API key authentication with tier-based rate limits
 - `server/email.ts` — Resend email service (alerts, digests, lockout notifications)
 - `server/stripeService.ts` — Stripe subscription management

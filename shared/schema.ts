@@ -1355,6 +1355,37 @@ export const insertSyncTokenSchema = createInsertSchema(syncTokens).omit({
 export type SyncToken = typeof syncTokens.$inferSelect;
 export type InsertSyncToken = z.infer<typeof insertSyncTokenSchema>;
 
+// ===== Ransom Notes =====
+export const ransomNotes = pgTable("ransom_notes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  groupName: text("group_name").notNull(),
+  familyName: text("family_name"),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  fileFormat: text("file_format").default("txt"),
+  fileExtensions: text("file_extensions"),
+  language: text("language").default("en"),
+  source: text("source").notNull(),
+  sourceUrl: text("source_url"),
+  discoveredAt: timestamp("discovered_at").defaultNow(),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("rn_group_idx").on(table.groupName),
+  index("rn_family_idx").on(table.familyName),
+  index("rn_source_idx").on(table.source),
+  index("rn_format_idx").on(table.fileFormat),
+  index("rn_discovered_idx").on(table.discoveredAt),
+  uniqueIndex("rn_group_title_source_uniq").on(table.groupName, table.title, table.source),
+]);
+
+export const insertRansomNoteSchema = createInsertSchema(ransomNotes).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type RansomNote = typeof ransomNotes.$inferSelect;
+export type InsertRansomNote = z.infer<typeof insertRansomNoteSchema>;
+
 // ===== Phishing Awareness Bulletins =====
 export const phishingBulletins = pgTable("phishing_bulletins", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

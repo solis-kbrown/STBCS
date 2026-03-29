@@ -5480,6 +5480,12 @@ export async function initializeThreatFeeds(): Promise<void> {
     { name: "CISA ICS-CERT", url: "https://www.cisa.gov/news-events/ics-advisories/all.xml", feedType: "news", updateFrequency: "daily", requiresProTier: false, description: "CISA Industrial Control Systems advisories for OT/ICS environments" },
 
     { name: "AbuseIPDB", url: "https://api.abuseipdb.com/api/v2/blacklist", feedType: "ip", updateFrequency: "daily", requiresProTier: true, description: "1,000 queries/day FREE - crowdsourced IP reputation blacklist" },
+
+    // Ransom Note Intelligence Library
+    { name: "ThreatLabz Ransom Notes", url: "https://github.com/ThreatLabz/ransomware_notes", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "Zscaler ThreatLabz ransomware note collection" },
+    { name: "Lemmou Ransom Notes", url: "https://github.com/lemmou/RansomNoteFiles", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "Community ransomware note file archive" },
+    { name: "Eshlomo Ransom Notes", url: "https://github.com/eshlomo1/Ransomware-NOTE", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "Ransomware note samples by eshlomo1" },
+    { name: "Malware Notes", url: "https://github.com/albertzsigovits/malware-notes", feedType: "ransomware", updateFrequency: "daily", requiresProTier: false, description: "Malware and ransomware note collection by albertzsigovits" },
   ];
   
   const apiKeyGatedFeeds: Record<string, string[]> = {
@@ -6101,7 +6107,10 @@ export async function fetchAllData(): Promise<void> {
   // ===========================================
   try { scraperLog.recordFeed("Ransomware", await fetchRansomwareData()); } catch(e) { scraperLog.recordError("Ransomware", e); }
   try { scraperLog.recordFeed("News", await fetchCybersecurityNews()); } catch(e) { scraperLog.recordError("News", e); }
-  
+
+  // Ransom Note Intelligence Library (daily scrape from GitHub repos)
+  try { scraperLog.recordFeed("RansomNotes", await scrapeRansomNoteRepos()); } catch(e) { scraperLog.recordError("RansomNotes", e); }
+
   scraperLog.endCycle();
 }
 
@@ -6499,6 +6508,120 @@ export async function checkPocAvailability(): Promise<number> {
     logScraperError("PoCCheck", error);
     return 0;
   }
+}
+
+// ===== Ransom Note Intelligence Library Scraper =====
+
+interface GitHubTreeItem {
+  path: string;
+  type: string;
+  url: string;
+  sha: string;
+}
+
+const RANSOM_NOTE_REPOS = [
+  { owner: "ThreatLabz", repo: "ransomware_notes", branch: "main" },
+  { owner: "lemmou", repo: "RansomNoteFiles", branch: "master" },
+  { owner: "eshlomo1", repo: "Ransomware-NOTE", branch: "master" },
+  { owner: "albertzsigovits", repo: "malware-notes", branch: "master" },
+];
+
+const NOTE_EXTENSIONS = [".txt", ".html", ".htm", ".hta", ".rtf", ".md"];
+
+function extractGroupFromPath(filePath: string, repoOwner: string): { groupName: string; familyName: string | null } {
+  const parts = filePath.split("/");
+  if (parts.length >= 2) {
+    const groupName = parts[0]
+      .replace(/[-_]/g, " ")
+      .replace(/\b\w/g, c => c.toUpperCase())
+      .trim();
+    return { groupName, familyName: parts.length >= 3 ? parts[1] : null };
+  }
+  return { groupName: repoOwner, familyName: null };
+}
+
+function detectFileFormat(filename: string): string {
+  const ext = filename.split(".").pop()?.toLowerCase() || "";
+  const formatMap: Record<string, string> = { txt: "txt", html: "html", htm: "html", hta: "hta", rtf: "rtf", md: "markdown" };
+  return formatMap[ext] || "txt";
+}
+
+export async function scrapeRansomNoteRepos(): Promise<number> {
+  const { storage } = await import("./storage");
+  let totalInserted = 0;
+
+  for (const repo of RANSOM_NOTE_REPOS) {
+    try {
+      const treeUrl = `https://api.github.com/repos/${repo.owner}/${repo.repo}/git/trees/${repo.branch}?recursive=1`;
+      const response = await secureFetch(treeUrl, {
+        headers: { "Accept": "application/vnd.github.v3+json" },
+        timeoutMs: 30000,
+      });
+
+      if (!response.ok) {
+        log.warn(`Failed to fetch tree for ${repo.owner}/${repo.repo}: ${response.status}`);
+        continue;
+      }
+
+      const data = await response.json() as { tree: GitHubTreeItem[] };
+      const noteFiles = data.tree.filter((item: GitHubTreeItem) =>
+        item.type === "blob" &&
+        NOTE_EXTENSIONS.some(ext => item.path.toLowerCase().endsWith(ext)) &&
+        !item.path.toLowerCase().includes("readme") &&
+        !item.path.toLowerCase().includes("license")
+      );
+
+      log.info(`[RansomNotes] ${repo.owner}/${repo.repo}: found ${noteFiles.length} note files`);
+
+      const batchSize = 20;
+      for (let i = 0; i < noteFiles.length; i += batchSize) {
+        const batch = noteFiles.slice(i, i + batchSize);
+        const notes: any[] = [];
+
+        for (const file of batch) {
+          try {
+            const rawUrl = `https://raw.githubusercontent.com/${repo.owner}/${repo.repo}/${repo.branch}/${file.path}`;
+            const contentResponse = await secureFetch(rawUrl, { timeoutMs: 15000 });
+            if (!contentResponse.ok) continue;
+
+            const content = await contentResponse.text();
+            if (!content || content.length < 10 || content.length > 500000) continue;
+
+            const { groupName, familyName } = extractGroupFromPath(file.path, repo.owner);
+            const filename = file.path.split("/").pop() || file.path;
+            const fileFormat = detectFileFormat(filename);
+
+            notes.push({
+              groupName,
+              familyName,
+              title: filename,
+              content: content.substring(0, 100000),
+              fileFormat,
+              source: `${repo.owner}/${repo.repo}`,
+              sourceUrl: `https://github.com/${repo.owner}/${repo.repo}/blob/${repo.branch}/${file.path}`,
+              discoveredAt: new Date(),
+            });
+          } catch {
+            // skip individual file errors
+          }
+        }
+
+        if (notes.length > 0) {
+          const count = await storage.bulkUpsertRansomNotes(notes);
+          totalInserted += count;
+        }
+
+        await delay(500);
+      }
+
+      await delay(2000);
+    } catch (error) {
+      logScraperError(`RansomNotes-${repo.owner}`, error);
+    }
+  }
+
+  log.info(`[RansomNotes] Total upserted: ${totalInserted} notes from ${RANSOM_NOTE_REPOS.length} repos`);
+  return totalInserted;
 }
 
 export function stopDataRefreshScheduler(): void {

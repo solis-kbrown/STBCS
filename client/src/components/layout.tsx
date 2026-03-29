@@ -46,7 +46,8 @@ import {
   ChevronRight,
   Calculator,
   Radio,
-  MailWarning
+  MailWarning,
+  ScrollText
 } from "lucide-react";
 import { useState, useEffect, useRef, useCallback, KeyboardEvent } from "react";
 import { Button } from "@/components/ui/button";
@@ -153,6 +154,7 @@ const navSections: NavSection[] = [
       { href: "/ics-advisories", labelKey: "nav.icsAdvisories", icon: Factory },
       { href: "/risk-score", labelKey: "nav.riskScore", icon: ShieldCheck },
       { href: "/ransomware-calculator", labelKey: "nav.ransomwareCalculator", icon: Calculator },
+      { href: "/ransom-notes", labelKey: "nav.ransomNotes", icon: ScrollText, isPro: true },
       { href: "/awareness", labelKey: "nav.awareness", icon: MailWarning },
       { href: "/playbooks", labelKey: "nav.playbooks", icon: ClipboardList },
       { href: "/compliance", labelKey: "nav.compliance", icon: ShieldCheck },

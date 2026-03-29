@@ -38,6 +38,7 @@ import {
   type FeedbackSubmission, type InsertFeedback,
   type SyncToken, type InsertSyncToken,
   type PhishingBulletin, type InsertPhishingBulletin,
+  type RansomNote, type InsertRansomNote,
   KB_POINTS,
   users, sessions, cves, ransomwareIncidents, threatActors, newsArticles,
   maliciousIps, maliciousUrls, cisaKev, subscriptions, threatFeeds,
@@ -47,7 +48,7 @@ import {
   uptimeMonitors, uptimeChecks, uptimeIncidents, darkWebMonitors, darkWebFindings,
   dailyThreatStats, attackSurfaceScans, attackSurfaceAssets, threatReports, reportSchedules,
   kbPosts, kbComments, kbVotes, kbBookmarks, kbReports, feedbackSubmissions, syncTokens,
-  phishingBulletins
+  phishingBulletins, ransomNotes
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, ilike, or, sql, and, gte, asc, count, ne, inArray } from "drizzle-orm";
@@ -397,6 +398,18 @@ export interface IStorage {
   getBulletinById(id: string): Promise<PhishingBulletin | undefined>;
   getBulletinCount(period?: string): Promise<number>;
   getRecentPhishingUrls(hours: number): Promise<MaliciousUrl[]>;
+
+  // Ransom Notes
+  getRansomNotes(options: { limit?: number; offset?: number; search?: string; group?: string; family?: string; format?: string; sort?: string }): Promise<RansomNote[]>;
+  getRansomNoteById(id: string): Promise<RansomNote | undefined>;
+  getRansomNoteCount(options: { search?: string; group?: string; family?: string; format?: string }): Promise<number>;
+  getRansomNoteStats(): Promise<{ totalNotes: number; familiesCovered: number; sourcesUsed: number; latestAddedAt: Date | null }>;
+  upsertRansomNote(note: InsertRansomNote): Promise<RansomNote>;
+  createRansomNote(note: InsertRansomNote): Promise<RansomNote>;
+  updateRansomNote(id: string, updates: Partial<InsertRansomNote>): Promise<RansomNote>;
+  deleteRansomNote(id: string): Promise<void>;
+  bulkUpsertRansomNotes(notes: InsertRansomNote[]): Promise<number>;
+  getRansomNoteGroups(): Promise<{ group: string; count: number }[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -3112,6 +3125,120 @@ export class DatabaseStorage implements IStorage {
         gte(maliciousUrls.createdAt, cutoff)
       ))
       .orderBy(desc(maliciousUrls.createdAt));
+  }
+
+  // Ransom Notes
+  async getRansomNotes(options: { limit?: number; offset?: number; search?: string; group?: string; family?: string; format?: string; sort?: string }): Promise<RansomNote[]> {
+    const { limit = 50, offset = 0, search, group, family, format, sort = "newest" } = options;
+    const conditions = [];
+    if (group) conditions.push(ilike(ransomNotes.groupName, group));
+    if (family) conditions.push(ilike(ransomNotes.familyName, `%${family}%`));
+    if (format) conditions.push(eq(ransomNotes.fileFormat, format));
+    if (search) {
+      conditions.push(or(
+        ilike(ransomNotes.content, `%${search}%`),
+        ilike(ransomNotes.groupName, `%${search}%`),
+        ilike(ransomNotes.familyName, `%${search}%`),
+        ilike(ransomNotes.title, `%${search}%`),
+        ilike(ransomNotes.fileExtensions, `%${search}%`)
+      ));
+    }
+    const orderBy = sort === "oldest" ? asc(ransomNotes.discoveredAt)
+      : sort === "group" ? asc(ransomNotes.groupName)
+      : desc(ransomNotes.discoveredAt);
+    return db.select().from(ransomNotes)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(orderBy)
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getRansomNoteById(id: string): Promise<RansomNote | undefined> {
+    const [result] = await db.select().from(ransomNotes).where(eq(ransomNotes.id, id));
+    return result;
+  }
+
+  async getRansomNoteCount(options: { search?: string; group?: string; family?: string; format?: string }): Promise<number> {
+    const { search, group, family, format } = options;
+    const conditions = [];
+    if (group) conditions.push(ilike(ransomNotes.groupName, group));
+    if (family) conditions.push(ilike(ransomNotes.familyName, `%${family}%`));
+    if (format) conditions.push(eq(ransomNotes.fileFormat, format));
+    if (search) {
+      conditions.push(or(
+        ilike(ransomNotes.content, `%${search}%`),
+        ilike(ransomNotes.groupName, `%${search}%`),
+        ilike(ransomNotes.familyName, `%${search}%`),
+        ilike(ransomNotes.title, `%${search}%`)
+      ));
+    }
+    const [result] = await db.select({ count: sql<number>`count(*)::int` })
+      .from(ransomNotes)
+      .where(conditions.length > 0 ? and(...conditions) : undefined);
+    return result?.count || 0;
+  }
+
+  async getRansomNoteStats(): Promise<{ totalNotes: number; familiesCovered: number; sourcesUsed: number; latestAddedAt: Date | null }> {
+    const [stats] = await db.select({
+      totalNotes: sql<number>`count(*)::int`,
+      familiesCovered: sql<number>`count(distinct coalesce(family_name, group_name))::int`,
+      sourcesUsed: sql<number>`count(distinct source)::int`,
+      latestAddedAt: sql<Date | null>`max(created_at)`,
+    }).from(ransomNotes);
+    return stats || { totalNotes: 0, familiesCovered: 0, sourcesUsed: 0, latestAddedAt: null };
+  }
+
+  async upsertRansomNote(note: InsertRansomNote): Promise<RansomNote> {
+    const [existing] = await db.select().from(ransomNotes)
+      .where(and(
+        eq(ransomNotes.groupName, note.groupName),
+        eq(ransomNotes.title, note.title),
+        eq(ransomNotes.source, note.source)
+      ));
+    if (existing) {
+      const [updated] = await db.update(ransomNotes)
+        .set(note)
+        .where(eq(ransomNotes.id, existing.id))
+        .returning();
+      return updated;
+    }
+    const [created] = await db.insert(ransomNotes).values(note).returning();
+    return created;
+  }
+
+  async createRansomNote(note: InsertRansomNote): Promise<RansomNote> {
+    const [created] = await db.insert(ransomNotes).values(note).returning();
+    return created;
+  }
+
+  async updateRansomNote(id: string, updates: Partial<InsertRansomNote>): Promise<RansomNote> {
+    const [updated] = await db.update(ransomNotes).set(updates).where(eq(ransomNotes.id, id)).returning();
+    return updated;
+  }
+
+  async deleteRansomNote(id: string): Promise<void> {
+    await db.delete(ransomNotes).where(eq(ransomNotes.id, id));
+  }
+
+  async bulkUpsertRansomNotes(notes: InsertRansomNote[]): Promise<number> {
+    let upserted = 0;
+    for (const note of notes) {
+      try {
+        await this.upsertRansomNote(note);
+        upserted++;
+      } catch { }
+    }
+    return upserted;
+  }
+
+  async getRansomNoteGroups(): Promise<{ group: string; count: number }[]> {
+    const results = await db.select({
+      group: ransomNotes.groupName,
+      count: sql<number>`count(*)::int`,
+    }).from(ransomNotes)
+      .groupBy(ransomNotes.groupName)
+      .orderBy(desc(sql`count(*)`));
+    return results;
   }
 }
 

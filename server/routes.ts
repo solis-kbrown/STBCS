@@ -6984,6 +6984,81 @@ Hiring: https://stbcybersecurity.com/support
     }
   });
 
+  // ===== Ransom Note Intelligence Library =====
+
+  app.get("/api/ransom-notes", requireAuth as any, requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const rawLimit = parseInt(asString(req.query.limit as string) || "50");
+      const rawOffset = parseInt(asString(req.query.offset as string) || "0");
+      const limit = Math.max(1, Math.min(isNaN(rawLimit) ? 50 : rawLimit, 100));
+      const offset = Math.max(0, isNaN(rawOffset) ? 0 : rawOffset);
+      const search = asString(req.query.search as string)?.substring(0, 200);
+      const group = asString(req.query.group as string)?.substring(0, 100);
+      const family = asString(req.query.family as string)?.substring(0, 100);
+      const format = asString(req.query.format as string);
+      const validSorts = ["newest", "oldest", "group"];
+      const sortParam = asString(req.query.sort as string) || "newest";
+      const sort = validSorts.includes(sortParam) ? sortParam : "newest";
+
+      const [notes, total] = await Promise.all([
+        storage.getRansomNotes({ limit, offset, search, group, family, format, sort }),
+        storage.getRansomNoteCount({ search, group, family, format }),
+      ]);
+
+      res.json({ notes, total, limit, offset });
+    } catch (error) {
+      console.error("Ransom notes list error:", error);
+      res.status(500).json({ error: "Failed to fetch ransom notes" });
+    }
+  });
+
+  app.get("/api/ransom-notes/stats", requireAuth as any, requirePro as any, async (_req: AuthenticatedRequest, res: Response) => {
+    try {
+      const stats = await storage.getRansomNoteStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Ransom notes stats error:", error);
+      res.status(500).json({ error: "Failed to fetch ransom note stats" });
+    }
+  });
+
+  app.get("/api/ransom-notes/groups", requireAuth as any, requirePro as any, async (_req: AuthenticatedRequest, res: Response) => {
+    try {
+      const groups = await storage.getRansomNoteGroups();
+      res.json(groups);
+    } catch (error) {
+      console.error("Ransom note groups error:", error);
+      res.status(500).json({ error: "Failed to fetch ransom note groups" });
+    }
+  });
+
+  app.get("/api/ransom-notes/:id", requireAuth as any, requirePro as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      const note = await storage.getRansomNoteById(req.params.id);
+      if (!note) {
+        return res.status(404).json({ error: "Ransom note not found" });
+      }
+      res.json(note);
+    } catch (error) {
+      console.error("Ransom note detail error:", error);
+      res.status(500).json({ error: "Failed to fetch ransom note" });
+    }
+  });
+
+  app.post("/api/ransom-notes/scrape", requireAuth as any, async (req: AuthenticatedRequest, res: Response) => {
+    try {
+      if (!req.user?.isAdmin) {
+        return res.status(403).json({ error: "Admin access required" });
+      }
+      const { scrapeRansomNoteRepos } = await import("./scrapers");
+      const count = await scrapeRansomNoteRepos();
+      res.json({ success: true, message: `Scraped ${count} ransom notes` });
+    } catch (error) {
+      console.error("Ransom note scrape error:", error);
+      res.status(500).json({ error: "Failed to scrape ransom notes" });
+    }
+  });
+
   // ===================== END NEW ROUTES =====================
 
   const REPORT_TOKENS: Record<string, { file: string; filename: string }> = {
