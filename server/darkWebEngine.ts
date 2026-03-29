@@ -607,7 +607,14 @@ export async function runDarkWebEngine(): Promise<{ scanned: number; findings: n
         scanned++;
       } catch (err: any) {
         errors++;
-        log.error(`Dark web monitor ${monitor.id} failed: ${err.message}`);
+        const msg = err?.message || "";
+        const isTransient = msg.includes("timeout exceeded") || msg.includes("Connection terminated") ||
+          msg.includes("connection timeout") || msg.includes("too many clients") || msg.includes("ETIMEDOUT");
+        if (isTransient) {
+          log.debug(`Dark web monitor ${monitor.id} skipped (transient): ${msg.split("\n")[0]}`);
+        } else {
+          log.error(`Dark web monitor ${monitor.id} failed: ${msg}`);
+        }
       }
     }
 
