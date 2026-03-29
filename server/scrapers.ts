@@ -2,7 +2,7 @@ import { storage } from "./storage";
 import type { InsertCve, InsertRansomware, InsertNews, InsertMaliciousIp, InsertMaliciousUrl, InsertCisaKev, InsertNotification, InsertIcsAdvisory } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { watchlistItems, cves, threatActors } from "@shared/schema";
+import { watchlistItems, cves, threatActors, threatFeeds } from "@shared/schema";
 import { createLogger, scraperLog } from "./logger";
 import Parser from "rss-parser";
 const log = createLogger("Scraper");
@@ -2073,6 +2073,18 @@ const PULSEDIVE_API = "https://pulsedive.com/api";
 let _pulsediveLastFetch = 0;
 const PULSEDIVE_MIN_INTERVAL_MS = 6 * 60 * 60 * 1000;
 
+async function getPulsediveLastFetch(): Promise<number> {
+  if (_pulsediveLastFetch > 0) return _pulsediveLastFetch;
+  try {
+    const [feed] = await db.select({ lastFetched: threatFeeds.lastFetched })
+      .from(threatFeeds).where(eq(threatFeeds.name, "Pulsedive")).limit(1);
+    if (feed?.lastFetched) {
+      _pulsediveLastFetch = feed.lastFetched.getTime();
+    }
+  } catch {}
+  return _pulsediveLastFetch;
+}
+
 export async function fetchPulsedive(): Promise<number> {
   const apiKey = process.env.PULSEDIVE_API_KEY;
   
@@ -2081,9 +2093,10 @@ export async function fetchPulsedive(): Promise<number> {
     return 0;
   }
 
-  if (Date.now() - _pulsediveLastFetch < PULSEDIVE_MIN_INTERVAL_MS) {
+  const lastFetch = await getPulsediveLastFetch();
+  if (Date.now() - lastFetch < PULSEDIVE_MIN_INTERVAL_MS) {
     log.debug("Pulsedive: throttled (free tier: max 3-4 fetches/day). Next fetch in " +
-      Math.round((PULSEDIVE_MIN_INTERVAL_MS - (Date.now() - _pulsediveLastFetch)) / 60000) + "m");
+      Math.round((PULSEDIVE_MIN_INTERVAL_MS - (Date.now() - lastFetch)) / 60000) + "m");
     return -1;
   }
   
