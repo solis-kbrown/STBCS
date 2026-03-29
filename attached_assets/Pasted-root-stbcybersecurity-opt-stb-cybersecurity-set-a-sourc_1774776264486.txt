@@ -1,0 +1,61 @@
+root@stbcybersecurity:/opt/stb-cybersecurity# set -a; source .env; set +a
+node dist/index.cjs
+5:23:11 AM [express] serving on port 5000
+5:23:11 AM [express] Static file serving initialized early for fast startup
+5:23:11 AM [express] Routes and static serving initialized
+5:23:11 AM [express] Staggered startup: deferring background services (60s+ after health checks)
+Database pool connection verified
+[Digest] Digest scheduler started (hourly checks)
+[Maintenance] Maintenance scheduler started | Sale ends: 3/6/2026 | Admin: kbpc.inc@gmail.com
+[KB Scraper] Initialized - will scrape every 4 hours, cleanup daily
+[UptimeEngine] Starting uptime monitor scheduler (every 300s)
+[DarkWebEngine] Starting dark web monitor scheduler (check due monitors every 360m)
+[Email] Resend error: {
+  statusCode: 403,
+  message: 'The stbcybersecurity.com domain is not verified. Please, add and verify your domain on https://resend.com/domains',
+  name: 'validation_error'
+}
+Initializing Stripe...
+Stripe connection verified
+Webhook URL base: https://stbcybersecurity.com/api/stripe/webhook
+Stripe initialization complete
+[Scraper] Starting threat intel refresh every 15 minutes (160+ sources)
+5:23:37 AM [express] GET /api/stats 200 in 47ms
+5:23:37 AM [express] GET /api/trends 200 in 45ms
+5:23:37 AM [express] GET /api/cves 200 in 13ms
+5:23:37 AM [express] GET /api/ransomware 200 in 10ms
+5:23:37 AM [express] GET /api/site-settings/hero-bg 200 in 6ms
+5:23:37 AM [express] GET /api/site-settings/logo-theme 200 in 5ms
+5:23:37 AM [express] GET /api/site-settings/icon-theme 200 in 2ms
+5:23:37 AM [express] Cache warm-up complete
+5:23:40 AM [express] Awareness bulletin scheduler started (daily 07:00 UTC)
+[Scraper] Starting threat data fetch cycle...
+[Scraper] Initialized 162 active threat feed sources (163 total, 1 skipped - no API key)
+[KB Scraper] Starting cybersecurity feed scrape...
+[KB Scraper] No new articles to add
+^C
+root@stbcybersecurity:/opt/stb-cybersecurity# pm2 start ecosystem.config.cjs
+pm2 save
+Command 'pm2' not found, did you mean:
+  command 'wm2' from deb wm2 (4+svn20090216-4build1)
+  command 'pmw' from deb pmw (1:5.22-1)
+  command 'tpm2' from deb tpm2-tools (5.4-1)
+  command 'pmc' from deb linuxptp (4.0-1ubuntu1.1)
+  command 'pom2' from deb libpod-pom-perl (2.01-4)
+  command 'pms' from deb pms (0.42-1.1)
+  command 'gm2' from deb gm2 (4:13.2.0-2ubuntu1)
+  command 'pm' from deb powerman (2.3.27-4)
+  command 'pmg' from deb python3-pymatgen (2023.06.23+dfsg1-2build1)
+Try: apt install <deb name>
+Command 'pm2' not found, did you mean:
+  command 'pm' from deb powerman (2.3.27-4)
+  command 'tpm2' from deb tpm2-tools (5.4-1)
+  command 'wm2' from deb wm2 (4+svn20090216-4build1)
+  command 'pmg' from deb python3-pymatgen (2023.06.23+dfsg1-2build1)
+  command 'pom2' from deb libpod-pom-perl (2.01-4)
+  command 'gm2' from deb gm2 (4:13.2.0-2ubuntu1)
+  command 'pms' from deb pms (0.42-1.1)
+  command 'pmw' from deb pmw (1:5.22-1)
+  command 'pmc' from deb linuxptp (4.0-1ubuntu1.1)
+Try: apt install <deb name>
+root@stbcybersecurity:/opt/stb-cybersecurity#
