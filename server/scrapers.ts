@@ -2100,6 +2100,7 @@ export async function fetchPulsedive(): Promise<number> {
     return -1;
   }
   
+  _pulsediveLastFetch = Date.now();
   try {
     log.debug("Fetching community threat intelligence...");
     
