@@ -430,7 +430,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <span>Support</span>
           </a>
           <span className="text-zinc-700">·</span>
-          <span className="text-zinc-600">stbcybersecurity.com</span>
+          <span className="text-zinc-600 truncate">STBCS · stbcybersecurity.com</span>
         </div>
       </div>
     </div>
