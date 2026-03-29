@@ -1,0 +1,17 @@
+[Unit]
+Description=STBCS Watchdog — Self-Healing Monitor
+Documentation=https://github.com/solis-kbrown/STBCS
+After=network.target postgresql.service caddy.service pm2-stbcs.service
+Wants=postgresql.service caddy.service
+
+[Service]
+Type=simple
+ExecStart=/opt/stb-cybersecurity/deploy/watchdog.sh
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=stbcs-watchdog
+
+[Install]
+WantedBy=multi-user.target
