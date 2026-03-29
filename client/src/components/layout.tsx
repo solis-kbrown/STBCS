@@ -301,15 +301,15 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-sidebar text-sidebar-foreground border-r border-sidebar-border relative">
       <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
-      <div className="p-6 pb-4">
+      <div className="px-4 py-3">
         <Link href="/">
           <div className="flex flex-col items-center cursor-pointer">
-            <img src={activeTheme.fullLogo} alt="STB Cybersecurity" className="h-32 w-auto rounded-lg sidebar-logo" />
+            <img src={activeTheme.fullLogo} alt="STB Cybersecurity" className="h-16 w-auto rounded-lg sidebar-logo" />
           </div>
         </Link>
       </div>
       
-      <div className="flex-1 overflow-y-auto px-3 py-4 scrollbar-thin scrollbar-thumb-orange-500/20 scrollbar-track-transparent sidebar-scroll-fade">
+      <div className="flex-1 overflow-y-auto px-3 py-2 scrollbar-thin scrollbar-thumb-orange-500/20 scrollbar-track-transparent sidebar-scroll-fade">
         {navSections.map((section, sectionIndex) => (
           <div key={section.id} className={sectionIndex > 0 ? "mt-1" : ""}>
             {sectionIndex > 0 && (
@@ -368,67 +368,68 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         ))}
       </div>
 
-      <div className="p-4 border-t border-zinc-800/50 space-y-3">
-        <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-3">
-          <p className="text-[10px] text-orange-400 font-bold mb-1 flex items-center gap-1">
-            <Phone aria-hidden="true" className="h-3 w-3" /> {t('hotline.emergency')}
-          </p>
-          <a 
-            href="tel:+18557821987" 
-            className="text-base font-display font-bold text-white hover:text-orange-400 transition-colors duration-300 block"
-            data-testid="link-phone-sidebar"
-          >
-            (855) STB-1987
-          </a>
-          <p className="text-xs text-zinc-500 mt-1">{t('hotline.available')}</p>
-          <div className="flex gap-2 mt-2">
+      <div className="px-3 py-2 border-t border-zinc-800/50 space-y-2">
+        <div className="bg-orange-500/10 border border-orange-500/30 rounded-md px-2.5 py-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 min-w-0">
+              <Phone aria-hidden="true" className="h-3 w-3 text-orange-400 shrink-0" />
+              <span className="text-[10px] text-orange-400 font-bold truncate">{t('hotline.emergency')}</span>
+            </div>
             <a 
               href="tel:+18557821987" 
-              className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-all duration-300"
+              className="text-sm font-display font-bold text-white hover:text-orange-400 transition-colors duration-300 shrink-0"
+              data-testid="link-phone-sidebar"
+            >
+              (855) STB-1987
+            </a>
+          </div>
+          <div className="flex gap-1.5 mt-1.5">
+            <a 
+              href="tel:+18557821987" 
+              className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-[10px] py-1 px-1.5 rounded flex items-center justify-center gap-1 transition-all duration-300"
               data-testid="button-call-sidebar"
             >
-              <Phone aria-hidden="true" className="h-3 w-3" /> {t('hotline.callNow')}
+              <Phone aria-hidden="true" className="h-2.5 w-2.5" /> {t('hotline.callNow')}
             </a>
             <a 
               href="sms:+18557821987" 
-              className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-xs py-1.5 px-2 rounded flex items-center justify-center gap-1 transition-all duration-300"
+              className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-[10px] py-1 px-1.5 rounded flex items-center justify-center gap-1 transition-all duration-300"
               data-testid="button-sms-sidebar"
             >
-              <MessageSquare aria-hidden="true" className="h-3 w-3" /> {t('hotline.textUs')}
+              <MessageSquare aria-hidden="true" className="h-2.5 w-2.5" /> {t('hotline.textUs')}
             </a>
           </div>
         </div>
-        <div className="relative rounded-lg p-[1px] overflow-hidden sidebar-upgrade-glow">
-          <div className="absolute inset-0 rounded-lg bg-gradient-to-r from-orange-500/40 via-amber-500/40 to-orange-500/40" />
-          <div className="relative bg-zinc-900/90 rounded-lg p-4">
-            <h4 className="font-display text-sm font-bold text-orange-400 mb-1">PRO ACCOUNT</h4>
-            <p className="text-xs text-zinc-500 mb-3">Upgrade for unlimited tools, real-time API access, and custom alerts.</p>
-            <Button size="sm" className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold tracking-wide transition-all duration-300 hover:shadow-[0_0_16px_rgba(249,115,22,0.3)]" asChild>
-              <a href="/pricing">UPGRADE</a>
-            </Button>
+        <div className="relative rounded-md p-[1px] overflow-hidden sidebar-upgrade-glow">
+          <div className="absolute inset-0 rounded-md bg-gradient-to-r from-orange-500/40 via-amber-500/40 to-orange-500/40" />
+          <div className="relative bg-zinc-900/90 rounded-md px-2.5 py-2">
+            <div className="flex items-center justify-between mb-1.5">
+              <h4 className="font-display text-xs font-bold text-orange-400">PRO ACCOUNT</h4>
+              <Button size="sm" className="h-6 px-3 text-[10px] bg-orange-500 hover:bg-orange-600 text-white font-bold tracking-wide transition-all duration-300 hover:shadow-[0_0_16px_rgba(249,115,22,0.3)]" asChild>
+                <a href="/pricing">UPGRADE</a>
+              </Button>
+            </div>
+            <p className="text-[10px] text-zinc-500 leading-snug">Unlimited tools, real-time API & custom alerts.</p>
           </div>
         </div>
-        <div className="px-2 space-y-1">
+        <div className="flex items-center justify-between px-1 text-[10px] text-zinc-500">
           <a 
             href="/contact?category=general" 
-            className="flex items-center gap-2 text-xs text-zinc-500 hover:text-orange-400 transition-all duration-300 hover:translate-x-0.5"
+            className="flex items-center gap-1 hover:text-orange-400 transition-all duration-300"
           >
-            <Mail aria-hidden="true" className="h-3 w-3" />
-            <span>Contact Us</span>
+            <Mail aria-hidden="true" className="h-2.5 w-2.5" />
+            <span>Contact</span>
           </a>
+          <span className="text-zinc-700">·</span>
           <a 
             href="/contact?category=support" 
-            className="flex items-center gap-2 text-xs text-zinc-500 hover:text-orange-400 transition-all duration-300 hover:translate-x-0.5"
+            className="flex items-center gap-1 hover:text-orange-400 transition-all duration-300"
           >
-            <Mail aria-hidden="true" className="h-3 w-3" />
-            <span>Get Support</span>
+            <Mail aria-hidden="true" className="h-2.5 w-2.5" />
+            <span>Support</span>
           </a>
-        </div>
-        <div className="px-2 pt-2 border-t border-zinc-800/50">
-          <p className="text-[10px] text-zinc-600 leading-relaxed">
-            STB Cybersecurity (STBCS)<br />
-            stbcybersecurity.com
-          </p>
+          <span className="text-zinc-700">·</span>
+          <span className="text-zinc-600">stbcybersecurity.com</span>
         </div>
       </div>
     </div>
