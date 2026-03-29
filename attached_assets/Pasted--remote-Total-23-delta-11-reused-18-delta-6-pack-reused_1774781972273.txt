@@ -1,0 +1,91 @@
+
+remote: Total 23 (delta 11), reused 18 (delta 6), pack-reused 0 (from 0)
+Unpacking objects: 100% (23/23), 13.80 MiB | 5.51 MiB/s, done.
+From https://github.com/solis-kbrown/STBCS
+ * branch            main       -> FETCH_HEAD
+   ec3ae92..1558718  main       -> origin/main
+Updating ec3ae92..1558718
+error: The following untracked working tree files would be overwritten by merg                                      e:
+        stbcs_full_backup.sql
+Please move or remove them before you merge.
+Aborting
+root@stbcybersecurity:/opt/stb-cybersecurity# vm stbcs_full_backup.sql /home/ubuntu
+Command 'vm' not found, but can be installed with:
+apt install mgetty-voice
+root@stbcybersecurity:/opt/stb-cybersecurity# mv stbcs_full_backup.sql /home/ubuntu
+root@stbcybersecurity:/opt/stb-cybersecurity# git pull origin main
+From https://github.com/solis-kbrown/STBCS
+ * branch            main       -> FETCH_HEAD
+Updating ec3ae92..1558718
+Fast-forward
+ .../2026-03-29_03_35_52-stripe-web-hooks-active_1774769795115.png         |    Bin 0 -> 286730 bytes
+ ...t-stbcybersecurity-opt-stb-cybersecurity-npm-install_1774776514556.txt |     94 +
+ ...t-stbcybersecurity-opt-stb-cybersecurity-set-a-sourc_1774776264486.txt |     61 +
+ ...kflow-Update-GitHub-Action-workflows-write-packages-_1774767744125.txt |    118 +
+ deploy/install-watchdog.sh                                                |    113 +
+ deploy/watchdog.service                                                   |     17 +
+ deploy/watchdog.sh                                                        |    452 +
+ stbcs_full_backup.sql                                                     | 204432 +++++++++++++++++++++++++++++++
+ 8 files changed, 205287 insertions(+)
+ create mode 100644 attached_assets/2026-03-29_03_35_52-stripe-web-hooks-active_1774769795115.png
+ create mode 100644 attached_assets/Pasted-root-stbcybersecurity-opt-stb-cybersecurity-npm-install_1774776514556.txt
+ create mode 100644 attached_assets/Pasted-root-stbcybersecurity-opt-stb-cybersecurity-set-a-sourc_1774776264486.txt
+ create mode 100644 attached_assets/Pasted-workflow-Update-GitHub-Action-workflows-write-packages-_1774767744125.txt
+ create mode 100755 deploy/install-watchdog.sh
+ create mode 100644 deploy/watchdog.service
+ create mode 100755 deploy/watchdog.sh
+ create mode 100644 stbcs_full_backup.sql
+root@stbcybersecurity:/opt/stb-cybersecurity# bash deploy/install-watchdog.sh
+
+  STBCS Watchdog Installer
+
+
+  Step 1/5: Verifying files...
+
+[INSTALL] Found watchdog.sh
+[INSTALL] Found watchdog.service
+
+  Step 2/5: Setting permissions...
+
+[INSTALL] watchdog.sh marked executable
+[INSTALL] Log directory ready at /opt/stb-cybersecurity/logs
+
+  Step 3/5: Installing systemd service...
+
+[INSTALL] Service file installed and systemd reloaded
+
+  Step 4/5: Enabling and starting watchdog...
+
+Created symlink /etc/systemd/system/multi-user.target.wants/stbcs-watchdog.service → /etc/systemd/system/stbcs-watchdog.service.
+[INSTALL] Watchdog service enabled and started
+
+  Step 5/5: Verifying...
+
+
+============================================
+  STBCS Watchdog is running!
+============================================
+
+  Status:    systemctl status stbcs-watchdog
+  Logs:      tail -f /opt/stb-cybersecurity/logs/watchdog.log
+  Journal:   journalctl -u stbcs-watchdog -f
+  Stop:      systemctl stop stbcs-watchdog
+  Restart:   systemctl restart stbcs-watchdog
+
+  What the watchdog monitors:
+  - App health (every 30s)
+  - PM2 process state
+  - PostgreSQL connectivity (every 60s)
+  - Caddy proxy (every 120s)
+  - Memory usage (every 120s)
+  - Disk space
+  - Error log patterns (OOM, pool exhaustion, init failures)
+  - PM2 log rotation (auto-trim at 100MB)
+
+  Recovery actions (zero-downtime first):
+  - Graceful PM2 reload (no user interruption)
+  - Hard restart only as last resort
+  - Auto-restart PostgreSQL if down
+  - Auto-restart Caddy if down
+  - 5-minute cooldown between restarts
+
