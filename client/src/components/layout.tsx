@@ -383,7 +383,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
               (855) STB-1987
             </a>
           </div>
-          <div className="flex gap-1.5 mt-1.5">
+          <div className="flex items-center gap-1.5 mt-1">
+            <p className="text-[9px] text-zinc-500 shrink-0">{t('hotline.available')}</p>
             <a 
               href="tel:+18557821987" 
               className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 text-orange-400 text-[10px] py-1 px-1.5 rounded flex items-center justify-center gap-1 transition-all duration-300"
