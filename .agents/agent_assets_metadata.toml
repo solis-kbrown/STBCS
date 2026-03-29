@@ -35,4 +35,10 @@ title = "STBCS v2.0 Definitive Release Notes"
 id = "FCk5zBunIm8klQg_KtNAc"
 uri = "file://HETZNER_DEPLOYMENT_GUIDE.md"
 type = "text"
-title = "STBCS Hetzner Dedicated Server Deployment Guide"
+title = "Full Deployment Guide (detailed step-by-step)"
+
+[[outputs]]
+id = "6VMqRZ9r4V01D-0-XL39Y"
+uri = "file://deploy/README.txt"
+type = "text"
+title = "Quick Start Reference"

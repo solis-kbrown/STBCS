@@ -7,6 +7,36 @@
 
 ---
 
+## Fast Track (If You Want to Skip the Manual Steps)
+
+This project includes automated scripts in the `deploy/` folder. If you're comfortable
+running scripts, here's the 4-step version:
+
+```bash
+# 1. Upload or clone the project to your server
+scp -r /path/to/stb-cybersecurity root@YOUR_SERVER_IP:/opt/stb-cybersecurity
+# OR: git clone https://github.com/YOU/stb-cybersecurity.git /opt/stb-cybersecurity
+
+# 2. Run the automated setup (installs everything)
+cd /opt/stb-cybersecurity
+chmod +x deploy/*.sh
+sudo ./deploy/setup.sh
+
+# 3. Edit .env with your real API keys
+nano /opt/stb-cybersecurity/.env
+
+# 4. Build and launch
+su - stbcs
+cd /opt/stb-cybersecurity
+./deploy/go.sh
+```
+
+Then point your DNS and update your Stripe webhook URL. Done.
+
+The rest of this guide explains every step in detail for reference and troubleshooting.
+
+---
+
 ## Table of Contents
 
 1. [What You'll Need Before Starting](#1-what-youll-need-before-starting)
