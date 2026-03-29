@@ -36,7 +36,7 @@ function cert1(f: CertFields) {
   <div style="position:absolute;inset:14px;border:1px solid #f9731620;border-radius:10px;"></div>
   <div style="position:absolute;top:8px;left:50%;transform:translateX(-50);width:60px;height:3px;background:#f97316;border-radius:2px;"></div>
   <div style="position:absolute;bottom:8px;left:50%;transform:translateX(-50%);width:60px;height:3px;background:#f97316;border-radius:2px;"></div>
-  <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="border-radius:10px;margin-bottom:12px;" />
+  <img src="${LOGO_URL}" alt="STB Cybersecurity certification seal" width="48" height="48" loading="lazy" style="border-radius:10px;margin-bottom:12px;" />
   <div style="font-size:9px;color:#f97316;text-transform:uppercase;letter-spacing:4px;margin-bottom:6px;">Certificate of</div>
   <div style="font-size:24px;font-weight:900;color:#ffffff;letter-spacing:3px;text-transform:uppercase;margin-bottom:20px;">Achievement</div>
   <div style="width:60px;height:2px;background:linear-gradient(90deg,transparent,#f97316,transparent);margin-bottom:16px;"></div>
@@ -65,7 +65,7 @@ function cert1(f: CertFields) {
 function cert2(f: CertFields) {
   return `<div style="width:100%;aspect-ratio:4/3;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;padding:32px;">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="36" height="36" style="border-radius:8px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity certification seal" width="36" height="36" loading="lazy" style="border-radius:8px;" />
     <div>
       <div style="font-size:12px;font-weight:800;color:#ffffff;letter-spacing:2px;">${f.company.toUpperCase()}</div>
       <div style="font-size:8px;color:#52525b;letter-spacing:2px;">TRAINING DIVISION</div>
@@ -110,7 +110,7 @@ function cert2(f: CertFields) {
 function cert3(f: CertFields) {
   return `<div style="width:100%;aspect-ratio:4/3;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;">
   <div style="width:140px;background:linear-gradient(180deg,#f97316,#ea580c);display:flex;flex-direction:column;align-items:center;padding:24px 12px;gap:12px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="border-radius:10px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity certification seal" width="48" height="48" loading="lazy" style="border-radius:10px;" />
     <div style="font-size:8px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:2px;text-align:center;text-transform:uppercase;">${f.company}</div>
     <div style="flex:1;"></div>
     <div style="width:80px;height:100px;background:rgba(0,0,0,0.2);border-radius:6px;display:flex;align-items:center;justify-content:center;">
@@ -159,7 +159,7 @@ function cert4(f: CertFields) {
   return `<div style="width:100%;aspect-ratio:4/3;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;padding:32px;">
   <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#f97316,#22c55e,#3b82f6,#f97316);"></div>
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="32" height="32" style="border-radius:6px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity certification seal" width="32" height="32" loading="lazy" style="border-radius:6px;" />
     <div style="font-size:10px;font-weight:700;color:#f97316;letter-spacing:2px;">${f.company.toUpperCase()} CTF</div>
   </div>
   <div style="font-size:28px;font-weight:900;color:#ffffff;letter-spacing:2px;margin-bottom:4px;">🏆 CTF CHAMPION</div>
@@ -203,7 +203,7 @@ function cert5(f: CertFields) {
   <div style="width:280px;height:280px;border-radius:50%;border:3px solid #f97316;display:flex;align-items:center;justify-content:center;position:relative;">
     <div style="width:250px;height:250px;border-radius:50%;border:1px solid #f9731640;display:flex;align-items:center;justify-content:center;">
       <div style="width:220px;height:220px;border-radius:50%;background:#18181b;border:2px solid #27272a;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center;">
-        <img src="${LOGO_URL}" alt="STBCS" width="32" height="32" style="border-radius:6px;margin-bottom:8px;" />
+        <img src="${LOGO_URL}" alt="STB Cybersecurity certification seal" width="32" height="32" loading="lazy" style="border-radius:6px;margin-bottom:8px;" />
         <div style="font-size:8px;color:#f97316;text-transform:uppercase;letter-spacing:3px;margin-bottom:4px;">SOC Analyst</div>
         <div style="font-size:14px;font-weight:900;color:#ffffff;margin-bottom:4px;">${f.recipientName}</div>
         <div style="font-size:10px;color:#a1a1aa;margin-bottom:8px;">${f.certTitle}</div>
@@ -239,7 +239,7 @@ function cert6(f: CertFields) {
   <div style="position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,#ef4444,#f97316);"></div>
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
     <div style="display:flex;align-items:center;gap:8px;">
-      <img src="${LOGO_URL}" alt="STBCS" width="32" height="32" style="border-radius:6px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity certification seal" width="32" height="32" loading="lazy" style="border-radius:6px;" />
       <div style="font-size:10px;font-weight:700;color:#ffffff;letter-spacing:2px;">${f.company.toUpperCase()}</div>
     </div>
     <div style="background:#ef444420;border:1px solid #ef444440;color:#ef4444;font-size:8px;font-weight:700;padding:3px 10px;border-radius:4px;letter-spacing:2px;">INCIDENT RESPONSE</div>
@@ -289,7 +289,7 @@ function cert7(f: CertFields) {
   return `<div style="width:100%;aspect-ratio:4/3;background:#ffffff;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;padding:32px;color:#18181b;">
   <div style="position:absolute;top:0;left:0;right:0;height:4px;background:#f97316;"></div>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="36" height="36" style="border-radius:8px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity certification seal" width="36" height="36" loading="lazy" style="border-radius:8px;" />
     <div>
       <div style="font-size:12px;font-weight:800;color:#18181b;letter-spacing:2px;">${f.company.toUpperCase()}</div>
       <div style="font-size:8px;color:#71717a;letter-spacing:2px;">COMPLIANCE DIVISION</div>
@@ -333,7 +333,7 @@ function cert8(f: CertFields) {
   <div style="position:relative;width:80px;height:80px;margin-bottom:16px;">
     <div style="position:absolute;inset:0;border:2px solid #dc2626;border-radius:50%;"></div>
     <div style="position:absolute;inset:6px;border:1px solid #dc262660;border-radius:50%;display:flex;align-items:center;justify-content:center;">
-      <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="border-radius:8px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity certification seal" width="40" height="40" loading="lazy" style="border-radius:8px;" />
     </div>
   </div>
   <div style="font-size:8px;color:#dc2626;text-transform:uppercase;letter-spacing:4px;margin-bottom:4px;">Certified</div>

@@ -34,7 +34,7 @@ function card1Front(f: CardFields) {
   return `<div style="width:350px;height:200px;background:#0a0a0c;border-radius:8px;padding:24px 28px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;box-sizing:border-box;overflow:hidden;">
   <div style="display:flex;align-items:center;gap:20px;width:100%;">
     <div style="flex-shrink:0;">
-      <img src="${LOGO_URL}" alt="STBCS" width="56" height="56" style="display:block;border-radius:10px;border:2px solid #f97316;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity business card logo" width="56" height="56" loading="lazy" style="display:block;border-radius:10px;border:2px solid #f97316;" />
       <div style="font-size:8px;color:#f97316;text-align:center;margin-top:4px;letter-spacing:2px;font-weight:700;">STBCS</div>
     </div>
     <div style="border-left:2px solid #27272a;padding-left:18px;">
@@ -51,7 +51,7 @@ function card1Front(f: CardFields) {
 function card1Back(f: CardFields) {
   return `<div style="width:350px;height:200px;background:#0a0a0c;border-radius:8px;padding:24px 28px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;overflow:hidden;">
   <div>
-    <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="display:block;margin:0 auto 10px;border-radius:10px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity business card logo" width="48" height="48" loading="lazy" style="display:block;margin:0 auto 10px;border-radius:10px;" />
     <div style="font-size:14px;font-weight:800;color:#ffffff;letter-spacing:3px;margin-bottom:4px;">STB CYBERSECURITY</div>
     <div style="font-size:9px;color:#71717a;margin-bottom:10px;letter-spacing:1px;">${f.tagline}</div>
     <div style="width:40px;height:2px;background:#f97316;margin:0 auto 10px;"></div>
@@ -78,7 +78,7 @@ function card2Front(f: CardFields) {
 function card2Back(f: CardFields) {
   return `<div style="width:350px;height:200px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:8px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;overflow:hidden;">
   <div>
-    <img src="${LOGO_URL}" alt="STBCS" width="56" height="56" style="display:block;margin:0 auto 12px;border-radius:12px;border:3px solid rgba(255,255,255,0.3);" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity business card logo" width="56" height="56" loading="lazy" style="display:block;margin:0 auto 12px;border-radius:12px;border:3px solid rgba(255,255,255,0.3);" />
     <div style="font-size:16px;font-weight:800;color:#ffffff;letter-spacing:3px;">STBCS</div>
     <div style="font-size:9px;color:rgba(255,255,255,0.8);letter-spacing:2px;margin-top:4px;">CYBERSECURITY</div>
   </div>
@@ -102,7 +102,7 @@ function card3Back(f: CardFields) {
   return `<div style="width:350px;height:200px;background:#000000;border-radius:8px;font-family:'Courier New',Consolas,monospace;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;overflow:hidden;position:relative;">
   <div style="position:absolute;inset:0;opacity:0.06;background-image:repeating-linear-gradient(0deg,transparent,transparent 18px,#22c55e 18px,#22c55e 19px),repeating-linear-gradient(90deg,transparent,transparent 18px,#22c55e 18px,#22c55e 19px);"></div>
   <div style="position:relative;z-index:1;">
-    <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:block;margin:0 auto 8px;border-radius:8px;border:2px solid #22c55e;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity business card logo" width="44" height="44" loading="lazy" style="display:block;margin:0 auto 8px;border-radius:8px;border:2px solid #22c55e;" />
     <div style="font-size:12px;color:#22c55e;font-weight:700;letter-spacing:2px;">STB CYBERSECURITY</div>
     <div style="font-size:8px;color:#166534;margin-top:4px;">${f.tagline}</div>
   </div>
@@ -111,7 +111,7 @@ function card3Back(f: CardFields) {
 
 function card4Front(f: CardFields) {
   return `<div style="width:350px;height:200px;background:#0c0c0e;border-radius:8px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;overflow:hidden;">
-  <img src="${LOGO_URL}" alt="STBCS" width="64" height="64" style="display:block;border-radius:50%;border:3px solid #f97316;margin-bottom:12px;" />
+  <img src="${LOGO_URL}" alt="STB Cybersecurity business card logo" width="64" height="64" loading="lazy" style="display:block;border-radius:50%;border:3px solid #f97316;margin-bottom:12px;" />
   <div style="font-size:16px;font-weight:800;color:#f97316;margin-bottom:2px;">${f.name}</div>
   <div style="font-size:10px;color:#a1a1aa;text-transform:uppercase;letter-spacing:1.5px;">${f.title}</div>
 </div>`;
@@ -157,7 +157,7 @@ function card5Back(f: CardFields) {
   <div style="position:absolute;inset:0;background:linear-gradient(135deg,#f97316 50%,#18181b 50%);"></div>
   <div style="position:relative;z-index:1;display:flex;align-items:center;justify-content:center;height:100%;text-align:center;">
     <div>
-      <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:block;margin:0 auto 8px;border-radius:8px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity business card logo" width="44" height="44" loading="lazy" style="display:block;margin:0 auto 8px;border-radius:8px;" />
       <div style="font-size:12px;font-weight:700;color:#ffffff;letter-spacing:2px;">STB CYBERSECURITY</div>
       <div style="font-size:8px;color:rgba(255,255,255,0.7);margin-top:4px;">${f.website}</div>
     </div>
@@ -179,7 +179,7 @@ function card6Front(f: CardFields) {
 function card6Back(f: CardFields) {
   return `<div style="width:350px;height:200px;background:#18181b;border-radius:8px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;overflow:hidden;">
   <div>
-    <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="display:block;margin:0 auto 10px;border-radius:10px;border:2px solid #f97316;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity business card logo" width="48" height="48" loading="lazy" style="display:block;margin:0 auto 10px;border-radius:10px;border:2px solid #f97316;" />
     <div style="font-size:12px;font-weight:700;color:#f97316;letter-spacing:2px;">STB CYBERSECURITY</div>
     <div style="font-size:8px;color:#71717a;margin-top:6px;">${f.tagline}</div>
   </div>
@@ -203,7 +203,7 @@ function card7Back(f: CardFields) {
   return `<div style="width:350px;height:200px;background:#0c0c0e;border-radius:8px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;overflow:hidden;position:relative;">
   <div style="position:absolute;inset:0;opacity:0.08;background-image:repeating-linear-gradient(0deg,transparent,transparent 12px,#f97316 12px,#f97316 13px),repeating-linear-gradient(90deg,transparent,transparent 12px,#f97316 12px,#f97316 13px);"></div>
   <div style="position:relative;z-index:1;">
-    <img src="${LOGO_URL}" alt="STBCS" width="52" height="52" style="display:block;margin:0 auto 8px;border-radius:10px;opacity:0.95;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity business card logo" width="52" height="52" loading="lazy" style="display:block;margin:0 auto 8px;border-radius:10px;opacity:0.95;" />
     <div style="font-size:10px;color:#ffffff;font-weight:600;letter-spacing:2px;">STB CYBERSECURITY</div>
   </div>
 </div>`;
@@ -224,7 +224,7 @@ function card8Back(f: CardFields) {
   return `<div style="width:350px;height:200px;background:linear-gradient(160deg,#1a1a1e,#0a0a0c);border-radius:8px;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;overflow:hidden;border:1px solid #27272a;position:relative;">
   <div style="position:absolute;inset:0;background:radial-gradient(circle at center,rgba(245,166,35,0.03) 0%,transparent 70%);"></div>
   <div style="position:relative;z-index:1;">
-    <img src="${LOGO_URL}" alt="STBCS" width="56" height="56" style="display:block;margin:0 auto 10px;border-radius:12px;box-shadow:0 0 30px rgba(245,166,35,0.1);border:2px solid #3d3020;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity business card logo" width="56" height="56" loading="lazy" style="display:block;margin:0 auto 10px;border-radius:12px;box-shadow:0 0 30px rgba(245,166,35,0.1);border:2px solid #3d3020;" />
     <div style="font-size:14px;font-weight:800;color:#f5a623;letter-spacing:4px;text-shadow:0 0 15px rgba(245,166,35,0.15);">STBCS</div>
     <div style="font-size:8px;color:#8a7a5a;letter-spacing:3px;margin-top:4px;text-transform:uppercase;">Premium Cybersecurity</div>
   </div>
@@ -263,7 +263,7 @@ function card9Back(f: CardFields) {
     <div style="position:absolute;top:0;left:0;width:100%;height:100%;background:linear-gradient(45deg,transparent 48%,rgba(249,115,22,0.04) 49%,rgba(249,115,22,0.04) 51%,transparent 52%);"></div>
   </div>
   <div style="position:relative;z-index:1;">
-    <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="display:block;margin:0 auto 8px;border-radius:10px;border:2px solid rgba(249,115,22,0.4);" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity business card logo" width="48" height="48" loading="lazy" style="display:block;margin:0 auto 8px;border-radius:10px;border:2px solid rgba(249,115,22,0.4);" />
     <div style="font-size:12px;font-weight:700;color:#ffffff;letter-spacing:2px;">STB CYBERSECURITY</div>
     <div style="font-size:8px;color:#71717a;margin-top:4px;letter-spacing:1px;">${f.tagline}</div>
   </div>
@@ -286,7 +286,7 @@ function card10Back(f: CardFields) {
   return `<div style="width:350px;height:200px;background:#0c0c0e;border-radius:8px;font-family:'Courier New',Consolas,monospace;display:flex;align-items:center;justify-content:center;text-align:center;box-sizing:border-box;overflow:hidden;position:relative;">
   <div style="position:absolute;inset:0;padding:8px;opacity:0.06;font-size:7px;color:#f97316;line-height:1.4;word-break:break-all;overflow:hidden;">C7 A3 9F 2B 8D E1 4C 70 B5 23 6A F8 D9 01 3E 7C A4 55 B2 19 8F C6 3D E0 71 2A 94 D7 48 BC 05 63 FA 91 2E 7B C8 A0 5D 16 83 E4 3F 72 B9 20 67 AE D5 4A 97 0C 61 F8 B3 2C 79 C4 A7 5E 18 85 E6 41 74 BB 22 69 A0 D7 4C 99 0E 63 FA B5 2E 7B C6 A9 50 1A 87 E8 43 76 BD 24 6B A2 D9 4E 9B 10 65 FC B7 30 7D C8 AB 52 1C 89 EA 45 78 BF 26 6D A4 DB 50 9D 12 67 FE B9 32 7F CA AD 54 1E 8B</div>
   <div style="position:relative;z-index:1;">
-    <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:block;margin:0 auto 8px;border-radius:8px;border:2px solid #f97316;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity business card logo" width="44" height="44" loading="lazy" style="display:block;margin:0 auto 8px;border-radius:8px;border:2px solid #f97316;" />
     <div style="font-size:8px;color:#52525b;letter-spacing:2px;margin-bottom:6px;">DECRYPT TO REVEAL</div>
     <div style="font-size:12px;font-weight:700;color:#f97316;letter-spacing:3px;">STBCS</div>
     <div style="font-size:7px;color:#52525b;margin-top:4px;">${f.website}</div>
@@ -317,7 +317,7 @@ function card11Back(f: CardFields) {
   <div style="position:absolute;top:0;left:0;width:100%;height:8px;background:repeating-linear-gradient(90deg,#f97316 0px,#f97316 6px,#0a0a0c 6px,#0a0a0c 12px);"></div>
   <div style="position:absolute;bottom:0;left:0;width:100%;height:8px;background:repeating-linear-gradient(90deg,#f97316 0px,#f97316 6px,#0a0a0c 6px,#0a0a0c 12px);"></div>
   <div style="position:relative;z-index:1;">
-    <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:block;margin:0 auto 8px;border-radius:8px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity business card logo" width="44" height="44" loading="lazy" style="display:block;margin:0 auto 8px;border-radius:8px;" />
     <div style="font-size:12px;font-weight:900;color:#f97316;letter-spacing:3px;text-transform:uppercase;">DANGER ZONE</div>
     <div style="font-size:8px;color:#71717a;margin-top:4px;letter-spacing:1px;">AUTHORIZED PERSONNEL ONLY</div>
   </div>
@@ -355,7 +355,7 @@ function card12Back(f: CardFields) {
   </div>
   <div style="position:relative;z-index:1;">
     <div style="width:48px;height:48px;margin:0 auto 8px;border:3px solid #f97316;display:flex;align-items:center;justify-content:center;">
-      <img src="${LOGO_URL}" alt="STBCS" width="36" height="36" style="display:block;image-rendering:pixelated;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity business card logo" width="36" height="36" loading="lazy" style="display:block;image-rendering:pixelated;" />
     </div>
     <div style="font-size:12px;font-weight:700;color:#f97316;letter-spacing:3px;text-shadow:2px 2px 0 rgba(249,115,22,0.2);">STBCS</div>
     <div style="font-size:7px;color:#71717a;margin-top:4px;letter-spacing:2px;">PIXEL SECURITY</div>

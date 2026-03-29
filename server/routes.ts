@@ -560,6 +560,9 @@ Allow: /playbooks
 Allow: /ransomware-calculator
 Allow: /compliance
 Allow: /service-status
+Allow: /awareness
+Allow: /stb-sync
+Allow: /email-signatures
 
 Disallow: /account
 Disallow: /checkout

@@ -37,7 +37,7 @@ const defaultFields: LetterheadFields = {
 function lh1(f: LetterheadFields) {
   return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:595px;min-height:842px;background:#ffffff;color:#1a1a1a;position:relative;display:flex;flex-direction:column;">
   <div style="text-align:center;padding:40px 40px 20px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="60" height="60" style="display:inline-block;border-radius:10px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity letterhead logo" width="60" height="60" loading="lazy" style="display:inline-block;border-radius:10px;" />
     <div style="font-size:22px;font-weight:800;color:#18181b;letter-spacing:3px;margin-top:10px;">${f.companyName.toUpperCase()}</div>
     <div style="font-size:10px;color:#71717a;letter-spacing:2px;margin-top:2px;">THREAT INTELLIGENCE &bull; INCIDENT RESPONSE &bull; SECURITY MONITORING</div>
     <div style="height:3px;background:#f97316;margin:16px auto 0;width:80%;border-radius:2px;"></div>
@@ -64,7 +64,7 @@ function lh1(f: LetterheadFields) {
 function lh2(f: LetterheadFields) {
   return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:595px;min-height:842px;background:#ffffff;color:#1a1a1a;position:relative;display:flex;">
   <div style="width:56px;background:#18181b;display:flex;flex-direction:column;align-items:center;padding:20px 0;">
-    <img src="${LOGO_URL}" alt="STBCS" width="36" height="36" style="border-radius:6px;margin-bottom:16px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity letterhead logo" width="36" height="36" loading="lazy" style="border-radius:6px;margin-bottom:16px;" />
     <div style="writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);font-size:11px;font-weight:800;color:#f97316;letter-spacing:4px;white-space:nowrap;">${f.companyName.toUpperCase()}</div>
   </div>
   <div style="flex:1;display:flex;flex-direction:column;">
@@ -99,7 +99,7 @@ function lh3(f: LetterheadFields) {
   <div style="position:absolute;top:20px;right:20px;background:#dc2626;color:#ffffff;font-size:11px;font-weight:900;padding:6px 18px;transform:rotate(12deg);letter-spacing:3px;border-radius:2px;">TOP SECRET</div>
   <div style="padding:40px 50px 20px;">
     <div style="display:flex;align-items:center;gap:12px;">
-      <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="border-radius:6px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity letterhead logo" width="40" height="40" loading="lazy" style="border-radius:6px;" />
       <div>
         <div style="font-size:16px;font-weight:900;color:#18181b;letter-spacing:3px;">${f.companyName.toUpperCase()}</div>
         <div style="font-size:9px;color:#dc2626;letter-spacing:2px;">CLASSIFIED CORRESPONDENCE</div>
@@ -130,7 +130,7 @@ function lh4(f: LetterheadFields) {
   <div style="height:3px;background:#f97316;"></div>
   <div style="padding:30px 50px 20px;display:flex;justify-content:space-between;align-items:center;">
     <div style="display:flex;align-items:center;gap:10px;">
-      <img src="${LOGO_URL}" alt="STBCS" width="28" height="28" style="border-radius:4px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity letterhead logo" width="28" height="28" loading="lazy" style="border-radius:4px;" />
       <span style="font-size:12px;font-weight:700;color:#18181b;letter-spacing:1px;">${f.companyName}</span>
     </div>
     <div style="font-size:10px;color:#a1a1aa;">${f.website}</div>
@@ -155,7 +155,7 @@ function lh4(f: LetterheadFields) {
 function lh5(f: LetterheadFields) {
   return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:595px;min-height:842px;background:#ffffff;color:#1a1a1a;position:relative;display:flex;flex-direction:column;">
   <div style="background:linear-gradient(180deg,#18181b 0%,#27272a 100%);padding:36px 50px;text-align:center;">
-    <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="display:inline-block;border-radius:10px;margin-bottom:10px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity letterhead logo" width="48" height="48" loading="lazy" style="display:inline-block;border-radius:10px;margin-bottom:10px;" />
     <div style="font-size:22px;font-weight:900;color:#ffffff;letter-spacing:4px;">${f.companyName.toUpperCase()}</div>
     <div style="font-size:10px;color:#a1a1aa;letter-spacing:2px;margin-top:4px;">Securing the Digital Frontier</div>
   </div>
@@ -200,7 +200,7 @@ function lh6(f: LetterheadFields) {
     </table>
   </div>
   <div style="padding:8px 40px 0;display:flex;align-items:center;gap:10px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="24" height="24" style="border-radius:4px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity letterhead logo" width="24" height="24" loading="lazy" style="border-radius:4px;" />
     <span style="font-size:11px;font-weight:700;color:#f97316;letter-spacing:2px;">${f.companyName.toUpperCase()}</span>
     <span style="font-size:9px;color:#a1a1aa;">// TECHNICAL BRIEF</span>
   </div>
@@ -220,14 +220,14 @@ function lh6(f: LetterheadFields) {
 function lh7(f: LetterheadFields) {
   return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:595px;min-height:842px;background:#ffffff;color:#1a1a1a;position:relative;display:flex;flex-direction:column;">
   <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.04;pointer-events:none;">
-    <img src="${LOGO_URL}" alt="" width="280" height="280" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity letterhead watermark" width="280" height="280" loading="lazy" />
   </div>
   <div style="padding:40px 50px 20px;display:flex;justify-content:space-between;align-items:flex-start;">
     <div>
       <div style="font-size:20px;font-weight:300;color:#18181b;letter-spacing:1px;">${f.companyName}</div>
       <div style="font-size:10px;color:#f97316;letter-spacing:1px;margin-top:2px;">Cybersecurity Consulting</div>
     </div>
-    <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="border-radius:8px;opacity:0.8;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity letterhead logo" width="40" height="40" loading="lazy" style="border-radius:8px;opacity:0.8;" />
   </div>
   <div style="height:1px;background:linear-gradient(90deg,transparent,#f97316,transparent);margin:0 50px;"></div>
   <div style="flex:1;padding:30px 50px;position:relative;z-index:1;">
@@ -252,7 +252,7 @@ function lh8(f: LetterheadFields) {
   return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:595px;min-height:842px;background:#ffffff;color:#1a1a1a;position:relative;display:flex;flex-direction:column;">
   <div style="padding:30px 40px 20px;background:#18181b;">
     <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;">
-      <img src="${LOGO_URL}" alt="STBCS" width="36" height="36" style="border-radius:6px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity letterhead logo" width="36" height="36" loading="lazy" style="border-radius:6px;" />
       <div>
         <div style="font-size:16px;font-weight:800;color:#ffffff;letter-spacing:2px;">${f.companyName.toUpperCase()}</div>
         <div style="font-size:9px;color:#f97316;letter-spacing:1px;">INCIDENT REPORT</div>
@@ -297,7 +297,7 @@ function lh9(f: LetterheadFields) {
   <div style="position:absolute;left:0;top:0;bottom:0;width:48px;overflow:hidden;opacity:0.07;font-family:'Courier New',Consolas,monospace;font-size:11px;line-height:1.4;color:#18181b;padding:10px 6px;word-break:break-all;">01001001011011100111010001100101011011000110110001101001011001110110010101101110011000110110010100100000010100100110010101110000011011110111001001110100001000000101001101010100010000100100001101010011001000000101001101100101011000110111010101110010011010010111010001111001001000000100110101101111011011100110100101110100011011110111001001101001011011100110011100100000001001100010000001010100011010000111001001100101011000010111010000100000010000010110111001100001011011000111100101110011011010010111001100100000001001100010000001001001011011100110001101101001011001000110010101101110011101000010000001010010011001010111001101110000011011110110111001110011011001010010000001010011011001010111001001110110011010010110001101100101011100110010000000100110001000000101000001100101011011100110010101110100011100100110000101110100011010010110111101101110</div>
   <div style="padding:40px 50px 20px 60px;display:flex;justify-content:space-between;align-items:flex-start;">
     <div style="display:flex;align-items:center;gap:12px;">
-      <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="border-radius:8px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity letterhead logo" width="44" height="44" loading="lazy" style="border-radius:8px;" />
       <div>
         <div style="font-size:18px;font-weight:800;color:#18181b;letter-spacing:2px;">${f.companyName.toUpperCase()}</div>
         <div style="font-size:9px;color:#71717a;letter-spacing:1px;">DIGITAL INTELLIGENCE DIVISION</div>
@@ -334,7 +334,7 @@ function lh10(f: LetterheadFields) {
     </div>
     <div style="position:relative;z-index:1;display:flex;align-items:center;gap:14px;">
       <div style="width:52px;height:46px;display:flex;align-items:center;justify-content:center;border:2px solid #f97316;clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);">
-        <img src="${LOGO_URL}" alt="STBCS" width="30" height="30" style="border-radius:4px;" />
+        <img src="${LOGO_URL}" alt="STB Cybersecurity letterhead logo" width="30" height="30" loading="lazy" style="border-radius:4px;" />
       </div>
       <div>
         <div style="font-size:20px;font-weight:900;color:#ffffff;letter-spacing:3px;">${f.companyName.toUpperCase()}</div>
@@ -366,7 +366,7 @@ function lh11(f: LetterheadFields) {
   <div style="height:6px;background:repeating-linear-gradient(90deg,#f97316 0px,#f97316 30px,#ea580c 30px,#ea580c 32px,transparent 32px,transparent 40px);"></div>
   <div style="padding:30px 50px 20px;display:flex;justify-content:space-between;align-items:center;">
     <div style="display:flex;align-items:center;gap:10px;">
-      <img src="${LOGO_URL}" alt="STBCS" width="36" height="36" style="border-radius:6px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity letterhead logo" width="36" height="36" loading="lazy" style="border-radius:6px;" />
       <div>
         <div style="font-size:16px;font-weight:800;color:#18181b;letter-spacing:2px;">${f.companyName.toUpperCase()}</div>
         <div style="font-size:9px;color:#f97316;letter-spacing:1px;">FIREWALL PROTECTED COMMUNICATIONS</div>
@@ -397,7 +397,7 @@ function lh12(f: LetterheadFields) {
   return `<div style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;width:100%;max-width:595px;min-height:842px;background:#0c0c0e;color:#e4e4e7;position:relative;display:flex;flex-direction:column;">
   <div style="padding:36px 50px 20px;display:flex;justify-content:space-between;align-items:center;">
     <div style="display:flex;align-items:center;gap:12px;">
-      <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="border-radius:8px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity letterhead logo" width="44" height="44" loading="lazy" style="border-radius:8px;" />
       <div>
         <div style="font-size:20px;font-weight:900;color:#ffffff;letter-spacing:3px;">${f.companyName.toUpperCase()}</div>
         <div style="font-size:9px;color:#71717a;letter-spacing:2px;">DIGITAL-ONLY SECURE DOCUMENT</div>

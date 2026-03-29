@@ -48,7 +48,7 @@ function cover1(f: ReportFields) {
   return `<div style="width:100%;aspect-ratio:210/297;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;padding:40px;">
   <div style="position:absolute;top:0;left:0;right:0;height:4px;background:${clr};"></div>
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:30px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="border-radius:10px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity report cover logo" width="48" height="48" loading="lazy" style="border-radius:10px;" />
     <div>
       <div style="font-size:16px;font-weight:800;color:#ffffff;letter-spacing:2px;">STB CYBERSECURITY</div>
       <div style="font-size:9px;color:#52525b;letter-spacing:3px;">SECURING THE DIGITAL FRONTIER</div>
@@ -79,7 +79,7 @@ function cover2(f: ReportFields) {
   </div>
   <div style="background:linear-gradient(135deg,#dc2626,#f97316);padding:40px;flex:0 0 auto;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;">
-      <img src="${LOGO_URL}" alt="STBCS" width="36" height="36" style="border-radius:8px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity report cover logo" width="36" height="36" loading="lazy" style="border-radius:8px;" />
       <span style="font-size:12px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:2px;">STB CYBERSECURITY</span>
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:3px;margin-bottom:8px;">PENETRATION TEST REPORT</div>
@@ -122,7 +122,7 @@ function cover3(f: ReportFields) {
   const clr = classificationColor(f.classificationLevel);
   return `<div style="width:100%;aspect-ratio:210/297;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;padding:40px;">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:30px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="border-radius:8px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity report cover logo" width="40" height="40" loading="lazy" style="border-radius:8px;" />
     <div>
       <div style="font-size:14px;font-weight:800;color:#ffffff;letter-spacing:2px;">STB CYBERSECURITY</div>
       <div style="font-size:9px;color:#52525b;letter-spacing:2px;">THREAT INTELLIGENCE DIVISION</div>
@@ -162,7 +162,7 @@ function cover3(f: ReportFields) {
 function cover4(f: ReportFields) {
   return `<div style="width:100%;aspect-ratio:210/297;background:#ffffff;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;padding:40px;color:#18181b;">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:40px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="border-radius:8px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity report cover logo" width="40" height="40" loading="lazy" style="border-radius:8px;" />
     <div>
       <div style="font-size:14px;font-weight:800;color:#18181b;letter-spacing:2px;">STB CYBERSECURITY</div>
       <div style="font-size:9px;color:#71717a;letter-spacing:2px;">COMPLIANCE &amp; AUDIT</div>
@@ -205,7 +205,7 @@ function cover5(f: ReportFields) {
   <div style="background:linear-gradient(135deg,#dc2626,#991b1b);padding:30px 40px;">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
       <div style="display:flex;align-items:center;gap:8px;">
-        <img src="${LOGO_URL}" alt="STBCS" width="32" height="32" style="border-radius:6px;" />
+        <img src="${LOGO_URL}" alt="STB Cybersecurity report cover logo" width="32" height="32" loading="lazy" style="border-radius:6px;" />
         <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:2px;">STB CYBERSECURITY</span>
       </div>
       <div style="background:rgba(0,0,0,0.3);color:#ffffff;font-size:8px;font-weight:700;padding:3px 8px;border-radius:3px;letter-spacing:2px;">URGENT</div>
@@ -266,7 +266,7 @@ function cover6(f: ReportFields) {
   </div>
   <div style="flex:1;padding:20px 40px;display:flex;flex-direction:column;justify-content:center;">
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;">
-      <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="border-radius:8px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity report cover logo" width="40" height="40" loading="lazy" style="border-radius:8px;" />
       <div>
         <div style="font-size:14px;font-weight:800;color:#ffffff;letter-spacing:2px;">STB CYBERSECURITY</div>
         <div style="font-size:9px;color:#52525b;letter-spacing:2px;">RISK MANAGEMENT</div>
@@ -309,7 +309,7 @@ function cover7(f: ReportFields) {
     ${[...Array(20)].map((_, i) => `<div style="position:absolute;left:0;right:0;top:${5 * i}%;height:1px;background:#f97316;"></div>`).join('')}
   </div>
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:24px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="border-radius:8px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity report cover logo" width="40" height="40" loading="lazy" style="border-radius:8px;" />
     <div>
       <div style="font-size:14px;font-weight:800;color:#ffffff;letter-spacing:2px;">STB CYBERSECURITY</div>
       <div style="font-size:9px;color:#52525b;letter-spacing:2px;">VULNERABILITY MANAGEMENT</div>
@@ -366,7 +366,7 @@ function cover8(f: ReportFields) {
   <div style="position:absolute;top:0;left:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,#f97316,transparent);"></div>
   <div style="position:absolute;top:0;right:0;bottom:0;width:2px;background:linear-gradient(180deg,transparent,#f97316,transparent);"></div>
   <div style="display:flex;align-items:center;justify-content:center;margin-bottom:40px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="56" height="56" style="border-radius:12px;box-shadow:0 0 30px rgba(249,115,22,0.15);" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity report cover logo" width="56" height="56" loading="lazy" style="border-radius:12px;box-shadow:0 0 30px rgba(249,115,22,0.15);" />
   </div>
   <div style="text-align:center;margin-bottom:16px;">
     <div style="font-size:10px;color:#f97316;letter-spacing:6px;text-transform:uppercase;font-weight:600;">STB CYBERSECURITY</div>
@@ -399,7 +399,7 @@ function cover9(f: ReportFields) {
       <div style="width:6px;height:6px;background:#ffffff;border-radius:50%;position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);"></div>
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;">
-      <img src="${LOGO_URL}" alt="STBCS" width="32" height="32" style="border-radius:6px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity report cover logo" width="32" height="32" loading="lazy" style="border-radius:6px;" />
       <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:2px;">STB CYBERSECURITY</span>
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:3px;margin-bottom:6px;">RED TEAM ASSESSMENT</div>
@@ -451,7 +451,7 @@ function cover10(f: ReportFields) {
       ${[...Array(8)].map((_, i) => `<div style="position:absolute;left:${10 + i * 12}%;top:20%;width:30px;height:60%;border:1px solid #38bdf8;border-radius:4px;opacity:${0.2 + (i % 3) * 0.1};"></div>`).join('')}
     </div>
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;position:relative;">
-      <img src="${LOGO_URL}" alt="STBCS" width="32" height="32" style="border-radius:6px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity report cover logo" width="32" height="32" loading="lazy" style="border-radius:6px;" />
       <span style="font-size:11px;font-weight:700;color:rgba(255,255,255,0.9);letter-spacing:2px;">STB CYBERSECURITY</span>
     </div>
     <div style="font-size:10px;color:rgba(255,255,255,0.6);text-transform:uppercase;letter-spacing:3px;margin-bottom:6px;position:relative;">BLUE TEAM DEFENSE</div>

@@ -100,7 +100,7 @@ export default function AboutPage() {
     <Layout>
       <div className="space-y-10 page-transition" data-testid="about-page">
         <AnimatedSection animation="fade-down" className="text-center space-y-4">
-          <img src="/brand/logo-main.png" alt="STB Cybersecurity" className="h-32 w-auto mx-auto drop-shadow-[0_0_14px_rgba(239,68,68,0.3)] icon-float" data-testid="img-about-logo" />
+          <img src="/brand/logo-main.png" alt="STB Cybersecurity company logo" className="h-32 w-auto mx-auto drop-shadow-[0_0_14px_rgba(239,68,68,0.3)] icon-float" data-testid="img-about-logo" />
           <h1 className="text-4xl font-display font-bold tracking-tight text-white" data-testid="text-about-title">
             We Fight Cyberattacks for a Living
           </h1>

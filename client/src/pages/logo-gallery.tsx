@@ -221,8 +221,9 @@ function LogoThemePicker() {
                 <div className="aspect-square bg-zinc-950 rounded-lg overflow-hidden mb-2 flex items-center justify-center relative border border-zinc-800 group-hover:border-zinc-400">
                   <img
                     src={theme.fullLogo}
-                    alt={theme.name}
+                    alt={`${theme.name} logo theme preview`}
                     className="max-w-[85%] max-h-[85%] object-contain"
+                    loading="lazy"
                   />
                   {isActive && (
                     <div className="absolute top-2 right-2 h-5 w-5 bg-orange-500 rounded-full flex items-center justify-center">
@@ -235,7 +236,7 @@ function LogoThemePicker() {
                     <p className="text-white text-xs font-semibold truncate">{theme.name}</p>
                     <p className="text-zinc-600 text-[10px] mt-0.5 line-clamp-1">{theme.description}</p>
                   </div>
-                  <img src={theme.icon} alt="" className="h-6 w-6 object-contain shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" />
+                  <img src={theme.icon} alt={`${theme.name} icon`} className="h-6 w-6 object-contain shrink-0 opacity-50 group-hover:opacity-100 transition-opacity" loading="lazy" />
                 </div>
                 {isActive ? (
                   <Badge className="bg-green-500/15 text-green-400 border-green-500/30 mt-2 w-full justify-center text-[10px]">
@@ -492,13 +493,13 @@ export default function LogoGallery() {
               <div className="bg-zinc-950 rounded-xl p-6 border border-zinc-800">
                 <img
                   src={currentLogo.file}
-                  alt="STBCS Current Logo"
+                  alt="STB Cybersecurity current active logo"
                   className="h-48 w-48 object-contain mx-auto drop-shadow-[0_0_20px_rgba(239,68,68,0.3)]"
                   data-testid="img-current-logo"
                 />
               </div>
               <div className="bg-zinc-950 rounded-xl p-4 border border-zinc-800 flex items-center justify-center gap-4">
-                <img src={currentLogo.icon} alt="Shield Icon" className="h-16 w-16 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.3)]" data-testid="img-current-icon" />
+                <img src={currentLogo.icon} alt="STB Cybersecurity shield icon" className="h-16 w-16 object-contain drop-shadow-[0_0_10px_rgba(239,68,68,0.3)]" data-testid="img-current-icon" />
                 <div className="text-left">
                   <p className="text-xs text-zinc-500">Shield Icon</p>
                   <p className="text-sm text-white font-medium">1024×1024</p>
@@ -511,7 +512,7 @@ export default function LogoGallery() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 {[16, 32, 64, 128].map((sz) => (
                   <div key={sz} className="bg-zinc-950 rounded-lg p-4 border border-zinc-800 flex flex-col items-center gap-2">
-                    <img src={currentLogo.icon} alt={`${sz}px`} style={{ height: sz > 64 ? 64 : sz, width: sz > 64 ? 64 : sz }} className="object-contain" />
+                    <img src={currentLogo.icon} alt={`STB Cybersecurity icon at ${sz}px`} style={{ height: sz > 64 ? 64 : sz, width: sz > 64 ? 64 : sz }} className="object-contain" loading="lazy" />
                     <span className="text-zinc-500 text-[10px]">{sz}px</span>
                   </div>
                 ))}
@@ -549,7 +550,7 @@ export default function LogoGallery() {
                   <CardContent className="p-5">
                     <div className="flex gap-4 items-center mb-4">
                       <div className="bg-zinc-950 rounded-lg p-3 border border-zinc-800 shrink-0">
-                        <img src={v.file} alt={v.name} className="h-20 w-20 object-contain" />
+                        <img src={v.file} alt={`${v.name} logo variant`} className="h-20 w-20 object-contain" loading="lazy" />
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-white font-semibold text-sm truncate">{v.name}</p>
@@ -610,8 +611,9 @@ export default function LogoGallery() {
                     <div className="aspect-square bg-zinc-950 rounded-lg overflow-hidden mb-3 flex items-center justify-center relative border border-zinc-800">
                       <img
                         src={item.file}
-                        alt={item.name}
+                        alt={`${item.name} brand asset`}
                         className="max-w-[85%] max-h-[85%] object-contain"
+                        loading="lazy"
                       />
                       {item.active && (
                         <div className="absolute top-2 right-2 h-5 w-5 bg-orange-500 rounded-full flex items-center justify-center">

@@ -98,7 +98,7 @@ export function AuthModal({ open, onOpenChange, defaultTab = "login", onSuccess 
       <DialogContent className="sm:max-w-md bg-zinc-900 border-zinc-800">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
-            <img src="/brand/icon-shield.png" alt="STBCS" className="h-10 w-10 drop-shadow-[0_0_6px_rgba(239,68,68,0.3)]" />
+            <img src="/brand/icon-shield.png" alt="STB Cybersecurity sign in" className="h-10 w-10 drop-shadow-[0_0_6px_rgba(239,68,68,0.3)]" />
             <DialogTitle className="text-xl font-display text-orange-400">STBCS Account</DialogTitle>
           </div>
           <DialogDescription className="text-zinc-400">

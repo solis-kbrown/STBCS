@@ -30,7 +30,7 @@ function sig1(f: SigFields) {
   return `<table cellpadding="0" cellspacing="0" border="0" style="font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#e4e4e7;max-width:520px;">
   <tr>
     <td style="padding-right:18px;vertical-align:top;border-right:3px solid #f97316;">
-      <img src="${LOGO_URL}" alt="STBCS" width="70" height="70" style="display:block;border-radius:12px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="70" height="70" loading="lazy" style="display:block;border-radius:12px;" />
     </td>
     <td style="padding-left:18px;vertical-align:top;">
       <table cellpadding="0" cellspacing="0" border="0">
@@ -53,7 +53,7 @@ function sig2(f: SigFields) {
     <td style="background:linear-gradient(135deg,#f97316,#ea580c);padding:16px 20px;">
       <table cellpadding="0" cellspacing="0" border="0" width="100%">
         <tr>
-          <td style="vertical-align:middle;"><img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="display:block;border-radius:10px;border:2px solid rgba(255,255,255,0.3);" /></td>
+          <td style="vertical-align:middle;"><img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="48" height="48" loading="lazy" style="display:block;border-radius:10px;border:2px solid rgba(255,255,255,0.3);" /></td>
           <td style="padding-left:14px;vertical-align:middle;">
             <div style="font-size:20px;font-weight:800;color:#ffffff;letter-spacing:1.5px;">STBCS</div>
             <div style="font-size:10px;color:rgba(255,255,255,0.85);letter-spacing:3px;text-transform:uppercase;">Cybersecurity</div>
@@ -90,7 +90,7 @@ function sig3(f: SigFields) {
     <td style="padding-bottom:12px;">
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
-          <td style="vertical-align:middle;"><img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:block;border-radius:8px;" /></td>
+          <td style="vertical-align:middle;"><img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="44" height="44" loading="lazy" style="display:block;border-radius:8px;" /></td>
           <td style="padding-left:10px;vertical-align:middle;">
             <div style="font-size:16px;font-weight:700;color:#ffffff;">${f.name}</div>
             <div style="font-size:11px;color:#71717a;">${f.title} &mdash; <span style="color:#f97316;font-weight:600;">STB Cybersecurity</span></div>
@@ -123,7 +123,7 @@ function sig4(f: SigFields) {
   <tr>
     <td style="vertical-align:top;padding-right:16px;">
       <table cellpadding="0" cellspacing="0" border="0">
-        <tr><td style="text-align:center;padding-bottom:6px;"><img src="${LOGO_URL}" alt="STBCS" width="64" height="64" style="display:block;border-radius:50%;border:3px solid #f97316;" /></td></tr>
+        <tr><td style="text-align:center;padding-bottom:6px;"><img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="64" height="64" loading="lazy" style="display:block;border-radius:50%;border:3px solid #f97316;" /></td></tr>
         <tr><td style="text-align:center;font-size:9px;color:#f97316;font-weight:700;letter-spacing:2px;">STBCS</td></tr>
       </table>
     </td>
@@ -172,7 +172,7 @@ function sig5(f: SigFields) {
             <div style="font-size:9px;color:#52525b;letter-spacing:4px;text-transform:uppercase;">CYBERSECURITY</div>
           </td>
           <td style="text-align:right;vertical-align:middle;">
-            <img src="${LOGO_URL}" alt="STBCS" width="42" height="42" style="display:inline-block;border-radius:8px;opacity:0.9;" />
+            <img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="42" height="42" loading="lazy" style="display:inline-block;border-radius:8px;opacity:0.9;" />
           </td>
         </tr>
       </table>
@@ -257,7 +257,7 @@ function sig7(f: SigFields) {
               <tr>
                 <td style="vertical-align:top;width:70px;">
                   <div style="width:64px;height:64px;background:linear-gradient(135deg,#f97316 0%,#ea580c 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;text-align:center;line-height:64px;">
-                    <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="display:inline-block;border-radius:8px;" />
+                    <img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="40" height="40" loading="lazy" style="display:inline-block;border-radius:8px;" />
                   </div>
                 </td>
                 <td style="padding-left:14px;vertical-align:top;">
@@ -310,7 +310,7 @@ function sig8(f: SigFields) {
       <table cellpadding="0" cellspacing="0" border="0" width="100%">
         <tr>
           <td style="vertical-align:middle;">
-            <img src="${LOGO_URL}" alt="STBCS" width="36" height="36" style="display:inline-block;border-radius:8px;vertical-align:middle;" />
+            <img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="36" height="36" loading="lazy" style="display:inline-block;border-radius:8px;vertical-align:middle;" />
           </td>
           <td style="padding-left:12px;vertical-align:middle;">
             <div style="font-size:16px;font-weight:800;color:#ffffff;letter-spacing:2px;">STB CYBERSECURITY</div>
@@ -358,7 +358,7 @@ function sig9(f: SigFields) {
         <tr>
           <td style="font-size:11px;font-weight:800;color:#fbbf24;letter-spacing:4px;text-transform:uppercase;">&#9888; OFFENSIVE SECURITY</td>
           <td style="text-align:right;">
-            <img src="${LOGO_URL}" alt="STBCS" width="28" height="28" style="display:inline-block;border-radius:6px;opacity:0.9;" />
+            <img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="28" height="28" loading="lazy" style="display:inline-block;border-radius:6px;opacity:0.9;" />
           </td>
         </tr>
       </table>
@@ -405,7 +405,7 @@ function sig10(f: SigFields) {
       <table cellpadding="0" cellspacing="0" border="0" width="100%">
         <tr>
           <td style="vertical-align:middle;">
-            <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:inline-block;border-radius:10px;vertical-align:middle;" />
+            <img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="44" height="44" loading="lazy" style="display:inline-block;border-radius:10px;vertical-align:middle;" />
           </td>
           <td style="padding-left:12px;vertical-align:middle;">
             <div style="font-size:17px;font-weight:700;color:#18181b;letter-spacing:1px;">STB Cybersecurity</div>
@@ -456,7 +456,7 @@ function sig11(f: SigFields) {
             <div style="font-size:9px;color:#71717a;letter-spacing:5px;text-transform:uppercase;">CYBERSECURITY</div>
           </td>
           <td style="text-align:right;vertical-align:middle;">
-            <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="display:inline-block;border-radius:10px;border:2px solid rgba(249,115,22,0.4);" />
+            <img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="48" height="48" loading="lazy" style="display:inline-block;border-radius:10px;border:2px solid rgba(249,115,22,0.4);" />
           </td>
         </tr>
       </table>
@@ -500,7 +500,7 @@ function sig12(f: SigFields) {
         <tr>
           <td style="vertical-align:top;width:80px;">
             <div style="width:72px;height:72px;background:#27272a;border-radius:8px;border:2px solid #3f3f46;display:table-cell;vertical-align:middle;text-align:center;">
-              <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="display:inline-block;border-radius:6px;" />
+              <img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="48" height="48" loading="lazy" style="display:inline-block;border-radius:6px;" />
             </div>
           </td>
           <td style="padding-left:14px;vertical-align:top;">
@@ -549,7 +549,7 @@ function sig13(f: SigFields) {
       <table cellpadding="0" cellspacing="0" border="0">
         <tr>
           <td style="vertical-align:middle;padding-right:8px;">
-            <img src="${LOGO_URL}" alt="STBCS" width="28" height="28" style="display:block;border-radius:6px;" />
+            <img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="28" height="28" loading="lazy" style="display:block;border-radius:6px;" />
           </td>
           <td style="vertical-align:middle;">
             <div style="font-size:12px;font-weight:700;color:#d4d4d8;letter-spacing:1px;">STB CYBERSECURITY</div>
@@ -592,7 +592,7 @@ function sig14(f: SigFields) {
             <div style="font-size:10px;color:#3f3f46;padding-top:2px;text-transform:uppercase;letter-spacing:2px;">${f.title}</div>
           </td>
           <td style="text-align:right;vertical-align:middle;">
-            <img src="${LOGO_URL}" alt="STBCS" width="28" height="28" style="display:inline-block;border-radius:4px;opacity:0.4;" />
+            <img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="28" height="28" loading="lazy" style="display:inline-block;border-radius:4px;opacity:0.4;" />
           </td>
         </tr>
       </table>
@@ -640,7 +640,7 @@ function sig15(f: SigFields) {
                   <tr>
                     <td style="vertical-align:top;">
                       <div style="width:56px;height:56px;background:linear-gradient(135deg,#f97316,#ea580c);border-radius:50%;text-align:center;line-height:56px;border:3px solid #27272a;">
-                        <img src="${LOGO_URL}" alt="STBCS" width="34" height="34" style="display:inline-block;border-radius:6px;vertical-align:middle;" />
+                        <img src="${LOGO_URL}" alt="STB Cybersecurity email signature logo" width="34" height="34" loading="lazy" style="display:inline-block;border-radius:6px;vertical-align:middle;" />
                       </div>
                     </td>
                     <td style="padding-left:14px;vertical-align:top;">

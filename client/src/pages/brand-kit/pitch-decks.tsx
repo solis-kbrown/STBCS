@@ -32,7 +32,7 @@ function pitch1(f: PitchFields) {
   return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;justify-content:center;padding:60px 80px;">
   <div style="position:absolute;top:0;left:0;right:0;height:5px;background:linear-gradient(90deg,#f97316,#ea580c,#f97316);"></div>
   <div style="position:absolute;top:30px;right:40px;display:flex;align-items:center;gap:10px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="32" height="32" style="border-radius:6px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity pitch deck logo" width="32" height="32" loading="lazy" style="border-radius:6px;" />
     <span style="font-size:11px;color:#52525b;font-weight:700;letter-spacing:2px;">${f.company.toUpperCase()}</span>
   </div>
   <div style="font-size:12px;color:#f97316;text-transform:uppercase;letter-spacing:4px;font-weight:700;margin-bottom:16px;">PROPOSAL</div>
@@ -52,7 +52,7 @@ function pitch2(f: PitchFields) {
   <div style="position:absolute;inset:0;opacity:0.04;background-image:repeating-linear-gradient(0deg,transparent,transparent 24px,#f97316 24px,#f97316 25px),repeating-linear-gradient(90deg,transparent,transparent 24px,#f97316 24px,#f97316 25px);"></div>
   <div style="position:absolute;top:16px;left:20px;font-size:9px;color:#52525b;letter-spacing:3px;">TOP SECRET // ${f.company.toUpperCase()}</div>
   <div style="position:absolute;top:16px;right:20px;display:flex;align-items:center;gap:6px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="24" height="24" style="border-radius:4px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity pitch deck logo" width="24" height="24" loading="lazy" style="border-radius:4px;" />
   </div>
   <div style="border-left:4px solid #f97316;padding-left:24px;">
     <div style="font-size:10px;color:#f97316;text-transform:uppercase;letter-spacing:4px;font-weight:700;margin-bottom:6px;">OPERATION:</div>
@@ -84,7 +84,7 @@ function pitch3(f: PitchFields) {
   <div style="display:flex;align-items:center;gap:30px;margin-bottom:24px;position:relative;">
     <div style="display:flex;flex-direction:column;align-items:center;">
       <div style="width:64px;height:64px;border-radius:16px;background:#27272a;border:2px solid #f97316;display:flex;align-items:center;justify-content:center;">
-        <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="border-radius:8px;" />
+        <img src="${LOGO_URL}" alt="STB Cybersecurity pitch deck logo" width="40" height="40" loading="lazy" style="border-radius:8px;" />
       </div>
       <div style="font-size:11px;color:#e4e4e7;margin-top:8px;font-weight:600;">${f.company}</div>
     </div>
@@ -111,7 +111,7 @@ function pitch4(f: PitchFields) {
     <div style="position:absolute;bottom:10%;right:5%;width:160px;height:160px;border:1px solid #27272a;border-radius:50%;"></div>
   </div>
   <div style="position:absolute;top:24px;left:30px;display:flex;align-items:center;gap:8px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="28" height="28" style="border-radius:6px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity pitch deck logo" width="28" height="28" loading="lazy" style="border-radius:6px;" />
     <span style="font-size:10px;color:#52525b;letter-spacing:2px;font-weight:600;">${f.company.toUpperCase()}</span>
   </div>
   <div style="font-size:10px;color:#f97316;text-transform:uppercase;letter-spacing:5px;font-weight:700;margin-bottom:12px;">NEXT-GEN SECURITY</div>
@@ -139,7 +139,7 @@ function pitch5(f: PitchFields) {
   return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;justify-content:center;padding:50px 70px;">
   <div style="position:absolute;top:0;right:0;width:40%;height:100%;background:linear-gradient(180deg,rgba(249,115,22,0.08),rgba(234,88,12,0.03),transparent);"></div>
   <div style="position:absolute;top:24px;right:30px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="32" height="32" style="border-radius:6px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity pitch deck logo" width="32" height="32" loading="lazy" style="border-radius:6px;" />
   </div>
   <div style="font-size:10px;color:#f97316;text-transform:uppercase;letter-spacing:5px;font-weight:700;margin-bottom:12px;">YOUR RISK PROFILE</div>
   <div style="font-size:32px;font-weight:900;color:#ffffff;line-height:1.2;max-width:70%;">${f.proposalTitle}</div>
@@ -171,7 +171,7 @@ function pitch6(f: PitchFields) {
   return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;justify-content:center;padding:50px 70px;">
   <div style="position:absolute;inset:0;opacity:0.05;background-image:repeating-linear-gradient(90deg,transparent,transparent 60px,#3f3f46 60px,#3f3f46 61px);"></div>
   <div style="position:absolute;top:24px;left:30px;display:flex;align-items:center;gap:8px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="28" height="28" style="border-radius:6px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity pitch deck logo" width="28" height="28" loading="lazy" style="border-radius:6px;" />
     <span style="font-size:10px;color:#52525b;letter-spacing:2px;font-weight:600;">${f.company.toUpperCase()}</span>
   </div>
   <div style="font-size:10px;color:#f97316;text-transform:uppercase;letter-spacing:5px;font-weight:700;margin-bottom:12px;">COMPLIANCE ROADMAP</div>
@@ -213,7 +213,7 @@ function pitch7(f: PitchFields) {
   <div style="position:relative;width:220px;height:260px;margin-bottom:16px;">
     <div style="position:absolute;inset:0;clip-path:polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);background:linear-gradient(180deg,#27272a,#18181b);border:2px solid #f97316;"></div>
     <div style="position:absolute;inset:4px;clip-path:polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);background:#0c0c0e;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:30px;">
-      <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="border-radius:8px;margin-bottom:12px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity pitch deck logo" width="40" height="40" loading="lazy" style="border-radius:8px;margin-bottom:12px;" />
       <div style="font-size:14px;font-weight:900;color:#ffffff;line-height:1.3;max-width:90%;">${f.proposalTitle}</div>
       <div style="font-size:9px;color:#71717a;margin-top:6px;">${f.projectScope}</div>
     </div>
@@ -227,7 +227,7 @@ function pitch7(f: PitchFields) {
 function pitch8(f: PitchFields) {
   return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;justify-content:center;padding:50px 70px;">
   <div style="position:absolute;top:24px;right:30px;display:flex;align-items:center;gap:8px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="28" height="28" style="border-radius:6px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity pitch deck logo" width="28" height="28" loading="lazy" style="border-radius:6px;" />
     <span style="font-size:10px;color:#52525b;letter-spacing:2px;font-weight:600;">${f.company.toUpperCase()}</span>
   </div>
   <div style="font-size:10px;color:#f97316;text-transform:uppercase;letter-spacing:5px;font-weight:700;margin-bottom:12px;">SECURITY INVESTMENT ANALYSIS</div>

@@ -719,7 +719,7 @@ export default function KbPost() {
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2"><QrCode className="h-5 w-5 text-orange-400" />QR Code</h3>
                     <button onClick={() => setShowQrCode(false)} className="text-zinc-500 hover:text-zinc-300" data-testid="button-close-qr" aria-label="Close QR code"><X className="h-5 w-5" /></button>
                   </div>
-                  <img src={qrDataUrl} alt="QR Code" className="mx-auto rounded-lg mb-3" width={256} height={256} data-testid="img-qr-code" />
+                  <img src={qrDataUrl} alt="QR code link to this knowledge base article" className="mx-auto rounded-lg mb-3" width={256} height={256} loading="lazy" data-testid="img-qr-code" />
                   <p className="text-xs text-zinc-500 mb-1">Scan to open this post</p>
                   <p className="text-xs text-orange-400 font-semibold mb-4">STB Cybersecurity</p>
                   <Button onClick={handleDownloadQr} variant="outline" size="sm" className="border-orange-500/30 text-orange-400 hover:bg-orange-500/10" data-testid="button-download-qr">

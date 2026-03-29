@@ -29,7 +29,7 @@ const defaultFields: PresentationFields = {
 function slide1(f: PresentationFields) {
   return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:40px;">
   <div style="position:absolute;inset:0;opacity:0.05;background-image:repeating-linear-gradient(0deg,transparent,transparent 30px,#f97316 30px,#f97316 31px),repeating-linear-gradient(90deg,transparent,transparent 30px,#f97316 30px,#f97316 31px);"></div>
-  <img src="${LOGO_URL}" alt="STBCS" width="64" height="64" style="margin-bottom:24px;border-radius:12px;opacity:0.9;" />
+  <img src="${LOGO_URL}" alt="STB Cybersecurity presentation logo" width="64" height="64" loading="lazy" style="margin-bottom:24px;border-radius:12px;opacity:0.9;" />
   <div style="font-size:32px;font-weight:900;color:#ffffff;text-align:center;letter-spacing:2px;max-width:80%;line-height:1.2;">${f.presentationTitle}</div>
   <div style="font-size:14px;color:#a1a1aa;text-align:center;margin-top:12px;max-width:70%;">${f.subtitle}</div>
   <div style="margin-top:24px;font-size:13px;color:#f97316;font-weight:600;">${f.presenter} &bull; ${f.company}</div>
@@ -42,7 +42,7 @@ function slide2(f: PresentationFields) {
   return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;justify-content:center;padding:40px 50px;">
   <div style="position:absolute;top:16px;right:20px;font-size:10px;color:#52525b;letter-spacing:3px;text-transform:uppercase;">CLASSIFIED</div>
   <div style="position:absolute;top:16px;left:20px;display:flex;align-items:center;gap:8px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="28" height="28" style="border-radius:6px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity presentation logo" width="28" height="28" loading="lazy" style="border-radius:6px;" />
     <span style="font-size:11px;color:#71717a;font-weight:700;letter-spacing:2px;">${f.company.toUpperCase()}</span>
   </div>
   <div style="border-left:4px solid #f97316;padding-left:20px;">
@@ -65,7 +65,7 @@ function slide3(f: PresentationFields) {
     ${[...Array(8)].map((_, i) => `<div style="width:24px;height:${60 + i * 10}%;background:linear-gradient(180deg,#f97316,#0c0c0e);border-radius:4px 4px 0 0;"></div>`).join('')}
   </div>
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center bottom,rgba(249,115,22,0.08),transparent 70%);"></div>
-  <img src="${LOGO_URL}" alt="STBCS" width="56" height="56" style="margin-bottom:20px;border-radius:12px;position:relative;" />
+  <img src="${LOGO_URL}" alt="STB Cybersecurity presentation logo" width="56" height="56" loading="lazy" style="margin-bottom:20px;border-radius:12px;position:relative;" />
   <div style="font-size:30px;font-weight:900;color:#ffffff;text-align:center;position:relative;line-height:1.2;">${f.presentationTitle}</div>
   <div style="font-size:13px;color:#a1a1aa;text-align:center;margin-top:10px;position:relative;">${f.subtitle}</div>
   <div style="margin-top:20px;font-size:12px;color:#71717a;position:relative;">${f.presenter} &mdash; ${f.company}</div>
@@ -77,7 +77,7 @@ function slide4(f: PresentationFields) {
   return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;justify-content:flex-end;padding:50px 60px;">
   <div style="position:absolute;top:0;left:0;right:0;height:2px;background:#f97316;"></div>
   <div style="position:absolute;top:20px;left:60px;display:flex;align-items:center;gap:8px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="24" height="24" style="border-radius:4px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity presentation logo" width="24" height="24" loading="lazy" style="border-radius:4px;" />
     <span style="font-size:10px;color:#52525b;letter-spacing:2px;font-weight:600;">${f.company.toUpperCase()}</span>
   </div>
   <div style="font-size:36px;font-weight:900;color:#ffffff;line-height:1.15;max-width:70%;">${f.presentationTitle}</div>
@@ -91,7 +91,7 @@ function slide4(f: PresentationFields) {
 
 function slide5(f: PresentationFields) {
   return `<div style="width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#f97316 0%,#ea580c 30%,#18181b 70%,#0c0c0e 100%);position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;justify-content:center;padding:50px 60px;">
-  <div style="position:absolute;top:20px;left:30px;"><img src="${LOGO_URL}" alt="STBCS" width="36" height="36" style="border-radius:8px;" /></div>
+  <div style="position:absolute;top:20px;left:30px;"><img src="${LOGO_URL}" alt="STB Cybersecurity presentation logo" width="36" height="36" loading="lazy" style="border-radius:8px;" /></div>
   <div style="font-size:34px;font-weight:900;color:#ffffff;line-height:1.2;max-width:75%;text-shadow:0 2px 12px rgba(0,0,0,0.3);">${f.presentationTitle}</div>
   <div style="font-size:14px;color:rgba(255,255,255,0.8);margin-top:12px;max-width:60%;">${f.subtitle}</div>
   <div style="margin-top:28px;display:flex;gap:20px;font-size:12px;">
@@ -107,7 +107,7 @@ function slide6(f: PresentationFields) {
   <div style="position:absolute;inset:0;opacity:0.06;background-image:repeating-linear-gradient(0deg,transparent,transparent 20px,#3f3f46 20px,#3f3f46 21px),repeating-linear-gradient(90deg,transparent,transparent 20px,#3f3f46 20px,#3f3f46 21px);"></div>
   <div style="position:absolute;top:16px;left:20px;font-size:9px;color:#3f3f46;">REV 1.0 // TECHNICAL DOCUMENT</div>
   <div style="position:absolute;top:16px;right:20px;display:flex;align-items:center;gap:6px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="20" height="20" style="border-radius:4px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity presentation logo" width="20" height="20" loading="lazy" style="border-radius:4px;" />
     <span style="font-size:9px;color:#3f3f46;letter-spacing:2px;">${f.company.toUpperCase()}</span>
   </div>
   <div style="border:1px solid #27272a;padding:24px;position:relative;">
@@ -127,7 +127,7 @@ function slide7(f: PresentationFields) {
   return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;justify-content:center;padding:40px 50px;">
   <div style="position:absolute;inset:0;opacity:0.07;background-image:repeating-linear-gradient(0deg,transparent,transparent 40px,#27272a 40px,#27272a 41px),repeating-linear-gradient(90deg,transparent,transparent 40px,#27272a 40px,#27272a 41px);"></div>
   <div style="position:absolute;top:16px;left:20px;display:flex;align-items:center;gap:8px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="24" height="24" style="border-radius:4px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity presentation logo" width="24" height="24" loading="lazy" style="border-radius:4px;" />
     <span style="font-size:10px;color:#52525b;letter-spacing:2px;font-weight:600;">${f.company.toUpperCase()}</span>
   </div>
   <div style="position:absolute;top:14px;right:20px;display:flex;gap:10px;">
@@ -167,7 +167,7 @@ function slide8(f: PresentationFields) {
   <div style="position:absolute;inset:14px;border:1px solid transparent;border-image:linear-gradient(225deg,rgba(249,115,22,0.2),rgba(168,85,247,0.15),rgba(59,130,246,0.15),rgba(34,197,94,0.15),rgba(249,115,22,0.2)) 1;"></div>
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(249,115,22,0.04),transparent 70%);"></div>
   <div style="background:rgba(12,12,14,0.85);backdrop-filter:blur(8px);border:1px solid rgba(249,115,22,0.15);border-radius:16px;padding:40px 60px;text-align:center;position:relative;max-width:80%;">
-    <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="margin:0 auto 20px;border-radius:12px;display:block;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity presentation logo" width="48" height="48" loading="lazy" style="margin:0 auto 20px;border-radius:12px;display:block;" />
     <div style="font-size:30px;font-weight:900;color:#ffffff;line-height:1.2;">${f.presentationTitle}</div>
     <div style="font-size:13px;color:#a1a1aa;margin-top:10px;">${f.subtitle}</div>
     <div style="margin-top:20px;font-size:12px;color:#71717a;">${f.presenter} &bull; ${f.company} &bull; ${f.date}</div>
@@ -179,7 +179,7 @@ function slide9(f: PresentationFields) {
   return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;flex-direction:column;padding:0;">
   <div style="background:linear-gradient(90deg,#18181b,#1c1917);padding:8px 20px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid #f97316;">
     <div style="display:flex;align-items:center;gap:8px;">
-      <img src="${LOGO_URL}" alt="STBCS" width="20" height="20" style="border-radius:4px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity presentation logo" width="20" height="20" loading="lazy" style="border-radius:4px;" />
       <span style="font-size:10px;color:#f97316;font-weight:700;letter-spacing:3px;text-transform:uppercase;">WAR ROOM</span>
     </div>
     <div style="display:flex;gap:12px;font-size:9px;color:#52525b;">
@@ -211,7 +211,7 @@ function slide10(f: PresentationFields) {
   <div style="position:absolute;inset:0;background:linear-gradient(180deg,#0c0c0e 0%,transparent 30%,transparent 70%,#0c0c0e 100%);"></div>
   <div style="position:absolute;top:0;left:0;right:0;height:60%;background:linear-gradient(180deg,rgba(12,12,14,0.3),rgba(12,12,14,0.95));"></div>
   <div style="position:absolute;top:20px;right:24px;display:flex;align-items:center;gap:6px;">
-    <img src="${LOGO_URL}" alt="STBCS" width="20" height="20" style="border-radius:4px;opacity:0.6;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity presentation logo" width="20" height="20" loading="lazy" style="border-radius:4px;opacity:0.6;" />
     <span style="font-size:9px;color:#3f3f46;letter-spacing:2px;">${f.company.toUpperCase()}</span>
   </div>
   <div style="position:relative;">

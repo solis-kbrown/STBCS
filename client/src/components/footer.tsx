@@ -244,7 +244,7 @@ export default function Footer() {
               <div className="flex items-center gap-3 mb-4">
                 <img
                   src="/brand/icon-shield.png"
-                  alt="STBCS"
+                  alt="STB Cybersecurity footer logo"
                   className="h-10 w-10 drop-shadow-[0_0_8px_rgba(239,68,68,0.4)] icon-float"
                 />
                 <span className="font-display font-bold text-lg text-primary tracking-wider">

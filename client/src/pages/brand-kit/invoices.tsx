@@ -98,7 +98,7 @@ function inv1(f: InvoiceFields) {
   <table cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
       <td style="vertical-align:top;">
-        <img src="${LOGO_URL}" alt="STBCS" width="50" height="50" style="display:block;border-radius:10px;" />
+        <img src="${LOGO_URL}" alt="STB Cybersecurity invoice logo" width="50" height="50" loading="lazy" style="display:block;border-radius:10px;" />
         <div style="font-size:18px;font-weight:800;color:#18181b;margin-top:8px;letter-spacing:1px;">${f.companyName}</div>
         <div style="font-size:11px;color:#71717a;margin-top:2px;">${f.companyAddress}</div>
         <div style="font-size:11px;color:#71717a;">${f.companyPhone} | ${f.companyEmail}</div>
@@ -145,7 +145,7 @@ function inv2(f: InvoiceFields) {
         <td style="vertical-align:middle;">
           <table cellpadding="0" cellspacing="0" border="0">
             <tr>
-              <td style="vertical-align:middle;"><img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:block;border-radius:10px;border:2px solid #f97316;" /></td>
+              <td style="vertical-align:middle;"><img src="${LOGO_URL}" alt="STB Cybersecurity invoice logo" width="44" height="44" loading="lazy" style="display:block;border-radius:10px;border:2px solid #f97316;" /></td>
               <td style="padding-left:12px;vertical-align:middle;">
                 <div style="font-size:16px;font-weight:800;color:#ffffff;letter-spacing:1px;">${f.companyName}</div>
                 <div style="font-size:10px;color:#71717a;letter-spacing:2px;text-transform:uppercase;">CYBERSECURITY SERVICES</div>
@@ -212,7 +212,7 @@ function inv3(f: InvoiceFields) {
   <table cellpadding="0" cellspacing="0" border="0" width="100%">
     <tr>
       <td style="vertical-align:top;">
-        <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:block;border-radius:8px;" />
+        <img src="${LOGO_URL}" alt="STB Cybersecurity invoice logo" width="44" height="44" loading="lazy" style="display:block;border-radius:8px;" />
         <div style="font-size:16px;font-weight:800;color:#18181b;margin-top:6px;">${f.companyName}</div>
         <div style="font-size:10px;color:#f97316;text-transform:uppercase;letter-spacing:2px;">CONSULTING SERVICES</div>
       </td>
@@ -300,7 +300,7 @@ function inv4(f: InvoiceFields) {
           <div style="font-size:22px;font-weight:900;color:#ffffff;margin-top:4px;">BILLING STATEMENT</div>
         </td>
         <td style="text-align:right;vertical-align:middle;">
-          <img src="${LOGO_URL}" alt="STBCS" width="48" height="48" style="display:inline-block;border-radius:10px;border:2px solid rgba(255,255,255,0.3);" />
+          <img src="${LOGO_URL}" alt="STB Cybersecurity invoice logo" width="48" height="48" loading="lazy" style="display:inline-block;border-radius:10px;border:2px solid rgba(255,255,255,0.3);" />
         </td>
       </tr>
     </table>
@@ -396,7 +396,7 @@ function inv5(f: InvoiceFields) {
       <td style="vertical-align:top;">
         <table cellpadding="0" cellspacing="0" border="0">
           <tr>
-            <td style="vertical-align:middle;"><img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="display:block;border-radius:8px;" /></td>
+            <td style="vertical-align:middle;"><img src="${LOGO_URL}" alt="STB Cybersecurity invoice logo" width="40" height="40" loading="lazy" style="display:block;border-radius:8px;" /></td>
             <td style="padding-left:10px;vertical-align:middle;">
               <div style="font-size:15px;font-weight:800;color:#18181b;">${f.companyName}</div>
               <div style="font-size:10px;color:#f97316;text-transform:uppercase;letter-spacing:2px;">MANAGED SECURITY</div>
@@ -494,7 +494,7 @@ function inv6(f: InvoiceFields) {
         <td style="vertical-align:middle;">
           <table cellpadding="0" cellspacing="0" border="0">
             <tr>
-              <td style="vertical-align:middle;"><img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:block;border-radius:10px;" /></td>
+              <td style="vertical-align:middle;"><img src="${LOGO_URL}" alt="STB Cybersecurity invoice logo" width="44" height="44" loading="lazy" style="display:block;border-radius:10px;" /></td>
               <td style="padding-left:12px;vertical-align:middle;">
                 <div style="font-size:16px;font-weight:800;color:#ffffff;">${f.companyName}</div>
                 <div style="font-size:10px;color:#71717a;letter-spacing:2px;text-transform:uppercase;">CYBERSECURITY SERVICES</div>
@@ -576,7 +576,7 @@ function inv7(f: InvoiceFields) {
     <table cellpadding="0" cellspacing="0" border="0" width="100%">
       <tr>
         <td style="vertical-align:middle;">
-          <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:block;border-radius:8px;border:2px solid #52525b;" />
+          <img src="${LOGO_URL}" alt="STB Cybersecurity invoice logo" width="44" height="44" loading="lazy" style="display:block;border-radius:8px;border:2px solid #52525b;" />
           <div style="font-size:16px;font-weight:800;color:#ffffff;margin-top:8px;">${f.companyName}</div>
           <div style="font-size:10px;color:#52525b;letter-spacing:3px;text-transform:uppercase;">CLASSIFIED BILLING DIVISION</div>
         </td>
@@ -650,7 +650,7 @@ function inv8(f: InvoiceFields) {
           <div style="font-size:22px;font-weight:900;color:#ffffff;margin-top:4px;">PRIORITY BILLING</div>
         </td>
         <td style="text-align:right;vertical-align:middle;">
-          <img src="${LOGO_URL}" alt="STBCS" width="44" height="44" style="display:inline-block;border-radius:10px;border:2px solid rgba(255,255,255,0.3);" />
+          <img src="${LOGO_URL}" alt="STB Cybersecurity invoice logo" width="44" height="44" loading="lazy" style="display:inline-block;border-radius:10px;border:2px solid rgba(255,255,255,0.3);" />
         </td>
       </tr>
     </table>
@@ -746,7 +746,7 @@ function inv9(f: InvoiceFields) {
       <td style="vertical-align:middle;">
         <table cellpadding="0" cellspacing="0" border="0">
           <tr>
-            <td style="vertical-align:middle;"><img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="display:block;border-radius:8px;" /></td>
+            <td style="vertical-align:middle;"><img src="${LOGO_URL}" alt="STB Cybersecurity invoice logo" width="40" height="40" loading="lazy" style="display:block;border-radius:8px;" /></td>
             <td style="padding-left:10px;vertical-align:middle;">
               <div style="font-size:15px;font-weight:800;color:#18181b;">${f.companyName}</div>
               <div style="font-size:10px;color:#f97316;text-transform:uppercase;letter-spacing:2px;">SUBSCRIPTION SERVICES</div>
@@ -876,7 +876,7 @@ function inv10(f: InvoiceFields) {
     <table cellpadding="0" cellspacing="0" border="0" width="100%">
       <tr>
         <td style="vertical-align:middle;">
-          <img src="${LOGO_URL}" alt="STBCS" width="40" height="40" style="display:block;border-radius:6px;" />
+          <img src="${LOGO_URL}" alt="STB Cybersecurity invoice logo" width="40" height="40" loading="lazy" style="display:block;border-radius:6px;" />
           <div style="font-size:14px;font-weight:800;color:#ffffff;margin-top:6px;">${f.companyName}</div>
           <div style="font-size:9px;color:#71717a;letter-spacing:2px;text-transform:uppercase;">GOVERNMENT CONTRACTOR</div>
         </td>

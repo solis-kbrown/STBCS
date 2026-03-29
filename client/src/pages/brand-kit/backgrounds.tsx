@@ -21,7 +21,7 @@ function bg1() {
   </div>
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(249,115,22,0.06),transparent 70%);"></div>
   <div style="position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;opacity:0.3;">
-    <img src="${LOGO_URL}" alt="" width="16" height="16" style="border-radius:3px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity background watermark" width="16" height="16" loading="lazy" style="border-radius:3px;" />
     <span style="font-size:8px;color:#52525b;letter-spacing:3px;">STB CYBERSECURITY</span>
   </div>
 </div>`;
@@ -36,7 +36,7 @@ function bg2() {
   </div>
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,rgba(59,130,246,0.05),transparent 50%),radial-gradient(ellipse at 70% 50%,rgba(249,115,22,0.05),transparent 50%);"></div>
   <div style="position:absolute;bottom:16px;right:24px;opacity:0.2;">
-    <img src="${LOGO_URL}" alt="" width="20" height="20" style="border-radius:4px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity background watermark" width="20" height="20" loading="lazy" style="border-radius:4px;" />
   </div>
 </div>`;
 }
@@ -91,7 +91,7 @@ function bg5() {
   </div>
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,0.7) 100%);"></div>
   <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.08;">
-    <img src="${LOGO_URL}" alt="" width="120" height="120" style="border-radius:20px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity background watermark" width="120" height="120" loading="lazy" style="border-radius:20px;" />
   </div>
 </div>`;
 }
@@ -100,7 +100,7 @@ function bg6() {
   return `<div style="width:100%;aspect-ratio:16/9;background:#0c0c0e;position:relative;overflow:hidden;font-family:'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
   <div style="position:absolute;inset:0;display:flex;flex-wrap:wrap;align-content:flex-start;padding:10px;gap:0;">
     ${[...Array(48)].map((_, i) => `<div style="width:12.5%;aspect-ratio:1;display:flex;align-items:center;justify-content:center;opacity:${(0.03 + (i % 5) * 0.01).toFixed(2)};">
-      <img src="${LOGO_URL}" alt="" width="28" height="28" style="border-radius:6px;" />
+      <img src="${LOGO_URL}" alt="STB Cybersecurity background watermark" width="28" height="28" loading="lazy" style="border-radius:6px;" />
     </div>`).join('')}
   </div>
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,rgba(249,115,22,0.04),transparent 60%);"></div>
@@ -123,7 +123,7 @@ function bg7() {
   </div>
   <div style="position:absolute;top:15%;left:50%;transform:translateX(-50%);width:60px;height:60px;border-radius:50%;border:1px solid rgba(249,115,22,0.1);box-shadow:0 0 40px rgba(249,115,22,0.05);"></div>
   <div style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:8px;opacity:0.25;">
-    <img src="${LOGO_URL}" alt="" width="14" height="14" style="border-radius:3px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity background watermark" width="14" height="14" loading="lazy" style="border-radius:3px;" />
     <span style="font-size:7px;color:#52525b;letter-spacing:3px;">STB CYBERSECURITY</span>
   </div>
 </div>`;
@@ -145,7 +145,7 @@ function bg8() {
   </svg>
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse at 50% 45%,rgba(249,115,22,0.06),transparent 60%);"></div>
   <div style="position:absolute;bottom:14px;right:20px;opacity:0.2;">
-    <img src="${LOGO_URL}" alt="" width="18" height="18" style="border-radius:4px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity background watermark" width="18" height="18" loading="lazy" style="border-radius:4px;" />
   </div>
 </div>`;
 }
@@ -171,7 +171,7 @@ function bg9() {
   }).join('')}
   <div style="position:absolute;inset:0;background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,0.6) 100%);"></div>
   <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.06;">
-    <img src="${LOGO_URL}" alt="" width="80" height="80" style="border-radius:16px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity background watermark" width="80" height="80" loading="lazy" style="border-radius:16px;" />
   </div>
 </div>`;
 }
@@ -199,7 +199,7 @@ function bg10() {
     </div>`).join('')}
   </div>
   <div style="position:absolute;bottom:12px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;opacity:0.2;">
-    <img src="${LOGO_URL}" alt="" width="14" height="14" style="border-radius:3px;" />
+    <img src="${LOGO_URL}" alt="STB Cybersecurity background watermark" width="14" height="14" loading="lazy" style="border-radius:3px;" />
     <span style="font-size:7px;color:#52525b;letter-spacing:3px;">STB CYBERSECURITY</span>
   </div>
 </div>`;

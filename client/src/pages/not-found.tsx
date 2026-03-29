@@ -12,7 +12,7 @@ export default function NotFound() {
       <Card className="w-full max-w-md mx-4 border-white/10 bg-zinc-900/50">
         <CardContent className="pt-8 pb-8 text-center">
           <div className="flex flex-col items-center gap-4 mb-6">
-            <img src="/brand/icon-shield.png" alt="STBCS" className="h-20 w-20 drop-shadow-[0_0_10px_rgba(239,68,68,0.3)] opacity-60" />
+            <img src="/brand/icon-shield.png" alt="STB Cybersecurity shield icon" className="h-20 w-20 drop-shadow-[0_0_10px_rgba(239,68,68,0.3)] opacity-60" />
             <div className="p-3 rounded-full bg-orange-500/10 border border-orange-500/30">
               <AlertTriangle className="h-8 w-8 text-orange-500" />
             </div>
