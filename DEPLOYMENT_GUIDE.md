@@ -1,9 +1,9 @@
-# STB Cybersecurity — Dedicated Server Deployment Guide
+# STB Cybersecurity — OVH Cloud VM Deployment Guide
 
 **Platform:** STB Cybersecurity (STBCS)  
 **Domain:** stbcybersecurity.com  
 **Contact:** (855) STB-1987 | kbpc.inc@gmail.com  
-**Target Server:** Hetzner Dedicated Server (or any Ubuntu 24.04 LTS host)  
+**Target Server:** OVH Cloud VM (Public Cloud Instance)  
 
 ---
 
@@ -40,7 +40,7 @@ The rest of this guide explains every step in detail for reference and troublesh
 ## Table of Contents
 
 1. [What You'll Need Before Starting](#1-what-youll-need-before-starting)
-2. [Install Ubuntu 24.04 via Hetzner Robot](#2-install-ubuntu-2404-via-hetzner-robot)
+2. [Create an Ubuntu 24.04 Instance on OVH Cloud](#2-create-an-ubuntu-2404-instance-on-ovh-cloud)
 3. [First Login & System Update](#3-first-login--system-update)
 4. [Create a Dedicated Application User](#4-create-a-dedicated-application-user)
 5. [Install Node.js 20 LTS](#5-install-nodejs-20-lts)
@@ -75,8 +75,8 @@ Before you begin, gather the following. You already have most of these from your
 
 | Item | Where to Find It |
 |------|-------------------|
-| Hetzner Robot login | robot.hetzner.com |
-| Server IP address | Hetzner Robot > Server > Overview |
+| OVH Cloud login | ovh.com/manager (OVH Control Panel) |
+| Server IP address | OVH Control Panel > Public Cloud > Instances |
 | Your domain registrar login | Wherever stbcybersecurity.com DNS is managed |
 | `STRIPE_SECRET_KEY` | Replit Secrets (or Stripe Dashboard > API Keys) |
 | `STRIPE_PUBLISHABLE_KEY` | Replit Secrets (or Stripe Dashboard > API Keys) |
@@ -89,19 +89,24 @@ Before you begin, gather the following. You already have most of these from your
 
 ---
 
-## 2. Install Ubuntu 24.04 via Hetzner Robot
+## 2. Create an Ubuntu 24.04 Instance on OVH Cloud
 
-1. Log into **Hetzner Robot** at https://robot.hetzner.com
-2. Select your dedicated server from the server list
-3. Click **Linux** in the left sidebar
-4. Select **Ubuntu 24.04 LTS minimal**
-5. Choose your preferred language (English recommended)
-6. Set a **strong root password** — write it down, you'll need it in the next step
-7. Optionally add your SSH public key for key-based login (more secure, recommended)
-8. Click **Activate Linux Installation**
-9. Confirm when prompted — this **erases the server** and installs a fresh Ubuntu
-10. Wait approximately 5-15 minutes for the installation to complete
-11. You'll receive an email from Hetzner when it's ready
+1. Log into the **OVH Control Panel** at https://ovh.com/manager
+2. Navigate to **Public Cloud** > select your project (or create one)
+3. Click **Instances** in the left sidebar, then **Create an instance**
+4. Choose your region (pick one close to your users — e.g., US-EAST-VA-1 or GRA for Europe)
+5. Select **Ubuntu 24.04** as the image
+6. Choose an instance size — recommended starting points:
+   - **B2-15** (4 vCPU, 15GB RAM) — good for moderate traffic
+   - **B2-30** (8 vCPU, 30GB RAM) — good for growth
+   - You can resize the VM later as you scale
+7. Add your **SSH public key** (required on OVH — they use key-based login by default)
+   - If you don't have one, generate it on your local machine: `ssh-keygen -t ed25519`
+   - Copy the public key: `cat ~/.ssh/id_ed25519.pub`
+8. Give it a name (e.g., `stbcs-production`)
+9. Click **Create an instance**
+10. Wait 1-2 minutes — OVH instances provision quickly
+11. Copy the **public IP address** from the Instances list
 
 ---
 
@@ -113,7 +118,10 @@ Open a terminal on your local computer and connect:
 ssh root@YOUR_SERVER_IP
 ```
 
-Replace `YOUR_SERVER_IP` with the IP from Hetzner Robot. Accept the fingerprint prompt by typing `yes`.
+Replace `YOUR_SERVER_IP` with the IP from the OVH Control Panel. Accept the fingerprint prompt by typing `yes`.
+
+> **OVH Note:** OVH instances use `ubuntu` as the default user, not `root`. Log in with:
+> `ssh ubuntu@YOUR_SERVER_IP` and then run `sudo -i` to become root for setup.
 
 Once logged in, update the system:
 
@@ -716,15 +724,15 @@ Log into your **domain registrar** (wherever stbcybersecurity.com's DNS is manag
 
 | Type | Name | Value | TTL |
 |------|------|-------|-----|
-| A | `@` (root) | `YOUR_HETZNER_SERVER_IP` | 300 |
-| A | `www` | `YOUR_HETZNER_SERVER_IP` | 300 |
+| A | `@` (root) | `YOUR_OVH_SERVER_IP` | 300 |
+| A | `www` | `YOUR_OVH_SERVER_IP` | 300 |
 
 If you also manage `stoptbcs.com`, point it the same way:
 
 | Type | Name | Value | TTL |
 |------|------|-------|-----|
-| A | `@` (root) | `YOUR_HETZNER_SERVER_IP` | 300 |
-| A | `www` | `YOUR_HETZNER_SERVER_IP` | 300 |
+| A | `@` (root) | `YOUR_OVH_SERVER_IP` | 300 |
+| A | `www` | `YOUR_OVH_SERVER_IP` | 300 |
 
 DNS changes typically take 5-60 minutes to propagate worldwide.
 
@@ -734,7 +742,7 @@ You can check propagation at https://dnschecker.org.
 
 ## 19. Configure Stripe Webhooks
 
-Your Stripe webhook URL needs to point to the Hetzner server instead of Replit.
+Your Stripe webhook URL needs to point to the OVH server instead of Replit.
 
 1. Go to the Stripe Dashboard: https://dashboard.stripe.com/webhooks
 2. Find your existing webhook endpoint

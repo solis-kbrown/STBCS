@@ -42,3 +42,9 @@ id = "6VMqRZ9r4V01D-0-XL39Y"
 uri = "file://deploy/README.txt"
 type = "text"
 title = "Quick Start Reference"
+
+[[outputs]]
+id = "Q3f3t_6Q7XaWFSN8lJl-6"
+uri = "file://DEPLOYMENT_GUIDE.md"
+type = "text"
+title = "OVH Cloud VM Deployment Guide (full reference)"

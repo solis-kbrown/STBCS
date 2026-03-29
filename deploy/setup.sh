@@ -2,9 +2,9 @@
 set -euo pipefail
 
 # ============================================================
-# STB Cybersecurity — Dedicated Server Setup Script
+# STB Cybersecurity — OVH Cloud VM Setup Script
 # ============================================================
-# Run this as root on a fresh Ubuntu 24.04 LTS server.
+# Run this as root on a fresh Ubuntu 24.04 LTS server (OVH Cloud or any provider).
 #
 # Usage:
 #   chmod +x setup.sh
@@ -52,8 +52,8 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-header "STB Cybersecurity — Server Setup"
-echo -e "This will configure a fresh Ubuntu 24.04 server to run STBCS."
+header "STB Cybersecurity — OVH Cloud VM Setup"
+echo -e "This will configure your Ubuntu 24.04 OVH Cloud VM to run STBCS."
 echo -e "The process takes approximately 5-10 minutes.\n"
 
 read -p "Enter the database password you'd like to use for STBCS: " -s DB_PASSWORD

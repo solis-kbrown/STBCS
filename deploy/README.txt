@@ -1,15 +1,15 @@
 ============================================================
-  STB Cybersecurity — Deployment Package
+  STB Cybersecurity — OVH Cloud Deployment Package
   stbcybersecurity.com | (855) STB-1987
 ============================================================
 
 This folder contains everything you need to deploy STBCS
-on your own dedicated server (Hetzner, OVH, or any Ubuntu box).
+on your OVH Cloud VM (or any Ubuntu 24.04 server).
 
 FILES IN THIS PACKAGE
 ---------------------
 
-  HETZNER_DEPLOYMENT_GUIDE.md
+  DEPLOYMENT_GUIDE.md
       The full step-by-step guide with explanations for
       every decision. Read this first if you want to
       understand what each piece does.
@@ -39,28 +39,33 @@ FILES IN THIS PACKAGE
 QUICK START (4 STEPS)
 ---------------------
 
-1. Upload this entire project to your server:
+1. SSH into your OVH Cloud VM:
 
-     scp -r /path/to/stb-cybersecurity root@YOUR_SERVER_IP:/opt/stb-cybersecurity
+     ssh ubuntu@YOUR_SERVER_IP
+     sudo -i
+
+2. Upload this entire project to your server:
+
+     scp -r /path/to/stb-cybersecurity ubuntu@YOUR_SERVER_IP:/opt/stb-cybersecurity
 
    Or clone from GitHub:
 
      git clone https://github.com/YOUR_USERNAME/stb-cybersecurity.git /opt/stb-cybersecurity
 
-2. Run the setup script (as root):
+3. Run the setup script (as root):
 
      cd /opt/stb-cybersecurity
      chmod +x deploy/*.sh
      sudo ./deploy/setup.sh
 
-3. Edit .env with your real API keys:
+4. Edit .env with your real API keys:
 
      nano /opt/stb-cybersecurity/.env
 
    Fill in: STRIPE_SECRET_KEY, STRIPE_PUBLISHABLE_KEY,
    STRIPE_WEBHOOK_SECRET, RESEND_API_KEY
 
-4. Build and launch (as stbcs user):
+5. Build and launch (as stbcs user):
 
      su - stbcs
      cd /opt/stb-cybersecurity
