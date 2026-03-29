@@ -30,3 +30,9 @@ id = "VjEJm4neb_OCkxqszo--i"
 uri = "file://STBCS_v2_Definitive_Release_Notes.md"
 type = "text"
 title = "STBCS v2.0 Definitive Release Notes"
+
+[[outputs]]
+id = "FCk5zBunIm8klQg_KtNAc"
+uri = "file://HETZNER_DEPLOYMENT_GUIDE.md"
+type = "text"
+title = "STBCS Hetzner Dedicated Server Deployment Guide"
